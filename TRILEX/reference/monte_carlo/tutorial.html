@@ -156,6 +156,105 @@ mechanics it is clearly just</p>
 <p>Let&#8217;s see how we can get this result from a Monte Carlo simulation. Here is
 a code that would do the job. Note that we put everything in one file here,
 but obviously you would usually want to cut this into pieces for clarity:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;triqs/utility/callbacks.hpp&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;triqs/mc_tools/mc_generic.hpp&gt;</span><span class="cp"></span>
+
+<span class="c1">// --------------- the configuration: a spin, the inverse temperature, the external field ---</span>
+<span class="k">struct</span> <span class="n">configuration</span> <span class="p">{</span>
+ <span class="kt">int</span> <span class="n">spin</span><span class="p">;</span>
+ <span class="kt">double</span> <span class="n">beta</span><span class="p">,</span> <span class="n">h</span><span class="p">;</span>
+ <span class="n">configuration</span><span class="p">(</span><span class="kt">double</span> <span class="n">beta_</span><span class="p">,</span> <span class="kt">double</span> <span class="n">h_</span><span class="p">)</span> <span class="o">:</span> <span class="n">spin</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">beta</span><span class="p">(</span><span class="n">beta_</span><span class="p">),</span> <span class="n">h</span><span class="p">(</span><span class="n">h_</span><span class="p">)</span> <span class="p">{}</span>
+<span class="p">};</span>
+
+
+<span class="c1">// --------------- a move: flip the spin ---------------</span>
+<span class="k">struct</span> <span class="n">flip</span> <span class="p">{</span>
+ <span class="n">configuration</span> <span class="o">*</span> <span class="n">config</span><span class="p">;</span>
+
+ <span class="n">flip</span><span class="p">(</span><span class="n">configuration</span><span class="o">*</span> <span class="n">config_</span><span class="p">)</span> <span class="o">:</span> <span class="n">config</span><span class="p">(</span><span class="n">config_</span><span class="p">)</span> <span class="p">{}</span>
+
+ <span class="kt">double</span> <span class="n">attempt</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">config</span><span class="o">-&gt;</span><span class="n">spin</span> <span class="o">*</span> <span class="n">config</span><span class="o">-&gt;</span><span class="n">h</span> <span class="o">*</span> <span class="n">config</span><span class="o">-&gt;</span><span class="n">beta</span><span class="p">);</span> <span class="p">}</span>
+ <span class="kt">double</span> <span class="n">accept</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">config</span><span class="o">-&gt;</span><span class="n">spin</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+  <span class="k">return</span> <span class="mf">1.0</span><span class="p">;</span>
+ <span class="p">}</span>
+ <span class="kt">void</span> <span class="n">reject</span><span class="p">()</span> <span class="p">{}</span>
+<span class="p">};</span>
+
+<span class="c1">//  ----------------- a measurement: the magnetization ------------</span>
+<span class="k">struct</span> <span class="n">compute_m</span> <span class="p">{</span>
+ <span class="n">configuration</span><span class="o">*</span> <span class="n">config</span><span class="p">;</span>
+ <span class="kt">double</span> <span class="n">Z</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">M</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+ <span class="n">compute_m</span><span class="p">(</span><span class="n">configuration</span><span class="o">*</span> <span class="n">config_</span><span class="p">)</span> <span class="o">:</span> <span class="n">config</span><span class="p">(</span><span class="n">config_</span><span class="p">)</span> <span class="p">{}</span>
+
+ <span class="kt">void</span> <span class="n">accumulate</span><span class="p">(</span><span class="kt">double</span> <span class="n">sign</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">Z</span> <span class="o">+=</span> <span class="n">sign</span><span class="p">;</span>
+  <span class="n">M</span> <span class="o">+=</span> <span class="n">sign</span> <span class="o">*</span> <span class="n">config</span><span class="o">-&gt;</span><span class="n">spin</span><span class="p">;</span>
+ <span class="p">}</span>
+
+ <span class="kt">void</span> <span class="n">collect_results</span><span class="p">(</span><span class="n">triqs</span><span class="o">::</span><span class="n">mpi</span><span class="o">::</span><span class="n">communicator</span> <span class="n">c</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kt">double</span> <span class="n">sum_Z</span> <span class="o">=</span> <span class="n">triqs</span><span class="o">::</span><span class="n">mpi</span><span class="o">::</span><span class="n">reduce</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">c</span><span class="p">);</span>
+  <span class="kt">double</span> <span class="n">sum_M</span> <span class="o">=</span> <span class="n">triqs</span><span class="o">::</span><span class="n">mpi</span><span class="o">::</span><span class="n">reduce</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">c</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">c</span><span class="p">.</span><span class="n">rank</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+   <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Magnetization: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">sum_M</span> <span class="o">/</span> <span class="n">sum_Z</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+ <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="c1">//  ----------------- main ------------</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+
+ <span class="c1">// initialize mpi</span>
+ <span class="n">triqs</span><span class="o">::</span><span class="n">mpi</span><span class="o">::</span><span class="n">environment</span> <span class="n">env</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">);</span>
+ <span class="n">triqs</span><span class="o">::</span><span class="n">mpi</span><span class="o">::</span><span class="n">communicator</span> <span class="n">world</span><span class="p">;</span>
+
+ <span class="c1">// greeting</span>
+ <span class="k">if</span> <span class="p">(</span><span class="n">world</span><span class="p">.</span><span class="n">rank</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Isolated spin&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+
+ <span class="c1">// prepare the MC parameters</span>
+ <span class="kt">int</span> <span class="n">n_cycles</span> <span class="o">=</span> <span class="mi">5000000</span><span class="p">;</span>
+ <span class="kt">int</span> <span class="n">length_cycle</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+ <span class="kt">int</span> <span class="n">n_warmup_cycles</span> <span class="o">=</span> <span class="mi">10000</span><span class="p">;</span>
+ <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">random_name</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="p">;</span>
+ <span class="kt">int</span> <span class="n">random_seed</span> <span class="o">=</span> <span class="mi">374982</span> <span class="o">+</span> <span class="n">world</span><span class="p">.</span><span class="n">rank</span><span class="p">()</span> <span class="o">*</span> <span class="mi">273894</span><span class="p">;</span>
+ <span class="kt">int</span> <span class="n">verbosity</span> <span class="o">=</span> <span class="p">(</span><span class="n">world</span><span class="p">.</span><span class="n">rank</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">?</span> <span class="mi">2</span> <span class="o">:</span> <span class="mi">0</span><span class="p">);</span>
+
+ <span class="c1">// construct a Monte Carlo loop</span>
+ <span class="n">triqs</span><span class="o">::</span><span class="n">mc_tools</span><span class="o">::</span><span class="n">mc_generic</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">SpinMC</span><span class="p">(</span><span class="n">random_name</span><span class="p">,</span> <span class="n">random_seed</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">verbosity</span><span class="p">);</span>
+
+ <span class="c1">// parameters of the model</span>
+ <span class="kt">double</span> <span class="n">beta</span> <span class="o">=</span> <span class="mf">0.3</span><span class="p">;</span>
+ <span class="kt">double</span> <span class="n">field</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">;</span>
+
+ <span class="c1">// construct configuration</span>
+ <span class="n">configuration</span> <span class="n">config</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">field</span><span class="p">);</span>
+
+ <span class="c1">// add moves and measures</span>
+ <span class="n">SpinMC</span><span class="p">.</span><span class="n">add_move</span><span class="p">(</span><span class="n">flip</span><span class="p">(</span><span class="o">&amp;</span><span class="n">config</span><span class="p">),</span> <span class="s">&quot;flip move&quot;</span><span class="p">);</span>
+ <span class="n">SpinMC</span><span class="p">.</span><span class="n">add_measure</span><span class="p">(</span><span class="n">compute_m</span><span class="p">(</span><span class="o">&amp;</span><span class="n">config</span><span class="p">),</span> <span class="s">&quot;magnetization measure&quot;</span><span class="p">);</span>
+
+ <span class="c1">// Run and collect results</span>
+ <span class="n">SpinMC</span><span class="p">.</span><span class="n">warmup_and_accumulate</span><span class="p">(</span><span class="n">n_warmup_cycles</span><span class="p">,</span> <span class="n">n_cycles</span><span class="p">,</span> <span class="n">length_cycle</span><span class="p">,</span> <span class="n">triqs</span><span class="o">::</span><span class="n">utility</span><span class="o">::</span><span class="n">clock_callback</span><span class="p">(</span><span class="mi">600</span><span class="p">));</span>
+
+ <span class="n">SpinMC</span><span class="p">.</span><span class="n">collect_results</span><span class="p">(</span><span class="n">world</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="o">----------</span> <span class="n">Result</span> <span class="n">is</span> <span class="o">-------</span>
+<span class="n">Isolated</span> <span class="n">spin</span>
+
+<span class="n">Warming</span> <span class="n">up</span> <span class="p">...</span>
+
+<span class="n">Accumulating</span> <span class="p">...</span>
+<span class="mi">12</span><span class="o">:</span><span class="mi">49</span><span class="o">:</span><span class="mi">31</span>   <span class="mi">0</span><span class="o">%</span> <span class="n">ETA</span> <span class="mo">00</span><span class="o">:</span><span class="mo">00</span><span class="o">:</span><span class="mi">10</span> <span class="n">cycle</span> <span class="mi">47625</span> <span class="n">of</span> <span class="mi">5000000</span>
+<span class="mi">12</span><span class="o">:</span><span class="mi">49</span><span class="o">:</span><span class="mi">33</span>  <span class="mi">26</span><span class="o">%</span> <span class="n">ETA</span> <span class="mo">00</span><span class="o">:</span><span class="mo">00</span><span class="o">:</span><span class="mo">05</span> <span class="n">cycle</span> <span class="mi">1319850</span> <span class="n">of</span> <span class="mi">5000000</span>
+<span class="mi">12</span><span class="o">:</span><span class="mi">49</span><span class="o">:</span><span class="mi">36</span>  <span class="mi">52</span><span class="o">%</span> <span class="n">ETA</span> <span class="mo">00</span><span class="o">:</span><span class="mo">00</span><span class="o">:</span><span class="mo">04</span> <span class="n">cycle</span> <span class="mi">2639136</span> <span class="n">of</span> <span class="mi">5000000</span>
+<span class="mi">12</span><span class="o">:</span><span class="mi">49</span><span class="o">:</span><span class="mi">39</span>  <span class="mi">93</span><span class="o">%</span> <span class="n">ETA</span> <span class="mo">00</span><span class="o">:</span><span class="mo">00</span><span class="o">:</span><span class="mo">00</span> <span class="n">cycle</span> <span class="mi">4674624</span> <span class="n">of</span> <span class="mi">5000000</span>
+
+
+<span class="nl">Magnetization</span><span class="p">:</span> <span class="mf">0.149608</span>
+<span class="n">Total</span> <span class="n">number</span> <span class="n">of</span> <span class="nl">measures</span><span class="p">:</span> <span class="mi">5000000</span>
+</pre></div>
+</div>
 <p>Let&#8217;s go through the different parts of this code. First we look
 at <code class="docutils literal"><span class="pre">main()</span></code>.</p>
 </div>
@@ -208,6 +307,10 @@ ones. This way the information will be printed only by the master.</p>
 <p>At this stage the basic structure of the Monte Carlo is in <code class="docutils literal"><span class="pre">SpinMC</span></code>. But we
 now need to tell it what moves must be tried and what measures must be made.
 This is done with:</p>
+<div class="highlight-c"><div class="highlight"><pre> <span class="n">SpinMC</span><span class="p">.</span><span class="n">add_move</span><span class="p">(</span><span class="n">flip</span><span class="p">(</span><span class="o">&amp;</span><span class="n">config</span><span class="p">),</span> <span class="s">&quot;flip move&quot;</span><span class="p">);</span>
+ <span class="n">SpinMC</span><span class="p">.</span><span class="n">add_measure</span><span class="p">(</span><span class="n">compute_m</span><span class="p">(</span><span class="o">&amp;</span><span class="n">config</span><span class="p">),</span> <span class="s">&quot;magnetization measure&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
 <p>The method <code class="docutils literal"><span class="pre">add_move</span></code> expects a move and a name, while
 <code class="docutils literal"><span class="pre">add_measure</span></code> expects a measure and a name. The name can be
 anything, but different measures must have different names. In this example,
@@ -225,6 +328,20 @@ class which proposed a flip of the spin. The class is very short.  It has a
 constructor which might define some class variables. But more importantly, it
 has three member functions that any move <strong>must</strong> have: <code class="docutils literal"><span class="pre">attempt</span></code>, <code class="docutils literal"><span class="pre">accept</span></code> and
 <code class="docutils literal"><span class="pre">reject</span></code>:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="k">struct</span> <span class="n">flip</span> <span class="p">{</span>
+ <span class="n">configuration</span> <span class="o">*</span> <span class="n">config</span><span class="p">;</span>
+
+ <span class="n">flip</span><span class="p">(</span><span class="n">configuration</span><span class="o">*</span> <span class="n">config_</span><span class="p">)</span> <span class="o">:</span> <span class="n">config</span><span class="p">(</span><span class="n">config_</span><span class="p">)</span> <span class="p">{}</span>
+
+ <span class="kt">double</span> <span class="n">attempt</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">config</span><span class="o">-&gt;</span><span class="n">spin</span> <span class="o">*</span> <span class="n">config</span><span class="o">-&gt;</span><span class="n">h</span> <span class="o">*</span> <span class="n">config</span><span class="o">-&gt;</span><span class="n">beta</span><span class="p">);</span> <span class="p">}</span>
+ <span class="kt">double</span> <span class="n">accept</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">config</span><span class="o">-&gt;</span><span class="n">spin</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+  <span class="k">return</span> <span class="mf">1.0</span><span class="p">;</span>
+ <span class="p">}</span>
+ <span class="kt">void</span> <span class="n">reject</span><span class="p">()</span> <span class="p">{}</span>
+<span class="p">};</span>
+</pre></div>
+</div>
 <p>The <code class="docutils literal"><span class="pre">attempt</span></code> method is called by the Monte Carlo loop in order to try a new
 move. The Monte Carlo class doesn&#8217;t care about what this trial is. All that
 matters for the loop is the Metropolis ratio describing the transition to a new
@@ -249,6 +366,26 @@ rejected. If it is accepted, the spin should be flipped.</p>
 <h2>The measure<a class="headerlink" href="#the-measure" title="Permalink to this headline">¶</a></h2>
 <p>Just in the same way, the measures are expected to satisfy a concept.
 Let&#8217;s look at <code class="docutils literal"><span class="pre">compute_m</span></code>.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="k">struct</span> <span class="n">compute_m</span> <span class="p">{</span>
+ <span class="n">configuration</span><span class="o">*</span> <span class="n">config</span><span class="p">;</span>
+ <span class="kt">double</span> <span class="n">Z</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">M</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+ <span class="n">compute_m</span><span class="p">(</span><span class="n">configuration</span><span class="o">*</span> <span class="n">config_</span><span class="p">)</span> <span class="o">:</span> <span class="n">config</span><span class="p">(</span><span class="n">config_</span><span class="p">)</span> <span class="p">{}</span>
+
+ <span class="kt">void</span> <span class="n">accumulate</span><span class="p">(</span><span class="kt">double</span> <span class="n">sign</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">Z</span> <span class="o">+=</span> <span class="n">sign</span><span class="p">;</span>
+  <span class="n">M</span> <span class="o">+=</span> <span class="n">sign</span> <span class="o">*</span> <span class="n">config</span><span class="o">-&gt;</span><span class="n">spin</span><span class="p">;</span>
+ <span class="p">}</span>
+
+ <span class="kt">void</span> <span class="n">collect_results</span><span class="p">(</span><span class="n">triqs</span><span class="o">::</span><span class="n">mpi</span><span class="o">::</span><span class="n">communicator</span> <span class="n">c</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kt">double</span> <span class="n">sum_Z</span> <span class="o">=</span> <span class="n">triqs</span><span class="o">::</span><span class="n">mpi</span><span class="o">::</span><span class="n">reduce</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">c</span><span class="p">);</span>
+  <span class="kt">double</span> <span class="n">sum_M</span> <span class="o">=</span> <span class="n">triqs</span><span class="o">::</span><span class="n">mpi</span><span class="o">::</span><span class="n">reduce</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">c</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">c</span><span class="p">.</span><span class="n">rank</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+   <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Magnetization: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">sum_M</span> <span class="o">/</span> <span class="n">sum_Z</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+ <span class="p">}</span>
+<span class="p">};</span>
+</pre></div>
+</div>
 <p>Here only two methods are expected, <code class="docutils literal"><span class="pre">accumulate</span></code> and <code class="docutils literal"><span class="pre">collect_results</span></code>.
 The method <code class="docutils literal"><span class="pre">accumulate</span></code> is called every <code class="docutils literal"><span class="pre">length_cycle</span></code> Monte Carlo loops.
 It takes one argument which is the current sign in the Monte Carlo simulation.

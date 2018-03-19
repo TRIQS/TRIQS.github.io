@@ -154,6 +154,66 @@ classes will act. We write this class in a file <code class="file docutils liter
 <div class="section" id="main-program">
 <h2>Main program<a class="headerlink" href="#main-program" title="Permalink to this headline">¶</a></h2>
 <p>The Monte-Carlo itself can now be written:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include</span> <span class="cpf">&lt;iostream&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;triqs/mc_tools/mc_generic.hpp&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;triqs/utility/callbacks.hpp&gt;</span><span class="cp"></span>
+
+<span class="cp">#include</span> <span class="cpf">&quot;moves.hpp&quot;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&quot;configuration.hpp&quot;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&quot;measures.hpp&quot;</span><span class="cp"></span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+
+ <span class="c1">// initialize mpi</span>
+ <span class="n">triqs</span><span class="o">::</span><span class="n">mpi</span><span class="o">::</span><span class="n">environment</span> <span class="n">env</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">);</span>
+ <span class="n">triqs</span><span class="o">::</span><span class="n">mpi</span><span class="o">::</span><span class="n">communicator</span> <span class="n">world</span><span class="p">;</span>
+
+ <span class="c1">// greeting</span>
+ <span class="k">if</span> <span class="p">(</span><span class="n">world</span><span class="p">.</span><span class="n">rank</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;Ising chain&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+
+ <span class="c1">// Prepare the MC parameters</span>
+ <span class="kt">int</span> <span class="n">n_cycles</span> <span class="o">=</span> <span class="mi">500000</span><span class="p">;</span>
+ <span class="kt">int</span> <span class="n">length_cycle</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span>
+ <span class="kt">int</span> <span class="n">n_warmup_cycles</span> <span class="o">=</span> <span class="mi">100000</span><span class="p">;</span>
+ <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">random_name</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="p">;</span>
+ <span class="kt">int</span> <span class="n">random_seed</span> <span class="o">=</span> <span class="mi">374982</span> <span class="o">+</span> <span class="n">world</span><span class="p">.</span><span class="n">rank</span><span class="p">()</span> <span class="o">*</span> <span class="mi">273894</span><span class="p">;</span>
+ <span class="kt">int</span> <span class="n">verbosity</span> <span class="o">=</span> <span class="p">(</span><span class="n">world</span><span class="p">.</span><span class="n">rank</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">?</span> <span class="mi">2</span> <span class="o">:</span> <span class="mi">0</span><span class="p">);</span>
+
+ <span class="c1">// Construct a Monte Carlo loop</span>
+ <span class="n">triqs</span><span class="o">::</span><span class="n">mc_tools</span><span class="o">::</span><span class="n">mc_generic</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">IsingMC</span><span class="p">(</span><span class="n">random_name</span><span class="p">,</span> <span class="n">random_seed</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">verbosity</span><span class="p">);</span>
+
+ <span class="c1">// parameters of the model</span>
+ <span class="kt">int</span> <span class="n">length</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+ <span class="kt">double</span> <span class="n">J</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">;</span>
+ <span class="kt">double</span> <span class="n">field</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">;</span>
+ <span class="kt">double</span> <span class="n">beta</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">;</span>
+
+ <span class="c1">// construct configuration</span>
+ <span class="n">configuration</span> <span class="n">config</span><span class="p">(</span><span class="n">length</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">J</span><span class="p">,</span> <span class="n">field</span><span class="p">);</span>
+
+ <span class="c1">// add moves and measures</span>
+ <span class="n">IsingMC</span><span class="p">.</span><span class="n">add_move</span><span class="p">(</span><span class="n">flip</span><span class="p">(</span><span class="o">&amp;</span><span class="n">config</span><span class="p">,</span> <span class="n">IsingMC</span><span class="p">.</span><span class="n">get_rng</span><span class="p">()),</span> <span class="s">&quot;spin flip&quot;</span><span class="p">);</span>
+ <span class="n">IsingMC</span><span class="p">.</span><span class="n">add_measure</span><span class="p">(</span><span class="n">compute_m</span><span class="p">(</span><span class="o">&amp;</span><span class="n">config</span><span class="p">),</span> <span class="s">&quot;measure magnetization&quot;</span><span class="p">);</span>
+
+ <span class="c1">// Run and collect results</span>
+ <span class="n">IsingMC</span><span class="p">.</span><span class="n">warmup_and_accumulate</span><span class="p">(</span><span class="n">n_warmup_cycles</span><span class="p">,</span> <span class="n">n_cycles</span><span class="p">,</span> <span class="n">length_cycle</span><span class="p">,</span> <span class="n">triqs</span><span class="o">::</span><span class="n">utility</span><span class="o">::</span><span class="n">clock_callback</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">));</span>
+ <span class="n">IsingMC</span><span class="p">.</span><span class="n">collect_results</span><span class="p">(</span><span class="n">world</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="o">----------</span> <span class="n">Result</span> <span class="n">is</span> <span class="o">-------</span>
+<span class="n">Ising</span> <span class="n">chain</span>
+
+<span class="n">Warming</span> <span class="n">up</span> <span class="p">...</span>
+<span class="mi">12</span><span class="o">:</span><span class="mi">49</span><span class="o">:</span><span class="mi">27</span>  <span class="mi">10</span><span class="o">%</span> <span class="n">ETA</span> <span class="mo">00</span><span class="o">:</span><span class="mo">00</span><span class="o">:</span><span class="mo">00</span> <span class="n">cycle</span> <span class="mi">10399</span> <span class="n">of</span> <span class="mi">100000</span>
+
+<span class="n">Accumulating</span> <span class="p">...</span>
+<span class="mi">12</span><span class="o">:</span><span class="mi">49</span><span class="o">:</span><span class="mi">28</span>   <span class="mi">2</span><span class="o">%</span> <span class="n">ETA</span> <span class="mo">00</span><span class="o">:</span><span class="mo">00</span><span class="o">:</span><span class="mo">03</span> <span class="n">cycle</span> <span class="mi">13814</span> <span class="n">of</span> <span class="mi">500000</span>
+<span class="mi">12</span><span class="o">:</span><span class="mi">49</span><span class="o">:</span><span class="mi">30</span>  <span class="mi">58</span><span class="o">%</span> <span class="n">ETA</span> <span class="mo">00</span><span class="o">:</span><span class="mo">00</span><span class="o">:</span><span class="mo">01</span> <span class="n">cycle</span> <span class="mi">294131</span> <span class="n">of</span> <span class="mi">500000</span>
+
+
+<span class="nl">Magnetization</span><span class="p">:</span> <span class="mf">9.27603</span>
+<span class="n">Total</span> <span class="n">number</span> <span class="n">of</span> <span class="nl">measures</span><span class="p">:</span> <span class="mi">500000</span>
+</pre></div>
+</div>
 </div>
 </div>
 
