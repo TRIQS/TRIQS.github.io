@@ -183,6 +183,37 @@ so that the first indices are <em>not</em> flatten. EXPLAIN.</p>
 </div>
 <div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include</span> <span class="cpf">&lt;triqs/gfs.hpp&gt;</span><span class="cp"></span>
+<span class="n">using</span> <span class="n">namespace</span> <span class="n">triqs</span><span class="o">::</span><span class="n">gfs</span><span class="p">;</span>
+<span class="n">using</span> <span class="n">triqs</span><span class="o">::</span><span class="n">clef</span><span class="o">::</span><span class="n">placeholder</span><span class="p">;</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+ <span class="kt">double</span> <span class="n">beta</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">tmin</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tmax</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+ <span class="kt">int</span> <span class="n">n_re_time</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">n_im_time</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+
+ <span class="n">using</span> <span class="n">g_t_tau_s</span> <span class="o">=</span> <span class="n">gf</span><span class="o">&lt;</span><span class="n">cartesian_product</span><span class="o">&lt;</span><span class="n">retime</span><span class="p">,</span> <span class="n">imtime</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">scalar_valued</span><span class="o">&gt;</span><span class="p">;</span>
+ <span class="n">using</span> <span class="n">g_t_tau_m</span> <span class="o">=</span> <span class="n">gf</span><span class="o">&lt;</span><span class="n">cartesian_product</span><span class="o">&lt;</span><span class="n">retime</span><span class="p">,</span> <span class="n">imtime</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">matrix_valued</span><span class="o">&gt;</span><span class="p">;</span>
+ <span class="n">using</span> <span class="n">g_t_tau_t</span> <span class="o">=</span> <span class="n">gf</span><span class="o">&lt;</span><span class="n">cartesian_product</span><span class="o">&lt;</span><span class="n">retime</span><span class="p">,</span> <span class="n">imtime</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">tensor_valued</span><span class="o">&lt;</span><span class="mi">3</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+
+ <span class="c1">// a scalar valued function</span>
+ <span class="k">auto</span> <span class="n">m1</span> <span class="o">=</span> <span class="n">gf_mesh</span><span class="o">&lt;</span><span class="n">retime</span><span class="o">&gt;</span><span class="p">{</span><span class="n">tmin</span><span class="p">,</span> <span class="n">tmax</span><span class="p">,</span> <span class="n">n_re_time</span><span class="p">};</span>
+ <span class="k">auto</span> <span class="n">m2</span> <span class="o">=</span> <span class="n">gf_mesh</span><span class="o">&lt;</span><span class="n">imtime</span><span class="o">&gt;</span><span class="p">{</span><span class="n">beta</span><span class="p">,</span> <span class="n">Fermion</span><span class="p">,</span> <span class="n">n_im_time</span><span class="p">};</span>
+ <span class="k">auto</span> <span class="n">g</span> <span class="o">=</span> <span class="n">g_t_tau_s</span><span class="p">{{</span><span class="n">m1</span><span class="p">,</span> <span class="n">m2</span><span class="p">}};</span>
+
+ <span class="c1">// a more compact notation</span>
+ <span class="k">auto</span> <span class="n">g2</span> <span class="o">=</span> <span class="n">g_t_tau_s</span><span class="p">{{{</span><span class="n">tmin</span><span class="p">,</span> <span class="n">tmax</span><span class="p">,</span> <span class="n">n_re_time</span><span class="p">},</span> <span class="p">{</span><span class="n">beta</span><span class="p">,</span> <span class="n">Fermion</span><span class="p">,</span> <span class="n">n_im_time</span><span class="p">}}};</span>
+
+ <span class="c1">// a matrix_valued_version</span>
+ <span class="k">auto</span> <span class="n">gm</span> <span class="o">=</span> <span class="n">g_t_tau_m</span><span class="p">{{{</span><span class="n">tmin</span><span class="p">,</span> <span class="n">tmax</span><span class="p">,</span> <span class="n">n_re_time</span><span class="p">},</span> <span class="p">{</span><span class="n">beta</span><span class="p">,</span> <span class="n">Fermion</span><span class="p">,</span> <span class="n">n_im_time</span><span class="p">}},</span> <span class="p">{</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">}};</span>
+
+ <span class="c1">// a tensor_valued_version</span>
+ <span class="k">auto</span> <span class="n">gt</span> <span class="o">=</span> <span class="n">g_t_tau_t</span><span class="p">{{{</span><span class="n">tmin</span><span class="p">,</span> <span class="n">tmax</span><span class="p">,</span> <span class="n">n_re_time</span><span class="p">},</span> <span class="p">{</span><span class="n">beta</span><span class="p">,</span> <span class="n">Fermion</span><span class="p">,</span> <span class="n">n_im_time</span><span class="p">}},</span> <span class="p">{</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">}};</span>
+
+ <span class="c1">// a little save in an hdf5 file ?</span>
+ <span class="n">triqs</span><span class="o">::</span><span class="n">h5</span><span class="o">::</span><span class="n">file</span> <span class="n">file</span><span class="p">(</span><span class="s">&quot;test_product_gf.h5&quot;</span><span class="p">,</span> <span class="n">H5F_ACC_TRUNC</span><span class="p">);</span>
+ <span class="n">h5_write</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s">&quot;g&quot;</span><span class="p">,</span> <span class="n">g</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 </div>
 </div>
 
