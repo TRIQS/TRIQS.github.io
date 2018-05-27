@@ -58,7 +58,7 @@
   </ul>
   <div>
     <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../index.html">dft tools</a></h1>
-    <span style="font-size: 14px; margin: 0px; padding: 0px;">connecting <a class="triqs" style="font-size: 12px" href="http://triqs.ipht.cnrs.fr/1.x">TRIQS</a> to DFT packages</span>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">connecting <a class="triqs" style="font-size: 12px" href="http://triqs.github.io/triqs/unstable">TRIQS</a> to DFT packages</span>
   </div>
 </div>
 
@@ -134,9 +134,13 @@
 <span id="transport"></span><h1>Transport calculations<a class="headerlink" href="#transport-calculations" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="formalism">
 <h2>Formalism<a class="headerlink" href="#formalism" title="Permalink to this headline">¶</a></h2>
-<p>The conductivity and the Seebeck coefficient in direction <span class="math">\(\alpha\beta\)</span> are defined as <a class="footnote-reference" href="#transp" id="id1">[1]</a>:</p>
+<p>The conductivity, the Seebeck coefficient and the electronic contribution to the thermal conductivity in direction <span class="math">\(\alpha\beta\)</span> are defined as <a class="footnote-reference" href="#transp1" id="id1">[1]</a> <a class="footnote-reference" href="#transp2" id="id2">[2]</a>:</p>
 <div class="math">
-\[\sigma_{\alpha\beta} = \beta e^{2} A_{0,\alpha\beta}  \ \ \  \text{and} \ \ \  S_{\alpha\beta} = -\frac{k_B}{|e|}\frac{A_{1,\alpha\beta}}{A_{0,\alpha\beta}},\]</div>
+\[\sigma_{\alpha\beta} = \beta e^{2} A_{0,\alpha\beta}\]</div>
+<div class="math">
+\[S_{\alpha\beta} = -\frac{k_B}{|e|}\frac{A_{1,\alpha\beta}}{A_{0,\alpha\beta}},\]</div>
+<div class="math">
+\[\kappa^{\text{el}}_{\alpha\beta} = k_B \left(A_{2,\alpha\beta} - \frac{A_{1,\alpha\beta}^2}{A_{0,\alpha\beta}}\right),\]</div>
 <p>in which the kinetic coefficients <span class="math">\(A_{n,\alpha\beta}\)</span> are given by</p>
 <div class="math">
 \[A_{n,\alpha\beta} = N_{sp} \pi \hbar \int{d\omega \left(\beta\omega\right)^n f\left(\omega\right)f\left(-\omega\right)\Gamma_{\alpha\beta}\left(\omega,\omega\right)}.\]</div>
@@ -188,7 +192,7 @@ window for each k-point. How to use the optics package is described below.</li>
 </ol>
 </dd>
 </dl>
-<p>Additionally the input file <code class="file docutils literal"><span class="pre">case.inop</span></code> is required. A detail description on how to setup this file can be found in the Wien2k user guide <a class="footnote-reference" href="#userguide" id="id2">[2]</a> on page 166.
+<p>Additionally the input file <code class="file docutils literal"><span class="pre">case.inop</span></code> is required. A detail description on how to setup this file can be found in the Wien2k user guide <a class="footnote-reference" href="#userguide" id="id3">[3]</a> on page 166.
 The optics energy window should be chosen according to the window used for <strong class="program">dmftproj</strong>. Note that the current version of the transport code uses only the smaller
 of those two windows. However, keep in mind that the optics energy window has to be specified in absolute values and NOT relative to the Fermi energy!
 You can read off the Fermi energy from the <code class="file docutils literal"><span class="pre">case.scf2</span></code> file. Please do not set the optional parameter NBvalMAX in <code class="file docutils literal"><span class="pre">case.inop</span></code>.
@@ -224,7 +228,7 @@ Additionally we need to read and set the self energy, the chemical potential and
 </div>
 <p>Here the transport distribution is calculated in <span class="math">\(xx\)</span> direction for the frequencies <span class="math">\(\Omega=0.0\)</span> and <span class="math">\(0.1\)</span>.
 To use the previously obtained self energy we set with_Sigma to True and the broadening to <span class="math">\(0.0\)</span>.
-As we also want to calculate the Seebeck coefficient we have to include <span class="math">\(\Omega=0.0\)</span> in the mesh.
+As we also want to calculate the Seebeck coefficient and the thermal conductivity we have to include <span class="math">\(\Omega=0.0\)</span> in the mesh.
 Note that the current version of the code repines the <span class="math">\(\Omega\)</span> values to the closest values on the self energy mesh.
 For complete description of the input parameters see the <code class="xref py py-meth docutils literal"><span class="pre">transport_distribution</span> <span class="pre">reference</span></code>.</p>
 <p>The resulting transport distribution is not automatically saved, but this can be easily achieved with:</p>
@@ -235,25 +239,31 @@ For complete description of the input parameters see the <code class="xref py py
 <div class="highlight-python"><div class="highlight"><pre><span class="n">SK</span><span class="o">.</span><span class="n">Gamma_w</span><span class="p">,</span> <span class="n">SK</span><span class="o">.</span><span class="n">Om_meshr</span><span class="p">,</span> <span class="n">SK</span><span class="o">.</span><span class="n">omega</span><span class="p">,</span> <span class="n">SK</span><span class="o">.</span><span class="n">directions</span> <span class="o">=</span> <span class="n">SK</span><span class="o">.</span><span class="n">load</span><span class="p">([</span><span class="s1">&#39;Gamma_w&#39;</span><span class="p">,</span><span class="s1">&#39;Om_meshr&#39;</span><span class="p">,</span><span class="s1">&#39;omega&#39;</span><span class="p">,</span><span class="s1">&#39;directions&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>Finally the optical conductivity <span class="math">\(\sigma(\Omega)\)</span> and the Seebeck coefficient <span class="math">\(S\)</span> can be obtained with:</p>
+<p>Finally the optical conductivity <span class="math">\(\sigma(\Omega)\)</span>, the Seebeck coefficient <span class="math">\(S\)</span> and the thermal conductivity <span class="math">\(\kappa^{\text{el}}\)</span> can be obtained with:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">SK</span><span class="o">.</span><span class="n">conductivity_and_seebeck</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
-<span class="n">SK</span><span class="o">.</span><span class="n">save</span><span class="p">([</span><span class="s1">&#39;seebeck&#39;</span><span class="p">,</span><span class="s1">&#39;optic_cond&#39;</span><span class="p">])</span>
+<span class="n">SK</span><span class="o">.</span><span class="n">save</span><span class="p">([</span><span class="s1">&#39;seebeck&#39;</span><span class="p">,</span><span class="s1">&#39;optic_cond&#39;</span><span class="p">,</span><span class="s1">&#39;kappa&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>It is strongly advised to check convergence in the number of k-points!</p>
 </div>
 <div class="section" id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
-<table class="docutils footnote" frame="void" id="transp" rules="none">
+<table class="docutils footnote" frame="void" id="transp1" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
 <tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td><a class="reference external" href="http://link.aps.org/doi/10.1103/PhysRevB.73.0351">V. S. Oudovenko, G. Palsson, K. Haule, G. Kotliar, S. Y. Savrasov, Phys. Rev. B 73, 035120 (2006)</a></td></tr>
 </tbody>
 </table>
+<table class="docutils footnote" frame="void" id="transp2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td><a class="reference external" href="https://link.aps.org/doi/10.1103/PhysRevB.82.085104">J. M. Tomczak, K. Haule, T. Miyake, A. Georges, G. Kotliar, Phys. Rev. B 82, 085104 (2010)</a></td></tr>
+</tbody>
+</table>
 <table class="docutils footnote" frame="void" id="userguide" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td><a class="reference external" href="http://www.wien2k.at/reg_user/textbooks/usersguide.pdf">P. Blaha, K. Schwarz, G. K. H. Madsen, D. Kvasnicka, J. Luitz, ISBN 3-9501031-1-2</a></td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id3">[3]</a></td><td><a class="reference external" href="http://www.wien2k.at/reg_user/textbooks/usersguide.pdf">P. Blaha, K. Schwarz, G. K. H. Madsen, D. Kvasnicka, J. Luitz, ISBN 3-9501031-1-2</a></td></tr>
 </tbody>
 </table>
 </div>
