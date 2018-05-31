@@ -100,8 +100,7 @@
 <li><a class="reference internal" href="#lazy-expressions">Lazy expressions</a></li>
 <li><a class="reference internal" href="#shelve-pickle">shelve / pickle</a></li>
 <li><a class="reference internal" href="#plot-options">Plot options</a></li>
-<li><a class="reference internal" href="#direct-access-to-data-points-and-tails-not-for-the-legendre-version">Direct access to data points and tails [not for the Legendre version]</a></li>
-<li><a class="reference internal" href="#direct-access-to-the-tails">Direct access to the tails</a></li>
+<li><a class="reference internal" href="#direct-access-to-data-points">Direct access to data points</a></li>
 </ul>
 </li>
 </ul>
@@ -212,7 +211,6 @@ the values of the Green function using</p>
     <span class="n">g</span><span class="p">[</span><span class="n">iw</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">iw</span>
 </pre></div>
 </div>
-<p>Note however that this will not set a proper singularity of the Green function.</p>
 </div>
 <div class="section" id="assignment-or-operator">
 <h2>Assignment: &lt;&lt; or = operator<a class="headerlink" href="#assignment-or-operator" title="Permalink to this headline">¶</a></h2>
@@ -309,65 +307,11 @@ for the imaginary part, and &#8216;S&#8217; for the spectral function, <span cla
 depending on the type of Green&#8217;s function under consideration, one or more of these options do not make a lot of sense, e.g.
 calculating the spectral function of an imaginary-time Green&#8217;s function is not useful.</p>
 </div>
-<div class="section" id="direct-access-to-data-points-and-tails-not-for-the-legendre-version">
-<h2>Direct access to data points and tails [not for the Legendre version]<a class="headerlink" href="#direct-access-to-data-points-and-tails-not-for-the-legendre-version" title="Permalink to this headline">¶</a></h2>
-<p>Data points can be accessed via the properties <code class="docutils literal"><span class="pre">data</span></code> and <code class="docutils literal"><span class="pre">tail</span></code> respectively.
-<code class="docutils literal"><span class="pre">data</span></code> returns an array object and so does <code class="docutils literal"><span class="pre">tail[i]</span></code>:</p>
+<div class="section" id="direct-access-to-data-points">
+<h2>Direct access to data points<a class="headerlink" href="#direct-access-to-data-points" title="Permalink to this headline">¶</a></h2>
+<p>Data points can be accessed via the property <code class="docutils literal"><span class="pre">data</span></code> which returns an array object:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">g</span><span class="o">.</span><span class="n">data</span>
 </pre></div>
-</div>
-<div class="admonition warning">
-<p class="first admonition-title">Warning</p>
-<p class="last">Be careful when manipulating data directly to keep consistency between
-the function and the tail.
-Basic operations do this automatically, so use them as much as possible.</p>
-</div>
-</div>
-<div class="section" id="direct-access-to-the-tails">
-<span id="greentails"></span><h2>Direct access to the tails<a class="headerlink" href="#direct-access-to-the-tails" title="Permalink to this headline">¶</a></h2>
-<p>All block Green&#8217;s function come together with a <strong>Tail</strong> object that describes its
-large-frequency behavior. In other words, for large <span class="math">\(|z|\)</span>, the Green&#8217;s function
-behaves like</p>
-<div class="math">
-\[g(z) \sim ... + M_{-1} z + M_0 + \frac{M_1}{z} + \frac{M_2}{z^2} + ...\]</div>
-<p>where <span class="math">\(M_i\)</span> are matrices with the same dimensions as <span class="math">\(g\)</span>.</p>
-<ul>
-<li><p class="first">Tails can be accessed with the <code class="docutils literal"><span class="pre">tail</span></code> property. Moreover, in order
-to have access to <span class="math">\(M_i\)</span>, one uses the bracket. For example:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">GfImFreq</span><span class="p">(</span><span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;eg1&#39;</span><span class="p">,</span><span class="s1">&#39;eg2&#39;</span><span class="p">],</span> <span class="n">beta</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">n_points</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;egBlock&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">&lt;&lt;</span> <span class="mf">2.0</span>
-<span class="go">gf_view</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">g</span><span class="o">.</span><span class="n">tail</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="go">[[ 2.+0.j  0.+0.j]</span>
-<span class="go"> [ 0.+0.j  2.+0.j]]</span>
-</pre></div>
-</div>
-<p>Here <code class="docutils literal"><span class="pre">g.tail[0]</span></code> is a diagonal matrix with 2 on the diagonal, corresponding to <span class="math">\(M_0\)</span>.</p>
-</li>
-<li><p class="first">Some operations (sum over frequencies, Fourier) uses these tails to regulate the sum,
-so it is necessary to always keep the consistency between the array of data and the tail expansion.</p>
-</li>
-<li><p class="first">Fortunately, in all basic operations on the blocks, these tails are computed automatically.
-For example, when adding two Green functions, the tails are added, and so on.</p>
-</li>
-<li><p class="first">However, if you modify the <code class="docutils literal"><span class="pre">data</span></code> or the <code class="docutils literal"><span class="pre">tail</span></code> manually, you lose this guarantee.
-So you have to set the tail properly yourself (or be sure that you will not need it later).
-For example:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">g</span> <span class="o">=</span> <span class="n">GfImFreq</span><span class="p">(</span><span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;eg1&#39;</span><span class="p">,</span><span class="s1">&#39;eg2&#39;</span><span class="p">],</span> <span class="n">beta</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">n_points</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;egBlock&quot;</span><span class="p">)</span>
-<span class="n">g</span> <span class="o">&lt;&lt;</span> <span class="n">Function</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">3</span><span class="o">/</span><span class="n">x</span><span class="p">)</span>
-<span class="n">g</span><span class="o">.</span><span class="n">tail</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
-<span class="n">g</span><span class="o">.</span><span class="n">tail</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="p">[[</span><span class="mf">3.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">3.0</span><span class="p">]]</span> <span class="p">)</span>
-</pre></div>
-</div>
-<p>The third line sets all the <span class="math">\(M_i\)</span> to zero, while the fourth puts <span class="math">\(M_1 = diag(3)\)</span>. With
-the tail set correctly, this Green&#8217;s function can be used safely.</p>
-</li>
-</ul>
-<div class="admonition warning">
-<p class="first admonition-title">Warning</p>
-<p class="last">The library will not be able detect tails that are incorrectly set.
-Calculations <em>may</em> be wrong in this case.</p>
 </div>
 </div>
 </div>
