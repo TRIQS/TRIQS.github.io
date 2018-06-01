@@ -1,0 +1,322 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>dft.trans_basis &mdash; TRIQS DFTTools 1.4.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/triqs.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.4.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/MathJax/MathJax.js?config=default"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="top" title="TRIQS DFTTools 1.4.0 documentation" href="../../contents.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head>
+  <body role="document">
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../install.html">Install</a></li>
+    
+    <li><a href="../../documentation.html">Documentation</a></li>
+    
+    <li><a href="../../issues.html">Issues</a></li>
+    
+    <li><a href="../../about.html">About DFTTools</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../index.html">dft tools</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">connecting <a class="triqs" style="font-size: 12px" href="http://triqs.ipht.cnrs.fr/1.x">TRIQS</a> to DFT packages</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for dft.trans_basis</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">pytriqs.applications.dft.sumk_dft</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">pytriqs.applications.dft.converters</span> <span class="kn">import</span> <span class="n">Wien2kConverter</span>
+<span class="kn">from</span> <span class="nn">pytriqs.gf.local</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">pytriqs.archive</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">pytriqs.utility.mpi</span> <span class="kn">as</span> <span class="nn">mpi</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+
+<div class="viewcode-block" id="TransBasis"><a class="viewcode-back" href="../../reference/transbasis.html#dft.trans_basis.TransBasis">[docs]</a><span class="k">class</span> <span class="nc">TransBasis</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computates rotations into a new basis, using the condition that a given property is diagonal in the new basis.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TransBasis.__init__"><a class="viewcode-back" href="../../reference/transbasis.html#dft.trans_basis.TransBasis.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">SK</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">hdf_datafile</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialization of the class. There are two ways to do so:</span>
+
+<span class="sd">        - existing SumkLDA class :  when you have an existing SumkLDA instance</span>
+<span class="sd">        - from hdf5 archive :  when you want to use data from hdf5 archive</span>
+
+<span class="sd">        Giving the class instance overrides giving the string for the hdf5 archive.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        SK : class SumkLDA, optional</span>
+<span class="sd">             Existing instance of SumkLDA class.</span>
+<span class="sd">        hdf5_datafile : string, optional</span>
+<span class="sd">                        Name of hdf5 archive to be used.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">SK</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="c"># build our own SK instance</span>
+            <span class="k">if</span> <span class="n">hdf_datafile</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s">&quot;trans_basis: give SK instance or HDF filename!&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="mi">0</span>
+
+            <span class="n">Converter</span> <span class="o">=</span> <span class="n">Wien2kConverter</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">hdf_datafile</span><span class="p">,</span> <span class="n">repacking</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            <span class="n">Converter</span><span class="o">.</span><span class="n">convert_dft_input</span><span class="p">()</span>
+            <span class="k">del</span> <span class="n">Converter</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">SK</span> <span class="o">=</span> <span class="n">SumkDFT</span><span class="p">(</span><span class="n">hdf_file</span><span class="o">=</span><span class="n">hdf_datafile</span> <span class="o">+</span>
+                              <span class="s">&#39;.h5&#39;</span><span class="p">,</span> <span class="n">use_dft_blocks</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">SK</span> <span class="o">=</span> <span class="n">SK</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SK</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">SK</span><span class="o">.</span><span class="n">corr_shells</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;dim&#39;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="TransBasis.calculate_diagonalisation_matrix"><a class="viewcode-back" href="../../reference/transbasis.html#dft.trans_basis.TransBasis.calculate_diagonalisation_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_diagonalisation_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop_to_be_diagonal</span><span class="o">=</span><span class="s">&#39;eal&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the diagonalisation matrix w, and stores it as member of the class.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        prop_to_be_diagonal : string, optional</span>
+<span class="sd">                              Defines the property to be diagonalized.</span>
+
+<span class="sd">                              - &#39;eal&#39; : local hamiltonian (i.e. crystal field)</span>
+<span class="sd">                              - &#39;dm&#39; : local density matrix</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        wsqr : double</span>
+<span class="sd">               Measure for the degree of rotation done by the diagonalisation. wsqr=1 means no rotation.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">prop_to_be_diagonal</span> <span class="o">==</span> <span class="s">&#39;eal&#39;</span><span class="p">:</span>
+            <span class="n">prop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SK</span><span class="o">.</span><span class="n">eff_atomic_levels</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">prop_to_be_diagonal</span> <span class="o">==</span> <span class="s">&#39;dm&#39;</span><span class="p">:</span>
+            <span class="n">prop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SK</span><span class="o">.</span><span class="n">density_matrix</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s">&#39;using_point_integration&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span>
+                <span class="s">&quot;trans_basis: not a valid quantitiy to be diagonal. Choices are &#39;eal&#39; or &#39;dm&#39;.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">SK</span><span class="o">.</span><span class="n">SO</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eig</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">prop</span><span class="p">[</span><span class="s">&#39;up&#39;</span><span class="p">])</span>
+            <span class="c"># calculate new Transformation matrix</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">)</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eig</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">prop</span><span class="p">[</span><span class="s">&#39;ud&#39;</span><span class="p">])</span>
+            <span class="c"># calculate new Transformation matrix</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">)</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+
+        <span class="c"># measure for the &#39;unity&#39; of the transformation:</span>
+        <span class="n">wsqr</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="o">.</span><span class="n">diagonal</span><span class="p">())</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="o">.</span><span class="n">diagonal</span><span class="p">()</span><span class="o">.</span><span class="n">size</span>
+        <span class="k">return</span> <span class="n">wsqr</span></div>
+
+<div class="viewcode-block" id="TransBasis.rotate_gf"><a class="viewcode-back" href="../../reference/transbasis.html#dft.trans_basis.TransBasis.rotate_gf">[docs]</a>    <span class="k">def</span> <span class="nf">rotate_gf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gf_to_rot</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Uses the diagonalisation matrix w to rotate a given GF into the new basis.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        gf_to_rot : BlockGf</span>
+<span class="sd">                    Green&#39;s function block to rotate.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        gfreturn : BlockGf</span>
+<span class="sd">                   Green&#39;s function rotated into the new basis.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c"># build a full GF</span>
+        <span class="n">gfrotated</span> <span class="o">=</span> <span class="n">BlockGf</span><span class="p">(</span><span class="n">name_block_generator</span><span class="o">=</span><span class="p">[(</span><span class="n">block</span><span class="p">,</span> <span class="n">GfImFreq</span><span class="p">(</span>
+            <span class="n">indices</span><span class="o">=</span><span class="n">inner</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="n">gf_to_rot</span><span class="o">.</span><span class="n">mesh</span><span class="p">))</span> <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">inner</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">SK</span><span class="o">.</span><span class="n">gf_struct_sumk</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">make_copies</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+        <span class="c"># transform the CTQMC blocks to the full matrix:</span>
+        <span class="c"># ish is the index of the inequivalent shell corresponding to icrsh</span>
+        <span class="n">ish</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SK</span><span class="o">.</span><span class="n">corr_to_inequiv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">inner</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_solver</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">ind1</span> <span class="ow">in</span> <span class="n">inner</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">ind2</span> <span class="ow">in</span> <span class="n">inner</span><span class="p">:</span>
+                    <span class="n">gfrotated</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">SK</span><span class="o">.</span><span class="n">solver_to_sumk_block</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">block</span><span class="p">]][</span>
+                        <span class="n">ind1</span><span class="p">,</span> <span class="n">ind2</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">gf_to_rot</span><span class="p">[</span><span class="n">block</span><span class="p">][</span><span class="n">ind1</span><span class="p">,</span> <span class="n">ind2</span><span class="p">]</span>
+
+        <span class="c"># Rotate using the matrix w</span>
+        <span class="k">for</span> <span class="n">bname</span><span class="p">,</span> <span class="n">gf</span> <span class="ow">in</span> <span class="n">gfrotated</span><span class="p">:</span>
+            <span class="n">gfrotated</span><span class="p">[</span><span class="n">bname</span><span class="p">]</span><span class="o">.</span><span class="n">from_L_G_R</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span> <span class="n">gfrotated</span><span class="p">[</span><span class="n">bname</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">)</span>
+
+        <span class="n">gfreturn</span> <span class="o">=</span> <span class="n">gf_to_rot</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="c"># Put back into CTQMC basis:</span>
+        <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">inner</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_solver</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">ind1</span> <span class="ow">in</span> <span class="n">inner</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">ind2</span> <span class="ow">in</span> <span class="n">inner</span><span class="p">:</span>
+                    <span class="n">gfreturn</span><span class="p">[</span><span class="n">block</span><span class="p">][</span><span class="n">ind1</span><span class="p">,</span> <span class="n">ind2</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">gfrotated</span><span class="p">[</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">SK</span><span class="o">.</span><span class="n">solver_to_sumk_block</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">block</span><span class="p">]][</span><span class="n">ind1</span><span class="p">,</span> <span class="n">ind2</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">gfreturn</span></div>
+
+<div class="viewcode-block" id="TransBasis.write_trans_file"><a class="viewcode-back" href="../../reference/transbasis.html#dft.trans_basis.TransBasis.write_trans_file">[docs]</a>    <span class="k">def</span> <span class="nf">write_trans_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Writes the new transformation T into a file readable by dmftproj. By that, the requested quantity is</span>
+<span class="sd">        diagonal already at input.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filename : string</span>
+<span class="sd">                   Name of the file where the transformation is stored.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">Tnew</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span>
+        <span class="n">dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SK</span><span class="o">.</span><span class="n">corr_shells</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;dim&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">SK</span><span class="o">.</span><span class="n">SO</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim</span><span class="p">):</span>
+                <span class="n">st</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim</span><span class="p">):</span>
+                    <span class="n">st</span> <span class="o">+=</span> <span class="s">&quot; </span><span class="si">%9.6f</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">Tnew</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+                    <span class="n">st</span> <span class="o">+=</span> <span class="s">&quot; </span><span class="si">%9.6f</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">Tnew</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">dim</span><span class="p">):</span>
+                    <span class="n">st</span> <span class="o">+=</span> <span class="s">&quot; 0.0&quot;</span>
+
+                <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">st</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">st1</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">,</span> <span class="s">&#39;*&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">st1</span><span class="p">))</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim</span><span class="p">):</span>
+                <span class="n">st</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">dim</span><span class="p">):</span>
+                    <span class="n">st</span> <span class="o">+=</span> <span class="s">&quot; 0.0&quot;</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim</span><span class="p">):</span>
+                    <span class="n">st</span> <span class="o">+=</span> <span class="s">&quot; </span><span class="si">%9.6f</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">Tnew</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+                    <span class="n">st</span> <span class="o">+=</span> <span class="s">&quot; </span><span class="si">%9.6f</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">Tnew</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">st</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">st1</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">,</span> <span class="s">&#39;*&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">st1</span><span class="p">))</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim</span><span class="p">):</span>
+                <span class="n">st</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim</span><span class="p">):</span>
+                    <span class="n">st</span> <span class="o">+=</span> <span class="s">&quot; </span><span class="si">%9.6f</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">Tnew</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+                    <span class="n">st</span> <span class="o">+=</span> <span class="s">&quot; </span><span class="si">%9.6f</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">Tnew</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">st</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">st1</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">,</span> <span class="s">&#39;*&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">st1</span><span class="p">))</span>
+
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2011-2013, M. Aichhorn, L. Pourovskii, V. Vildosola, C. Martins.
+    </div>
+  </body>
+</html>

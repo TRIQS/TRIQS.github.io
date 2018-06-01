@@ -1,0 +1,331 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Generic many-body operators &mdash; TRIQS Hybridization Expansion Solver 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/triqs.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/MathJax/MathJax.js?config=default"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="top" title="TRIQS Hybridization Expansion Solver 1.0.0 documentation" href="index.html" />
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head>
+  <body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="install.html">Install</a></li>
+    
+    <li><a href="documentation.html">Documentation</a></li>
+    
+    <li><a href="issues.html">Issues</a></li>
+    
+    <li><a href="about.html">About CTHYB</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="index.html">cthyb</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">a generic quantum impurity solver based on the <a class="triqs" style="font-size: 12px" href="http://ipht.cea.fr/triqs">TRIQS</a> library</span>
+  </div>
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="index.html">Home</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Generic many-body operators</a><ul>
+<li><a class="reference internal" href="#template-parameters">Template parameters</a></li>
+<li><a class="reference internal" href="#construction-factories">Construction/factories</a></li>
+<li><a class="reference internal" href="#overloaded-operators">Overloaded operators</a></li>
+<li><a class="reference internal" href="#serialization-hdf5">Serialization &amp; HDF5</a></li>
+<li><a class="reference internal" href="#iteration-over-monomials">Iteration over monomials</a></li>
+<li><a class="reference internal" href="#cythonization">Cythonization</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/operators.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="generic-many-body-operators">
+<h1>Generic many-body operators<a class="headerlink" href="#generic-many-body-operators" title="Permalink to this headline">¶</a></h1>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Add information about C++/Cython header files and namespaces (once the header files have landed to the lib).</p>
+</div>
+<p><tt class="docutils literal"><span class="pre">many_body_operator</span></tt> is a template class, which implements the algebra of fermion operators.
+An object of this class represents a general fermion operator and supports all standard algebraic operations (sums, products, multiplication by a scalar).
+It allows to write readable and clean C++ code involving various operators, such as Hamiltonians and observables of many-body systems.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The internal storage of a <tt class="docutils literal"><span class="pre">many_body_operator</span></tt> object is not based on a matrix representation.
+Instead of that the object stores a list of normally-ordered monomials in basis elements
+(creation and annihilation operators), accompanied by scalar coefficients. This approach allows
+to minimize the required storage space.</p>
+</div>
+<p><tt class="docutils literal"><span class="pre">many_body_operator</span></tt> is defined as</p>
+<div class="highlight-python"><pre>template&lt;typename scalar_t, LessThanComparable... IndexTypes&gt; class many_body_operator;</pre>
+</div>
+<div class="section" id="template-parameters">
+<h2>Template parameters<a class="headerlink" href="#template-parameters" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><strong>scalar_t</strong> determines the type of a scalar to construct the algebra</li>
+<li><strong>IndexTypes</strong> is a parameter pack, which determines types of indices of a single creation/annihilation operator.
+The number of types may vary from 0 to the maximum supported by the compiler. Each type must model LessThanComparable.</li>
+</ul>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p><strong>scalar_t</strong> is often chosen once for a whole project. It is convenient to shorten declarations by using the template aliasing feature of C++11:</p>
+<div class="last highlight-python"><pre>template&lt;typename ...IndexTypes&gt; using op_with_double_coeff = many_body_operator&lt;double, IndexTypes...&gt;;</pre>
+</div>
+</div>
+</div>
+<div class="section" id="construction-factories">
+<h2>Construction/factories<a class="headerlink" href="#construction-factories" title="Permalink to this headline">¶</a></h2>
+<p><tt class="docutils literal"><span class="pre">many_body_operator</span></tt> provides a minimal set of constructors: default, copy and move constructor. The default constructor
+creates a zero operator.</p>
+<p>Three factory functions can be used to construct nontrivial operators:</p>
+<div class="highlight-python"><pre>many_body_operator&lt;scalar_t,IndexTypes...&gt; Op1 = c(IndexTypes... indices); // annihilation
+many_body_operator&lt;scalar_t,IndexTypes...&gt; Op2 = c_dag(IndexTypes... indices); // creation
+many_body_operator&lt;scalar_t,IndexTypes...&gt; Op3 = n(IndexTypes... indices); // number of particles</pre>
+</div>
+<p>Creation and annihilation operators obey the canonical anticommutation relation</p>
+<div class="math">
+\[\hat C^\dagger_i \hat C_j + \hat C_j \hat C^\dagger_i = \delta_{ij},\]</div>
+<p>and the number of particle is defined as</p>
+<div class="math">
+\[\hat n_i = \hat C^\dagger_i \hat C_i.\]</div>
+<p>There is no need to preregister valid values of <tt class="docutils literal"><span class="pre">indices</span></tt> before they are used to create an elementary operator.
+That means, that an algebra can be extended with new basis elements on-the-fly, after you have created some expressions.</p>
+</div>
+<div class="section" id="overloaded-operators">
+<h2>Overloaded operators<a class="headerlink" href="#overloaded-operators" title="Permalink to this headline">¶</a></h2>
+<p><tt class="docutils literal"><span class="pre">many_body_operator</span></tt> class defines a number of arithmetic operations with objects of the class and constants of type <tt class="docutils literal"><span class="pre">scalar_t</span></tt>.
+If <tt class="docutils literal"><span class="pre">A</span></tt> and <tt class="docutils literal"><span class="pre">B</span></tt> are objects of class <tt class="docutils literal"><span class="pre">many_body_operator</span></tt> (instantiated with <em>the same template parameters</em>) and <tt class="docutils literal"><span class="pre">x</span></tt> is an
+instance of <tt class="docutils literal"><span class="pre">scalar_t</span></tt>, then the following expressions are valid:</p>
+<div class="highlight-python"><pre>// Addition
+A + B
+A + x
+x + A
+A += B
+A += x
+
+// Subtraction
+A - B
+A - x
+x - A
+A -= B
+-A
+
+// Multiplication
+x*A
+A*x
+A*B</pre>
+</div>
+<p>The result of any of the defined operations is guaranteed to preserve its normally ordered form.</p>
+<p>An operator can be tested to be precise zero by a call to <tt class="docutils literal"><span class="pre">is_zero()</span></tt> method.</p>
+<p>Within the current implementation, <tt class="docutils literal"><span class="pre">many_body_operator</span></tt> provides no type conversions between objects with
+different scalar types or index types.
+For example, one cannot mix operators with <tt class="docutils literal"><span class="pre">scalar_t=double</span></tt> and <tt class="docutils literal"><span class="pre">scalar_t=std::complex&lt;double&gt;</span></tt> in a single expression.
+Nevertheless, one operator can be assigned from another if their scalar types are compatible.</p>
+<p>An instance of <tt class="docutils literal"><span class="pre">many_body_operator</span></tt> can be inserted into an output stream, provided that <tt class="docutils literal"><span class="pre">scalar_t</span></tt> and all index types support
+the stream insertion.</p>
+<div class="highlight-python"><pre>many_body_operator&lt;double,int&gt; x = c(0);
+many_body_operator&lt;double,int&gt; y = c_dag(1);
+
+std::cout &lt;&lt; (x + y)*(x - y) &lt;&lt; std::endl; // prints "2*C^+(1)C(0)"</pre>
+</div>
+</div>
+<div class="section" id="serialization-hdf5">
+<h2>Serialization &amp; HDF5<a class="headerlink" href="#serialization-hdf5" title="Permalink to this headline">¶</a></h2>
+<p>Objects of <tt class="docutils literal"><span class="pre">many_body_operator</span></tt> are ready to be serialized/deserialized with Boost.Serialization.
+It also allows to transparently send/receive them through Boost.MPI calls.</p>
+<p>There is no special code to support HDF5-storage of operators. However, the core HDF5 library of TRIQS
+automatically performs text-serialization of an operator and puts the resulting string into the HDF5-archive.</p>
+</div>
+<div class="section" id="iteration-over-monomials">
+<h2>Iteration over monomials<a class="headerlink" href="#iteration-over-monomials" title="Permalink to this headline">¶</a></h2>
+<p>The aim of <tt class="docutils literal"><span class="pre">many_body_operator</span></tt> is to have a class, which allows to encode different operator expressions in C++ in the form closest to the mathematical notation.
+But at the same time, one would like to explicitly extract the structure of a defined operator (to calculate its matrix elements, for example).
+For this purpose <tt class="docutils literal"><span class="pre">many_body_operator</span></tt> exposes the following part of its interface:</p>
+<ul>
+<li><dl class="first docutils">
+<dt><tt class="docutils literal"><span class="pre">struct</span> <span class="pre">canonical_ops_t</span></tt></dt>
+<dd><p class="first">This structure represents an elementary operator (basis element of the algebra).</p>
+<div class="last highlight-python"><pre>struct canonical_ops_t {
+    bool dagger;    // true = creation, false = annihilation
+    std::tuple&lt;IndexTypes...&gt; indices; // values of indices
+};</pre>
+</div>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><tt class="docutils literal"><span class="pre">typedef</span> <span class="pre">...</span> <span class="pre">monomial_t;</span></tt></dt>
+<dd><p class="first last">An ordered sequence of elementary operators (monomial).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><tt class="docutils literal"><span class="pre">typedef</span> <span class="pre">...</span> <span class="pre">const_iterator;</span></tt></dt>
+<dd><p class="first last">A bidirectional constant iterator to the list of monomials.
+It can be dereferenced into a special proxy object, which carries two data members: <tt class="docutils literal"><span class="pre">coef</span></tt> and <tt class="docutils literal"><span class="pre">monomial</span></tt>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><tt class="docutils literal"><span class="pre">begin()</span></tt>/<tt class="docutils literal"><span class="pre">cbegin()</span></tt></dt>
+<dd><p class="first last">Returns <tt class="docutils literal"><span class="pre">const_iterator</span></tt> pointing at the first monomial.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><tt class="docutils literal"><span class="pre">end()</span></tt>/<tt class="docutils literal"><span class="pre">cend()</span></tt></dt>
+<dd><p class="first last">Returns <tt class="docutils literal"><span class="pre">const_iterator</span></tt> pointing past the end.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>Here is an example of use:</p>
+<div class="highlight-python"><pre>typedef many_body_operator&lt;double,int&gt; Op;
+Op H = -0.5*(n(0) + n(1)) + n(0)*n(1);
+
+for(Op::const_iterator it = H.begin(); it != H.end(); ++it){
+    double coef = it-&gt;coef;
+    Op::monomial_t monomial = it-&gt;monomial;
+
+    std::cout &lt;&lt; "Coefficient: " &lt;&lt; coef &lt;&lt; std::endl;
+    std::cout &lt;&lt; "Monomial: " &lt;&lt; std::endl;
+    for(auto const&amp; o : monomial){
+        std::cout &lt;&lt; "dagger: " &lt;&lt; o.dagger &lt;&lt; " index: " &lt;&lt; std::get&lt;0&gt;(o.indices) &lt;&lt; " "; // only 1 index per elementary operator
+    }
+    std::cout &lt;&lt; std::endl;
+}</pre>
+</div>
+<p>The output should be</p>
+<div class="highlight-python"><pre>Coefficient: -0.5
+Monomial:
+dagger: 1 index: 0 dagger: 0 index: 0
+Coefficient: -0.5
+Monomial:
+dagger: 1 index: 1 dagger: 0 index: 1
+Coefficient: 1
+Monomial:
+dagger: 1 index: 0 dagger: 1 index: 1 dagger: 0 index: 1 dagger: 0 index: 0</pre>
+</div>
+</div>
+<div class="section" id="cythonization">
+<h2>Cythonization<a class="headerlink" href="#cythonization" title="Permalink to this headline">¶</a></h2>
+<p>This class can be cimported from Cython:</p>
+<div class="highlight-python"><pre>from many_body_operator cimport many_body_operator</pre>
+</div>
+<p>It corresponds to a specialized version of <tt class="docutils literal"><span class="pre">many_body_operator</span></tt>: <tt class="docutils literal"><span class="pre">double</span></tt> as the scalar type and two indices of type <tt class="docutils literal"><span class="pre">std::string</span></tt>.
+There are also an extension type <tt class="docutils literal"><span class="pre">Operator</span></tt> and three factory function to be imported from Python:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">many_body_operator</span> <span class="kn">import</span> <span class="n">Operator</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">C_dag</span><span class="p">,</span> <span class="n">N</span>
+</pre></div>
+</div>
+<p>All arithmetic operations implemented in C++ are also available in Python as well as special methods <tt class="docutils literal"><span class="pre">__repr__()</span></tt> and <tt class="docutils literal"><span class="pre">__str__()</span></tt>.
+The factory functions accept two arguments of any types and convert them into strings using Python operator <tt class="docutils literal"><span class="pre">str()</span></tt>.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last"><tt class="docutils literal"><span class="pre">many_body_operator.pyx</span></tt> must be split into <em>.pxd</em> and <em>.pyx</em> parts when it is moved into the library.
+That was the initial intention, but there is an issue with how Cython compiler looks for header files.
+In short words, <em>.pxd</em>-files must reside at the same place of build and install directory hierarchies.
+But this is impossible to achieve with the standard directory layout of a TRIQS application.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="index.html">Home</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, P. Seth, I. Krivenko, M. Ferrero, O. Parcollet.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,79 @@
+
+.. module:: cthyb_segment_offdiag
+
+.. _documentation:
+
+Reference documentation
+=========================
+
+The 'cthyb-segment' solver is a continuous-time Quantum Monte Carlo solver aimed at solving an :doc:`Anderson impurity model <definitions>` with static and dynamical density-density interactions.
+
+Below is a very short example demonstrating the basic usage of the solver.
+
+.. runblock:: python
+
+  from pytriqs.gf.local import *
+  from pytriqs.operators import *
+
+  # set up a few parameters
+  U = 2.0
+  beta = 20.0
+  mu = 0.2
+  eps0 = 0.3
+  V = 1.0
+
+  # Construct the segment solver
+  from cthyb_segment_offdiag import Solver
+  S = Solver(beta = beta, gf_struct = {"up":[0],"down":[0]})
+
+  # initialize the Green function
+  S.G0_iw << inverse(iOmega_n + mu - V**2 * inverse(iOmega_n - eps0))
+
+  S.solve(h_int = U * n('up',0)*n('down',0),
+          n_cycles  = 10000,
+          length_cycle = 100,
+          n_warmup_cycles = 5000,
+          measure_nn = False,
+          move_move = False,
+          move_swap_empty_lines = False)
+
+
+To use the solver, one has to go through the following steps:
+
+Import the Solver class::
+
+  from cthyb_segment_offdiag import Solver 
+ 
+Declare and construct a solver instance. Some construction parameters are mandatory, some others are optional. See :doc:`here <options>` for a complete list.::
+
+  S = Solver(beta = beta, gf_struct = {"up":[0],"down":[0]})
+ 
+Initialize the inputs of the solver. For a complete list of the input and output members of the solver, see :doc:`here <members>` ::
+
+  S.G0_iw <<= inverse(iOmega_n + mu - V**2 * inverse(iOmega_n - eps0))
+ 
+  
+Call the solve() method. This method comes with mandatory and optional parameters, whose complete list can be found :doc:`here <options>`.::
+
+  S.solve(h_int = U * n('up',0)*n('down',0),
+          n_cycles  = 100000,
+          length_cycle = 100,
+          n_warmup_cycles = 5000,
+          measure_nn = False,
+          move_move = False,
+          move_swap_empty_lines = False)
+
+ 
+
+
+To know more about the solver, visit one of the following pages:
+
+.. toctree::
+   :maxdepth: 1
+
+   definitions
+   options
+   observables
+   members
+   provenance
+   

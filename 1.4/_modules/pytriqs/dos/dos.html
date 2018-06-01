@@ -1,0 +1,323 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pytriqs.dos.dos &mdash; TRIQS  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/triqs.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/MathJax/MathJax.js?config=default"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="top" title="TRIQS  documentation" href="../../../contents.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head>
+  <body role="document">
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../../install.html">Install</a></li>
+    
+    <li><a href="../../../reference.html">Reference</a></li>
+    
+    <li><a href="../../../tutorials.html">Tutorials</a></li>
+    
+    <li><a href="../../../applications.html">Applications</a></li>
+    
+    <li><a href="../../../issues.html">Issues</a></li>
+    
+    <li><a href="../../../about.html">About TRIQS</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../../index.html">triqs</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">a Toolbox for Research on Interacting Quantum Systems</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pytriqs.dos.dos</h1><div class="highlight"><pre>
+
+<span class="c">################################################################################</span>
+<span class="c">#</span>
+<span class="c"># TRIQS: a Toolbox for Research in Interacting Quantum Systems</span>
+<span class="c">#</span>
+<span class="c"># Copyright (C) 2011 by M. Ferrero, O. Parcollet</span>
+<span class="c">#</span>
+<span class="c"># TRIQS is free software: you can redistribute it and/or modify it under the</span>
+<span class="c"># terms of the GNU General Public License as published by the Free Software</span>
+<span class="c"># Foundation, either version 3 of the License, or (at your option) any later</span>
+<span class="c"># version.</span>
+<span class="c">#</span>
+<span class="c"># TRIQS is distributed in the hope that it will be useful, but WITHOUT ANY</span>
+<span class="c"># WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS</span>
+<span class="c"># FOR A PARTICULAR PURPOSE. See the GNU General Public License for more</span>
+<span class="c"># details.</span>
+<span class="c">#</span>
+<span class="c"># You should have received a copy of the GNU General Public License along with</span>
+<span class="c"># TRIQS. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c">#</span>
+<span class="c">################################################################################</span>
+
+<span class="kn">import</span> <span class="nn">types</span><span class="o">,</span><span class="nn">string</span><span class="o">,</span><span class="nn">itertools</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">isSequenceType</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+
+<div class="viewcode-block" id="DOS"><a class="viewcode-back" href="../../../reference/lattice_tools/dos.html#pytriqs.dos.DOS">[docs]</a><span class="k">class</span> <span class="nc">DOS</span> <span class="p">:</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">* Stores a density of state of fermions  </span>
+
+<span class="sd">.. math::</span>
+
+<span class="sd"> \rho (\epsilon) \equiv \sum&#39;_k \delta( \epsilon - \epsilon_k)</span>
+
+<span class="sd">* The sum is normalized </span>
+
+<span class="sd">.. math::</span>
+
+<span class="sd">  \int_{-\infty}^{\infty} d\epsilon \rho (\epsilon) = 1</span>
+
+<span class="sd">* Implement :ref:`Plot Protocol &lt;plotting&gt;`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eps</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;  </span>
+<span class="sd">Parameters </span>
+<span class="sd">------------</span>
+<span class="sd">eps : 1d array-type</span>
+<span class="sd">    eps[i] is value of epsilon.</span>
+<span class="sd">rho : 1d array-type</span>
+<span class="sd">    The corresponding value of the dos. </span>
+<span class="sd">name : string</span>
+<span class="sd">     Name of the dos/orbital</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="k">try</span> <span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eps</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="n">eps</span> <span class="p">)</span>
+            <span class="k">assert</span>  <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span><span class="mi">1</span>
+        <span class="k">except</span> <span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">,</span> <span class="s">&quot;Argument eps mismatch&quot;</span>
+        <span class="k">try</span> <span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rho</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="n">rho</span> <span class="p">)</span>
+            <span class="k">assert</span>  <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rho</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span><span class="mi">1</span>
+        <span class="k">except</span> <span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">,</span> <span class="s">&quot;Argument rho mismatch&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">rho</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s">&quot;Dimensions of eps and rho do not match&quot;</span>
+        
+        
+    <span class="c">#-------------------------------------------------------------</span>
+
+    <span class="k">def</span> <span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span> 
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">rho</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__reduce_to_dict__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s">&#39;epsilon&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">,</span> <span class="s">&#39;rho&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">rho</span><span class="p">}</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">__factory_from_dict__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span><span class="n">name</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span> <span class="p">:</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="n">D</span><span class="p">[</span><span class="s">&#39;epsilon&#39;</span><span class="p">],</span><span class="n">D</span><span class="p">[</span><span class="s">&#39;rho&#39;</span><span class="p">],</span> <span class="n">name</span><span class="p">)</span>
+ 
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span> 
+        <span class="k">return</span>  <span class="s">&quot;&quot;&quot;</span>
+<span class="s">        DOS object :</span>
+<span class="s">        &quot;&quot;&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span> 
+
+<div class="viewcode-block" id="DOS.copy"><a class="viewcode-back" href="../../../reference/lattice_tools/dos.html#pytriqs.dos.DOS.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DOS</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">rho</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_plot_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Options</span><span class="p">)</span> <span class="p">:</span> 
+        <span class="k">return</span>  <span class="p">[</span> <span class="p">{</span><span class="s">&#39;label&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;xlabel&#39;</span> <span class="p">:</span><span class="s">r&#39;$\epsilon$&#39;</span><span class="p">,</span> <span class="s">&#39;ylabel&#39;</span> <span class="p">:</span> <span class="s">r&#39;</span><span class="si">%s</span><span class="s">$(\epsilon)$&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;xdata&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">,</span><span class="s">&#39;ydata&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">rho</span> <span class="p">}</span> <span class="p">]</span>
+
+<div class="viewcode-block" id="DOS.density"><a class="viewcode-back" href="../../../reference/lattice_tools/dos.html#pytriqs.dos.DOS.density">[docs]</a>    <span class="k">def</span> <span class="nf">density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">mu</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculates the density of free fermions for the given DOS for chemical potential mu.&quot;&quot;&quot;</span>
+
+        <span class="n">dens</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="n">e</span><span class="o">&gt;</span><span class="n">mu</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span> <span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">de</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c">#for e,r in itertools.izip(self.eps[0:ind],self.rho[0:ind]):</span>
+        <span class="c">#    dens += r</span>
+        <span class="n">dens</span> <span class="o">=</span> <span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rho</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">ind</span><span class="p">])</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">rho</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mf">2.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">rho</span><span class="p">[</span><span class="n">ind</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mf">2.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">de</span>
+        <span class="c">#dens2 = dens + (self.rho[ind-1]/2.0 + self.rho[ind]/2.0) * de</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">ind</span><span class="o">&lt;</span><span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span> <span class="n">dens</span> <span class="o">+=</span> <span class="p">(</span><span class="n">mu</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">[</span><span class="n">ind</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rho</span><span class="p">[</span><span class="n">ind</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">rho</span><span class="p">[</span><span class="n">ind</span><span class="p">])</span><span class="o">/</span><span class="mf">2.0</span>
+        <span class="k">return</span> <span class="n">dens</span> </div></div>
+
+<span class="c">##########################################################################</span>
+
+<div class="viewcode-block" id="dos_from_file"><a class="viewcode-back" href="../../../reference/lattice_tools/dos.html#pytriqs.dos.dos_from_file">[docs]</a><span class="k">def</span> <span class="nf">dos_from_file</span><span class="p">(</span><span class="n">Filename</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">single_orbital</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;   </span>
+<span class="sd">    Read the DOS from a file </span>
+
+<span class="sd">    :param Filename:  a string  : name of the file</span>
+<span class="sd">    :param name: name of the DOS</span>
+<span class="sd">    :param single_orbital: can be None or an integer.</span>
+<span class="sd">                    </span>
+<span class="sd">    :rtype: </span>
+<span class="sd">       * if single_orbital== None, returns a tuple of DOS (even if there is one dos !).</span>
+<span class="sd">       * If single_orbital==i, return only ONE DOS corresponding to ith orbital (starting at 1).</span>
+
+<span class="sd">    Format of the file :   </span>
+<span class="sd">        * N_orbitals +1 columns, </span>
+<span class="sd">        * the first column is the value of epsilon</span>
+<span class="sd">        * the N_orbitals other columns are the values of the dos for various orbitals</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">Filename</span><span class="p">);</span> <span class="n">s</span><span class="o">=</span><span class="s">&#39;&#39;</span>
+    <span class="k">while</span> <span class="ow">not</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="p">:</span>
+        <span class="n">s</span><span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">s</span><span class="p">,</span> <span class="s">&quot;File is empty !&quot;</span>
+    <span class="n">N_Orbitals</span> <span class="o">=</span> <span class="nb">len</span> <span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">())</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="k">assert</span> <span class="n">N_Orbitals</span> <span class="o">&gt;</span><span class="mi">0</span><span class="p">,</span> <span class="s">&quot;File : wrong format&quot;</span>
+    <span class="c"># not very safe :  fromfile routine can crashes if given non numerics</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">Filename</span><span class="p">,</span><span class="n">sep</span><span class="o">=</span><span class="s">&#39; &#39;</span><span class="p">)</span>
+    <span class="n">l</span><span class="p">,</span><span class="n">div</span>  <span class="o">=</span>  <span class="n">r</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">N_Orbitals</span> <span class="o">+</span><span class="mi">1</span> 
+    <span class="k">assert</span> <span class="n">l</span><span class="o">%</span><span class="p">(</span><span class="n">div</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">,</span><span class="s">&quot;File does not contains N*</span><span class="si">%d</span><span class="s"> numbers !&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">div</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span>  <span class="n">l</span><span class="o">//</span><span class="p">(</span><span class="n">div</span><span class="p">)</span> <span class="p">,</span> <span class="n">div</span> <span class="c"># reshape the array</span>
+    <span class="n">eps</span> <span class="o">=</span> <span class="n">r</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">single_orbital</span> <span class="p">:</span> 
+        <span class="k">assert</span> <span class="n">single_orbital</span><span class="o">&gt;</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">single_orbital</span> <span class="o">&lt;=</span> <span class="n">N_Orbitals</span><span class="p">,</span> <span class="s">&quot; single_orbital  &quot;</span>
+        <span class="k">return</span> <span class="n">DOS</span> <span class="p">(</span><span class="n">r</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="p">,</span><span class="n">r</span><span class="p">[:,</span><span class="n">single_orbital</span><span class="p">],</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">else</span> <span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span>  <span class="n">DOS</span> <span class="p">(</span><span class="n">r</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="p">,</span><span class="n">r</span><span class="p">[:,</span><span class="n">i</span> <span class="o">+</span><span class="mi">1</span> <span class="p">],</span> <span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="n">N_Orbitals</span><span class="p">)]</span></div>
+
+
+<span class="c">##########################################################################</span>
+
+<div class="viewcode-block" id="DOSFromFunction"><a class="viewcode-back" href="../../../reference/lattice_tools/dos.html#pytriqs.dos.DOSFromFunction">[docs]</a><span class="k">class</span> <span class="nc">DOSFromFunction</span><span class="p">(</span><span class="n">DOS</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    * A DOS class, but constructed from a function.</span>
+<span class="sd">    </span>
+<span class="sd">    * The number of points can be variable and self-adjusted in the Hilbert transform to adapt precision.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">n_pts</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param function: * a function :math:`\\epsilon \\rightarrow \\rho(\\epsilon)`</span>
+<span class="sd">                         * The result type can be anything from which a 1d-array can be constructed by numpy</span>
+<span class="sd">        :param x_min,x_max: Bound of the mesh (domain of the function). </span>
+<span class="sd">        :param n_pts: Number of points in the mesh.</span>
+<span class="sd">        :param name: Name of the DOS.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">callable</span><span class="p">(</span><span class="n">function</span><span class="p">),</span> <span class="s">&quot;function is not callable&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">x_min</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">x_max</span> <span class="o">=</span> <span class="n">function</span><span class="p">,</span><span class="n">x_min</span><span class="p">,</span><span class="n">x_max</span>
+        <span class="k">try</span> <span class="p">:</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="mf">0.001</span><span class="p">)</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span><span class="mi">1</span>
+        <span class="k">except</span> <span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span> <span class="p">,</span> <span class="s">&quot;Value of the function must be a 1d-array&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__f</span><span class="p">(</span><span class="n">n_pts</span><span class="p">)</span> <span class="c"># compute arrays</span>
+        <span class="n">DOS</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">rho</span><span class="p">,</span><span class="n">name</span><span class="p">)</span> 
+        
+    <span class="c">#-------------------------------------------------------------</span>
+    
+    <span class="k">def</span> <span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span> 
+        <span class="k">return</span>  <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">x_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_max</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    
+    <span class="c">#-------------------------------------------------------------</span>
+  
+    <span class="k">def</span> <span class="nf">__f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">N</span><span class="p">)</span> <span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_max</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_min</span><span class="p">)</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eps</span>  <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">x_min</span> <span class="o">+</span> <span class="n">r</span><span class="o">*</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="p">]</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rho</span>  <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">])</span></div>
+
+<span class="c">#-----------------------------------------------------</span>
+<span class="c">#  Register the class for HDFArchive</span>
+<span class="c">#-----------------------------------------------------</span>
+
+<span class="kn">from</span> <span class="nn">pytriqs.archive.hdf_archive_schemes</span> <span class="kn">import</span> <span class="n">register_class</span>
+<span class="n">register_class</span> <span class="p">(</span><span class="n">DOS</span><span class="p">)</span>
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2011-2015, The TRIQS collaboration.
+    </div>
+  </body>
+</html>

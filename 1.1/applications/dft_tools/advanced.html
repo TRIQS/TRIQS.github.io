@@ -1,0 +1,300 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>A more advanced example &mdash; TRIQS Interface to Wien2k 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/triqs.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/MathJax/MathJax.js?config=default"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="top" title="TRIQS Interface to Wien2k 1.0.0 documentation" href="index.html" />
+    <link rel="up" title="Documentation" href="documentation.html" />
+    <link rel="next" title="Analysing tools" href="analysis.html" />
+    <link rel="prev" title="The LDA+DMFT calculation" href="LDADMFTmain.html" />
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head>
+  <body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="install.html">Install</a></li>
+    
+    <li><a href="documentation.html">Documentation</a></li>
+    
+    <li><a href="issues.html">Issues</a></li>
+    
+    <li><a href="about.html">About Wien2TRIQS</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="index.html">Wien2TRIQS</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">Connecting <a class="triqs" style="font-size: 12px" href="http://ipht.cea.fr/triqs">TRIQS</a>  to the Wien2k package</span>
+  </div>
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="analysis.html" title="Analysing tools"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="LDADMFTmain.html" title="The LDA+DMFT calculation"
+             accesskey="P">previous</a> |</li>
+    <li><a href="index.html">Home</a> &raquo;</li>
+
+          <li><a href="documentation.html" accesskey="U">Documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="LDADMFTmain.html"
+                        title="previous chapter">The LDA+DMFT calculation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="analysis.html"
+                        title="next chapter">Analysing tools</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/advanced.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="a-more-advanced-example">
+<span id="advanced"></span><h1>A more advanced example<a class="headerlink" href="#a-more-advanced-example" title="Permalink to this headline">¶</a></h1>
+<p>Normally, one wants to adjust some more parameters in order to make the calculation more efficient. Here, we
+will see a more advanced example, which is also suited for parallel execution.
+First, we load the necessary modules:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">pytriqs.applications.dft.sumk_lda</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">pytriqs.applications.dft.converters.wien2k_converter</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">pytriqs.applications.dft.solver_multiband</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">pytriqs.gf.local</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">pytriqs.archive</span> <span class="kn">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+<p>Then we define some parameters:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">lda_filename</span><span class="o">=</span><span class="s">&#39;srvo3&#39;</span>
+<span class="n">U</span> <span class="o">=</span> <span class="mf">4.0</span>
+<span class="n">J</span> <span class="o">=</span> <span class="mf">0.65</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="mi">40</span>
+<span class="n">loops</span> <span class="o">=</span>  <span class="mi">10</span>                      <span class="c"># Number of DMFT sc-loops</span>
+<span class="n">mix</span> <span class="o">=</span> <span class="mf">1.0</span>                        <span class="c"># Mixing factor of Sigma after solution of the AIM</span>
+<span class="n">Delta_mix</span> <span class="o">=</span> <span class="mf">1.0</span>                  <span class="c"># Mixing factor of Delta as input for the AIM</span>
+<span class="n">dc_type</span> <span class="o">=</span> <span class="mi">1</span>                      <span class="c"># DC type: 0 FLL, 1 Held, 2 AMF</span>
+<span class="n">use_blocks</span> <span class="o">=</span> <span class="bp">True</span>                <span class="c"># use bloc structure from LDA input</span>
+<span class="n">use_matrix</span> <span class="o">=</span> <span class="bp">False</span>               <span class="c"># True: Slater parameters, False: Kanamori parameters U, U-2J, U-3J</span>
+<span class="n">use_spinflip</span> <span class="o">=</span> <span class="bp">False</span>             <span class="c"># use the full rotational invariant interaction?</span>
+<span class="n">prec_mu</span> <span class="o">=</span> <span class="mf">0.0001</span>
+<span class="n">qmc_cycles</span> <span class="o">=</span> <span class="mi">20000</span>
+<span class="n">length_cycle</span> <span class="o">=</span> <span class="mi">200</span>
+<span class="n">warming_iterations</span> <span class="o">=</span> <span class="mi">2000</span>
+</pre></div>
+</div>
+<p>Most of these parameters are self-explaining. The first, <cite>lda_filename</cite>, gives the filename of the input files.
+The next step, as described in the previous section, is to convert the input files:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">Converter</span> <span class="o">=</span> <span class="n">Wien2kConverter</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">lda_filename</span><span class="p">,</span> <span class="n">repacking</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">Converter</span><span class="o">.</span><span class="n">convert_dmft_input</span><span class="p">()</span>
+<span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The command <tt class="docutils literal"><span class="pre">mpi.barrier()</span></tt> ensures that all nodes wait until the conversion of the input is finished on the master
+node. After the conversion, we can check in the hdf5 archive, if previous runs are present, or if we have to start
+from scratch:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">previous_runs</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">previous_present</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+    <span class="n">ar</span> <span class="o">=</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">lda_filename</span><span class="o">+</span><span class="s">&#39;.h5&#39;</span><span class="p">,</span><span class="s">&#39;a&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s">&#39;iterations&#39;</span> <span class="ow">in</span> <span class="n">ar</span><span class="p">:</span>
+        <span class="n">previous_present</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">previous_runs</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s">&#39;iterations&#39;</span><span class="p">]</span>
+    <span class="k">del</span> <span class="n">ar</span>
+<span class="n">previous_runs</span>    <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">previous_runs</span><span class="p">)</span>
+<span class="n">previous_present</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">previous_present</span><span class="p">)</span>
+<span class="c"># if previous runs are present, no need for recalculating the bloc structure:</span>
+<span class="n">calc_blocs</span> <span class="o">=</span> <span class="n">use_blocks</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">previous_present</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now we can use all this information to initialise the <tt class="xref py py-class docutils literal"><span class="pre">SumkLDA</span></tt> class:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">SK</span><span class="o">=</span><span class="n">SumkLDA</span><span class="p">(</span><span class="n">hdf_file</span><span class="o">=</span><span class="n">lda_filename</span><span class="o">+</span><span class="s">&#39;.h5&#39;</span><span class="p">,</span><span class="n">use_lda_blocks</span><span class="o">=</span><span class="n">calc_blocs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If there was a previous run, we know already about the block structure, and therefore <cite>UseLDABlocs</cite> is set to <cite>False</cite>.
+The next step is to initialise the Solver:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">Norb</span> <span class="o">=</span> <span class="n">SK</span><span class="o">.</span><span class="n">corr_shells</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span>
+<span class="n">l</span> <span class="o">=</span> <span class="n">SK</span><span class="o">.</span><span class="n">corr_shells</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+<span class="n">S</span> <span class="o">=</span> <span class="n">SolverMultiBand</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span><span class="n">n_orb</span><span class="o">=</span><span class="n">Norb</span><span class="p">,</span><span class="n">gf_struct</span><span class="o">=</span><span class="n">SK</span><span class="o">.</span><span class="n">gf_struct_solver</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="nb">map</span><span class="o">=</span><span class="n">SK</span><span class="o">.</span><span class="n">map</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>As we can see, many options of the solver are set by properties of the <tt class="xref py py-class docutils literal"><span class="pre">SumkLDA</span></tt> class, so we don&#8217;t have
+to set them manually.</p>
+<p>If there are previous runs stored in the hdf5 archive, we can now load the self energy
+of the last iteration:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">if</span> <span class="p">(</span><span class="n">previous_present</span><span class="p">):</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">()):</span>
+      <span class="n">ar</span> <span class="o">=</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">lda_filename</span><span class="o">+</span><span class="s">&#39;.h5&#39;</span><span class="p">,</span><span class="s">&#39;a&#39;</span><span class="p">)</span>
+      <span class="n">S</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">&lt;&lt;=</span> <span class="n">ar</span><span class="p">[</span><span class="s">&#39;SigmaF&#39;</span><span class="p">]</span>
+      <span class="k">del</span> <span class="n">ar</span>
+  <span class="n">S</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Sigma</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The last command is the broadcasting of the self energy from the master node to the slave nodes.
+Now we can go to the definition of the self-consistency step. It consists again of the basic steps discussed in the
+previous section, with some additional refinement:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">for</span> <span class="n">iteration_number</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">loops</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="p">:</span>
+
+      <span class="n">SK</span><span class="o">.</span><span class="n">symm_deg_gf</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Sigma</span><span class="p">,</span><span class="n">orb</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>                           <span class="c"># symmetrise Sigma</span>
+      <span class="n">SK</span><span class="o">.</span><span class="n">put_Sigma</span><span class="p">(</span><span class="n">Sigma_imp</span> <span class="o">=</span> <span class="p">[</span> <span class="n">S</span><span class="o">.</span><span class="n">Sigma</span> <span class="p">])</span>                   <span class="c"># put Sigma into the SumK class:</span>
+
+      <span class="n">chemical_potential</span> <span class="o">=</span> <span class="n">SK</span><span class="o">.</span><span class="n">find_mu</span><span class="p">(</span> <span class="n">precision</span> <span class="o">=</span> <span class="n">prec_mu</span> <span class="p">)</span>  <span class="c"># find the chemical potential</span>
+      <span class="n">S</span><span class="o">.</span><span class="n">G</span> <span class="o">&lt;&lt;=</span> <span class="n">SK</span><span class="o">.</span><span class="n">extract_G_loc</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>                           <span class="c"># calculation of the local Green function</span>
+      <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s">&quot;Total charge of Gloc : </span><span class="si">%.6f</span><span class="s">&quot;</span><span class="o">%</span><span class="n">S</span><span class="o">.</span><span class="n">G</span><span class="o">.</span><span class="n">total_density</span><span class="p">())</span>
+
+      <span class="k">if</span> <span class="p">((</span><span class="n">iteration_number</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span><span class="ow">and</span><span class="p">(</span><span class="n">previous_present</span><span class="o">==</span><span class="bp">False</span><span class="p">)):</span>
+          <span class="c"># Init the DC term and the real part of Sigma, if no previous run was found:</span>
+          <span class="n">dm</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G</span><span class="o">.</span><span class="n">density</span><span class="p">()</span>
+          <span class="n">SK</span><span class="o">.</span><span class="n">set_dc</span><span class="p">(</span> <span class="n">dm</span><span class="p">,</span> <span class="n">U_interact</span> <span class="o">=</span> <span class="n">U</span><span class="p">,</span> <span class="n">J_hund</span> <span class="o">=</span> <span class="n">J</span><span class="p">,</span> <span class="n">orb</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">use_dc_formula</span> <span class="o">=</span> <span class="n">dc_type</span><span class="p">)</span>
+          <span class="n">S</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">&lt;&lt;=</span> <span class="n">SK</span><span class="o">.</span><span class="n">dc_imp</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+
+      <span class="c"># now calculate new G0:</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">()):</span>
+          <span class="c"># We can do a mixing of Delta in order to stabilize the DMFT iterations:</span>
+          <span class="n">S</span><span class="o">.</span><span class="n">G0</span> <span class="o">&lt;&lt;=</span> <span class="n">S</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">+</span> <span class="n">inverse</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">G</span><span class="p">)</span>
+          <span class="n">ar</span> <span class="o">=</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">lda_filename</span><span class="o">+</span><span class="s">&#39;.h5&#39;</span><span class="p">,</span><span class="s">&#39;a&#39;</span><span class="p">)</span>
+          <span class="k">if</span> <span class="p">((</span><span class="n">iteration_number</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">previous_present</span><span class="p">)):</span>
+              <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s">&quot;Mixing input Delta with factor </span><span class="si">%s</span><span class="s">&quot;</span><span class="o">%</span><span class="n">Delta_mix</span><span class="p">)</span>
+              <span class="n">Delta</span> <span class="o">=</span> <span class="p">(</span><span class="n">Delta_mix</span> <span class="o">*</span> <span class="n">S</span><span class="o">.</span><span class="n">G0</span><span class="o">.</span><span class="n">delta</span><span class="p">())</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">Delta_mix</span><span class="p">)</span> <span class="o">*</span> <span class="n">ar</span><span class="p">[</span><span class="s">&#39;DeltaF&#39;</span><span class="p">]</span>
+              <span class="n">S</span><span class="o">.</span><span class="n">G0</span> <span class="o">&lt;&lt;=</span> <span class="n">S</span><span class="o">.</span><span class="n">G0</span> <span class="o">+</span> <span class="n">S</span><span class="o">.</span><span class="n">G0</span><span class="o">.</span><span class="n">delta</span><span class="p">()</span> <span class="o">-</span> <span class="n">Delta</span>
+
+          <span class="n">ar</span><span class="p">[</span><span class="s">&#39;DeltaF&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G0</span><span class="o">.</span><span class="n">delta</span><span class="p">()</span>
+          <span class="n">S</span><span class="o">.</span><span class="n">G0</span> <span class="o">&lt;&lt;=</span> <span class="n">inverse</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">G0</span><span class="p">)</span>
+          <span class="k">del</span> <span class="n">ar</span>
+
+      <span class="n">S</span><span class="o">.</span><span class="n">G0</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">G0</span><span class="p">)</span>
+
+      <span class="c"># Solve the impurity problem:</span>
+      <span class="n">S</span><span class="o">.</span><span class="n">Solve</span><span class="p">(</span><span class="n">U_interact</span><span class="o">=</span><span class="n">U</span><span class="p">,</span><span class="n">J_hund</span><span class="o">=</span><span class="n">J</span><span class="p">,</span><span class="n">n_orb</span><span class="o">=</span><span class="n">Norb</span><span class="p">,</span><span class="n">use_matrix</span><span class="o">=</span><span class="n">use_matrix</span><span class="p">,</span>
+              <span class="n">T</span><span class="o">=</span><span class="n">SK</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">gf_struct</span><span class="o">=</span><span class="n">SK</span><span class="o">.</span><span class="n">gf_struct_solver</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="nb">map</span><span class="o">=</span><span class="n">SK</span><span class="o">.</span><span class="n">map</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+              <span class="n">l</span><span class="o">=</span><span class="n">l</span><span class="p">,</span> <span class="n">deg_orbs</span><span class="o">=</span><span class="n">SK</span><span class="o">.</span><span class="n">deg_shells</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">use_spinflip</span><span class="o">=</span><span class="n">use_spinflip</span><span class="p">,</span>
+              <span class="n">n_cycles</span> <span class="o">=</span><span class="n">qmc_cycles</span><span class="p">,</span><span class="n">length_cycle</span><span class="o">=</span><span class="n">length_cycle</span><span class="p">,</span><span class="n">n_warmup_cycles</span><span class="o">=</span><span class="n">warming_iterations</span><span class="p">)</span>
+
+      <span class="c"># solution done, do the post-processing:</span>
+      <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s">&quot;Total charge of impurity problem : </span><span class="si">%.6f</span><span class="s">&quot;</span><span class="o">%</span><span class="n">S</span><span class="o">.</span><span class="n">G</span><span class="o">.</span><span class="n">total_density</span><span class="p">())</span>
+
+      <span class="c"># Now mix Sigma and G with factor Mix, if wanted:</span>
+      <span class="k">if</span> <span class="p">((</span><span class="n">iteratio_number</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">previous_present</span><span class="p">)):</span>
+          <span class="k">if</span> <span class="p">(</span><span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">()):</span>
+              <span class="n">ar</span> <span class="o">=</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">lda_filename</span><span class="o">+</span><span class="s">&#39;.h5&#39;</span><span class="p">,</span><span class="s">&#39;a&#39;</span><span class="p">)</span>
+              <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s">&quot;Mixing Sigma and G with factor </span><span class="si">%s</span><span class="s">&quot;</span><span class="o">%</span><span class="n">mix</span><span class="p">)</span>
+              <span class="n">S</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">&lt;&lt;=</span> <span class="n">mix</span> <span class="o">*</span> <span class="n">S</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">mix</span><span class="p">)</span> <span class="o">*</span> <span class="n">ar</span><span class="p">[</span><span class="s">&#39;SigmaF&#39;</span><span class="p">]</span>
+              <span class="n">S</span><span class="o">.</span><span class="n">G</span> <span class="o">&lt;&lt;=</span> <span class="n">mix</span> <span class="o">*</span> <span class="n">S</span><span class="o">.</span><span class="n">G</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">mix</span><span class="p">)</span> <span class="o">*</span> <span class="n">ar</span><span class="p">[</span><span class="s">&#39;GF&#39;</span><span class="p">]</span>
+              <span class="k">del</span> <span class="n">ar</span>
+          <span class="n">S</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">G</span><span class="p">)</span>
+          <span class="n">S</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Sigma</span><span class="p">)</span>
+
+      <span class="c"># Write the final Sigma and G to the hdf5 archive:</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">()):</span>
+          <span class="n">ar</span> <span class="o">=</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">lda_filename</span><span class="o">+</span><span class="s">&#39;.h5&#39;</span><span class="p">,</span><span class="s">&#39;a&#39;</span><span class="p">)</span>
+          <span class="n">ar</span><span class="p">[</span><span class="s">&#39;iterations&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">previous_runs</span> <span class="o">+</span> <span class="n">iteration_number</span>
+          <span class="n">ar</span><span class="p">[</span><span class="s">&#39;SigmaF&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Sigma</span>
+          <span class="n">ar</span><span class="p">[</span><span class="s">&#39;GF&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G</span>
+          <span class="k">del</span> <span class="n">ar</span>
+
+      <span class="c"># Now set new double counting:</span>
+      <span class="n">dm</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G</span><span class="o">.</span><span class="n">density</span><span class="p">()</span>
+      <span class="n">SK</span><span class="o">.</span><span class="n">set_dc</span><span class="p">(</span> <span class="n">dm</span><span class="p">,</span> <span class="n">U_interact</span> <span class="o">=</span> <span class="n">U</span><span class="p">,</span> <span class="n">J_hund</span> <span class="o">=</span> <span class="n">J</span><span class="p">,</span> <span class="n">orb</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">use_dc_formula</span> <span class="o">=</span> <span class="n">dc_type</span><span class="p">)</span>
+
+      <span class="c">#Save stuff:</span>
+      <span class="n">SK</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>This is all we need for the LDA+DMFT calculation. At the end, all results are stored in the hdf5 output file.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="analysis.html" title="Analysing tools"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="LDADMFTmain.html" title="The LDA+DMFT calculation"
+             >previous</a> |</li>
+    <li><a href="index.html">Home</a> &raquo;</li>
+
+          <li><a href="documentation.html" >Documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011-2013, M. Aichhorn, L. Pourovskii, V. Vildosola, C. Martins.
+    </div>
+  </body>
+</html>

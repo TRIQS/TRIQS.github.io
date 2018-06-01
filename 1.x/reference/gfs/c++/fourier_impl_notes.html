@@ -1,0 +1,318 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Fourier: implementation notes &mdash; TRIQS  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/triqs.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/MathJax/MathJax.js?config=default"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="top" title="TRIQS  documentation" href="../../../contents.html" />
+    <link rel="up" title="Fourier transforms" href="fourier.html" />
+    <link rel="next" title="High frequency tail" href="tail.html" />
+    <link rel="prev" title="Fourier transforms" href="fourier.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head>
+  <body role="document">
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../../install.html">Install</a></li>
+    
+    <li><a href="../../../reference.html">Reference</a></li>
+    
+    <li><a href="../../../tutorials.html">Tutorials</a></li>
+    
+    <li><a href="../../../applications.html">Applications</a></li>
+    
+    <li><a href="../../../issues.html">Issues</a></li>
+    
+    <li><a href="../../../about.html">About TRIQS</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../../index.html">triqs</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">a Toolbox for Research on Interacting Quantum Systems</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tail.html" title="High frequency tail"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="fourier.html" title="Fourier transforms"
+             accesskey="P">previous</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../../reference.html" >Reference</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../contents.html" ><strong>[triqs/gfs]</strong> Green&#8217;s functions</a> &raquo;</li>
+          <li class="nav-item nav-item-3"><a href="contents.html" >C++ documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-4"><a href="fourier.html" accesskey="U">Fourier transforms</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../../contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Fourier: implementation notes</a><ul>
+<li><a class="reference internal" href="#the-fftw-library">The FFTW library</a></li>
+<li><a class="reference internal" href="#implementation-in-real-time-frequency-using-fftw">Implementation in real time/frequency using FFTW</a></li>
+<li><a class="reference internal" href="#implementation-in-imaginary-time-frequency-using-fftw">Implementation in imaginary time/frequency using FFTW</a><ul>
+<li><a class="reference internal" href="#special-case-of-real-functions-in-time-for-fermions">Special case of real functions in time for fermions</a></li>
+<li><a class="reference internal" href="#special-case-of-real-functions-in-time-for-bosons">Special case of real functions in time for bosons</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#effect-of-a-tf-on-the-tail">Effect of a TF on the tail</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="fourier.html"
+                        title="previous chapter">Fourier transforms</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tail.html"
+                        title="next chapter">High frequency tail</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../../_sources/reference/gfs/c++/fourier_impl_notes.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="fourier-implementation-notes">
+<h1>Fourier: implementation notes<a class="headerlink" href="#fourier-implementation-notes" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="the-fftw-library">
+<h2>The FFTW library<a class="headerlink" href="#the-fftw-library" title="Permalink to this headline">¶</a></h2>
+<p>Documentation on FFTW is on <a class="reference external" href="https://www.fftw.org">https://www.fftw.org</a>.
+FFTW is a C subroutine library for computing the discrete Fourier transform (DFT) in one or more dimensions, of arbitrary input size, and of both real and complex data.
+It will be used to calculate the (inverse) Fourier transform, in real/imaginary time/frequency, using the fact that the GF values are stored for a finite amount of regularly spaced values.</p>
+<dl class="docutils">
+<dt>The DFT transforms of a sequence of <span class="math">\(N\)</span> complex numbers <span class="math">\(f_0...,f_{N-1}\)</span> into a sequence of <span class="math">\(N\)</span> complex numbers <span class="math">\(\tilde f_0...,\tilde f_{N-1}\)</span> according to the formula:</dt>
+<dd><div class="first last math">
+\[\tilde f_k = \sum_{n=0}^{N-1} f_n e^{-i 2 \pi k n / N}.\]</div>
+</dd>
+<dt>The inverse DFT formula is</dt>
+<dd><div class="first last math">
+\[f_n = \frac{1}{N} \sum_{k=0}^{N-1} \tilde f_k e^{i 2 \pi k n / N}.\]</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="implementation-in-real-time-frequency-using-fftw">
+<h2>Implementation in real time/frequency using FFTW<a class="headerlink" href="#implementation-in-real-time-frequency-using-fftw" title="Permalink to this headline">¶</a></h2>
+<p>The real time mesh parameters are <span class="math">\(t_{min}\)</span>, <span class="math">\(\delta t\)</span> and <span class="math">\(N_t\)</span>.
+For the real frequency mesh, they are <span class="math">\(\omega_{min}\)</span>, <span class="math">\(\delta \omega\)</span> and <span class="math">\(N_\omega\)</span>.
+The Fourier transform requires <span class="math">\(N_\omega=N_t\)</span> and <span class="math">\(\delta t \delta \omega= \frac{2\pi}{N_t}\)</span>.
+The times are <span class="math">\(t_k=t_{min}+k\delta t\)</span> and the frequencies <span class="math">\(\omega_m=\omega_{min}+m\delta \omega\)</span>.</p>
+<dl class="docutils">
+<dt>By approximating Eq. <span class="xref std std-ref">TF_R</span> by</dt>
+<dd><div class="first last math">
+\[\tilde G(\omega_m) = \delta t \sum_{k=0}^{N_t} G(t_k) e^{i\omega_m t_k},\]</div>
+</dd>
+<dt>we recognize an inverse DFT (Eq. <span class="xref std std-ref">inv_DFT</span>). To calculate it using FFTW, we first need to prepare the input <span class="math">\(\tilde f_k\)</span>, then to do the DFT and finally to modify the output to obtain <span class="math">\(\tilde G(\omega_m)\)</span> using the two formulas:</dt>
+<dd><div class="first math">
+\[\tilde f_k = G(t_k) e^{i \omega_{min}t_k},\]</div>
+<div class="last math">
+\[\tilde G(\omega_m) = \delta t f_m e^{i t_{min}(\omega_m-\omega_{min})}.\]</div>
+</dd>
+<dt>Similarly, the inverse transformation is obtained by approximating Eq. <span class="xref std std-ref">eq_inv_TF_R</span> by</dt>
+<dd><div class="first last math">
+\[G(t_k)=\frac{\delta\omega}{2\pi}\sum_{m=0}^{N_\omega} \tilde G(\omega_m)e^{-i\omega_m t_k},\]</div>
+</dd>
+<dt>we recognize a DFT (Eq. <span class="xref std std-ref">DFT</span>). To calculate it using FFTW, we first need to prepare the input <span class="math">\(f_m\)</span>, then to do the inverse DFT and finally to modify the output to obtain <span class="math">\(G(t_k)\)</span>:</dt>
+<dd><div class="first math">
+\[f_m = \tilde G(\omega_m) e^{-i t_{min}\omega_m},\]</div>
+<div class="last math">
+\[G(t_k) = \frac{1}{N_t \delta t}\tilde f_k e^{-i \omega_{min}(t_k-t_{min})}.\]</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="implementation-in-imaginary-time-frequency-using-fftw">
+<h2>Implementation in imaginary time/frequency using FFTW<a class="headerlink" href="#implementation-in-imaginary-time-frequency-using-fftw" title="Permalink to this headline">¶</a></h2>
+<p>The imaginary time mesh parameters are <span class="math">\(\beta\)</span> and <span class="math">\(N_\tau\)</span>. There is a point both at the beginning
+and at the end of the interval and therefore that last point has to be removed for the fourier transform.
+From these parameters, we deduce <span class="math">\(\delta\tau=\beta/N_\tau\)</span>.</p>
+<p>For the imaginary frequency mesh, the mesh parameters are <span class="math">\(\beta\)</span>, <span class="math">\(n_{min}\)</span> and <span class="math">\(N_{\omega_n}\)</span>.
+From them, we deduce <span class="math">\(\delta\omega=\frac{2\pi}{\beta}\)</span>.</p>
+<p>The Fourier transform requires <span class="math">\(N_\omega=N_\tau\)</span>.
+The times are <span class="math">\(\tau_k=\tau_{min}+k\delta\tau\)</span> and the frequencies <span class="math">\(\omega_n=\omega_{min}+n\delta \omega\)</span>.
+<span class="math">\(\tau_{min}\)</span> is either 0 or <span class="math">\(\delta\tau/2\)</span> depending on the mesh kind.
+<span class="math">\(\omega_{min}\)</span> is either <span class="math">\(\frac{2\pi(n_{min}+1)}{\beta}\)</span> or <span class="math">\(\frac{2\pi n_{min}}{\beta}\)</span> depending on the statistics.</p>
+<dl class="docutils">
+<dt>We approximate the TF and its inverse by</dt>
+<dd><div class="first math">
+\[\tilde G(i\omega_n) = \delta\tau \sum_{k=0}^{N_\tau} G(\tau_k)e^{i\omega_n \tau_k}\]</div>
+<div class="last math">
+\[G(\tau_k) = \sum_{n=n_{min}}^{N_\tau} \frac{1}{\beta} \tilde G(i\omega_n)e^{-i\omega_n \tau_k}\]</div>
+</dd>
+<dt>We use for the TF:</dt>
+<dd><div class="first math">
+\[\tilde f_k = G(\tau_k) e^{i \omega_{min}\tau_k},\]</div>
+<div class="last math">
+\[\tilde G(i\omega_n) = \frac{\beta}{N_\tau} f_n e^{i \tau_{min}(\omega_n-\omega_{min})}.\]</div>
+</dd>
+<dt>and for the inverse TF:</dt>
+<dd><div class="first math">
+\[f_m = \frac{1}{\beta}\tilde G(i\omega_n) e^{-i t_{min}\omega_n},\]</div>
+<div class="last math">
+\[G(t_k) = \tilde f_k e^{-i \omega_{min}(\tau_k-\tau_{min})},\]</div>
+</dd>
+</dl>
+<div class="section" id="special-case-of-real-functions-in-time-for-fermions">
+<h3>Special case of real functions in time for fermions<a class="headerlink" href="#special-case-of-real-functions-in-time-for-fermions" title="Permalink to this headline">¶</a></h3>
+<p>In this case, <span class="math">\(G(i\omega_n)=conj(G(i\omega_n))\)</span> and we only store the values of <span class="math">\(G(i\omega_n)\)</span> for <span class="math">\(\omega_n &gt; 0\)</span>.
+The Eq. <span class="xref std std-ref">inv_DFT_I</span> becomes:</p>
+<blockquote>
+<div><div class="math">
+\[G(\tau)=\sum_{n=0}^\infty \frac{2}{\beta} \tilde G(i\omega_n)\cos(\omega_n \tau)\]</div>
+</div></blockquote>
+<dl class="docutils">
+<dt>The inverse TF formulas are in this case</dt>
+<dd><div class="first math">
+\[f_m = \frac{2}{\beta}\tilde G(i\omega_n) e^{-i t_{min}\omega_n},\]</div>
+<div class="last math">
+\[G(t_k) = \tilde f_k e^{-i \omega_{min}(\tau_k-\tau_{min})},\]</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="special-case-of-real-functions-in-time-for-bosons">
+<h3>Special case of real functions in time for bosons<a class="headerlink" href="#special-case-of-real-functions-in-time-for-bosons" title="Permalink to this headline">¶</a></h3>
+<p>In this case, <span class="math">\(G(i\omega_n)=conj(G(i\omega_n))\)</span> and we only store the values of <span class="math">\(G(i\omega_n)\)</span> for <span class="math">\(\omega_n \ge 0\)</span>.
+The Eq. <span class="xref std std-ref">inv_DFT_I</span> becomes:</p>
+<blockquote>
+<div><div class="math">
+\[G(\tau)=\frac{1}{\beta} \tilde G(0)+\sum_{n=1}^\infty \frac{2}{\beta} \tilde G(i\omega_n)\cos(\omega_n \tau)\]</div>
+</div></blockquote>
+<dl class="docutils">
+<dt>The inverse TF formulas are in this case</dt>
+<dd><div class="first math">
+\[f_0 = \frac{1}{\beta}\tilde G(0),\]</div>
+<div class="math">
+\[f_m = \frac{2}{\beta}\tilde G(i\omega_n) \cos(t_{min}\omega_n),\]</div>
+<div class="last math">
+\[G(t_k) = \tilde f_k e^{-i \omega_{min}(\tau_k-\tau_{min})},\]</div>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="effect-of-a-tf-on-the-tail">
+<h2>Effect of a TF on the tail<a class="headerlink" href="#effect-of-a-tf-on-the-tail" title="Permalink to this headline">¶</a></h2>
+<p>The tail is unchanged during a TF, but its value is used to limit the errors.</p>
+<p>The components 1 and 2 of the tail (<span class="math">\(t_1\)</span> and <span class="math">\(t_2\)</span>) are used to improve the computation of the GF in the following way:
+in the large <span class="math">\(\omega\)</span> limit,</p>
+<blockquote>
+<div><div class="math">
+\[G(\omega)\simeq \frac{t_1}{\omega}+\frac{t_2}{\omega^2}\simeq \frac{a_1}{\omega+i}+\frac{a_2}{\omega-i}\]</div>
+</div></blockquote>
+<p>with <span class="math">\(a_1=\frac{t_1+it_2}{2}\)</span> and <span class="math">\(a_2=\frac{t_1-it_2}{2}\)</span>.</p>
+<p>As these large w terms are badly taken into account if we naively Fourier transform the function described by its values on the mesh in w, we substract them, do the Fourier transform and add their Fourier transform to the result.</p>
+<p>We use the following Fourier tranforms:</p>
+<blockquote>
+<div><div class="math">
+\[\frac{2a}{\omega^2+a^2} \leftrightarrow e^{-a|x|}\]</div>
+<div class="math">
+\[\frac{1}{\omega+i} \leftrightarrow -i e^{-x} \theta(x)\]</div>
+<div class="math">
+\[\frac{1}{\omega-i} \leftrightarrow i e^{x} \theta(-x)\]</div>
+</div></blockquote>
+<p>For the inverse Fourier transform, the inverse procedure is used.</p>
+<p>In the library, <span class="math">\(a\)</span> is optimized according to the mesh properties (its size <span class="math">\(L=G.mesh().size()\)</span> and its precision <span class="math">\(\delta = G.mesh().delta()\)</span>).
+The requirements are <span class="math">\(a \gg \delta\omega\)</span> and <span class="math">\(a \ll L\delta\omega\)</span>, or equivalently <span class="math">\(a \gg \delta t\)</span> and <span class="math">\(a \ll L\delta t\)</span>.
+Thus, we chose <span class="math">\(a=\sqrt{L}\delta\omega\)</span></p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tail.html" title="High frequency tail"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="fourier.html" title="Fourier transforms"
+             >previous</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../../reference.html" >Reference</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../contents.html" ><strong>[triqs/gfs]</strong> Green&#8217;s functions</a> &raquo;</li>
+          <li class="nav-item nav-item-3"><a href="contents.html" >C++ documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-4"><a href="fourier.html" >Fourier transforms</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2011-2015, The TRIQS collaboration.
+    </div>
+  </body>
+</html>

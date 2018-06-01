@@ -1,0 +1,217 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>View memory management &mdash; TRIQS 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/triqs.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/MathJax/MathJax.js?config=default"></script>
+    <link rel="author" title="About these documents" href="../../../../about.html" />
+    <link rel="top" title="TRIQS 1.0.0 documentation" href="../../../../index.html" />
+    <link rel="up" title="Views" href="views.html" />
+    <link rel="next" title="Template parameters of the containers and views" href="template_parameters.html" />
+    <link rel="prev" title="Views" href="views.html" />
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head>
+  <body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../../../install.html">Install</a></li>
+    
+    <li><a href="../../../../documentation.html">Documentation</a></li>
+    
+    <li><a href="../../../../applications.html">Applications</a></li>
+    
+    <li><a href="../../../../issues.html">Issues</a></li>
+    
+    <li><a href="../../../../about.html">About TRIQS</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../../../index.html">triqs</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">a Toolbox for Research on Interacting Quantum Systems</span>
+  </div>
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="template_parameters.html" title="Template parameters of the containers and views"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="views.html" title="Views"
+             accesskey="P">previous</a> |</li>
+    <li><a href="../../../../index.html">Home</a> &raquo;</li>
+
+          <li><a href="../../../../documentation.html" >Documentation</a> &raquo;</li>
+          <li><a href="../../contents.html" >C++</a> &raquo;</li>
+          <li><a href="../contents.html" >Multidimensional arrays</a> &raquo;</li>
+          <li><a href="views.html" accesskey="U">Views</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../../../contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">View memory management</a><ul>
+<li><a class="reference internal" href="#weak-views-advanced">Weak views [Advanced]</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="views.html"
+                        title="previous chapter">Views</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="template_parameters.html"
+                        title="next chapter">Template parameters of the containers and views</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../../_sources/reference/c++/arrays/containers/memory.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="view-memory-management">
+<span id="arr-view-memory"></span><h1>View memory management<a class="headerlink" href="#view-memory-management" title="Permalink to this headline">¶</a></h1>
+<p>View classes contains a reference counting system to the memory block they view
+(like a std::shared_ptr, but more sophisticated to properly interface to Python numpy).</p>
+<p>This guarantees that memory will not be dellocated before the destruction of the view.</p>
+<p>The memory block will be dellocated when its array and all array_view
+pointing to it or to a portion of it will be destroyed, and only at that moment.</p>
+<p>Example:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="n">array</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="mi">2</span><span class="o">&gt;</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">new</span> <span class="n">array</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="mi">2</span><span class="o">&gt;</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">);</span> <span class="c1">// create an array p</span>
+<span class="n">array_view</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="mi">2</span><span class="o">&gt;</span> <span class="n">B</span> <span class="o">=</span> <span class="o">*</span><span class="n">p</span><span class="p">;</span> <span class="c1">// making a view</span>
+<span class="n">delete</span> <span class="n">p</span><span class="p">;</span> <span class="c1">// p is gone...</span>
+<span class="n">B</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">=</span> <span class="mi">314</span><span class="p">;</span> <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="n">B</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span> <span class="c1">//  B (and the data) is still alive</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">TRIQS arrays, and in particular views are NOT thread-safe, contrary to std::shared_ptr.
+This is a deliberate choice for optimisation.</p>
+</div>
+<div class="section" id="weak-views-advanced">
+<h2>Weak views [Advanced]<a class="headerlink" href="#weak-views-advanced" title="Permalink to this headline">¶</a></h2>
+<p>Unfortunately this can not be the end of the story, at least on current C++11 compilers.
+It turns out that, in very performance sensitive loops, increasing this tiny
+reference counter can break a lot of optimisations in almost all compilers, including the most
+recent ones (gcc 4.8, clang 3.3).</p>
+<p>It was therefore decided to introduce <cite>weak views</cite>.</p>
+<ul>
+<li><p class="first">Weak views are completely similar to &#8220;normal&#8221; views, except that they do <cite>not</cite> increase the memory
+reference counter.</p>
+</li>
+<li><p class="first">Normal views are be implicitely constructed from weak view (the reverse is also true),
+As soon as you store the weak view into a normal view (e.g. array_view&lt;T,N&gt;)
+the reference counting is again incremented, and the memory guarantee holds.</p>
+</li>
+<li><p class="first">Explicit construction of weak views is intentionally not documented here.
+It is designed to be (almost) an implementation detail.</p>
+</li>
+<li><p class="first">The () operator returns a weak view <cite>on a fully compliant C++11 compiler</cite> (in particular, <cite>rvalue reference for *this</cite> must be implemented)
+allowing therefore for better performance on such compiler, in some loops.
+Older supported compiler will therefore generate code with lower performances.</p>
+</li>
+<li><p class="first">It is however necessary for the advanced user to know about this implementation detail,
+because in some convolved cases, the memory guarantee may not hold.
+Example</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="n">TO</span> <span class="n">BE</span> <span class="n">WRITTEN</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="template_parameters.html" title="Template parameters of the containers and views"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="views.html" title="Views"
+             >previous</a> |</li>
+    <li><a href="../../../../index.html">Home</a> &raquo;</li>
+
+          <li><a href="../../../../documentation.html" >Documentation</a> &raquo;</li>
+          <li><a href="../../contents.html" >C++</a> &raquo;</li>
+          <li><a href="../contents.html" >Multidimensional arrays</a> &raquo;</li>
+          <li><a href="views.html" >Views</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011-2013, The TRIQS collaboration.
+    </div>
+  </body>
+</html>

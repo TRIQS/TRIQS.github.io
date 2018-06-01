@@ -1,0 +1,331 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pytriqs.gf.local.tools &mdash; TRIQS  documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/triqs.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/MathJax/MathJax.js?config=default"></script>
+    <link rel="author" title="About these documents" href="../../../../about.html" />
+    <link rel="top" title="TRIQS  documentation" href="../../../../contents.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head>
+  <body role="document">
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../../../install.html">Install</a></li>
+    
+    <li><a href="../../../../reference.html">Reference</a></li>
+    
+    <li><a href="../../../../tutorials.html">Tutorials</a></li>
+    
+    <li><a href="../../../../applications.html">Applications</a></li>
+    
+    <li><a href="../../../../issues.html">Issues</a></li>
+    
+    <li><a href="../../../../about.html">About TRIQS</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../../../index.html">triqs</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">a Toolbox for Research on Interacting Quantum Systems</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pytriqs.gf.local.tools</h1><div class="highlight"><pre>
+<span class="c">################################################################################</span>
+<span class="c">#</span>
+<span class="c"># TRIQS: a Toolbox for Research in Interacting Quantum Systems</span>
+<span class="c">#</span>
+<span class="c"># Copyright (C) 2011 by M. Ferrero, O. Parcollet</span>
+<span class="c">#</span>
+<span class="c"># TRIQS is free software: you can redistribute it and/or modify it under the</span>
+<span class="c"># terms of the GNU General Public License as published by the Free Software</span>
+<span class="c"># Foundation, either version 3 of the License, or (at your option) any later</span>
+<span class="c"># version.</span>
+<span class="c">#</span>
+<span class="c"># TRIQS is distributed in the hope that it will be useful, but WITHOUT ANY</span>
+<span class="c"># WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS</span>
+<span class="c"># FOR A PARTICULAR PURPOSE. See the GNU General Public License for more</span>
+<span class="c"># details.</span>
+<span class="c">#</span>
+<span class="c"># You should have received a copy of the GNU General Public License along with</span>
+<span class="c"># TRIQS. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c">#</span>
+<span class="c">################################################################################</span>
+
+<span class="kn">import</span> <span class="nn">lazy_expressions</span><span class="o">,</span> <span class="nn">descriptors</span>
+<span class="kn">from</span> <span class="nn">block_gf</span> <span class="kn">import</span> <span class="n">BlockGf</span>
+<span class="kn">from</span> <span class="nn">gf</span> <span class="kn">import</span> <span class="n">GfImFreq</span><span class="p">,</span> <span class="n">GfReFreq</span><span class="p">,</span> <span class="n">TailGf</span>
+<span class="kn">from</span> <span class="nn">descriptor_base</span> <span class="kn">import</span> <span class="n">A_Omega_Plus_B</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
+
+<div class="viewcode-block" id="inverse"><a class="viewcode-back" href="../../../../reference/gfs/py/tools.html#pytriqs.gf.local.tools.inverse">[docs]</a><span class="k">def</span> <span class="nf">inverse</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the inverse of a Green&#39;s function and return this.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">descriptors</span><span class="o">.</span><span class="n">is_lazy</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">lazy_expressions</span><span class="o">.</span><span class="n">lazy_function</span><span class="p">(</span><span class="s">&quot;inverse&quot;</span><span class="p">,</span> <span class="n">inverse</span><span class="p">)</span> <span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="s">&#39;invert&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="s">&#39;copy&#39;</span><span class="p">)</span>
+    <span class="n">cop</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> 
+    <span class="n">cop</span><span class="o">.</span><span class="n">invert</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">cop</span></div>
+
+
+<div class="viewcode-block" id="delta"><a class="viewcode-back" href="../../../../reference/gfs/py/tools.html#pytriqs.gf.local.tools.delta">[docs]</a><span class="k">def</span> <span class="nf">delta</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute Delta_iw from G0_iw.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    g : BlockGf (of GfImFreq) or GfImFreq</span>
+<span class="sd">        Non-interacting Green&#39;s function.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    delta_iw : BlockGf (of GfImFreq) or GfImFreq</span>
+<span class="sd">               Hybridization function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="o">==</span> <span class="n">BlockGf</span><span class="p">:</span>
+    	<span class="k">return</span> <span class="n">BlockGf</span><span class="p">(</span><span class="n">name_block_generator</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">delta</span><span class="p">(</span><span class="n">g0</span><span class="p">))</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span><span class="n">g0</span> <span class="ow">in</span> <span class="n">g</span><span class="p">],</span> <span class="n">make_copies</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="o">==</span> <span class="n">GfImFreq</span><span class="p">:</span>
+    	<span class="n">g0_iw_inv</span> <span class="o">=</span> <span class="n">inverse</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+    	<span class="n">delta_iw</span> <span class="o">=</span> <span class="n">g0_iw_inv</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    	<span class="n">delta_iw</span> <span class="o">&lt;&lt;</span> <span class="n">A_Omega_Plus_B</span><span class="p">(</span><span class="n">g0_iw_inv</span><span class="o">.</span><span class="n">tail</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">g0_iw_inv</span><span class="o">.</span><span class="n">tail</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    	<span class="n">delta_iw</span> <span class="o">-=</span> <span class="n">g0_iw_inv</span>
+        <span class="k">return</span> <span class="n">delta_iw</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="s">&quot;No function delta for g0 object of type </span><span class="si">%s</span><span class="s">&quot;</span><span class="o">%</span><span class="nb">type</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> </div>
+
+
+<span class="c"># Determine one of G0_iw, G_iw and Sigma_iw from other two using Dyson&#39;s equation</span>
+<div class="viewcode-block" id="dyson"><a class="viewcode-back" href="../../../../reference/gfs/py/tools.html#pytriqs.gf.local.tools.dyson">[docs]</a><span class="k">def</span> <span class="nf">dyson</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Solve Dyson&#39;s equation for given two of G0_iw, G_iw and Sigma_iw to yield the third.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G0_iw : Gf, optional</span>
+<span class="sd">            Non-interacting Green&#39;s function.</span>
+<span class="sd">    G_iw : Gf, optional</span>
+<span class="sd">           Interacting Green&#39;s function.</span>
+<span class="sd">    Sigma_iw : Gf, optional</span>
+<span class="sd">               Self-energy.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span><span class="o">==</span><span class="mi">2</span> <span class="ow">and</span> <span class="nb">set</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">&lt;</span><span class="nb">set</span><span class="p">([</span><span class="s">&#39;G0_iw&#39;</span><span class="p">,</span><span class="s">&#39;G_iw&#39;</span><span class="p">,</span> <span class="s">&#39;Sigma_iw&#39;</span><span class="p">])):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="s">&#39;dyson: Two (and only two) of G0_iw, G_iw and Sigma_iw must be provided to determine the third.&#39;</span>
+    <span class="k">if</span> <span class="s">&#39;G0_iw&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">G0_iw</span> <span class="o">=</span> <span class="n">inverse</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;Sigma_iw&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">inverse</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;G_iw&#39;</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">G0_iw</span>
+    <span class="k">elif</span> <span class="s">&#39;G_iw&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">G_iw</span> <span class="o">=</span> <span class="n">inverse</span><span class="p">(</span><span class="n">inverse</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;G0_iw&#39;</span><span class="p">])</span> <span class="o">-</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;Sigma_iw&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">G_iw</span>
+    <span class="k">elif</span> <span class="s">&#39;Sigma_iw&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">Sigma_iw</span> <span class="o">=</span> <span class="n">inverse</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;G0_iw&#39;</span><span class="p">])</span> <span class="o">-</span> <span class="n">inverse</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;G_iw&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">Sigma_iw</span></div>
+
+<span class="c"># Fit tails for Sigma_iw and G_iw.</span>
+<span class="c"># Either give window to fix in terms of matsubara frequencies index (fit_min_n/fit_max_n) or value (fit_min_w/fit_max_w).</span>
+<div class="viewcode-block" id="tail_fit"><a class="viewcode-back" href="../../../../reference/gfs/py/tools.html#pytriqs.gf.local.tools.tail_fit">[docs]</a><span class="k">def</span> <span class="nf">tail_fit</span><span class="p">(</span><span class="n">Sigma_iw</span><span class="p">,</span><span class="n">G0_iw</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">G_iw</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">fit_min_n</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">fit_max_n</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">fit_min_w</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">fit_max_w</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">fit_max_moment</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">fit_known_moments</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fit the tails of Sigma_iw and optionally G_iw.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Sigma_iw : Gf</span>
+<span class="sd">               Self-energy.</span>
+<span class="sd">    G0_iw : Gf, optional</span>
+<span class="sd">            Non-interacting Green&#39;s function.</span>
+<span class="sd">    G_iw : Gf, optional</span>
+<span class="sd">           Interacting Green&#39;s function.</span>
+<span class="sd">           If G0_iw and G_iw are provided, the tails of G_iw will also be fitted.</span>
+<span class="sd">    fit_min_n : int, optional, default=int(0.8*len(Sigma_iw.mesh))</span>
+<span class="sd">                Matsubara frequency index from which tail fitting should start.</span>
+<span class="sd">    fit_max_n : int, optional, default=int(len(Sigma_iw.mesh))</span>
+<span class="sd">                Matsubara frequency index at which tail fitting should end.</span>
+<span class="sd">    fit_min_w : float, optional</span>
+<span class="sd">                Matsubara frequency from which tail fitting should start.</span>
+<span class="sd">    fit_max_w : float, optional</span>
+<span class="sd">                Matsubara frequency at which tail fitting should end.</span>
+<span class="sd">    fit_max_moment : int, optional</span>
+<span class="sd">                     Highest moment to fit in the tail of Sigma_iw.</span>
+<span class="sd">    fit_known_moments : dict{str:TailGf object}, optional, default = {block_name: TailGf(dim1, dim2, max_moment=0, order_min=0)}</span>
+<span class="sd">                        Known moments of Sigma_iw, given as a TailGf object.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Sigma_iw : Gf</span>
+<span class="sd">               Self-energy.</span>
+<span class="sd">    G_iw : Gf, optional</span>
+<span class="sd">           Interacting Green&#39;s function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># Define default tail quantities</span>
+    <span class="k">if</span> <span class="n">fit_known_moments</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">fit_known_moments</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span><span class="n">TailGf</span><span class="p">(</span><span class="n">sig</span><span class="o">.</span><span class="n">N1</span><span class="p">,</span><span class="n">sig</span><span class="o">.</span><span class="n">N2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">sig</span> <span class="ow">in</span> <span class="n">Sigma_iw</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">fit_min_w</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="n">fit_min_n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">fit_min_w</span><span class="o">*</span><span class="n">Sigma_iw</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">beta</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">fit_max_w</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="n">fit_max_n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">fit_max_w</span><span class="o">*</span><span class="n">Sigma_iw</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">beta</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">fit_min_n</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">fit_min_n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.8</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">Sigma_iw</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fit_max_n</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">fit_max_n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Sigma_iw</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fit_max_moment</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span> <span class="n">fit_max_moment</span> <span class="o">=</span> <span class="mi">3</span>
+
+    <span class="c"># Now fit the tails of Sigma_iw and G_iw</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">sig</span> <span class="ow">in</span> <span class="n">Sigma_iw</span><span class="p">:</span> <span class="n">sig</span><span class="o">.</span><span class="n">fit_tail</span><span class="p">(</span><span class="n">fit_known_moments</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">fit_max_moment</span><span class="p">,</span> <span class="n">fit_min_n</span><span class="p">,</span> <span class="n">fit_max_n</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">G_iw</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">G0_iw</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">G_iw</span><span class="p">:</span> <span class="n">g</span><span class="o">.</span><span class="n">tail</span> <span class="o">=</span> <span class="n">inverse</span><span class="p">(</span> <span class="n">inverse</span><span class="p">(</span><span class="n">G0_iw</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">tail</span><span class="p">)</span> <span class="o">-</span> <span class="n">Sigma_iw</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">tail</span> <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">Sigma_iw</span><span class="p">,</span> <span class="n">G_iw</span></div>
+
+
+<div class="viewcode-block" id="read_gf_from_txt"><a class="viewcode-back" href="../../../../reference/gfs/py/tools.html#pytriqs.gf.local.tools.read_gf_from_txt">[docs]</a><span class="k">def</span> <span class="nf">read_gf_from_txt</span><span class="p">(</span><span class="n">block_txtfiles</span><span class="p">,</span> <span class="n">block_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read a GfReFreq from text files with the format (w, Re(G), Im(G)) for a single block.</span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    A BlockGf must be constructed from multiple GfReFreq objects if desired.</span>
+<span class="sd">    The mesh must be the same for all files read in.</span>
+<span class="sd">    Non-uniform meshes are not supported.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    block_txtfiles: Rank 2 square np.array(str) or list[list[str]]</span>
+<span class="sd">        The text files containing the GF data that need to read for the block.</span>
+<span class="sd">        e.g. [[&#39;up_eg1.dat&#39;]] for a one-dimensional block and</span>
+<span class="sd">             [[&#39;up_eg1_1.dat&#39;,&#39;up_eg2_1.dat&#39;],</span>
+<span class="sd">              [&#39;up_eg1_2.dat&#39;,&#39;up_eg2_2.dat&#39;]] for a 2x2 block.</span>
+<span class="sd">    block_name: str</span>
+<span class="sd">        Name of the block.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    g: GfReFreq</span>
+<span class="sd">        The real frequency Green&#39;s function read in.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">block_txtfiles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">block_txtfiles</span><span class="p">)</span> <span class="c"># Must be an array to use certain functions</span>
+    <span class="n">N1</span><span class="p">,</span><span class="n">N2</span> <span class="o">=</span> <span class="n">block_txtfiles</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">mesh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">genfromtxt</span><span class="p">(</span><span class="n">block_txtfiles</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="n">usecols</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="c"># Mesh needs to be the same for all blocks</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">GfReFreq</span><span class="p">(</span><span class="n">indices</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="n">N1</span><span class="p">),</span><span class="n">window</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">mesh</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">mesh</span><span class="p">)),</span><span class="n">n_points</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">mesh</span><span class="p">),</span><span class="n">name</span><span class="o">=</span><span class="n">block_name</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">j</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">N1</span><span class="p">),</span><span class="nb">range</span><span class="p">(</span><span class="n">N2</span><span class="p">)):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">genfromtxt</span><span class="p">(</span><span class="n">block_txtfiles</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">],</span><span class="n">usecols</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1j</span><span class="o">*</span><span class="n">data</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">g</span></div>
+
+
+<div class="viewcode-block" id="write_gf_to_txt"><a class="viewcode-back" href="../../../../reference/gfs/py/tools.html#pytriqs.gf.local.tools.write_gf_to_txt">[docs]</a><span class="k">def</span> <span class="nf">write_gf_to_txt</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Write a GfReFreq or GfImFreq to in the format (w/iw, Re(G), Im(G)) for a single block.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    g: GfReFreq or GfImFreq</span>
+<span class="sd">        The real/imaginary frequency Green&#39;s function to be written out.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="o">==</span> <span class="n">GfReFreq</span><span class="p">:</span>
+        <span class="n">mesh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">mesh</span><span class="p">))</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="o">==</span> <span class="n">GfImFreq</span><span class="p">:</span>
+        <span class="n">mesh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">mesh</span><span class="p">))</span><span class="o">.</span><span class="n">imag</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="s">&#39;write_gf_to_txt: Only GfReFreq and GfImFreq quantities are supported.&#39;</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">j</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">N1</span><span class="p">),</span><span class="nb">range</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">N2</span><span class="p">)):</span>
+        <span class="n">txtfile</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">_</span><span class="si">%s</span><span class="s">_</span><span class="si">%s</span><span class="s">.dat&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+        <span class="n">redata</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">g</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">imdata</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">imag</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">g</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">mesh_and_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">mesh</span><span class="p">,</span><span class="n">redata</span><span class="p">,</span><span class="n">imdata</span><span class="p">))</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">txtfile</span><span class="p">,</span><span class="n">mesh_and_data</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2011-2015, The TRIQS collaboration.
+    </div>
+  </body>
+</html>

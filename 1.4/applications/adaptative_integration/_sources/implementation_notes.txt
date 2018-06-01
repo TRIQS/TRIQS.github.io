@@ -1,0 +1,88 @@
+Implementation notes
+=======================
+
+Files
+------
+- simplex.hpp: contains low-level functions on 1D/2D/3D simplices
+- integration.hpp: contains low-level integration routines
+- integration_worker.hpp: contains the main algorithm
+
+
+Basic algorithm (integration_worker.hpp)
+-----------------------------------------
+
+Let $f(x,y)$ be the function to be integrated on the d-dimensional domain D. The goal is to compute 
+
+.. math::
+  \int_D f(\mathbf{x}) d^d \mathbf{x} dy 
+
+For simplicity let us suppose that the domain D is a simplex, ie a segment (1D), triangle (2D) or tetrahedron (3D).
+
+The steps are the following:
+
+1. Initialize: 
+
+* initialize one map to store simplices: simplex_map 
+
+simplex_map : map : weight -> simplex_and_integral 
+- simplex_and_integral is a struct containing the simplex and the value of its integral
+- A possible choice for the weight is  w(T) := abs(I(T)- sum_t I(t))
+ where t are the simplices obtained by splitting the original simplex T.
+
+* insertion of domain D into simplex_map 
+
+2. Refinement Loop: 
+  while CRITERION ON WEIGHTS (e.g sum of weights < EPSILON):
+  * Erase triangle with highest weight from simplex_map
+  * Split it and insert sons into simplex_map
+    
+3. Return sum([I(t) for t in simplex_map])
+
+
+Data structures
+----------------
+
+Basic simplex structures
+************************
+
+* a point{1d|2d|3d} class (with members (double) x,y,z...)
+* a simplex{segment|triangle|tetrahedron} class :
+ point a, b, c :
+
+
+Integration
+***********
+Gaussian quadrature: see documentation
+Gauss-Legendre integration is apparently twice faster than Gauss-Lobatto!
+
+
+A few points : 
+-------------------
+Parallelization
+***************
+* The access to the vector of points and M_work 
+read/write must ALL be done through a few private functions (e.g. get_biggest_triangle, etc...)
+so that we can add a simple mutex there and go multithreaded.
+(probably as simple as a lock_guard : http://en.cppreference.com/w/cpp/thread/lock_guard).
+
+##TA: do you mean I should also write a Worker class on top of the small classes already mentioned?
+
+
+Unrefining
+**********
+* We should also think about "fusing" the triangle in a bigger one.
+Imagine I need to compute for omega, and then for omega + delta_omega : 
+the grid is approximately ok. We would start from there, fusing a few triangles where refinements is not ok, 
+splitting a few others. It would be simpler than restarting from scratch...
+At this stage, the question is : from a triangle, can I get the "parent" big triangle 
+to make such operations possible ?
+
+Tests
+--------
+
+* Simple tests for functions area (take simple triangle t...), barycenter (idem), integrate (simple function + simple triangle)
+* Real-life test: density of states of 2D/3D square lattice; 2D Lindhard function...
+
+
+
+

@@ -1,0 +1,122 @@
+.. module:: pytriqs.applications.impurity_solvers.cthyb_segment
+
+.. _aim:
+
+Description of the solver
+============================
+
+The Anderson impurity model
+-----------------------------
+
+The Anderson impurity model (AIM) is defined by the action:
+
+
+
+.. math::
+
+  S = \int_0^\beta d\tau \int_0^\beta d\tau' \sum_{a\sigma} c^{*}_{a\sigma}(\tau) \left( - \left[\mathcal{G}^{-1}_0\right]_a(\tau-\tau') \right) c_{a\sigma}(\tau') + \frac{1}{2}\int_0^\beta d\tau \int_0^\beta d\tau' \sum_{ab}  n_{a}(\tau)  \mathcal{U}_{ab}(\tau-\tau') n_{b}(\tau')
+
+where :math:`\mathcal{G}_0`  is the non-interacting Green's function, :math:`a, b \dots` are the orbital indices, :math:`n_{a}\equiv n_{a\uparrow}+n_{a\downarrow}`, and :math:`\mathcal{U}(\tau)` is the dynamical interaction. It is in general composed of a static part :math:`U` and of a retarded part :math:`\mathcal{D}(\tau)`:
+
+.. math::
+
+  \mathcal{U}(\tau) = U\delta(\tau) + \mathcal{D}(\tau)
+
+
+Hybridization expansion and segment picture
+--------------------------------------------
+Solving the Anderson impurity model amounts to computing its correlation functions like the one-particle Green's function
+
+.. math::
+
+  G(\tau) \equiv - \langle T c(\tau) c^{\dagger}(0) \rangle
+
+In order to do so, one can expand one of the terms of the Anderson action and numerically evaluate the corresponding Feynman diagrams. The hybridization expansion consists in expanding the partition function in powers of the hybridization function :math:`\Delta(\tau)`. In the case of density-density interactions :math:`U_{ab} n_{a}(\tau) n_{b}(\tau)` the diagrams one obtains can be represented by sets of occupied or empty segments, hence the name "segment picture". This segment picture allows for an analytical formula for and hence fast computation of the trace of the impurity operators :
+
+
+.. math::
+
+  w_U = \exp\left(-\sum_{a,b,b<a} U_{ab} l^{\mathrm{overlap}}_{ab} + \mu \sum_a l_a\right)
+
+
+
+Dynamical interactions
+----------------------
+Dynamical interactions do not alter the segment picture. The trace can still be computed without great numerical expense. Dynamical interactions just result in a shift of the static :math:`U_{ab}` by :math:`-2 K'_{ab}(0)` and of the chemical potential :math:`\mu_a`  of :math:`+K'_a(0)` , as well as an additional term in the trace:
+
+.. math::
+
+  w_{\mathcal{D}} = \exp\left(\sum_{ab} \sum_{\mathrm{op} i_a,j_b} s_{i_{a}} s_{j_{b}} K_{ab}(\tau_{i_a} - \tau_{j_b}) \right)
+
+
+where :math:`s_{i_a} = 1`  if the operator at time :math:`\tau_{i_a}` is a creation operator,  :math:`s_{i_a} = -1` otherwise.
+
+The kernel :math:`K(\tau)` is defined as 
+
+.. math::
+
+  K''(\tau) = \mathcal{D}(\tau) \\
+  K(0) = K(\beta) = 0
+
+It is obtained from the retarded interaction :math:`\mathcal{D}(\tau)` through the expression:
+
+
+.. math::
+
+  K(\tau) = \frac{2}{\beta} \sum_{n>0} \frac{\mathcal{D}(i\nu_n)-\mathcal{D}(0)}{\nu_n^2} \left(  1-\cos(\nu_n \tau) \right)
+
+
+In practice, one specifies the retarded interactions in the following way:
+
+.. literalinclude:: test/python/basic/ct_seg_single_bath_retint.py
+   :lines: 24-27
+
+The solver then computes :math:`K(\tau)` internally.
+
+
+Before starting a computation
+--------------------------------
+
+Before starting a computation, you must make sure that the tails of :math:`\mathcal{G}_0` (describing the high-frequency asymptotic behavior) are consistent with the data of :math:`\mathcal{G}_0` . Indeed, tails are crucial for the computation of :math:`\Delta(\tau)`, which is the observable used in the Monte-Carlo algorithm. :math:`\Delta` is computed from `\mathcal{G}_0`, the non-interacting Green's function, in the following way:
+
+.. math::
+
+  \Delta_{a\sigma}(i \omega_n) = a_1  i \omega_n + a_0 \mu_a - \mathcal{G}^{-1}_{0,a\sigma} (i \omega_n)
+
+
+where :math:`a_0` and :math:`a_1` are the coefficients corresponding to the constant and linear term in the high-frequency asymptotics of :math:`\mathcal{G}_0^{-1}(i\omega)`.
+
+The main source of issues are related with a :math:`\Delta(\tau)` of bad quality. Before reporting an issue, please check that :math:`\Delta(\tau)` is smooth and convex.
+
+
+
+
+Correspondence table
+---------------------
+Here is a correspondence table between the observables defined above and the solver's variables:
+
++--------------------------------------------------------------------------------------------+-----------------+
+| Observable                                                                                 | Variable        |
++============================================================================================+=================+
+| :math:`\mathcal{D}(i\omega)`                                                               | ``D0_iw``       |
++--------------------------------------------------------------------------------------------+-----------------+
+| :math:`K(\tau)`                                                                            | ``K_tau``       |
++--------------------------------------------------------------------------------------------+-----------------+
+| :math:`K'(\tau)`                                                                           | ``K_prime_tau`` |
++--------------------------------------------------------------------------------------------+-----------------+
+| :math:`\Delta(\tau)`                                                                       | ``Delta_tau``   |
++--------------------------------------------------------------------------------------------+-----------------+
+| :math:`\mathcal{G}_0(i\omega_n)`                                                           | ``G0_iw``       |
++--------------------------------------------------------------------------------------------+-----------------+
+| :math:`G(\tau)`                                                                            | ``G_tau``       |
++--------------------------------------------------------------------------------------------+-----------------+
+| :math:`\chi_{{\sigma_1}{\sigma_2}}(\tau) \equiv \langle n_{\sigma_1} n_{\sigma_2} \rangle` | ``nn_tau``      |
++--------------------------------------------------------------------------------------------+-----------------+
+| :math:`G(i\omega_n)`                                                                       | ``G_iw``        |
++--------------------------------------------------------------------------------------------+-----------------+
+| :math:`\Sigma(i\omega_n) \equiv \mathcal{G}_0(i\omega_n)^{-1} -G(i\omega_n)^{-1}`          | ``Sigma_iw``    |
++--------------------------------------------------------------------------------------------+-----------------+
+
+
+
+ 

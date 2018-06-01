@@ -1,0 +1,321 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pytriqs.dos.hilbert_transform &mdash; TRIQS  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/triqs.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/breathe.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/MathJax/MathJax.js?config=default"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="top" title="TRIQS  documentation" href="../../../contents.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head>
+  <body role="document">
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../../install.html">Install</a></li>
+    
+    <li><a href="../../../documentation.html">Documentation</a></li>
+    
+    <li><a href="../../../applications.html">Applications</a></li>
+    
+    <li><a href="../../../issues.html">Issues</a></li>
+    
+    <li><a href="../../../about.html">About TRIQS</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../../index.html">triqs</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">a Toolbox for Research on Interacting Quantum Systems</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pytriqs.dos.hilbert_transform</h1><div class="highlight"><pre>
+<span class="c">################################################################################</span>
+<span class="c">#</span>
+<span class="c"># TRIQS: a Toolbox for Research in Interacting Quantum Systems</span>
+<span class="c">#</span>
+<span class="c"># Copyright (C) 2011 by M. Ferrero, O. Parcollet</span>
+<span class="c">#</span>
+<span class="c"># TRIQS is free software: you can redistribute it and/or modify it under the</span>
+<span class="c"># terms of the GNU General Public License as published by the Free Software</span>
+<span class="c"># Foundation, either version 3 of the License, or (at your option) any later</span>
+<span class="c"># version.</span>
+<span class="c">#</span>
+<span class="c"># TRIQS is distributed in the hope that it will be useful, but WITHOUT ANY</span>
+<span class="c"># WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS</span>
+<span class="c"># FOR A PARTICULAR PURPOSE. See the GNU General Public License for more</span>
+<span class="c"># details.</span>
+<span class="c">#</span>
+<span class="c"># You should have received a copy of the GNU General Public License along with</span>
+<span class="c"># TRIQS. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c">#</span>
+<span class="c">################################################################################</span>
+
+<span class="kn">from</span> <span class="nn">pytriqs.gf.local</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">types</span><span class="o">,</span> <span class="nn">string</span><span class="o">,</span> <span class="nn">inspect</span><span class="o">,</span> <span class="nn">itertools</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">isSequenceType</span>
+<span class="kn">from</span> <span class="nn">pytriqs.dos</span> <span class="kn">import</span> <span class="n">DOS</span><span class="p">,</span> <span class="n">DOSFromFunction</span>
+<span class="kn">import</span> <span class="nn">pytriqs.utility.mpi</span> <span class="kn">as</span> <span class="nn">mpi</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+
+<span class="k">class</span> <span class="nc">HilbertTransform</span><span class="p">:</span>
+<div class="viewcode-block" id="HilbertTransform"><a class="viewcode-back" href="../../../reference/lattice_tools/hilbert.html#pytriqs.dos.HilbertTransform">[docs]</a>    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Computes the Hilbert Transform from a DOS object</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">       \int_{-\infty}^\infty d \epsilon \rho(\epsilon) \Bigl(  (\omega + \mu +</span>
+<span class="sd">       I\eta)\mathbf{1} - \hat\varepsilon(\epsilon) - \text{field} - \Sigma(\epsilon)</span>
+<span class="sd">       \Bigr)^{-1}</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rho</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param rho: a DOS object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dos</span>  <span class="o">=</span> <span class="n">rho</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">DOS</span><span class="p">),</span>  <span class="s">&quot;See Doc. rho must be a DOS&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__normalize</span><span class="p">()</span>
+
+    <span class="c">#-------------------------------------------------------------</span>
+
+    <span class="k">def</span> <span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rho</span><span class="p">)</span>
+
+    <span class="c">#-------------------------------------------------------------</span>
+
+    <span class="k">def</span> <span class="nf">__normalize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># normalisation. dos is not the value of the function, is the weight of the integrals</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dos</span><span class="o">.</span><span class="n">rho</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rho_for_sum</span> <span class="o">=</span> <span class="n">R</span>
+        <span class="n">eps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dos</span><span class="o">.</span><span class="n">eps</span>
+        <span class="n">R</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="o">*=</span> <span class="p">(</span><span class="n">eps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">eps</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">R</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*=</span> <span class="p">(</span><span class="n">eps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">eps</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">eps</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*=</span>  <span class="p">(</span><span class="n">eps</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">eps</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span><span class="o">+</span><span class="p">(</span><span class="n">eps</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">eps</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span>
+        <span class="n">R</span> <span class="o">/=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
+
+    <span class="c">#-------------------------------------------------------------</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Sigma</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">eta</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">epsilon_hat</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">result</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+<div class="viewcode-block" id="HilbertTransform.__call__"><a class="viewcode-back" href="../../../reference/lattice_tools/hilbert.html#pytriqs.dos.HilbertTransform.__call__">[docs]</a>                  <span class="n">n_points_integral</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">test_convergence</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">        Compute the Hilbert Transform</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+
+<span class="sd">        mu: float</span>
+<span class="sd">        eta: float</span>
+<span class="sd">        Sigma: a GFBloc or a function epsilon-&gt; GFBloc</span>
+<span class="sd">        field: anything that can added to the GFBloc Sigma, e.g.:</span>
+<span class="sd">                 * an Array_with_GFBloc_Indices (same size as Sigma)</span>
+<span class="sd">                 * a GBloc</span>
+<span class="sd">        epsilon_hat: a function that takes a 1d array eps[i] and returns 3d-array   eps[i,:,:]</span>
+<span class="sd">                            where the:,: has the matrix structure of Sigma. Default: eps[i] * Identity_Matrix</span>
+<span class="sd">                            Used only when DOS is a DOSFromFunction:</span>
+<span class="sd">        n_points_integral: How many points to use. If None, use the Npts of construction</span>
+<span class="sd">        test_convergence: If defined, it will refine the grid until CV is reached</span>
+<span class="sd">                          starting from n_points_integral and multiplying by 2</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        Returns the result. If provided, use result to compute the result locally.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c"># we suppose here that self.eps, self.rho_for_sum such that</span>
+        <span class="c"># H(z) = \sum_i self.rho_for_sum[i] * (z- self.eps[i])^-1</span>
+
+        <span class="c"># Check Sigma</span>
+        <span class="c"># case 1) Sigma is a Gf</span>
+        <span class="k">if</span> <span class="n">Sigma</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;Gf&#39;</span><span class="p">:</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">Sigma</span>
+            <span class="n">Sigma_fnt</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="c"># case 2) Sigma is a function returning a Gf</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">callable</span><span class="p">(</span><span class="n">Sigma</span><span class="p">),</span> <span class="s">&quot;If Sigma is not a Gf it must be a function&quot;</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">getargspec</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&quot;Sigma must be a function of a single variable&quot;</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">Sigma</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dos</span><span class="o">.</span><span class="n">eps</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">Sigma_fnt</span> <span class="o">=</span> <span class="bp">True</span>
+
+        <span class="c"># Check that Sigma is square</span>
+        <span class="n">N1</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">N1</span>
+        <span class="n">N2</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">N2</span>
+        <span class="k">assert</span> <span class="n">N1</span> <span class="o">==</span> <span class="n">N2</span><span class="p">,</span> <span class="s">&quot;Sigma must be a square Gf&quot;</span>
+
+        <span class="c"># Check result</span>
+        <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">N1</span> <span class="o">==</span> <span class="n">N1</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">N2</span> <span class="o">==</span> <span class="n">N2</span><span class="p">,</span> <span class="s">&quot;Size of result and Sigma mismatch&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dos</span><span class="p">,</span> <span class="n">DOSFromFunction</span><span class="p">)):</span>
+            <span class="k">assert</span> <span class="n">n_points_integral</span><span class="o">==</span><span class="bp">None</span> <span class="ow">and</span> <span class="n">test_convergence</span> <span class="o">==</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&quot; Those parameters can only be used with an dos_from_function&quot;</span>
+        <span class="k">if</span> <span class="n">field</span> <span class="o">!=</span><span class="bp">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">+=</span> <span class="n">field</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&quot;field cannot be added to the Green function blocks !. Cf Doc&quot;</span>
+
+        <span class="k">def</span> <span class="nf">HT</span><span class="p">(</span><span class="n">res</span><span class="p">):</span>
+            <span class="c"># First compute the eps_hat array</span>
+            <span class="n">eps_hat</span> <span class="o">=</span> <span class="n">epsilon_hat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dos</span><span class="o">.</span><span class="n">eps</span><span class="p">)</span> <span class="k">if</span> <span class="n">epsilon_hat</span> <span class="k">else</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="p">[</span> <span class="n">x</span><span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">identity</span> <span class="p">(</span><span class="n">N1</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dos</span><span class="o">.</span><span class="n">eps</span><span class="p">]</span> <span class="p">)</span>
+            <span class="k">assert</span> <span class="n">eps_hat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">dos</span><span class="o">.</span><span class="n">eps</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s">&quot;epsilon_hat function behaves incorrectly&quot;</span>
+            <span class="k">assert</span> <span class="n">eps_hat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">eps_hat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="s">&quot;epsilon_hat function behaves incorrectly (result not a square matrix)&quot;</span>
+            <span class="k">assert</span> <span class="n">N1</span> <span class="o">==</span> <span class="n">eps_hat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s">&quot;Size of Sigma and of epsilon_hat mismatch&quot;</span>
+
+            <span class="n">res</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+
+            <span class="c"># Perform the sum over eps[i]</span>
+            <span class="n">tmp</span><span class="p">,</span> <span class="n">tmp2</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">res</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">tmp</span> <span class="o">&lt;&lt;</span> <span class="n">iOmega_n</span> <span class="o">+</span> <span class="n">mu</span> <span class="o">+</span> <span class="n">eta</span> <span class="o">*</span> <span class="mi">1j</span>
+            <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">Sigma_fnt</span><span class="p">):</span>
+                <span class="n">tmp</span> <span class="o">-=</span> <span class="n">Sigma</span>
+            <span class="k">if</span> <span class="n">field</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span> <span class="n">tmp</span> <span class="o">-=</span> <span class="n">field</span>
+
+            <span class="c"># I slice all the arrays on the node. Cf reduce operation below.</span>
+            <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">e_h</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span>  <span class="n">itertools</span><span class="o">.</span><span class="n">izip</span> <span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">mpi</span><span class="o">.</span><span class="n">slice_array</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="k">for</span> <span class="n">A</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">rho_for_sum</span><span class="p">,</span> <span class="n">eps_hat</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dos</span><span class="o">.</span><span class="n">eps</span><span class="p">]]):</span>
+                <span class="n">tmp2</span><span class="o">.</span><span class="n">copy_from</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+                <span class="n">tmp2</span> <span class="o">-=</span> <span class="n">e_h</span>
+                <span class="k">if</span> <span class="n">Sigma_fnt</span><span class="p">:</span> <span class="n">tmp2</span> <span class="o">-=</span> <span class="n">Sigma</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="n">tmp2</span><span class="o">.</span><span class="n">invert</span><span class="p">()</span>
+                <span class="n">tmp2</span> <span class="o">*=</span> <span class="n">d</span>
+                <span class="n">res</span> <span class="o">+=</span> <span class="n">tmp2</span>
+            <span class="c"># sum the res GF of all nodes and returns the results on all nodes...</span>
+            <span class="c"># Cf Boost.mpi.python, collective communicator for documentation.</span>
+            <span class="c"># The point is that res is pickable, hence can be transmitted between nodes without further code...</span>
+            <span class="n">res</span> <span class="o">&lt;&lt;</span> <span class="n">mpi</span><span class="o">.</span><span class="n">all_reduce</span><span class="p">(</span><span class="n">mpi</span><span class="o">.</span><span class="n">world</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
+        <span class="c"># END of HT</span>
+
+        <span class="k">def</span> <span class="nf">test_distance</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span> <span class="n">G2</span><span class="p">,</span> <span class="n">dist</span><span class="p">):</span>
+            <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span> <span class="n">G2</span><span class="p">):</span>
+                <span class="n">dS</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">G1</span><span class="o">.</span><span class="n">data</span> <span class="o">-</span> <span class="n">G2</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+                <span class="n">aS</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">G1</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+                <span class="k">return</span> <span class="n">dS</span> <span class="o">&lt;=</span> <span class="n">aS</span><span class="o">*</span><span class="n">dist</span>
+            <span class="c">#return reduce(lambda x, y: x and y, [f(g1, g2) for (i1, g1), (i2, g2) in izip(G1, G2)])</span>
+            <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span> <span class="n">G2</span><span class="p">)</span> <span class="c"># for block function, the previous one is for GF functions</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dos</span><span class="p">,</span> <span class="n">DOSFromFunction</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">n_points_integral</span><span class="p">):</span> <span class="c"># if not defined, use the defaults given at construction of the dos</span>
+                <span class="n">n_points_integral</span><span class="o">=</span>  <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dos</span><span class="o">.</span><span class="n">eps</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dos</span><span class="o">.</span><span class="n">_DOS__f</span><span class="p">(</span><span class="n">n_points_integral</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__normalize</span><span class="p">()</span>
+
+            <span class="n">HT</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+            <span class="n">nloop</span><span class="p">,</span> <span class="n">test</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span>
+            <span class="k">while</span> <span class="n">test_convergence</span> <span class="ow">and</span> <span class="n">nloop</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="ow">and</span> <span class="p">(</span><span class="n">nloop</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">test</span> <span class="o">&gt;</span> <span class="n">test_convergence</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">nloop</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dos</span><span class="o">.</span><span class="n">_DOS__f</span><span class="p">(</span><span class="n">n_points_integral</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">__normalize</span><span class="p">()</span>
+
+                <span class="n">result_old</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">DOS</span><span class="o">.</span><span class="n">HilbertTransform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Sigma</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">eta</span><span class="p">,</span> <span class="n">epsilon_hat</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+                <span class="n">test</span> <span class="o">=</span> <span class="n">test_distance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">result_old</span><span class="p">,</span> <span class="n">test_convergence</span><span class="p">)</span>
+                <span class="n">n_points_integral</span> <span class="o">*=</span><span class="mi">2</span>
+
+        <span class="k">else</span><span class="p">:</span>  <span class="c"># Ordinary DOS</span>
+            <span class="n">HT</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">result</span>
+</pre></div></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2011-2015, The TRIQS collaboration.
+    </div>
+  </body>
+</html>

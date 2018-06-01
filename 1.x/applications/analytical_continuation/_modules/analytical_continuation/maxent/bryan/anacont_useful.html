@@ -1,0 +1,177 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>analytical_continuation.maxent.bryan.anacont_useful &mdash; TRILEX  documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/triqs.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/MathJax/MathJax.js?config=default"></script>
+    <link rel="top" title="TRILEX  documentation" href="../../../../contents.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head>
+  <body role="document">
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../../../install.html">Install</a></li>
+    
+    <li><a href="../../../../contents.html">Documentation</a></li>
+    
+    <li><a href="../../../../issues.html">Issues</a></li>
+    
+    <li><a href="../../../../about.html">About CTSEG</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../../../index.html">analytical_continuation</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">tools for DMFT and beyond, based on the <a class="triqs" style="font-size: 12px" href="http://ipht.cea.fr/triqs">TRIQS</a> library</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for analytical_continuation.maxent.bryan.anacont_useful</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">bryan_for_cpp</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">pytriqs.dos</span> <span class="kn">import</span> <span class="n">HilbertTransform</span><span class="p">,</span> <span class="n">dos_from_file</span><span class="p">,</span><span class="n">DOS</span>
+
+<div class="viewcode-block" id="maxent_continue"><a class="viewcode-back" href="../../../../bryan.html#analytical_continuation.maxent.bryan.anacont_useful.maxent_continue">[docs]</a><span class="k">def</span> <span class="nf">maxent_continue</span><span class="p">(</span><span class="n">g_tau</span><span class="p">,</span><span class="n">n_w</span><span class="p">,</span><span class="n">w_min</span><span class="p">,</span><span class="n">w_max</span><span class="p">,</span><span class="n">sigma</span><span class="p">,</span><span class="n">sum_rule</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; the main function</span>
+
+<span class="sd">        :param g_tau: ``GfImTime`` :math:`G(\\tau)`</span>
+<span class="sd">        :param n_w: number of points in the discrete real frequency mesh</span>
+<span class="sd">        :param w_min: min of energy window :math:`\\omega_\mathrm{min}`</span>
+<span class="sd">        :param w_max: max of energy window :math:`\\omega_\mathrm{max}`</span>
+<span class="sd">        :param sigma: covariance of input data g_tau</span>
+<span class="sd">        :param sum_rule: sum rule on ouput</span>
+
+<span class="sd">        :returns: a tuple [A_w, g_tau_repr, log] where A_w is :math:`A(\\omega)`, g_tau_repr is the Green&#39;s function obtained by applying the kernel :math:`K(\\tau,\\omega)` to :math:`A(\\omega)`, and log is a log of the run (with additional information).</span>
+
+<span class="sd">        .. warning:: g_tau_repr must be close to g_tau. Otherwise, something is wrong. In particular:</span>
+
+<span class="sd">             - check that your data is accurate enough</span>
+
+<span class="sd">             - check that sigma is consistent with the noise of your data (if too large, you will miss fine features, if too small, you will be fitting noise)</span>
+
+<span class="sd">             - check that n_w is large enough (otherwise you may miss fine features)</span>
+
+<span class="sd">             - check that the energy window is large enough (otherwise you may miss large-energy features)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="p">[</span><span class="n">A_data</span><span class="p">,</span><span class="n">Gtrepr_data</span><span class="p">,</span><span class="n">log</span><span class="p">]</span><span class="o">=</span><span class="n">performMaxent</span><span class="p">(</span><span class="n">g_tau</span><span class="p">,</span><span class="n">n_w</span><span class="p">,</span><span class="n">w_min</span><span class="p">,</span><span class="n">w_max</span><span class="p">,</span><span class="n">sigma</span><span class="p">,</span><span class="n">sum_rule</span><span class="p">)</span>
+    <span class="n">A_w</span><span class="o">=</span><span class="n">DOS</span><span class="p">(</span><span class="n">eps</span><span class="o">=</span><span class="n">A_data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="p">,</span><span class="n">rho</span><span class="o">=</span><span class="n">A_data</span><span class="p">[:,</span><span class="mi">1</span><span class="p">])</span> <span class="k">if</span> <span class="n">g_tau</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">statistic</span><span class="o">==</span><span class="s2">&quot;Fermion&quot;</span> <span class="k">else</span> <span class="n">DOS</span><span class="p">(</span><span class="n">eps</span><span class="o">=</span><span class="n">A_data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="p">,</span><span class="n">rho</span><span class="o">=</span><span class="n">A_data</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">A_data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">g_tau_repr</span><span class="o">=</span><span class="n">g_tau</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">g_tau_repr</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="n">Gtrepr_data</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">A_w</span><span class="p">,</span> <span class="n">g_tau_repr</span><span class="p">,</span> <span class="n">log</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="get_sigma_tilde"><a class="viewcode-back" href="../../../../bryan.html#analytical_continuation.maxent.bryan.anacont_useful.get_sigma_tilde">[docs]</a><span class="k">def</span> <span class="nf">get_sigma_tilde</span><span class="p">(</span><span class="n">Sigma</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    :param Sigma: a self-energy :math:`\\Sigma(i\\omega)`</span>
+<span class="sd">    :returns: a tuple [:math:`(\\Sigma-s_0)/s_1`, :math:`s_0`, :math`s_1`]</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">Sigma_tilde</span> <span class="o">=</span> <span class="n">Sigma</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">Sigma_tilde</span> <span class="o">&lt;&lt;=</span> <span class="p">(</span><span class="n">Sigma</span> <span class="o">-</span> <span class="n">Sigma</span><span class="o">.</span><span class="n">tail</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="n">Sigma</span><span class="o">.</span><span class="n">tail</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">Sigma_tilde</span><span class="p">,</span> <span class="n">Sigma</span><span class="o">.</span><span class="n">tail</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">Sigma</span><span class="o">.</span><span class="n">tail</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]]</span></div>
+
+<div class="viewcode-block" id="get_sigma_from_sigma_tilde"><a class="viewcode-back" href="../../../../bryan.html#analytical_continuation.maxent.bryan.anacont_useful.get_sigma_from_sigma_tilde">[docs]</a><span class="k">def</span> <span class="nf">get_sigma_from_sigma_tilde</span><span class="p">(</span><span class="n">Sigma_tilde</span><span class="p">,</span> <span class="n">S0</span><span class="p">,</span><span class="n">S1</span><span class="p">):</span>
+   <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">   :param Sigma_tilde: a &#39;normalized&#39; self-energy,</span>
+<span class="sd">   :param S0: the zeroth asymptotic moment</span>
+<span class="sd">   :param S1: the first asymptotic moment (:math:`1/i\\omega` term)</span>
+<span class="sd">   :returns: the self-energy :math:`\\Sigma(i\\omega)=\\tilde{\\Sigma}(i\\omega)\\cdot s_1 + s_0`</span>
+<span class="sd">   &#39;&#39;&#39;</span>
+   <span class="n">Sigma</span> <span class="o">=</span> <span class="n">Sigma_tilde</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+   <span class="n">Sigma</span> <span class="o">&lt;&lt;=</span> <span class="n">Sigma_tilde</span><span class="o">*</span><span class="n">S1</span> <span class="o">+</span> <span class="n">S0</span>
+   <span class="k">return</span> <span class="n">Sigma</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, T. Ayral.
+    </div>
+  </body>
+</html>

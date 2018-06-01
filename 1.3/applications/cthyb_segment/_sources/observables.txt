@@ -1,0 +1,253 @@
+.. module:: pytriqs.applications.impurity_solvers.cthyb_segment
+
+.. _options:
+
+Measurements: definitions
+===========================
+
+Here we list all the observables that can be measured by the solver along with their definition. Each measurement can be turned on or off via the corresponding :doc:`switch <accessors>`.
+
+
+Green's function
+-------------------
+
+The single-particle Green's function can be measured in imaginary time, Matsubara frequencies or the Legendre basis (see `L. Boehnke et al., Phys. Rev. B 84, 075145 (2011) <http://link.aps.org/doi/10.1103/PhysRevB.84.075145>`_).
+
+In addition, we provide measurements of the so-called improved estimators (see `H. Hafermann et al., Phys. Rev. B 85, 205106 (2012) <http://dx.doi.org/10.1103/PhysRevB.85.205106>`_), which
+allow an accurate evaluation of the self-energy.
+
+.. note::
+  The accuracy gain of improved estimators goes together with a performance penalty, which is larger when dynamical interactions are involved. The overhead occurs if the improved estimator for any measurement is turned on. The corresponding part is shared among different measurements, so there is no additional penalty if the improved estimator is measured for more than one observable.
+
+Imaginary time
+*******************
+
+The imaginary-time Green's function is defined as
+
+.. math::
+
+  G_a(\tau) = -\langle T_\tau c_a(\tau)c_a^\dagger(0) \rangle
+
+and the corresponding improved estimator is given by
+  
+.. math::
+
+  \begin{align}
+  F_a(\tau) &= F_a^{\text{st}}(\tau) + F_a^{\text{ret}}(\tau)\\
+  F_a^{\text{st}}(\tau) &= -\sum_b \langle T_\tau n_b(\tau) U_{ba} c_a(\tau)c_a^\dagger(0) \rangle\\
+  F_a^{\text{ret}}(\tau) &= -\int_0^\beta d\tilde{\tau} \sum_b \langle T_\tau n_b(\tilde{\tau}) U^{\text{ret}}_{ba}(\tilde{\tau}-\tau) c_a(\tau)c_a^\dagger(0) \rangle
+  \end{align}
+
+where :math:`F^{\text{st}}` and :math:`F^{\text{ret}}` denote the contributions due to the static
+and retarded parts of the interaction.
+
+These measurements are turned on by setting ``measure_gt`` and ``measure_ft`` to ``True``, respectively.
+The number of time points on the grid is specified through ``n_tau_g`` and is the same for both observables.
+
+.. note::
+
+	The imaginary-time measurement is most efficient. The performance of the algorithm does not scale
+	with the number of points in the grid on which it is measured, so this number can and should be
+	chosen large. By Nyquist's theorem, the Fourier transform will correctly reproduce the function
+	in the frequency domain on the first :math:`N_\omega\approx N_\tau/4\pi` frequencies.
+
+
+Matsubara frequencies
+**********************
+
+In the frequency measurement, the solver measures the Fourier transform of the Green's function and the improved estimator on positive Matsubara frequencies :math:`\omega_n=(2n+1)\pi/\beta`, :math:`n=0,\ldots,n_\omega-1`.
+
+.. math::
+
+  G_a(i\omega) &= \int_0^\beta d\tau\, e^{i\omega_n\tau} G_a(\tau)\\
+  F_a(i\omega) &= \int_0^\beta d\tau\, e^{i\omega_n\tau} F_a(\tau)
+
+The switches for these measurements are ``measure_gw`` and ``measure_fw``. The number of frequencies is specified through ``n_w``.
+
+.. note::
+
+   If the improved estimator is measured on Matsubara frequencies, the self-energy is automatically
+   computed at the end of the simulations as :math:`\Sigma_a(i\omega)=F_a(i\omega)/G_a(i\omega)`.
+
+Legendre polynomial basis
+**************************
+
+The Legendre coefficients of the Green's function and the improved estimator are defined as
+
+.. math::
+
+  \begin{align}
+  G_a(l) &= \sqrt{2l+1}\int_0^\beta d\tau\, P_l[x(\tau)] G_a(\tau)\\
+  F_a(l) &= \sqrt{2l+1}\int_0^\beta d\tau\, P_l[x(\tau)] F_a(\tau)
+  \end{align}
+
+where :math:`x(\tau)=2\tau/\beta-1`.
+These measurements are controlled through the switches and parameter ``meaure_gl``, ``measure_fl`` and ``n_legendre_g``.
+
+The Legendre Green's function may be transformed to the Matsubara basis through the unitary transformation
+
+.. math::
+
+  G_a(i\omega_n) = \sum_{l\geq 0}T_{nl} G_a(l)
+
+where
+
+.. math::
+
+  T_{nl} = (-1)^ni^{l+1}\sqrt{2l+1}j_l\left(\frac{(2n+1)\pi}{2}\right)
+
+with the spherical Bessel functions :math:`j_l(z)`.
+
+
+Density-density correlation function
+----------------------------------------
+
+The measurement of the imaginary-time density-density correlation function
+
+.. math::
+
+  \chi^{ab}(\tau) = \langle T_\tau n_a(\tau)n_b(0) \rangle
+
+is triggered through the switch ``measure_nnt``.
+In contrast to the Green's function, the measurement slows down considerably with the number of points ``n_tau_nn`` on the grid.
+
+In most cases, it is more efficicient to measure it on Matsubara frequencies as specified through ``measure_nnw``:
+
+.. math::
+
+  \chi^{ab}(i\nu_m) = \int_0^\beta d\tau\, e^{i\nu_m\tau} \chi^{ab}(\tau)
+
+where the number of bosonic frequencies :math:`\nu_m=2m\pi/\beta` is specified through ``n_w_b_nn``.
+
+
+Two-frequency quantities
+--------------------------
+
+
+Two-frequency correlation functions
+***************************************
+
+We define the following imaginary-time correlation functions:
+
+.. math::
+
+  G^{(2)}_{ab}(\tau,\tau',\tau'') = -\langle T_\tau c_a(\tau)c_a^\dagger(\tau')n_b(\tau'') \rangle
+
+  \begin{align}
+  F^{(2)}_{ab}(\tau,\tau',\tau'') &= F_{ab}^{(2),\text{st}}(\tau,\tau',\tau'') + F_{ab}^{(2),\text{ret}}(\tau,\tau',\tau'')\\
+  F_{ab}^{(2),\text{st}}(\tau,\tau',\tau'') &= -\sum_{a'} \langle T_\tau n_{a'}(\tau) U_{a'a} c_a(\tau)c_a^\dagger(\tau')n_b(\tau'') \rangle\\
+  F_{ab}^{(2),\text{ret}}(\tau,\tau',\tau'') &= -\int_0^\beta d\tilde{\tau} \sum_{a'} \langle T_\tau n_{a'}(\tilde{\tau}) U^{\text{ret}}_{a'a}(\tilde{\tau}-\tau) c_a(\tau)c_a^\dagger(\tau')n_b(\tau'') \rangle
+  \end{align}
+
+The code provides measurements for the Fourier transform of these quantities, defined as
+
+.. math::
+ 
+ \begin{align}
+  G^{(2)}_{ab}(i\omega,i\nu) &= \frac{1}{\beta}\int_0^\beta d\tau \int_0^\beta d\tau' \int_0^\beta d\tau'' e^{i\omega_n\tau}e^{-i(\omega_n+\nu_m)\tau'} e^{i\nu_m\tau''} G^{(2)}_{ab}(\tau,\tau',\tau'')\\
+  \end{align}
+
+and analogously for the improved estimator.
+The number of fermionic (bosonic) frequencies is specified through the parameters ``n_w_f_vertex`` (``n_w_b_vertex``).
+
+.. note::
+    Currently only the frequency measurement is provided.
+
+
+
+Vertex function
+***********************
+
+If one or two of the two-frequency correlation functions have been measured and the parameter ``evaluate_vertex`` is set to ``true``, the following vertex function is computed in the charge channel:
+
+.. math::
+
+  \lambda_a(i\omega,i\nu) = \frac{1}{\chi^{\text{ch}}(i\nu)}\left(\frac{G^{(2),\text{con}}_{a}(i\omega,i\nu)}{G_a(i\omega)G_a(i\omega+i\nu)} -1\right)
+
+where the charge susceptibility :math:`\chi^\text{ch}(i\nu)` is defined as
+
+.. math::
+    \chi^\text{ch}(i\nu) = -\sum_{ab} \left[\chi_{ab}(i\nu)-\langle n_a\rangle \langle n_b\rangle \delta_{\nu} \right]
+
+and where, depending on which two-frequency correlation functions have been measured, the connected part is computed in either of the following ways:
+
+.. math::
+
+  \begin{align}
+  G^{(2),\text{con}}_{a}(i\omega,i\nu) &= \sum_b G^{(2)}_{ab}(i\omega,i\nu) - \sum_b G^{(2),\text{disc}}_{ab}(i\omega,i\nu)\\
+  G^{(2),\text{con}}_{a}(i\omega,i\nu) &= G_a(i\omega) \sum_b F_{ab}^{(2)}(i\omega,i\nu)-F_a(i\omega) \sum_b G_{ab}^{(2)}(i\omega,i\nu)\\
+  G^{(2),\text{con}}_{a}(i\omega,i\nu) &= \Big[G_a(i\omega) \sum_b F_{ab}^{(2)}(i\omega,i\nu)-F_a(i\omega) \sum_b G_{ab}^{(2),\text{disc}}(i\omega,i\nu)\Big]/[1+F_a(i\omega)].
+  \end{align}
+
+Here the disconnected part of the correlation function has been defined as
+
+.. math::
+
+  G^{(2),\text{disc}}_{ab}(i\omega,i\nu) = \beta G_a(i\omega)\langle n_b\rangle\delta_{\nu}-G_a(i\omega) G_a(i\omega+i\nu)\delta_{ab}.
+
+
+
+Three-frequency quantities
+--------------------------
+
+
+Three-frequency correlation functions
+***************************************
+
+We define the following imaginary-time correlation functions:
+
+.. math::
+
+  G^{(3)}_{ab}(\tau,\tau',\tau'') = \langle T_\tau c_a(\tau)c_a^\dagger(\tau')c_b(\tau'')c_b^\dagger(0) \rangle
+
+  \begin{align}
+  F^{(3)}_{ab}(\tau,\tau',\tau'') &= F_{ab}^{(3),\text{st}}(\tau,\tau',\tau'') + F_{ab}^{(3),\text{ret}}(\tau,\tau',\tau'')\\
+  F_{ab}^{(3),\text{st}}(\tau,\tau',\tau'') &= \sum_{a'} \langle T_\tau n_{a'}(\tau) U_{a'a} c_a(\tau)c_a^\dagger(\tau')c_b(\tau'')c_b^\dagger(0) \rangle\\
+  F_{ab}^{(3),\text{ret}}(\tau,\tau',\tau'') &= \int_0^\beta d\tilde{\tau} \sum_{a'} \langle T_\tau n_{a'}(\tilde{\tau}) U^{\text{ret}}_{a'a}(\tilde{\tau}-\tau) c_a(\tau)c_a^\dagger(\tau')c_b(\tau'')c_b^\dagger(0) \rangle
+  \end{align}
+
+The code provides measurements for the Fourier transform of these quantities, defined as
+
+.. math::
+ 
+ \begin{align}
+  G^{(3)}_{ab}(i\omega,i\omega',i\nu) &= \frac{1}{\beta}\int_0^\beta d\tau \int_0^\beta d\tau' \int_0^\beta d\tau'' e^{i\omega_n\tau}e^{-i(\omega_n+\nu_m)\tau'}e^{i(\omega'_n+\nu_m)\tau'} e^{-i\omega'_n\tau''} G^{(3)}_{ab}(\tau,\tau',\tau'')\\
+  \end{align}
+
+and analogously for the improved estimator.
+The number of fermionic (bosonic) frequencies is specified through the parameters ``n_w_f_vertex`` (``n_w_b_vertex``).
+
+.. note::
+
+   Currently only the frequency measurement is provided.
+
+
+
+Vertex function
+***********************
+
+If one or two of the three-frequency correlation functions have been measured and the parameter ``evaluate_vertex`` is set to ``true``, the following vertex function is computed at the end of the simulation:
+
+.. math::
+
+  \gamma_{ab}(i\omega,i\omega',i\nu) = \frac{G^{(3),\text{con}}_{ab}(i\omega,i\omega',i\nu)}{G_a(i\omega)G_a(i\omega+i\nu)G_b(i\omega'+i\nu)G_b(i\omega')}
+
+Depending on which two-frequency correlation functions have been measured, the connected part is computed in either of the following ways:
+
+.. math::
+
+  \begin{align}
+  G^{(3),\text{con}}_{a}(i\omega,i\omega',i\nu) &= G^{(3)}_{ab}(i\omega,i\omega',i\nu) - G^{(3),\text{disc}}_{ab}(i\omega,i\omega',i\nu)\\
+  G^{(3),\text{con}}_{a}(i\omega,i\omega',i\nu) &= G_a(i\omega) F_{ab}^{(3)}(i\omega,i\omega',i\nu)-F_a(i\omega) G_{ab}^{(3)}(i\omega,i\omega',i\nu)\\
+  G^{(3),\text{con}}_{a}(i\omega,i\omega',i\nu) &= \Big[G_a(i\omega) F_{ab}^{(3)}(i\omega,i\omega',i\nu)-F_a(i\omega) G_{a}^{(3),\text{disc}}(i\omega,i\omega',i\nu)\Big]/[1+F_a(i\omega)].
+  \end{align}
+
+The disconnected part of the correlation function has been defined as
+
+.. math::
+
+  G^{(2),\text{disc}}_{ab}(i\omega,i\omega',i\nu) = \beta G_{a}(i\omega)G_b(i\omega')\delta_{\nu}-\beta G_a(i\omega) G_a(i\omega+i\nu)\delta_{\omega,\omega'}\delta_{ab}.
+
+
+
+

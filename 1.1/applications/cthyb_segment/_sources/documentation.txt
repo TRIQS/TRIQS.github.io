@@ -1,0 +1,83 @@
+
+.. module:: pytriqs.applications.impurity_solvers.cthyb_segment
+
+.. _documentation:
+
+Documentation
+=============
+
+The 'cthyb-segment' solver is a continuous-time Quantum Monte Carlo solver aimed at solving an :doc:`Anderson impurity model <definitions>` with static and dynamical density-density interactions.
+
+Below is a very short example demonstrating the basic usage of the solver.
+
+.. code-block:: python
+
+  from pytriqs.gf.local import *
+  from numpy import zeros
+
+  # set up a few parameters
+  U = 2.0
+  beta = 20.0
+  mu = 0.2
+  eps0 = 0.3
+  V = 1.0
+
+  # Construct the segment solver
+  from pytriqs.applications.impurity_solvers.cthyb_segment import Solver
+  S = Solver(beta = beta, block_names = ["up","down"])
+
+  # Interaction matrix
+  Umat = zeros([2,2])
+  for (i,(n1,g1)) in enumerate (S.G0) :
+    for (j,(n2,g2)) in enumerate (S.G0) :
+        Umat[i][j] = U if set((n1,n2)) == set(['down','up']) else 0
+
+  # initialize the Green function
+  S.G0 <<= inverse(iOmega_n + mu - V**2 * inverse(iOmega_n - eps0))
+
+  S.solve(U = Umat,
+          n_cycles  = 100000,
+          length_cycle = 100,
+          n_warmup_cycles = 5000,
+          measure_nn = False,
+          move_move = False,
+          move_swap_empty_lines = False)
+
+
+To use the solver, one has to go through the following steps:
+
+Import the Solver class::
+
+  from pytriqs.applications.impurity_solvers.cthyb_segment import Solver 
+ 
+Declare and construct a solver instance. Some construction parameters are mandatory, some others are optional. See :doc:`here <options>` for a complete list.::
+
+  S = Solver(beta = beta, block_names = ["up","down"])
+ 
+Initialize the inputs of the solver. For a complete list of the input and output members of the solver, see :doc:`here <members>` ::
+
+  S.G0 <<= inverse(iOmega_n + mu - V**2 * inverse(iOmega_n - eps0))
+ 
+  
+Call the solve() method. This method comes with mandatory and optional parameters, whose complete list can be found :doc:`here <options>`.::
+
+  S.solve(U = Umat,
+          n_cycles  = 100000,
+          length_cycle = 100,
+          n_warmup_cycles = 5000,
+          measure_nn = False,
+          move_move = False,
+          move_swap_empty_lines = False)
+
+ 
+
+
+To know more about the solver, visit one of the following pages:
+
+.. toctree::
+   :maxdepth: 1
+
+   definitions
+   options
+   members
+   

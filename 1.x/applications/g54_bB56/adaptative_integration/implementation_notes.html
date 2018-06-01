@@ -1,0 +1,240 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Implementation notes &mdash; Modern C++ for physicists 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/triqs.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/MathJax/MathJax.js?config=default"></script>
+    <link rel="top" title="Modern C++ for physicists 0.1 documentation" href="contents.html" />
+    <link rel="prev" title="Splitters" href="splitters.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head>
+  <body role="document">
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="install.html">Install</a></li>
+    
+    <li><a href="documentation.html">Documentation</a></li>
+    
+    <li><a href="issues.html">Issues</a></li>
+    
+    <li><a href="about.html">About CTSEG</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="index.html">Adaptative integration</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">based on the <a class="triqs" style="font-size: 12px" href="http://ipht.cea.fr/triqs">TRIQS</a> library</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="splitters.html" title="Splitters"
+             accesskey="P">previous</a> |</li>
+    <li><a href="index.html">Home</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Implementation notes</a><ul>
+<li><a class="reference internal" href="#files">Files</a></li>
+<li><a class="reference internal" href="#basic-algorithm-integration-worker-hpp">Basic algorithm (integration_worker.hpp)</a></li>
+<li><a class="reference internal" href="#data-structures">Data structures</a><ul>
+<li><a class="reference internal" href="#basic-simplex-structures">Basic simplex structures</a></li>
+<li><a class="reference internal" href="#integration">Integration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#a-few-points">A few points :</a><ul>
+<li><a class="reference internal" href="#parallelization">Parallelization</a></li>
+<li><a class="reference internal" href="#unrefining">Unrefining</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tests">Tests</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="splitters.html"
+                        title="previous chapter">Splitters</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/implementation_notes.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="implementation-notes">
+<h1>Implementation notes<a class="headerlink" href="#implementation-notes" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="files">
+<h2>Files<a class="headerlink" href="#files" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>simplex.hpp: contains low-level functions on 1D/2D/3D simplices</li>
+<li>integration.hpp: contains low-level integration routines</li>
+<li>integration_worker.hpp: contains the main algorithm</li>
+</ul>
+</div>
+<div class="section" id="basic-algorithm-integration-worker-hpp">
+<h2>Basic algorithm (integration_worker.hpp)<a class="headerlink" href="#basic-algorithm-integration-worker-hpp" title="Permalink to this headline">¶</a></h2>
+<p>Let $f(x,y)$ be the function to be integrated on the d-dimensional domain D. The goal is to compute</p>
+<div class="math">
+\[\int_D f(\mathbf{x}) d^d \mathbf{x} dy\]</div>
+<p>For simplicity let us suppose that the domain D is a simplex, ie a segment (1D), triangle (2D) or tetrahedron (3D).</p>
+<p>The steps are the following:</p>
+<ol class="arabic simple">
+<li>Initialize:</li>
+</ol>
+<ul class="simple">
+<li>initialize one map to store simplices: simplex_map</li>
+</ul>
+<p>simplex_map : map : weight -&gt; simplex_and_integral
+- simplex_and_integral is a struct containing the simplex and the value of its integral
+- A possible choice for the weight is  w(T) := abs(I(T)- sum_t I(t))  where t are the simplices obtained by splitting the original simplex T.</p>
+<ul class="simple">
+<li>insertion of domain D into simplex_map</li>
+</ul>
+<ol class="arabic simple" start="2">
+<li>Refinement Loop:</li>
+</ol>
+<blockquote>
+<div>while CRITERION ON WEIGHTS (e.g sum of weights &lt; EPSILON):
+* Erase triangle with highest weight from simplex_map
+* Split it and insert sons into simplex_map</div></blockquote>
+<ol class="arabic simple" start="3">
+<li>Return sum([I(t) for t in simplex_map])</li>
+</ol>
+</div>
+<div class="section" id="data-structures">
+<h2>Data structures<a class="headerlink" href="#data-structures" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="basic-simplex-structures">
+<h3>Basic simplex structures<a class="headerlink" href="#basic-simplex-structures" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>a point{1d|2d|3d} class (with members (double) x,y,z...)</li>
+<li>a simplex{segment|triangle|tetrahedron} class :</li>
+</ul>
+<p>Point a, b, c :</p>
+</div>
+<div class="section" id="integration">
+<h3>Integration<a class="headerlink" href="#integration" title="Permalink to this headline">¶</a></h3>
+<p>Gaussian quadrature: see documentation
+Gauss-Legendre integration is apparently twice faster than Gauss-Lobatto!</p>
+</div>
+</div>
+<div class="section" id="a-few-points">
+<h2>A few points :<a class="headerlink" href="#a-few-points" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="parallelization">
+<h3>Parallelization<a class="headerlink" href="#parallelization" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>The access to the vector of points and M_work</li>
+</ul>
+<p>Read/write must ALL be done through a few private functions (e.g. get_biggest_triangle, etc...)
+so that we can add a simple mutex there and go multithreaded.
+(probably as simple as a lock_guard : <a class="reference external" href="http://en.cppreference.com/w/cpp/thread/lock_guard">http://en.cppreference.com/w/cpp/thread/lock_guard</a>).</p>
+<p>##TA: do you mean I should also write a Worker class on top of the small classes already mentioned?</p>
+</div>
+<div class="section" id="unrefining">
+<h3>Unrefining<a class="headerlink" href="#unrefining" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>We should also think about &#8220;fusing&#8221; the triangle in a bigger one.</li>
+</ul>
+<p>Imagine I need to compute for omega, and then for omega + delta_omega :
+the grid is approximately ok. We would start from there, fusing a few triangles where refinements is not ok,
+splitting a few others. It would be simpler than restarting from scratch...
+At this stage, the question is : from a triangle, can I get the &#8220;parent&#8221; big triangle
+to make such operations possible ?</p>
+</div>
+</div>
+<div class="section" id="tests">
+<h2>Tests<a class="headerlink" href="#tests" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Simple tests for functions area (take simple triangle t...), barycenter (idem), integrate (simple function + simple triangle)</li>
+<li>Real-life test: density of states of 2D/3D square lattice; 2D Lindhard function...</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="splitters.html" title="Splitters"
+             >previous</a> |</li>
+    <li><a href="index.html">Home</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2014, O. Parcollet.
+    </div>
+  </body>
+</html>

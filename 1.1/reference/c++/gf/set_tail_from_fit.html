@@ -1,0 +1,243 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Fitting the tail of a Matsubara Green’s function &mdash; TRIQS 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/triqs.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/MathJax/MathJax.js?config=default"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="top" title="TRIQS 1.0.0 documentation" href="../../../index.html" />
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head>
+  <body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../../install.html">Install</a></li>
+    
+    <li><a href="../../../documentation.html">Documentation</a></li>
+    
+    <li><a href="../../../applications.html">Applications</a></li>
+    
+    <li><a href="../../../issues.html">Issues</a></li>
+    
+    <li><a href="../../../about.html">About TRIQS</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../../index.html">triqs</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">a Toolbox for Research on Interacting Quantum Systems</span>
+  </div>
+</div>
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../../contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Fitting the tail of a Matsubara Green&#8217;s function</a><ul>
+<li><a class="reference internal" href="#api">API</a></li>
+<li><a class="reference internal" href="#example">Example</a></li>
+<li><a class="reference internal" href="#implementation">Implementation</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/reference/c++/gf/set_tail_from_fit.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="fitting-the-tail-of-a-matsubara-green-s-function">
+<h1>Fitting the tail of a Matsubara Green&#8217;s function<a class="headerlink" href="#fitting-the-tail-of-a-matsubara-green-s-function" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="api">
+<h2>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h2>
+<p>The tail of a given <tt class="docutils literal"><span class="pre">gf&lt;imfreq&gt;/gf&lt;block_index,</span> <span class="pre">gf&lt;imfreq&gt;&gt;</span> <span class="pre">gw</span></tt> can be fitted using the two following functions:</p>
+<blockquote>
+<div><p><tt class="docutils literal"><span class="pre">void</span> <span class="pre">set_tail_from_fit(gf&lt;imfreq&gt;</span> <span class="pre">&amp;gf,</span> <span class="pre">tail_view</span> <span class="pre">known_moments,</span> <span class="pre">int</span> <span class="pre">n_moments,</span> <span class="pre">size_t</span> <span class="pre">n_min,</span> <span class="pre">size_t</span> <span class="pre">n_max,</span> <span class="pre">bool</span> <span class="pre">replace_by_fit</span> <span class="pre">=</span> <span class="pre">false);</span></tt></p>
+<p><tt class="docutils literal"><span class="pre">void</span> <span class="pre">set_tail_from_fit(gf&lt;block_index,</span> <span class="pre">gf&lt;imfreq&gt;&gt;</span> <span class="pre">&amp;block_gf,</span> <span class="pre">tail_view</span> <span class="pre">known_moments,</span> <span class="pre">int</span> <span class="pre">n_moments,</span> <span class="pre">size_t</span> <span class="pre">n_min,</span>&nbsp; <span class="pre">size_t</span> <span class="pre">n_max,</span> <span class="pre">bool</span> <span class="pre">replace_by_fit</span> <span class="pre">=</span> <span class="pre">false);</span></tt></p>
+</div></blockquote>
+<p>where</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="11%" />
+<col width="15%" />
+<col width="65%" />
+<col width="8%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">type</th>
+<th class="head">name</th>
+<th class="head">description</th>
+<th class="head">default</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>gf&lt;imfreq&gt;</td>
+<td>gf</td>
+<td>Green&#8217;s function to be fit (bosonic/fermionic)</td>
+<td>no</td>
+</tr>
+<tr class="row-odd"><td>tail_view</td>
+<td>known_moments</td>
+<td>known part of the tail</td>
+<td>no</td>
+</tr>
+<tr class="row-even"><td>int</td>
+<td>n_moments</td>
+<td>number of moments in the final tail (including known ones)</td>
+<td>no</td>
+</tr>
+<tr class="row-odd"><td>size_t</td>
+<td>n_min</td>
+<td>Matsubara index on mesh to start the fit</td>
+<td>no</td>
+</tr>
+<tr class="row-even"><td>size_t</td>
+<td>n_max</td>
+<td>final Matsubara index for fit (included)</td>
+<td>no</td>
+</tr>
+<tr class="row-odd"><td>bool</td>
+<td>replace_by_fit</td>
+<td>if true, replace the gf data in the fitting range by the tail values</td>
+<td>true</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;triqs/gfs.hpp&gt;</span>
+<span class="cp">#include &lt;triqs/gfs/local/fit_tail.hpp&gt;</span>
+<span class="n">using</span> <span class="n">namespace</span> <span class="n">triqs</span><span class="o">::</span><span class="n">gfs</span><span class="p">;</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(){</span>
+ <span class="n">triqs</span><span class="o">::</span><span class="n">clef</span><span class="o">::</span><span class="n">placeholder</span><span class="o">&lt;</span><span class="mi">0</span><span class="o">&gt;</span> <span class="n">iom_</span><span class="p">;</span>
+ <span class="kt">double</span> <span class="n">beta</span> <span class="o">=</span><span class="mi">10</span><span class="p">;</span>
+ <span class="kt">int</span> <span class="n">N</span><span class="o">=</span><span class="mi">100</span><span class="p">;</span>
+
+ <span class="k">auto</span> <span class="n">gw</span> <span class="o">=</span> <span class="n">gf</span><span class="o">&lt;</span><span class="n">imfreq</span><span class="o">&gt;</span><span class="p">{{</span><span class="n">beta</span><span class="p">,</span> <span class="n">Fermion</span><span class="p">,</span> <span class="n">N</span><span class="p">},</span> <span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">}};</span>
+ <span class="n">gw</span><span class="p">(</span><span class="n">iom_</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">iom_</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+
+ <span class="kt">size_t</span> <span class="n">n_min</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">n_max</span><span class="o">=</span><span class="mi">90</span><span class="p">;</span>
+ <span class="kt">int</span> <span class="n">n_moments</span><span class="o">=</span><span class="mi">4</span><span class="p">;</span>
+ <span class="kt">int</span>  <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span> <span class="c1">//means that we know one moment</span>
+ <span class="kt">int</span> <span class="n">order_min</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span> <span class="c1">//means that the first moment in the final tail will be the first moment</span>
+ <span class="k">auto</span> <span class="n">known_moments</span> <span class="o">=</span> <span class="n">local</span><span class="o">::</span><span class="n">tail</span><span class="p">(</span><span class="n">make_shape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">size</span><span class="p">,</span> <span class="n">order_min</span><span class="p">);</span> <span class="c1">//length is 0, first moment to fit is order_min</span>
+ <span class="n">known_moments</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">=</span><span class="mf">1.</span><span class="p">;</span><span class="c1">//set the first moment</span>
+
+ <span class="n">set_tail_from_fit</span><span class="p">(</span><span class="n">gw</span><span class="p">,</span> <span class="n">known_moments</span><span class="p">,</span> <span class="n">n_moments</span><span class="p">,</span> <span class="n">n_min</span><span class="p">,</span> <span class="n">n_max</span><span class="p">,</span> <span class="nb">true</span><span class="p">);</span>
+
+ <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">gw</span><span class="p">.</span><span class="n">singularity</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="o">----------</span> <span class="n">Result</span> <span class="n">is</span> <span class="o">-------</span>
+<span class="n">tail</span><span class="o">/</span><span class="n">tail_view</span><span class="o">:</span> <span class="n">min</span><span class="o">/</span><span class="n">smallest</span><span class="o">/</span><span class="n">max</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="mi">1</span> <span class="mi">4</span>
+ <span class="p">...</span>  <span class="n">Order</span> <span class="o">-</span><span class="mi">1</span> <span class="o">=</span> 
+<span class="p">[[(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)]]</span>
+ <span class="p">...</span>  <span class="n">Order</span> <span class="mi">0</span> <span class="o">=</span> 
+<span class="p">[[(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)]]</span>
+ <span class="p">...</span>  <span class="n">Order</span> <span class="mi">1</span> <span class="o">=</span> 
+<span class="p">[[(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)]]</span>
+ <span class="p">...</span>  <span class="n">Order</span> <span class="mi">2</span> <span class="o">=</span> 
+<span class="p">[[(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)]]</span>
+ <span class="p">...</span>  <span class="n">Order</span> <span class="mi">3</span> <span class="o">=</span> 
+<span class="p">[[(</span><span class="mf">0.999251</span><span class="p">,</span><span class="mi">0</span><span class="p">)]]</span>
+ <span class="p">...</span>  <span class="n">Order</span> <span class="mi">4</span> <span class="o">=</span> 
+<span class="p">[[(</span><span class="mf">0.998655</span><span class="p">,</span><span class="mi">0</span><span class="p">)]]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="implementation">
+<h2>Implementation<a class="headerlink" href="#implementation" title="Permalink to this headline">¶</a></h2>
+<p>The fitting problem is written as a linear system of equations, which is solved by SVD.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011-2013, The TRIQS collaboration.
+    </div>
+  </body>
+</html>
