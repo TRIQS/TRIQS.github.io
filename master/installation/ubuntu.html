@@ -92,6 +92,8 @@
   <ul>
 <li><a class="reference internal" href="#">Installing required libraries on Ubuntu</a><ul>
 <li><a class="reference internal" href="#c-compiler">C++ compiler</a></li>
+<li><a class="reference internal" href="#c-2py">C++2py</a></li>
+<li><a class="reference internal" href="#issues">Issues</a></li>
 </ul>
 </li>
 </ul>
@@ -156,10 +158,12 @@
 </ul>
 <div class="section" id="c-compiler">
 <h2>C++ compiler<a class="headerlink" href="#c-compiler" title="Permalink to this headline">¶</a></h2>
-<p>The default compiler on e.g. Ubuntu 16.04 LTS is gcc 5.4.0, which is too old to compile the latest version of TRIQS.</p>
-<p>There are two options:</p>
-<ul>
-<li><p class="first">Upgrade gcc to version 7 using the Ubuntu Toolchain test builds with the following commands:</p>
+<p>The default compiler on e.g. Ubuntu 16.04 (xenial) is gcc 5.4.0, which is too old to compile the latest version of TRIQS.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The instructions below address Ubuntu 16.04 (xenial). In Ubuntu 18.04 (bionic), please consider using the respective standard apt packages instead.</p>
+</div>
+<p>We recommend to upgrade to gcc version 7 using the Ubuntu Toolchain test builds with the following commands:</p>
 <div class="highlight-bash"><div class="highlight"><pre>sudo apt-get install software-properties-common
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 sudo apt-get update
@@ -167,30 +171,47 @@ sudo apt-get upgrade
 sudo apt-get install g++-7
 </pre></div>
 </div>
-<p>In a next step, set the C/C++ compiler for your <a class="reference internal" href="environment_vars.html#environment-vars"><span>environment</span></a>:</p>
+<p>In a second step, set the C/C++ compiler for your <a class="reference internal" href="environment_vars.html#environment-vars"><span>environment</span></a>:</p>
 <div class="highlight-bash"><div class="highlight"><pre><span class="nb">export</span> <span class="nv">CC</span><span class="o">=</span>gcc-7
 <span class="nb">export</span> <span class="nv">CXX</span><span class="o">=</span>g++-7
 </pre></div>
 </div>
-<p>To make this choice permanent, add these two lines to your <code class="docutils literal"><span class="pre">$HOME/.bash_profile</span></code>.</p>
-</li>
-</ul>
+<p>You can make this choice permanent by adding these two lines to your <code class="docutils literal"><span class="pre">$HOME/.bash_profile</span></code>.</p>
+</div>
+<div class="section" id="c-2py">
+<h2>C++2py<a class="headerlink" href="#c-2py" title="Permalink to this headline">¶</a></h2>
+<p>For full functionality of the C++2Py Tool, a recent version of the libclang library is required.
+While a recent version is packaged with Ubuntu 18.04 (bionic), more steps are required on Ubuntu 16.04 (xenial).</p>
 <ul>
-<li><p class="first">When developing applications with TRIQS, we recommend to use the clang compiler instead.
-As a first step you will need to install the g++-7 package as described in the first set of commands above.
-In a next step we install version 6.0 of clang and libclang.:</p>
+<li><p class="first">As a first step you will need to install the g++-7 package as described in the first set of commands above.</p>
+</li>
+<li><p class="first">In a second step we install version 6.0 of clang and libclang from the <a class="reference external" href="apt.llvm.org">apt.llvm.org</a> repositories:</p>
 <div class="highlight-bash"><div class="highlight"><pre><span class="nb">source</span> /etc/lsb-release
 sudo add-apt-repository <span class="s1">&#39;deb http://apt.llvm.org/$DISTRIB_CODENAME/ llvm-toolchain-$DISTRIB_CODENAME-6.0 main&#39;</span> -y
 curl -L https://apt.llvm.org/llvm-snapshot.gpg.key <span class="p">|</span> sudo apt-key add -
 sudo apt-get update <span class="o">&amp;&amp;</span> sudo apt-get install clang-6.0 libclang-6.0-dev python-clang-6.0
 </pre></div>
 </div>
-<p>Finally, we set the C/C++ compiler:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span class="nb">export</span> <span class="nv">CC</span><span class="o">=</span>clang-6.0
-<span class="nb">export</span> <span class="nv">CXX</span><span class="o">=</span>clang++-6.0
+</li>
+</ul>
+<p>If you are using the Ubuntu 16.04 (xenial) <a class="reference internal" href="../install.html#ubuntu-debian"><span>debian packages</span></a>, you should permanently set the following <a class="reference internal" href="environment_vars.html#environment-vars"><span>environment variables</span></a>:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nb">export</span> <span class="nv">LIBCLANG_LOCATION</span><span class="o">=</span>/usr/lib/llvm-6.0/lib/libclang.so
+<span class="nb">export</span> <span class="nv">LIBCLANG_CXX_FLAGS</span><span class="o">=</span><span class="s2">&quot;-I/usr/include/x86_64-linux-gnu/c++/7&quot;</span>
 </pre></div>
 </div>
-<p>To make this choice permanent, add these two lines to your <code class="docutils literal"><span class="pre">$HOME/.bash_profile</span></code>.</p>
+</div>
+<div class="section" id="issues">
+<h2>Issues<a class="headerlink" href="#issues" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">If you encounter compile-time error messages such as:</p>
+<div class="highlight-bash"><div class="highlight"><pre>fatal error: mpi.h: No such file or directory
+fatal error: H5public.h: No such file or directory
+</pre></div>
+</div>
+<p>make sure that the include directories of your openmpi and hdf5 installation are in the CPATH <a class="reference internal" href="environment_vars.html#environment-vars"><span>environment variable</span></a>:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nb">export</span> <span class="nv">CPATH</span><span class="o">=</span>/usr/include/openmpi:/usr/include/hdf5/serial/:<span class="nv">$C</span>PATH
+</pre></div>
+</div>
 </li>
 </ul>
 </div>
