@@ -1,0 +1,282 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>PLOVasp input file &mdash; TRIQS DFTTools 1.5.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/triqs.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=default"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="top" title="TRIQS DFTTools 1.5.0 documentation" href="../contents.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head>
+  <body role="document">
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../install.html">Install</a></li>
+    
+    <li><a href="../documentation.html">Documentation</a></li>
+    
+    <li><a href="../issues.html">Issues</a></li>
+    
+    <li><a href="../about.html">About DFTTools</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../index.html">dft tools</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">connecting <a class="triqs" style="font-size: 12px" href="http://triqs.ipht.cnrs.fr/1.x">TRIQS</a> to DFT packages</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../index.html">Home</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">PLOVasp input file</a><ul>
+<li><a class="reference internal" href="#input-file-format">Input file format</a><ul>
+<li><a class="reference internal" href="#section-general">Section [General]</a></li>
+<li><a class="reference internal" href="#section-shell">Section [Shell]</a></li>
+<li><a class="reference internal" href="#section-group">Section [Group]</a></li>
+<li><a class="reference internal" href="#file-of-transformation-matrices">File of transformation matrices</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/guide/plovasp.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="plovasp-input-file">
+<span id="plovasp"></span><h1>PLOVasp input file<a class="headerlink" href="#plovasp-input-file" title="Permalink to this headline">¶</a></h1>
+<p>The general purpose of the PLOVasp tool is to transform
+raw, non-normalized projectors generated by VASP into normalized
+projectors corresponding to user-defined projected localized orbitals (PLO).
+The PLOs can then be used for DFT+DMFT calculations with or without
+charge self-consistency. PLOVasp also provides some utilities
+for basic analysis of the generated projectors, such as outputting
+density matrices, local Hamiltonians, and projected
+density of states.</p>
+<p>PLOs are determined by the energy window in which the raw projectors
+are normalized. This allows to define either atomic-like strongly
+localized Wannier functions (large energy window) or extended
+Wannier functions focusing on selected low-energy states (small
+energy window).</p>
+<p>In PLOVasp all projectors sharing the same energy window are combined
+into a <cite>projector group</cite>. Technically, this allows one to define
+several groups with different energy windows for the same set of
+raw projectors. Note, however, that DFTtools does not support projector
+groups at the moment but this feature might appear in future releases.</p>
+<p>A set of projectors defined on sites realted to each other either by symmetry
+or by sort along with a set of <span class="math">\(l\)</span>, <span class="math">\(m\)</span> quantum numbers forms a
+<cite>projector shell</cite>. There could be several projectors shells in a
+projector group, implying that they will be normalized within
+the same energy window.</p>
+<p>Projector shells and groups are specified by a user-defined input file
+whose format is described below.</p>
+<div class="section" id="input-file-format">
+<h2>Input file format<a class="headerlink" href="#input-file-format" title="Permalink to this headline">¶</a></h2>
+<p>The input file is written in the standard config-file format.
+Parameters (or &#8216;options&#8217;) are grouped into sections specified as
+<cite>[Section name]</cite>. All parameters must be defined inside some section.</p>
+<p>A PLOVasp input file can contain three types of sections:</p>
+<ol class="arabic simple">
+<li><strong>[General]</strong>: includes parameters that are independent
+of a particular projector set, such as the Fermi level, additional
+output (e.g. the density of states), etc.</li>
+<li><strong>[Group &lt;Ng&gt;]</strong>: describes projector groups, i.e. a set of
+projectors sharing the same energy window and normalization type.
+At the moment, DFTtools support only one projector group, therefore
+there should be no more than one projector group.</li>
+<li><strong>[Shell &lt;Ns&gt;]</strong>: contains parameters of a projector shell labelled
+with <cite>&lt;Ns&gt;</cite>. If there is only one group section and one shell section,
+the group section can be omitted and its required parameters can be
+given inside the single shell section.</li>
+</ol>
+<div class="section" id="section-general">
+<h3>Section [General]<a class="headerlink" href="#section-general" title="Permalink to this headline">¶</a></h3>
+<p>The entire section is optional and it contains three parameters:</p>
+<ul class="simple">
+<li><strong>BASENAME</strong> (string): provides a base name for output files.
+Default filenames are <code class="file docutils literal"><span class="pre">vasp.*</span></code>.</li>
+<li><strong>DOSMESH</strong> ([float float] integer): if this parameter is given
+projected density of states for each projected orbital will be
+evaluated and stored to files <code class="file docutils literal"><span class="pre">pdos_&lt;n&gt;.dat</span></code>, where <cite>n</cite> is the
+orbital number. The energy
+mesh is defined by three numbers: <cite>EMIN</cite> <cite>EMAX</cite> <cite>NPOINTS</cite>. The first two
+can be omitted in which case they are taken to be equal to the projector
+energy window. <strong>Important note</strong>: at the moment this option works
+only if the tetrahedron integration method (<cite>ISMEAR = -4</cite> or <cite>-5</cite>)
+is used in VASP to produce <cite>LOCPROJ</cite>.</li>
+<li><strong>EFERMI</strong> (float): provides the Fermi level. This value overrides
+the one extracted from VASP output files.</li>
+</ul>
+<p>There are no required parameters in this section.</p>
+</div>
+<div class="section" id="section-shell">
+<h3>Section [Shell]<a class="headerlink" href="#section-shell" title="Permalink to this headline">¶</a></h3>
+<p>This section specifies a projector shell. Each shell section must be
+labeled by an index, e.g. <cite>[Shell 1]</cite>. These indices can then be referenced
+in a <cite>[Group]</cite> section.</p>
+<p>In each <cite>[Shell]</cite> section two parameters are required:</p>
+<ul class="simple">
+<li><strong>IONS</strong> (list of integer): indices of sites included in the shell.
+The sites can be given either by a list of integers <cite>IONS = 5 6 7 8</cite>
+or by a range <cite>IONS = 5..8</cite>. The site indices must be compatible with
+POSCAR file.</li>
+<li><strong>LSHELL</strong> (integer): <span class="math">\(l\)</span> quantum number of the desired local states.</li>
+</ul>
+<p>It is important that a given combination of site indices and local states
+given by <cite>LSHELL</cite> must be present in LOCPROJ file.</p>
+<p>There are additional optional parameters that allow one to transform
+the local states:</p>
+<ul class="simple">
+<li><strong>TRANSFORM</strong> (matrix): local transformation matrix applied to all states
+in the projector shell. The matrix is defined by (multiline) block
+of floats, with each line corresponding to a row. The number of columns
+must be equal to <span class="math">\(2 l + 1\)</span>, with <span class="math">\(l\)</span> given by <cite>LSHELL</cite>. Only real matrices
+are allowed. This parameter can be useful to select certain subset of
+orbitals or perform a simple global rotation.</li>
+<li><strong>TRANSFILE</strong> (string): name of the file containing transformation
+matrices for each site. This option allows for a full-fledged functionality
+when it comes to local state transformations. The format of this file
+is described in <span class="xref std std-ref">_transformation_file</span>.</li>
+</ul>
+</div>
+<div class="section" id="section-group">
+<h3>Section [Group]<a class="headerlink" href="#section-group" title="Permalink to this headline">¶</a></h3>
+<p>Each defined projector shell must be part of a projector group. In the current
+implementation of DFTtools only a single group is supported which can be
+labeled by any integer, e.g. <cite>[Group 1]</cite>. This implies that all projector shells
+must be included in this group.</p>
+<p>Required parameters for any group are the following:</p>
+<ul class="simple">
+<li><strong>SHELLS</strong> (list of integers): indices of projector shells included in the group.
+All defined shells must be grouped.</li>
+<li><strong>EWINDOW</strong> (float float): the energy window specified by two floats: bottom
+and top. All projectors in the current group are going to be normalized within
+this window.</li>
+</ul>
+<p>Optional group parameters:</p>
+<ul class="simple">
+<li><strong>NORMALIZE</strong> (True/False): specifies whether projectors in the group are
+to be noramlized. The default value is <strong>True</strong>.</li>
+<li><strong>NORMION</strong> (True/False): specifies whether projectors are normalized on
+a per-site (per-ion) basis. That is, if <cite>NORMION = True</cite> the orthogonality
+condition will be enforced on each site separately but the Wannier functions
+on different sites will not be orthogonal. If <cite>NORMION = False</cite> Wannier functions
+on different sites included in the group will be orthogonal to each other.</li>
+</ul>
+</div>
+<div class="section" id="file-of-transformation-matrices">
+<h3>File of transformation matrices<a class="headerlink" href="#file-of-transformation-matrices" title="Permalink to this headline">¶</a></h3>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The description below applies only to collinear cases (i.e. without spin-orbit
+coupling). In this case the matrices are spin-independent.</p>
+</div>
+<p>The file specified by option <cite>TRANSFILE</cite> contains transformation matrices
+for each ion.  Each line must contain a series of floats whose number is either equal to
+the number of orbitals <span class="math">\(N_{orb}\)</span> (in this case the transformation matrices
+are assumed to be real) or to <span class="math">\(2 N_{orb}\)</span> (for the complex transformation matrices).
+The number of lines <span class="math">\(N\)</span> must be a multiple of the number of ions <span class="math">\(N_{ion}\)</span>
+and the ratio <span class="math">\(N / N_{ion}\)</span>, then, gives the dimension of the transformed
+orbital space. The lines with floats can be separated by any number of empty or
+comment lines which are ignored.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../index.html">Home</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2011-2013, M. Aichhorn, L. Pourovskii, V. Vildosola, C. Martins.
+    </div>
+  </body>
+</html>
