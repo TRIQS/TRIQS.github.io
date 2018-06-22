@@ -1,0 +1,201 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pytriqs.operators.util.op_struct &mdash; TRIQS  documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/triqs.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=default"></script>
+    <link rel="author" title="About these documents" href="../../../../about.html" />
+    <link rel="top" title="TRIQS  documentation" href="../../../../contents.html" />
+    <link rel="up" title="Module code" href="../../../index.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head>
+  <body role="document">
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../../../install.html">Install</a></li>
+    
+    <li><a href="../../../../reference.html">Reference</a></li>
+    
+    <li><a href="../../../../tutorials.html">Tutorials</a></li>
+    
+    <li><a href="../../../../applications.html">Applications</a></li>
+    
+    <li><a href="../../../../issues.html">Issues</a></li>
+    
+    <li><a href="../../../../about.html">About TRIQS</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../../../index.html">triqs</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">a Toolbox for Research on Interacting Quantum Systems</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pytriqs.operators.util.op_struct</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
+
+<span class="c1"># Set function to make index for GF blocks given spin sn and orbital name on</span>
+<div class="viewcode-block" id="get_mkind"><a class="viewcode-back" href="../../../../reference/operators/util.html#pytriqs.operators.util.op_struct.get_mkind">[docs]</a><span class="k">def</span> <span class="nf">get_mkind</span><span class="p">(</span><span class="n">off_diag</span><span class="p">,</span><span class="n">map_operator_structure</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Set function that makes the index for operators and GF blocks for a given</span>
+<span class="sd">    spin and orbital name.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    off_diag : boolean</span>
+<span class="sd">               Do we have (orbital) off-diagonal elements?</span>
+<span class="sd">               If yes, the operators and blocks are denoted by (&#39;spin&#39;, &#39;orbital&#39;), otherwise by (&#39;spin_orbital&#39;,0).</span>
+<span class="sd">    map_operator_structure : dict </span>
+<span class="sd">			     Mapping of names of GF blocks names from one convention to another, </span>
+<span class="sd">                             e.g. {(&#39;up&#39;, 0): (&#39;up_0&#39;, 0), (&#39;down&#39;, 0): (&#39;down_0&#39;,0)}.</span>
+<span class="sd">                             If provided, the operators and blocks are denoted by the mapping of ``(&#39;spin&#39;, &#39;orbital&#39;)``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    mkind : lambda</span>
+<span class="sd">            The function mapping spin and orbital names to a tuple.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">off_diag</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">map_operator_structure</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;hamiltonians: provide either off_diag or map_operator_structure.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">map_operator_structure</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">off_diag</span><span class="p">:</span>
+            <span class="n">mkind</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">sn</span><span class="p">,</span> <span class="n">on</span><span class="p">:</span> <span class="p">(</span><span class="n">sn</span><span class="p">,</span> <span class="n">on</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mkind</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">sn</span><span class="p">,</span> <span class="n">on</span><span class="p">:</span> <span class="p">(</span><span class="n">sn</span><span class="o">+</span><span class="s1">&#39;_</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">on</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mkind</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">sn</span><span class="p">,</span> <span class="n">on</span><span class="p">:</span> <span class="n">map_operator_structure</span><span class="p">[(</span><span class="n">sn</span><span class="p">,</span><span class="n">on</span><span class="p">)]</span>
+
+    <span class="k">return</span> <span class="n">mkind</span></div>
+
+<span class="c1"># Set block structure of GF</span>
+<div class="viewcode-block" id="set_operator_structure"><a class="viewcode-back" href="../../../../reference/operators/util.html#pytriqs.operators.util.op_struct.set_operator_structure">[docs]</a><span class="k">def</span> <span class="nf">set_operator_structure</span><span class="p">(</span><span class="n">spin_names</span><span class="p">,</span><span class="n">orb_names</span><span class="p">,</span><span class="n">off_diag</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Set the operator_structure for given spin and orbital names, according to</span>
+<span class="sd">    whether or not the Green&#39;s functions contain off-diagonal blocks.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spin_names : list of strings</span>
+<span class="sd">                 Names of the spins, e.g. [&#39;up&#39;,&#39;down&#39;].</span>
+<span class="sd">    orb_names : list of strings or int       </span>
+<span class="sd">                Names of the orbitals, e.g. [0,1,2] or [&#39;t2g&#39;,&#39;eg&#39;].</span>
+<span class="sd">    off_diag : boolean</span>
+<span class="sd">               Do we have (orbital) off-diagonal elements?</span>
+<span class="sd">               If yes, the operators and blocks are denoted by (&#39;spin&#39;, &#39;orbital&#39;),</span>
+<span class="sd">               otherwise by (&#39;spin_orbital&#39;,0).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    op_struct : dict</span>
+<span class="sd">                The structure of the operators {block:[inner]}.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">op_struct</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">off_diag</span><span class="p">:</span> <span class="c1"># outer blocks are spin blocks</span>
+        <span class="k">for</span> <span class="n">sn</span> <span class="ow">in</span> <span class="n">spin_names</span><span class="p">:</span>
+            <span class="n">op_struct</span><span class="p">[</span><span class="n">sn</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">on</span> <span class="k">for</span> <span class="n">on</span> <span class="ow">in</span> <span class="n">orb_names</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span> <span class="c1"># outer blocks are spin-orbital blocks</span>
+        <span class="k">for</span> <span class="n">sn</span><span class="p">,</span> <span class="n">on</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="n">spin_names</span><span class="p">,</span><span class="n">orb_names</span><span class="p">):</span>
+            <span class="n">op_struct</span><span class="p">[</span><span class="n">sn</span><span class="o">+</span><span class="s1">&#39;_</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">on</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">op_struct</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2011-2017, The TRIQS collaboration.
+    </div>
+  </body>
+</html>
