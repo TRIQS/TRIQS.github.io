@@ -4,15 +4,16 @@ from pytriqs.archive import HDFArchive
 from triqs_cthyb import *
 from pytriqs.gf import *
 from triqs_dft_tools.sumk_dft import *
+from triqs_dft_tools.converters.wien2k_converter import *
 
 dft_filename='SrVO3'
-U = 4.0
-J = 0.65
+U = 9.6
+J = 0.8
 beta = 40
-loops = 15                       # Number of DMFT sc-loops
+loops = 10                       # Number of DMFT sc-loops
 sigma_mix = 1.0                  # Mixing factor of Sigma after solution of the AIM
 delta_mix = 1.0                  # Mixing factor of Delta as input for the AIM
-dc_type = 1                      # DC type: 0 FLL, 1 Held, 2 AMF
+dc_type = 0                      # DC type: 0 FLL, 1 Held, 2 AMF
 use_blocks = True                # use bloc structure from DFT input
 prec_mu = 0.0001
 h_field = 0.0
@@ -60,11 +61,13 @@ orb_names = [i for i in range(n_orb)]
 # Use GF structure determined by DFT blocks
 gf_struct = [(block, indices) for block, indices in SK.gf_struct_solver[0].iteritems()]
 
-# Construct U matrix for density-density calculations
-Umat, Upmat = U_matrix_kanamori(n_orb=n_orb, U_int=U, J_hund=J)
+# Construct Slater U matrix 
+U_sph = U_matrix(l=2, U_int=U, J_hund=J)
+U_cubic = transform_U_matrix(U_sph, spherical_to_cubic(l=2, convention='wien2k'))
+Umat = t2g_submatrix(U_cubic, convention='wien2k')
 
-# Construct density-density Hamiltonian and solver
-h_int = h_int_density(spin_names, orb_names, map_operator_structure=SK.sumk_to_solver[0], U=Umat, Uprime=Upmat, H_dump="H.txt")
+# Construct Hamiltonian and solver
+h_int = h_int_slater(spin_names, orb_names, map_operator_structure=SK.sumk_to_solver[0], U_matrix=Umat)
 S = Solver(beta=beta, gf_struct=gf_struct)
 
 if previous_present:
@@ -147,5 +150,5 @@ for iteration_number in range(1,loops+1):
     dm = S.G_iw.density() # compute the density matrix of the impurity problem
     SK.calc_dc(dm, U_interact = U, J_hund = J, orb = 0, use_dc_formula = dc_type)
 
-    # Save stuff into the user_data group of hdf5 archive in case of rerun:
+    # Save stuff into the dft_output group of hdf5 archive in case of rerun:
     SK.save(['chemical_potential','dc_imp','dc_energ'])
