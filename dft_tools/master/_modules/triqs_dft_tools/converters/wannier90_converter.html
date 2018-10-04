@@ -1,0 +1,738 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>triqs_dft_tools.converters.wannier90_converter &mdash; TRIQS DFTTools  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/triqs.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=default"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="top" title="TRIQS DFTTools  documentation" href="../../../contents.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head>
+  <body role="document">
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../../install.html">Install</a></li>
+    
+    <li><a href="../../../documentation.html">Documentation</a></li>
+    
+    <li><a href="../../../issues.html">Issues</a></li>
+    
+    <li><a href="../../../about.html">About DFTTools</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../../index.html">dft tools</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">connecting <a class="triqs" style="font-size: 12px" href="http://triqs.github.io/triqs">TRIQS</a> to DFT packages</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for triqs_dft_tools.converters.wannier90_converter</h1><div class="highlight"><pre>
+
+<span class="c1">##########################################################################</span>
+<span class="c1">#</span>
+<span class="c1"># TRIQS: a Toolbox for Research in Interacting Quantum Systems</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (C) 2011 by M. Aichhorn, L. Pourovskii, V. Vildosola</span>
+<span class="c1">#</span>
+<span class="c1"># TRIQS is free software: you can redistribute it and/or modify it under the</span>
+<span class="c1"># terms of the GNU General Public License as published by the Free Software</span>
+<span class="c1"># Foundation, either version 3 of the License, or (at your option) any later</span>
+<span class="c1"># version.</span>
+<span class="c1">#</span>
+<span class="c1"># TRIQS is distributed in the hope that it will be useful, but WITHOUT ANY</span>
+<span class="c1"># WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS</span>
+<span class="c1"># FOR A PARTICULAR PURPOSE. See the GNU General Public License for more</span>
+<span class="c1"># details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License along with</span>
+<span class="c1"># TRIQS. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1">##########################################################################</span>
+
+<span class="c1">###</span>
+<span class="c1">#  Wannier90 to HDF5 converter for the SumkDFT class of dfttools/TRIQS;</span>
+<span class="c1">#</span>
+<span class="c1">#   written by Gabriele Sclauzero (Materials Theory, ETH Zurich), Dec 2015 -- Jan 2016,</span>
+<span class="c1">#   under the supervision of Claude Ederer (Materials Theory).</span>
+<span class="c1">#   Partially based on previous work by K. Dymkovski and the DFT_tools/TRIQS team.</span>
+<span class="c1">#</span>
+<span class="c1">#  Limitations of the current implementation:</span>
+<span class="c1"># - the case with SO=1 is not considered at the moment</span>
+<span class="c1"># - the T rotation matrices are not used in this implementation</span>
+<span class="c1"># - projectors for uncorrelated shells (proj_mat_all) cannot be set</span>
+<span class="c1">#</span>
+<span class="c1">#  Things to be improved/checked:</span>
+<span class="c1"># - the case with SP=1 might work, but was never tested (do we need to define</span>
+<span class="c1">#   rot_mat_time_inv also if symm_op = 0?)</span>
+<span class="c1"># - the calculation of rot_mat in find_rot_mat() relies on the eigenvalues of H(0);</span>
+<span class="c1">#   this might fail in presence of degenerate eigenvalues (now just prints warning)</span>
+<span class="c1"># - the FFT is always done in serial mode (because all converters run serially);</span>
+<span class="c1">#   this can become very slow with a large number of R-vectors/k-points</span>
+<span class="c1"># - make the code more MPI safe (error handling): if we run with more than one process</span>
+<span class="c1">#   and an error occurs on the masternode, the calculation does not abort</span>
+<span class="c1">###</span>
+
+
+<span class="kn">from</span> <span class="nn">types</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">pytriqs.archive</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">converter_tools</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+
+
+<div class="viewcode-block" id="Wannier90Converter"><a class="viewcode-back" href="../../../reference/converters.html#triqs_dft_tools.converters.wannier90_converter.Wannier90Converter">[docs]</a><span class="k">class</span> <span class="nc">Wannier90Converter</span><span class="p">(</span><span class="n">ConverterTools</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Conversion from Wannier90 output to an hdf5 file that can be used as input for the SumkDFT class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Wannier90Converter.__init__"><a class="viewcode-back" href="../../../reference/converters.html#triqs_dft_tools.converters.wannier90_converter.Wannier90Converter.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seedname</span><span class="p">,</span> <span class="n">hdf_filename</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">dft_subgrp</span><span class="o">=</span><span class="s1">&#39;dft_input&#39;</span><span class="p">,</span>
+                 <span class="n">symmcorr_subgrp</span><span class="o">=</span><span class="s1">&#39;dft_symmcorr_input&#39;</span><span class="p">,</span> <span class="n">repacking</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialise the class.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        seedname : string</span>
+<span class="sd">            Base name of Wannier90 files</span>
+<span class="sd">        hdf_filename : string, optional</span>
+<span class="sd">            Name of hdf5 archive to be created</span>
+<span class="sd">        dft_subgrp : string, optional</span>
+<span class="sd">            Name of subgroup storing necessary DFT data</span>
+<span class="sd">        symmcorr_subgrp : string, optional</span>
+<span class="sd">            Name of subgroup storing correlated-shell symmetry data</span>
+<span class="sd">        repacking : boolean, optional</span>
+<span class="sd">            Does the hdf5 archive need to be repacked to save space?</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="s2">&quot;Wannier90Converter&quot;</span>
+        <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">seedname</span><span class="p">)</span> <span class="o">==</span> <span class="n">StringType</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">+</span> \
+            <span class="s2">&quot;: Please provide the DFT files&#39; base name as a string.&quot;</span>
+        <span class="k">if</span> <span class="n">hdf_filename</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">hdf_filename</span> <span class="o">=</span> <span class="n">seedname</span> <span class="o">+</span> <span class="s1">&#39;.h5&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hdf_file</span> <span class="o">=</span> <span class="n">hdf_filename</span>
+        <span class="c1"># if the w90 output is seedname_hr.dat, the input file for the</span>
+        <span class="c1"># converter must be called seedname.inp</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inp_file</span> <span class="o">=</span> <span class="n">seedname</span> <span class="o">+</span> <span class="s1">&#39;.inp&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w90_seed</span> <span class="o">=</span> <span class="n">seedname</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dft_subgrp</span> <span class="o">=</span> <span class="n">dft_subgrp</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">symmcorr_subgrp</span> <span class="o">=</span> <span class="n">symmcorr_subgrp</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fortran_to_replace</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;D&#39;</span><span class="p">:</span> <span class="s1">&#39;E&#39;</span><span class="p">}</span>
+        <span class="c1"># threshold below which matrix elements from wannier90 should be</span>
+        <span class="c1"># considered equal</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_w90zero</span> <span class="o">=</span> <span class="mf">2.e-6</span>
+
+        <span class="c1"># Checks if h5 file is there and repacks it if wanted:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf_file</span><span class="p">)</span> <span class="ow">and</span> <span class="n">repacking</span><span class="p">):</span>
+            <span class="n">ConverterTools</span><span class="o">.</span><span class="n">repack</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Wannier90Converter.convert_dft_input"><a class="viewcode-back" href="../../../reference/converters.html#triqs_dft_tools.converters.wannier90_converter.Wannier90Converter.convert_dft_input">[docs]</a>    <span class="k">def</span> <span class="nf">convert_dft_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reads the appropriate files and stores the data for the</span>
+
+<span class="sd">        - dft_subgrp</span>
+<span class="sd">        - symmcorr_subgrp</span>
+
+<span class="sd">        in the hdf5 archive. </span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Read and write only on the master node</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">()):</span>
+            <span class="k">return</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Reading input from </span><span class="si">%s</span><span class="s2">...&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">inp_file</span><span class="p">)</span>
+
+        <span class="c1"># R is a generator : each R.Next() will return the next number in the</span>
+        <span class="c1"># file</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="n">ConverterTools</span><span class="o">.</span><span class="n">read_fortran_file</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inp_file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_to_replace</span><span class="p">)</span>
+        <span class="n">shell_entries</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;atom&#39;</span><span class="p">,</span> <span class="s1">&#39;sort&#39;</span><span class="p">,</span> <span class="s1">&#39;l&#39;</span><span class="p">,</span> <span class="s1">&#39;dim&#39;</span><span class="p">]</span>
+        <span class="n">corr_shell_entries</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;atom&#39;</span><span class="p">,</span> <span class="s1">&#39;sort&#39;</span><span class="p">,</span> <span class="s1">&#39;l&#39;</span><span class="p">,</span> <span class="s1">&#39;dim&#39;</span><span class="p">,</span> <span class="s1">&#39;SO&#39;</span><span class="p">,</span> <span class="s1">&#39;irep&#39;</span><span class="p">]</span>
+        <span class="c1"># First, let&#39;s read the input file with the parameters needed for the</span>
+        <span class="c1"># conversion</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># read k - point mesh generation option</span>
+            <span class="n">kmesh_mode</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">next</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">kmesh_mode</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># read k-point mesh size from input</span>
+                <span class="n">nki</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">next</span><span class="p">())</span> <span class="k">for</span> <span class="n">idir</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># some default grid, if everything else fails...</span>
+                <span class="n">nki</span> <span class="o">=</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">]</span>
+            <span class="c1"># read the total number of electrons per cell</span>
+            <span class="n">density_required</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">next</span><span class="p">())</span>
+            <span class="c1"># we do not read shells, because we have no additional shells beyond correlated ones,</span>
+            <span class="c1"># and the data will be copied from corr_shells into shells (see below)</span>
+            <span class="c1"># number of corr. shells (e.g. Fe d, Ce f) in the unit cell,</span>
+            <span class="n">n_corr_shells</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">next</span><span class="p">())</span>
+            <span class="c1"># now read the information about the correlated shells (atom, sort,</span>
+            <span class="c1"># l, dim, SO flag, irep):</span>
+            <span class="n">corr_shells</span> <span class="o">=</span> <span class="p">[{</span><span class="n">name</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+                <span class="n">corr_shell_entries</span><span class="p">,</span> <span class="n">R</span><span class="p">)}</span> <span class="k">for</span> <span class="n">icrsh</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_corr_shells</span><span class="p">)]</span>
+        <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>  <span class="c1"># a more explicit error if the file is corrupted.</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">+</span> <span class="s2">&quot;: reading input file </span><span class="si">%s</span><span class="s2"> failed!&quot;</span> <span class="o">%</span>
+                       <span class="bp">self</span><span class="o">.</span><span class="n">inp_file</span><span class="p">)</span>
+        <span class="c1"># close the input file</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="c1"># Set or derive some quantities</span>
+        <span class="c1"># Wannier90 does not use symmetries to reduce the k-points</span>
+        <span class="c1"># the following might change in future versions</span>
+        <span class="n">symm_op</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># copy corr_shells into shells (see above)</span>
+        <span class="n">n_shells</span> <span class="o">=</span> <span class="n">n_corr_shells</span>
+        <span class="n">shells</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">ish</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_shells</span><span class="p">):</span>
+            <span class="n">shells</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="n">key</span><span class="p">:</span> <span class="n">corr_shells</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="n">key</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">shell_entries</span><span class="p">})</span>
+        <span class="c1">###</span>
+        <span class="n">SP</span> <span class="o">=</span> <span class="mi">0</span>                          <span class="c1"># NO spin-polarised calculations for now</span>
+        <span class="n">SO</span> <span class="o">=</span> <span class="mi">0</span>                          <span class="c1"># NO spin-orbit calculation for now</span>
+        <span class="n">charge_below</span> <span class="o">=</span> <span class="mi">0</span>                <span class="c1"># total charge below energy window NOT used for now</span>
+        <span class="n">energy_unit</span> <span class="o">=</span> <span class="mf">1.0</span>               <span class="c1"># should be understood as eV units</span>
+        <span class="c1">###</span>
+        <span class="c1"># this is more general</span>
+        <span class="n">n_spin</span> <span class="o">=</span> <span class="n">SP</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">SO</span>
+        <span class="n">dim_corr_shells</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">sh</span><span class="p">[</span><span class="s1">&#39;dim&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">sh</span> <span class="ow">in</span> <span class="n">corr_shells</span><span class="p">])</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span>
+            <span class="s2">&quot;Total number of WFs expected in the correlated shells: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">dim_corr_shells</span><span class="p">)</span>
+
+        <span class="c1"># determine the number of inequivalent correlated shells and maps,</span>
+        <span class="c1"># needed for further processing</span>
+        <span class="n">n_inequiv_shells</span><span class="p">,</span> <span class="n">corr_to_inequiv</span><span class="p">,</span> <span class="n">inequiv_to_corr</span> <span class="o">=</span> <span class="n">ConverterTools</span><span class="o">.</span><span class="n">det_shell_equivalence</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">corr_shells</span><span class="p">)</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Number of inequivalent shells: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">n_inequiv_shells</span><span class="p">)</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Shell representatives: &quot;</span> <span class="o">+</span> <span class="n">format</span><span class="p">(</span><span class="n">inequiv_to_corr</span><span class="p">))</span>
+        <span class="n">shells_map</span> <span class="o">=</span> <span class="p">[</span><span class="n">inequiv_to_corr</span><span class="p">[</span><span class="n">corr_to_inequiv</span><span class="p">[</span><span class="n">ish</span><span class="p">]]</span>
+                      <span class="k">for</span> <span class="n">ish</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_corr_shells</span><span class="p">)]</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Mapping: &quot;</span> <span class="o">+</span> <span class="n">format</span><span class="p">(</span><span class="n">shells_map</span><span class="p">))</span>
+
+        <span class="c1"># build the k-point mesh, if its size was given on input (kmesh_mode &gt;= 0),</span>
+        <span class="c1"># otherwise it is built according to the data in the hr file (see</span>
+        <span class="c1"># below)</span>
+        <span class="k">if</span> <span class="n">kmesh_mode</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">n_k</span><span class="p">,</span> <span class="n">k_mesh</span><span class="p">,</span> <span class="n">bz_weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kmesh_build</span><span class="p">(</span><span class="n">nki</span><span class="p">,</span> <span class="n">kmesh_mode</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_k</span> <span class="o">=</span> <span class="n">n_k</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">k_mesh</span> <span class="o">=</span> <span class="n">k_mesh</span>
+
+        <span class="c1"># not used in this version: reset to dummy values?</span>
+        <span class="n">n_reps</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_inequiv_shells</span><span class="p">)]</span>
+        <span class="n">dim_reps</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_inequiv_shells</span><span class="p">)]</span>
+        <span class="n">T</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">ish</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_inequiv_shells</span><span class="p">):</span>
+            <span class="n">ll</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">corr_shells</span><span class="p">[</span><span class="n">inequiv_to_corr</span><span class="p">[</span><span class="n">ish</span><span class="p">]][</span><span class="s1">&#39;l&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">lmax</span> <span class="o">=</span> <span class="n">ll</span> <span class="o">*</span> <span class="p">(</span><span class="n">corr_shells</span><span class="p">[</span><span class="n">inequiv_to_corr</span><span class="p">[</span><span class="n">ish</span><span class="p">]][</span><span class="s1">&#39;SO&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">T</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">lmax</span><span class="p">,</span> <span class="n">lmax</span><span class="p">],</span> <span class="n">numpy</span><span class="o">.</span><span class="n">complex_</span><span class="p">))</span>
+
+        <span class="n">spin_w90name</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;_up&#39;</span><span class="p">,</span> <span class="s1">&#39;_down&#39;</span><span class="p">]</span>
+        <span class="n">hamr_full</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># TODO: generalise to SP=1 (only partially done)</span>
+        <span class="n">rot_mat_time_inv</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_corr_shells</span><span class="p">)]</span>
+
+        <span class="c1"># Second, let&#39;s read the file containing the Hamiltonian in WF basis</span>
+        <span class="c1"># produced by Wannier90</span>
+        <span class="k">for</span> <span class="n">isp</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_spin</span><span class="p">):</span>
+            <span class="c1"># begin loop on isp</span>
+
+            <span class="c1"># build filename according to wannier90 conventions</span>
+            <span class="k">if</span> <span class="n">SP</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span>
+                    <span class="s2">&quot;Reading information for spin component n. </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">isp</span><span class="p">)</span>
+                <span class="n">hr_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w90_seed</span> <span class="o">+</span> <span class="n">spin_w90name</span><span class="p">[</span><span class="n">isp</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;_hr.dat&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">hr_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w90_seed</span> <span class="o">+</span> <span class="s1">&#39;_hr.dat&#39;</span>
+            <span class="c1"># now grab the data from the H(R) file</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span>
+                <span class="s2">&quot;The Hamiltonian in MLWF basis is extracted from </span><span class="si">%s</span><span class="s2"> ...&quot;</span> <span class="o">%</span> <span class="n">hr_file</span><span class="p">)</span>
+            <span class="n">nr</span><span class="p">,</span> <span class="n">rvec</span><span class="p">,</span> <span class="n">rdeg</span><span class="p">,</span> <span class="n">nw</span><span class="p">,</span> <span class="n">hamr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_wannier90hr</span><span class="p">(</span><span class="n">hr_file</span><span class="p">)</span>
+            <span class="c1"># number of R vectors, their indices, their degeneracy, number of</span>
+            <span class="c1"># WFs, H(R)</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;... done: </span><span class="si">%d</span><span class="s2"> R vectors, </span><span class="si">%d</span><span class="s2"> WFs found&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">nr</span><span class="p">,</span> <span class="n">nw</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">isp</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># set or check some quantities that must be the same for both</span>
+                <span class="c1"># spins</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">nrpt</span> <span class="o">=</span> <span class="n">nr</span>
+
+                <span class="c1"># k-point grid: (if not defined before)</span>
+                <span class="k">if</span> <span class="n">kmesh_mode</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="c1"># the size of the k-point mesh is determined from the</span>
+                    <span class="c1"># largest R vector</span>
+                    <span class="n">nki</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">rvec</span><span class="p">[:,</span> <span class="n">idir</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">idir</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span>
+                    <span class="c1"># it will be the same as in the win only when nki is odd, because of the</span>
+                    <span class="c1"># wannier90 convention: if we have nki k-points along the i-th direction,</span>
+                    <span class="c1"># then we should get 2*(nki/2)+nki%2 R points along that</span>
+                    <span class="c1"># direction</span>
+                    <span class="n">n_k</span><span class="p">,</span> <span class="n">k_mesh</span><span class="p">,</span> <span class="n">bz_weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kmesh_build</span><span class="p">(</span><span class="n">nki</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">n_k</span> <span class="o">=</span> <span class="n">n_k</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">k_mesh</span> <span class="o">=</span> <span class="n">k_mesh</span>
+
+                <span class="c1"># set the R vectors and their degeneracy</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">rvec</span> <span class="o">=</span> <span class="n">rvec</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">rdeg</span> <span class="o">=</span> <span class="n">rdeg</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">nwfs</span> <span class="o">=</span> <span class="n">nw</span>
+                <span class="c1"># check that the total number of WFs makes sense</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nwfs</span> <span class="o">&lt;</span> <span class="n">dim_corr_shells</span><span class="p">:</span>
+                    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span>
+                        <span class="s2">&quot;ERROR: number of WFs in the file smaller than number of correlated orbitals!&quot;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">nwfs</span> <span class="o">&gt;</span> <span class="n">dim_corr_shells</span><span class="p">:</span>
+                    <span class="c1"># NOTE: correlated shells must appear before uncorrelated</span>
+                    <span class="c1"># ones inside the file</span>
+                    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Number of WFs larger than correlated orbitals:</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span>
+                               <span class="s2">&quot;WFs from </span><span class="si">%d</span><span class="s2"> to </span><span class="si">%d</span><span class="s2"> treated as uncorrelated&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">dim_corr_shells</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nwfs</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span>
+                        <span class="s2">&quot;Number of WFs equal to number of correlated orbitals&quot;</span><span class="p">)</span>
+
+                <span class="c1"># we assume spin up and spin down always have same total number</span>
+                <span class="c1"># of WFs</span>
+                <span class="n">n_orbitals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span>
+                    <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">n_k</span><span class="p">,</span> <span class="n">n_spin</span><span class="p">],</span> <span class="n">numpy</span><span class="o">.</span><span class="n">int</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nwfs</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># consistency check between the _up and _down file contents</span>
+                <span class="k">if</span> <span class="n">nr</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nrpt</span><span class="p">:</span>
+                    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span>
+                        <span class="s2">&quot;Different number of R vectors for spin-up/spin-down!&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">nw</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nwfs</span><span class="p">:</span>
+                    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span>
+                        <span class="s2">&quot;Different number of WFs for spin-up/spin-down!&quot;</span><span class="p">)</span>
+
+            <span class="n">hamr_full</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hamr</span><span class="p">)</span>
+            <span class="c1"># FIXME: when do we actually need deepcopy()?</span>
+            <span class="c1"># hamr_full.append(deepcopy(hamr))</span>
+
+            <span class="k">for</span> <span class="n">ir</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nr</span><span class="p">):</span>
+                <span class="c1"># checks if the Hamiltonian is real (it should, if</span>
+                <span class="c1"># wannierisation worked fine)</span>
+                <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">((</span><span class="n">hamr</span><span class="p">[</span><span class="n">ir</span><span class="p">]</span><span class="o">.</span><span class="n">imag</span><span class="o">.</span><span class="n">max</span><span class="p">())</span><span class="o">.</span><span class="n">max</span><span class="p">())</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_w90zero</span><span class="p">:</span>
+                    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span>
+                        <span class="s2">&quot;H(R) has large complex components at R </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">ir</span><span class="p">)</span>
+                <span class="c1"># copy the R=0 block corresponding to the correlated shells</span>
+                <span class="c1"># into another variable (needed later for finding rot_mat)</span>
+                <span class="k">if</span> <span class="n">rvec</span><span class="p">[</span><span class="n">ir</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">rvec</span><span class="p">[</span><span class="n">ir</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">rvec</span><span class="p">[</span><span class="n">ir</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">ham_corr0</span> <span class="o">=</span> <span class="n">hamr</span><span class="p">[</span><span class="n">ir</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="n">dim_corr_shells</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">dim_corr_shells</span><span class="p">]</span>
+
+            <span class="c1"># checks if ham0 is Hermitian</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">numpy</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">ham_corr0</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span> <span class="n">ham_corr0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_w90zero</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1.e-9</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;H(R=0) matrix is not Hermitian!&quot;</span><span class="p">)</span>
+
+            <span class="c1"># find rot_mat symmetries by diagonalising the on-site Hamiltonian</span>
+            <span class="c1"># of the first spin</span>
+            <span class="k">if</span> <span class="n">isp</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">use_rotations</span><span class="p">,</span> <span class="n">rot_mat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_rot_mat</span><span class="p">(</span>
+                    <span class="n">n_corr_shells</span><span class="p">,</span> <span class="n">corr_shells</span><span class="p">,</span> <span class="n">shells_map</span><span class="p">,</span> <span class="n">ham_corr0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># consistency check</span>
+                <span class="n">use_rotations_</span><span class="p">,</span> <span class="n">rot_mat_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_rot_mat</span><span class="p">(</span>
+                    <span class="n">n_corr_shells</span><span class="p">,</span> <span class="n">corr_shells</span><span class="p">,</span> <span class="n">shells_map</span><span class="p">,</span> <span class="n">ham_corr0</span><span class="p">)</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">use_rotations</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">use_rotations_</span><span class="p">):</span>
+                    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span>
+                        <span class="s2">&quot;Rotations cannot be used for spin component n. </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">isp</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">icrsh</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_corr_shells</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">numpy</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">rot_mat_</span><span class="p">[</span><span class="n">icrsh</span><span class="p">],</span> <span class="n">rot_mat</span><span class="p">[</span><span class="n">icrsh</span><span class="p">],</span> <span class="n">atol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_w90zero</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1.e-15</span><span class="p">):</span>
+                        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span>
+                            <span class="s2">&quot;Rotations for spin component n. </span><span class="si">%d</span><span class="s2"> do not match!&quot;</span> <span class="o">%</span> <span class="n">isp</span><span class="p">)</span>
+        <span class="c1"># end loop on isp</span>
+
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;The k-point grid has dimensions: </span><span class="si">%d</span><span class="s2">, </span><span class="si">%d</span><span class="s2">, </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">nki</span><span class="p">))</span>
+        <span class="c1"># if calculations are spin-polarized, then renormalize k-point weights</span>
+        <span class="k">if</span> <span class="n">SP</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">bz_weights</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">bz_weights</span>
+
+        <span class="c1"># Third, compute the hoppings in reciprocal space</span>
+        <span class="n">hopping</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">n_k</span><span class="p">,</span> <span class="n">n_spin</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span>
+            <span class="n">n_orbitals</span><span class="p">),</span> <span class="n">numpy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">n_orbitals</span><span class="p">)],</span> <span class="n">numpy</span><span class="o">.</span><span class="n">complex_</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">isp</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_spin</span><span class="p">):</span>
+            <span class="c1"># make Fourier transform H(R) -&gt; H(k) : it can be done one spin at</span>
+            <span class="c1"># a time</span>
+            <span class="n">hamk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fourier_ham</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nwfs</span><span class="p">,</span> <span class="n">hamr_full</span><span class="p">[</span><span class="n">isp</span><span class="p">])</span>
+            <span class="c1"># copy the H(k) in the right place of hoppings... is there a better</span>
+            <span class="c1"># way to do this??</span>
+            <span class="k">for</span> <span class="n">ik</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_k</span><span class="p">):</span>
+                <span class="c1">#hopping[ik,isp,:,:] = deepcopy(hamk[ik][:,:])*energy_unit</span>
+                <span class="n">hopping</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span> <span class="n">isp</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">hamk</span><span class="p">[</span><span class="n">ik</span><span class="p">][:,</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">energy_unit</span>
+
+        <span class="c1"># Then, initialise the projectors</span>
+        <span class="n">k_dep_projection</span> <span class="o">=</span> <span class="mi">0</span>   <span class="c1"># we always have the same number of WFs at each k-point</span>
+        <span class="n">proj_mat</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">n_k</span><span class="p">,</span> <span class="n">n_spin</span><span class="p">,</span> <span class="n">n_corr_shells</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">crsh</span><span class="p">[</span><span class="s1">&#39;dim&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">crsh</span> <span class="ow">in</span> <span class="n">corr_shells</span><span class="p">]),</span> <span class="n">numpy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">n_orbitals</span><span class="p">)],</span> <span class="n">numpy</span><span class="o">.</span><span class="n">complex_</span><span class="p">)</span>
+        <span class="n">iorb</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># Projectors simply consist in identity matrix blocks selecting those MLWFs that</span>
+        <span class="c1"># correspond to the specific correlated shell indexed by icrsh.</span>
+        <span class="c1"># NOTE: we assume that the correlated orbitals appear at the beginning of the H(R)</span>
+        <span class="c1"># file and that the ordering of MLWFs matches the corr_shell info from</span>
+        <span class="c1"># the input.</span>
+        <span class="k">for</span> <span class="n">icrsh</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_corr_shells</span><span class="p">):</span>
+            <span class="n">norb</span> <span class="o">=</span> <span class="n">corr_shells</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="s1">&#39;dim&#39;</span><span class="p">]</span>
+            <span class="n">proj_mat</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">icrsh</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">norb</span><span class="p">,</span> <span class="n">iorb</span><span class="p">:</span><span class="n">iorb</span> <span class="o">+</span>
+                     <span class="n">norb</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">norb</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">complex_</span><span class="p">)</span>
+            <span class="n">iorb</span> <span class="o">+=</span> <span class="n">norb</span>
+
+        <span class="c1"># Finally, save all required data into the HDF archive:</span>
+        <span class="n">ar</span> <span class="o">=</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf_file</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dft_subgrp</span> <span class="ow">in</span> <span class="n">ar</span><span class="p">):</span>
+            <span class="n">ar</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dft_subgrp</span><span class="p">)</span>
+        <span class="c1"># The subgroup containing the data. If it does not exist, it is</span>
+        <span class="c1"># created. If it exists, the data is overwritten!</span>
+        <span class="n">things_to_save</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;energy_unit&#39;</span><span class="p">,</span> <span class="s1">&#39;n_k&#39;</span><span class="p">,</span> <span class="s1">&#39;k_dep_projection&#39;</span><span class="p">,</span> <span class="s1">&#39;SP&#39;</span><span class="p">,</span> <span class="s1">&#39;SO&#39;</span><span class="p">,</span> <span class="s1">&#39;charge_below&#39;</span><span class="p">,</span> <span class="s1">&#39;density_required&#39;</span><span class="p">,</span>
+                          <span class="s1">&#39;symm_op&#39;</span><span class="p">,</span> <span class="s1">&#39;n_shells&#39;</span><span class="p">,</span> <span class="s1">&#39;shells&#39;</span><span class="p">,</span> <span class="s1">&#39;n_corr_shells&#39;</span><span class="p">,</span> <span class="s1">&#39;corr_shells&#39;</span><span class="p">,</span> <span class="s1">&#39;use_rotations&#39;</span><span class="p">,</span> <span class="s1">&#39;rot_mat&#39;</span><span class="p">,</span>
+                          <span class="s1">&#39;rot_mat_time_inv&#39;</span><span class="p">,</span> <span class="s1">&#39;n_reps&#39;</span><span class="p">,</span> <span class="s1">&#39;dim_reps&#39;</span><span class="p">,</span> <span class="s1">&#39;T&#39;</span><span class="p">,</span> <span class="s1">&#39;n_orbitals&#39;</span><span class="p">,</span> <span class="s1">&#39;proj_mat&#39;</span><span class="p">,</span> <span class="s1">&#39;bz_weights&#39;</span><span class="p">,</span> <span class="s1">&#39;hopping&#39;</span><span class="p">,</span>
+                          <span class="s1">&#39;n_inequiv_shells&#39;</span><span class="p">,</span> <span class="s1">&#39;corr_to_inequiv&#39;</span><span class="p">,</span> <span class="s1">&#39;inequiv_to_corr&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">things_to_save</span><span class="p">:</span>
+            <span class="n">ar</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dft_subgrp</span><span class="p">][</span><span class="n">it</span><span class="p">]</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()[</span><span class="n">it</span><span class="p">]</span>
+        <span class="k">del</span> <span class="n">ar</span></div>
+
+<div class="viewcode-block" id="Wannier90Converter.read_wannier90hr"><a class="viewcode-back" href="../../../reference/converters.html#triqs_dft_tools.converters.wannier90_converter.Wannier90Converter.read_wannier90hr">[docs]</a>    <span class="k">def</span> <span class="nf">read_wannier90hr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hr_filename</span><span class="o">=</span><span class="s2">&quot;wannier_hr.dat&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method for reading the seedname_hr.dat file produced by Wannier90 (http://wannier.org)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        hr_filename : string</span>
+<span class="sd">            full name of the H(R) file produced by Wannier90 (usually seedname_hr.dat)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        nrpt : integer</span>
+<span class="sd">            number of R vectors found in the file</span>
+<span class="sd">        rvec_idx : numpy.array of integers</span>
+<span class="sd">            Miller indices of the R vectors</span>
+<span class="sd">        rvec_deg : numpy.array of floats</span>
+<span class="sd">            weight of the R vectors</span>
+<span class="sd">        num_wf : integer</span>
+<span class="sd">            number of Wannier functions found</span>
+<span class="sd">        h_of_r : list of numpy.array</span>
+<span class="sd">            &lt;w_i|H(R)|w_j&gt; = Hamilonian matrix elements in the Wannier basis</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Read only from the master node</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">()):</span>
+            <span class="k">return</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">hr_filename</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">hr_filedesc</span><span class="p">:</span>
+                <span class="n">hr_data</span> <span class="o">=</span> <span class="n">hr_filedesc</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+                <span class="n">hr_filedesc</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;The file </span><span class="si">%s</span><span class="s2"> could not be read!&quot;</span> <span class="o">%</span> <span class="n">hr_filename</span><span class="p">)</span>
+
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Reading </span><span class="si">%s</span><span class="s2">...&quot;</span> <span class="o">%</span> <span class="n">hr_filename</span> <span class="o">+</span> <span class="n">hr_data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># reads number of Wannier functions per spin</span>
+            <span class="n">num_wf</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">hr_data</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">nrpt</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">hr_data</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Could not read number of WFs or R vectors&quot;</span><span class="p">)</span>
+
+        <span class="c1"># allocate arrays to save the R vector indexes and degeneracies and the</span>
+        <span class="c1"># Hamiltonian</span>
+        <span class="n">rvec_idx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nrpt</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">rvec_deg</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nrpt</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">h_of_r</span> <span class="o">=</span> <span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_wf</span><span class="p">,</span> <span class="n">num_wf</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">complex_</span><span class="p">)</span>
+                  <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nrpt</span><span class="p">)]</span>
+
+        <span class="c1"># variable currpos points to the current line in the file</span>
+        <span class="n">currpos</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ir</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="c1"># read the degeneracy of the R vectors (needed for the Fourier</span>
+            <span class="c1"># transform)</span>
+            <span class="k">while</span> <span class="n">ir</span> <span class="o">&lt;</span> <span class="n">nrpt</span><span class="p">:</span>
+                <span class="n">currpos</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">hr_data</span><span class="p">[</span><span class="n">currpos</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">ir</span> <span class="o">&gt;=</span> <span class="n">nrpt</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;wrong number of R vectors??&quot;</span><span class="p">)</span>
+                    <span class="n">rvec_deg</span><span class="p">[</span><span class="n">ir</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                    <span class="n">ir</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="c1"># for each direct lattice vector R read the block of the</span>
+            <span class="c1"># Hamiltonian H(R)</span>
+            <span class="k">for</span> <span class="n">ir</span><span class="p">,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ii</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">nrpt</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_wf</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_wf</span><span class="p">)):</span>
+                <span class="c1"># advance one line, split the line into tokens</span>
+                <span class="n">currpos</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">cline</span> <span class="o">=</span> <span class="n">hr_data</span><span class="p">[</span><span class="n">currpos</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                <span class="c1"># check if the orbital indexes in the file make sense</span>
+                <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">cline</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="o">!=</span> <span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span> <span class="ow">or</span> <span class="nb">int</span><span class="p">(</span><span class="n">cline</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span> <span class="o">!=</span> <span class="n">jj</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span>
+                        <span class="s2">&quot;Inconsistent indices at </span><span class="si">%s%s</span><span class="s2"> of R n. </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">ii</span><span class="p">,</span> <span class="n">jj</span><span class="p">,</span> <span class="n">ir</span><span class="p">))</span>
+                <span class="n">rcurr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                    <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">cline</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">cline</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">cline</span><span class="p">[</span><span class="mi">2</span><span class="p">])])</span>
+                <span class="k">if</span> <span class="n">ii</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">jj</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">rvec_idx</span><span class="p">[</span><span class="n">ir</span><span class="p">]</span> <span class="o">=</span> <span class="n">rcurr</span>
+                    <span class="n">rprec</span> <span class="o">=</span> <span class="n">rcurr</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># check if the vector indices are consistent</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">rcurr</span><span class="p">,</span> <span class="n">rprec</span><span class="p">):</span>
+                        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span>
+                            <span class="s2">&quot;Inconsistent indices for R vector n. </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">ir</span><span class="p">)</span>
+
+                <span class="c1"># fill h_of_r with the matrix elements of the Hamiltonian</span>
+                <span class="n">h_of_r</span><span class="p">[</span><span class="n">ir</span><span class="p">][</span><span class="n">ii</span><span class="p">,</span> <span class="n">jj</span><span class="p">]</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">cline</span><span class="p">[</span><span class="mi">5</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">cline</span><span class="p">[</span><span class="mi">6</span><span class="p">]))</span>
+
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Wrong data or structure in file </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">hr_filename</span><span class="p">)</span>
+
+        <span class="c1"># return the data into variables</span>
+        <span class="k">return</span> <span class="n">nrpt</span><span class="p">,</span> <span class="n">rvec_idx</span><span class="p">,</span> <span class="n">rvec_deg</span><span class="p">,</span> <span class="n">num_wf</span><span class="p">,</span> <span class="n">h_of_r</span></div>
+
+<div class="viewcode-block" id="Wannier90Converter.find_rot_mat"><a class="viewcode-back" href="../../../reference/converters.html#triqs_dft_tools.converters.wannier90_converter.Wannier90Converter.find_rot_mat">[docs]</a>    <span class="k">def</span> <span class="nf">find_rot_mat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_sh</span><span class="p">,</span> <span class="n">sh_lst</span><span class="p">,</span> <span class="n">sh_map</span><span class="p">,</span> <span class="n">ham0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method for finding the matrices that bring from local to global coordinate systems</span>
+<span class="sd">        (and viceversa), based on the eigenvalues of H(R=0)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n_sh : integer</span>
+<span class="sd">            number of shells</span>
+<span class="sd">        sh_lst : list of shells-type dictionaries</span>
+<span class="sd">            contains the shells (could be correlated or not)</span>
+<span class="sd">        sh_map : list of integers</span>
+<span class="sd">            mapping between shells</span>
+<span class="sd">        ham0 : numpy.array of floats</span>
+<span class="sd">            local Hamiltonian matrix elements</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        istatus : integer</span>
+<span class="sd">            if 0, something failed in the construction of the matrices</span>
+<span class="sd">        rot_mat : list of numpy.array</span>
+<span class="sd">            rotation matrix for each of the shell</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># initialize the rotation matrices to identities</span>
+        <span class="n">rot_mat</span> <span class="o">=</span> <span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">sh_lst</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="s1">&#39;dim&#39;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+                   <span class="k">for</span> <span class="n">ish</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_sh</span><span class="p">)]</span>
+        <span class="n">istatus</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">hs</span> <span class="o">=</span> <span class="n">ham0</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">if</span> <span class="n">hs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">hs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">or</span> <span class="n">hs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">sh</span><span class="p">[</span><span class="s1">&#39;dim&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">sh</span> <span class="ow">in</span> <span class="n">sh_lst</span><span class="p">]):</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span>
+                <span class="s2">&quot;find_rot_mat: wrong block structure of input Hamiltonian!&quot;</span><span class="p">)</span>
+            <span class="n">istatus</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="c1"># this error will lead into troubles later... early return</span>
+            <span class="k">return</span> <span class="n">istatus</span><span class="p">,</span> <span class="n">rot_mat</span>
+
+        <span class="c1"># TODO: better handling of degenerate eigenvalue case</span>
+        <span class="n">eigval_lst</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">eigvec_lst</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">iwf</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># loop over shells</span>
+        <span class="k">for</span> <span class="n">ish</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_sh</span><span class="p">):</span>
+            <span class="c1"># nw = number of orbitals in this shell</span>
+            <span class="n">nw</span> <span class="o">=</span> <span class="n">sh_lst</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="s2">&quot;dim&quot;</span><span class="p">]</span>
+            <span class="c1"># diagonalize the sub-block of H(0) corresponding to this shell</span>
+            <span class="n">eigval</span><span class="p">,</span> <span class="n">eigvec</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span>
+                <span class="n">ham0</span><span class="p">[</span><span class="n">iwf</span><span class="p">:</span><span class="n">iwf</span> <span class="o">+</span> <span class="n">nw</span><span class="p">,</span> <span class="n">iwf</span><span class="p">:</span><span class="n">iwf</span> <span class="o">+</span> <span class="n">nw</span><span class="p">])</span>
+            <span class="c1"># find the indices sorting the eigenvalues in ascending order</span>
+            <span class="n">eigsrt</span> <span class="o">=</span> <span class="n">eigval</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">nw</span><span class="p">]</span><span class="o">.</span><span class="n">argsort</span><span class="p">()</span>
+            <span class="c1"># order eigenvalues and eigenvectors and save in a list</span>
+            <span class="n">eigval_lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eigval</span><span class="p">[</span><span class="n">eigsrt</span><span class="p">])</span>
+            <span class="n">eigvec_lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eigvec</span><span class="p">[</span><span class="n">eigsrt</span><span class="p">])</span>
+            <span class="n">iwf</span> <span class="o">+=</span> <span class="n">nw</span>
+            <span class="c1"># TODO: better handling of degenerate eigenvalue case</span>
+            <span class="k">if</span> <span class="n">sh_map</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span> <span class="o">!=</span> <span class="n">ish</span><span class="p">:</span>  <span class="c1"># issue warning only when there are equivalent shells</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nw</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">nw</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">eigval</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">eigval</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_w90zero</span><span class="p">):</span>
+                            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;WARNING: degenerate eigenvalue of H(0) detected for shell </span><span class="si">%d</span><span class="s2">: &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">ish</span><span class="p">)</span> <span class="o">+</span>
+                                       <span class="s2">&quot;global-to-local transformation might not work!&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">ish</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_sh</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># build rotation matrices by combining the unitary</span>
+                <span class="c1"># transformations that diagonalize H(0)</span>
+                <span class="n">rot_mat</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">eigvec_lst</span><span class="p">[</span><span class="n">ish</span><span class="p">],</span> <span class="n">eigvec_lst</span><span class="p">[</span>
+                                         <span class="n">sh_map</span><span class="p">[</span><span class="n">ish</span><span class="p">]]</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span>
+                    <span class="s2">&quot;Global-to-local rotation matrices cannot be constructed!&quot;</span><span class="p">)</span>
+
+            <span class="n">istatus</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="c1"># check that eigenvalues are the same (within accuracy) for</span>
+            <span class="c1"># equivalent shells</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">numpy</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">eigval_lst</span><span class="p">[</span><span class="n">ish</span><span class="p">],</span> <span class="n">eigval_lst</span><span class="p">[</span><span class="n">sh_map</span><span class="p">[</span><span class="n">ish</span><span class="p">]],</span> <span class="n">atol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_w90zero</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1.e-15</span><span class="p">):</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span>
+                    <span class="s2">&quot;ERROR: eigenvalue mismatch between equivalent shells! </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">ish</span><span class="p">)</span>
+                <span class="n">eigval_diff</span> <span class="o">=</span> <span class="n">eigval_lst</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span> <span class="o">-</span> <span class="n">eigval_lst</span><span class="p">[</span><span class="n">sh_map</span><span class="p">[</span><span class="n">ish</span><span class="p">]]</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Eigenvalue difference: &quot;</span> <span class="o">+</span> <span class="n">format</span><span class="p">(</span><span class="n">eigval_diff</span><span class="p">))</span>
+                <span class="n">istatus</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># TODO: add additional consistency check on rot_mat matrices?</span>
+
+        <span class="k">return</span> <span class="n">istatus</span><span class="p">,</span> <span class="n">rot_mat</span></div>
+
+<div class="viewcode-block" id="Wannier90Converter.kmesh_build"><a class="viewcode-back" href="../../../reference/converters.html#triqs_dft_tools.converters.wannier90_converter.Wannier90Converter.kmesh_build">[docs]</a>    <span class="k">def</span> <span class="nf">kmesh_build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msize</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">mmode</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method for the generation of the k-point mesh.</span>
+<span class="sd">        Right now it only supports the option for generating a full grid containing k=0,0,0.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        msize : list of 3 integers</span>
+<span class="sd">            the dimensions of the mesh</span>
+<span class="sd">        mmode : integer</span>
+<span class="sd">            mesh generation mode (right now, only full grid available)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        nkpt : integer</span>
+<span class="sd">            total number of k-points in the mesh</span>
+<span class="sd">        k_mesh : numpy.array[nkpt,3] of floats</span>
+<span class="sd">            the coordinates of all k-points</span>
+<span class="sd">        wk : numpy.array[nkpt] of floats</span>
+<span class="sd">            the weight of each k-point</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">mmode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Mesh generation mode not supported: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">mmode</span><span class="p">)</span>
+
+        <span class="c1"># a regular mesh including Gamma point</span>
+        <span class="c1"># total number of k-points</span>
+        <span class="n">nkpt</span> <span class="o">=</span> <span class="n">msize</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">msize</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">msize</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">kmesh</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nkpt</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">ii</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">ix</span><span class="p">,</span> <span class="n">iy</span><span class="p">,</span> <span class="n">iz</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">msize</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">range</span><span class="p">(</span><span class="n">msize</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">range</span><span class="p">(</span><span class="n">msize</span><span class="p">[</span><span class="mi">2</span><span class="p">])):</span>
+            <span class="n">kmesh</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">ix</span><span class="p">)</span> <span class="o">/</span> <span class="n">msize</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">float</span><span class="p">(</span><span class="n">iy</span><span class="p">)</span> <span class="o">/</span>
+                            <span class="n">msize</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">float</span><span class="p">(</span><span class="n">iz</span><span class="p">)</span> <span class="o">/</span> <span class="n">msize</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span>
+            <span class="n">ii</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="c1"># weight is equal for all k-points because wannier90 uses uniform grid on whole BZ</span>
+        <span class="c1"># (normalization is always 1 and takes into account spin degeneracy)</span>
+        <span class="n">wk</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="n">nkpt</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">nkpt</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">nkpt</span><span class="p">,</span> <span class="n">kmesh</span><span class="p">,</span> <span class="n">wk</span></div>
+
+<div class="viewcode-block" id="Wannier90Converter.fourier_ham"><a class="viewcode-back" href="../../../reference/converters.html#triqs_dft_tools.converters.wannier90_converter.Wannier90Converter.fourier_ham">[docs]</a>    <span class="k">def</span> <span class="nf">fourier_ham</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">h_of_r</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method for obtaining H(k) from H(R) via Fourier transform</span>
+<span class="sd">        The R vectors and k-point mesh are read from global module variables</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        norb : integer</span>
+<span class="sd">            number of orbitals</span>
+<span class="sd">        h_of_r : list of numpy.array[norb,norb]</span>
+<span class="sd">            Hamiltonian H(R) in Wannier basis</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        h_of_k : list of numpy.array[norb,norb]</span>
+<span class="sd">            transformed Hamiltonian H(k) in Wannier basis</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">twopi</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">pi</span>
+        <span class="n">h_of_k</span> <span class="o">=</span> <span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">norb</span><span class="p">,</span> <span class="n">norb</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">complex_</span><span class="p">)</span>
+                  <span class="k">for</span> <span class="n">ik</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_k</span><span class="p">)]</span>
+        <span class="n">ridx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nrpt</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">ik</span><span class="p">,</span> <span class="n">ir</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_k</span><span class="p">),</span> <span class="n">ridx</span><span class="p">):</span>
+            <span class="n">rdotk</span> <span class="o">=</span> <span class="n">twopi</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">k_mesh</span><span class="p">[</span><span class="n">ik</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">rvec</span><span class="p">[</span><span class="n">ir</span><span class="p">])</span>
+            <span class="n">factor</span> <span class="o">=</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">rdotk</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1j</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">rdotk</span><span class="p">))</span> <span class="o">/</span> \
+                <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rdeg</span><span class="p">[</span><span class="n">ir</span><span class="p">])</span>
+            <span class="n">h_of_k</span><span class="p">[</span><span class="n">ik</span><span class="p">][:,</span> <span class="p">:]</span> <span class="o">+=</span> <span class="n">factor</span> <span class="o">*</span> <span class="n">h_of_r</span><span class="p">[</span><span class="n">ir</span><span class="p">][:,</span> <span class="p">:]</span>
+
+        <span class="k">return</span> <span class="n">h_of_k</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2011-2013, M. Aichhorn, L. Pourovskii, V. Vildosola, C. Martins.
+    </div>
+  </body>
+</html>
