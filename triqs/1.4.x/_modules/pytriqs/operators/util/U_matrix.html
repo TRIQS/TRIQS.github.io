@@ -1,0 +1,675 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>pytriqs.operators.util.U_matrix &#8212; TRIQS  documentation</title>
+    <link rel="stylesheet" href="../../../../_static/triqs.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="/mnt/home/wentzell/opt/MathJax-2.7.5/MathJax.js?config=default"></script>
+    <link rel="author" title="About these documents" href="../../../../about.html" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head>
+  <body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../../../install.html">Install</a></li>
+    
+    <li><a href="../../../../reference.html">Reference</a></li>
+    
+    <li><a href="../../../../tutorials.html">Tutorials</a></li>
+    
+    <li><a href="../../../../applications.html">Applications</a></li>
+    
+    <li><a href="../../../../issues.html">Issues</a></li>
+    
+    <li><a href="../../../../about.html">About TRIQS</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../../../index.html">triqs</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">a Toolbox for Research on Interacting Quantum Systems</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pytriqs.operators.util.U_matrix</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">sqrt</span>
+<span class="kn">from</span> <span class="nn">scipy.misc</span> <span class="k">import</span> <span class="n">factorial</span> <span class="k">as</span> <span class="n">fact</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">product</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="c1"># The interaction matrix in desired basis</span>
+<span class="c1"># U^{spherical}_{m1 m2 m3 m4} = \sum_{k=0}^{2l} F_k angular_matrix_element(l, k, m1, m2, m3, m4)</span>
+<span class="c1"># H = \frac{1}{2} \sum_{ijkl,\sigma \sigma&#39;} U_{ijkl} a_{i \sigma}^\dagger a_{j \sigma&#39;}^\dagger a_{l \sigma&#39;} a_{k \sigma}.</span>
+<div class="viewcode-block" id="U_matrix"><a class="viewcode-back" href="../../../../reference/operators/util/U_matrix.html#pytriqs.operators.util.U_matrix.U_matrix">[docs]</a><span class="k">def</span> <span class="nf">U_matrix</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">radial_integrals</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">U_int</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">J_hund</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;spherical&#39;</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the full four-index U matrix being given either radial_integrals or U_int and J_hund.</span>
+<span class="sd">    The convetion for the U matrix is that used to construct the Hamiltonians, namely:</span>
+
+<span class="sd">    .. math:: H = \frac{1}{2} \sum_{ijkl,\sigma \sigma&#39;} U_{ijkl} a_{i \sigma}^\dagger a_{j \sigma&#39;}^\dagger a_{l \sigma&#39;} a_{k \sigma}.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    l : integer</span>
+<span class="sd">        Angular momentum of shell being treated (l=2 for d shell, l=3 for f shell).</span>
+<span class="sd">    radial_integrals : list, optional</span>
+<span class="sd">                       Slater integrals [F0,F2,F4,..].</span>
+<span class="sd">                       Must be provided if U_int and J_hund are not given.</span>
+<span class="sd">                       Preferentially used to compute the U_matrix if provided alongside U_int and J_hund.</span>
+<span class="sd">    U_int : scalar, optional</span>
+<span class="sd">            Value of the screened Hubbard interaction.</span>
+<span class="sd">            Must be provided if radial_integrals are not given.</span>
+<span class="sd">    J_hund : scalar, optional</span>
+<span class="sd">             Value of the Hund&#39;s coupling.</span>
+<span class="sd">             Must be provided if radial_integrals are not given.</span>
+<span class="sd">    basis : string, optional</span>
+<span class="sd">            The basis in which the interaction matrix should be computed.</span>
+<span class="sd">            Takes the values</span>
+
+<span class="sd">            - &#39;spherical&#39;: spherical harmonics,</span>
+<span class="sd">            - &#39;cubic&#39;: cubic harmonics,</span>
+<span class="sd">            - &#39;other&#39;: other basis type as given by the transformation matrix T.</span>
+
+<span class="sd">    T : real/complex numpy array, optional</span>
+<span class="sd">        Transformation matrix for basis change.</span>
+<span class="sd">        Must be provided if basis=&#39;other&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    U_matrix : float numpy array</span>
+<span class="sd">               The four-index interaction matrix in the chosen basis.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Check all necessary information is present and consistent</span>
+    <span class="k">if</span> <span class="n">radial_integrals</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="n">U_int</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">J_hund</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;U_matrix: provide either the radial_integrals or U_int and J_hund.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">radial_integrals</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="n">U_int</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">J_hund</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">radial_integrals</span> <span class="o">=</span> <span class="n">U_J_to_radial_integrals</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">U_int</span><span class="p">,</span> <span class="n">J_hund</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">radial_integrals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="p">(</span><span class="n">U_int</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">J_hund</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">radial_integrals</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span> <span class="o">!=</span> <span class="n">l</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;U_matrix: inconsistency in l and number of radial_integrals provided.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">radial_integrals</span> <span class="o">-</span> <span class="n">U_J_to_radial_integrals</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">U_int</span><span class="p">,</span> <span class="n">J_hund</span><span class="p">))</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s2">&quot;Warning: U_matrix: radial_integrals provided do not match U_int and J_hund. Using radial_integrals to calculate U_matrix.&quot;</span>
+
+    <span class="c1"># Full interaction matrix</span>
+    <span class="c1"># Basis of spherical harmonics Y_{-2}, Y_{-1}, Y_{0}, Y_{1}, Y_{2}</span>
+    <span class="c1"># U^{spherical}_{m1 m2 m3 m4} = \sum_{k=0}^{2l} F_k angular_matrix_element(l, k, m1, m2, m3, m4)</span>
+    <span class="n">U_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="n">l</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">l</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">l</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">l</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+    <span class="n">m_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="n">l</span><span class="p">,</span><span class="n">l</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">F</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">radial_integrals</span><span class="p">):</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">n</span>
+        <span class="k">for</span> <span class="n">m1</span><span class="p">,</span> <span class="n">m2</span><span class="p">,</span> <span class="n">m3</span><span class="p">,</span> <span class="n">m4</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="n">m_range</span><span class="p">,</span><span class="n">m_range</span><span class="p">,</span><span class="n">m_range</span><span class="p">,</span><span class="n">m_range</span><span class="p">):</span>
+            <span class="n">U_matrix</span><span class="p">[</span><span class="n">m1</span><span class="o">+</span><span class="n">l</span><span class="p">,</span><span class="n">m2</span><span class="o">+</span><span class="n">l</span><span class="p">,</span><span class="n">m3</span><span class="o">+</span><span class="n">l</span><span class="p">,</span><span class="n">m4</span><span class="o">+</span><span class="n">l</span><span class="p">]</span> <span class="o">+=</span> <span class="n">F</span> <span class="o">*</span> <span class="n">angular_matrix_element</span><span class="p">(</span><span class="n">l</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">m1</span><span class="p">,</span><span class="n">m2</span><span class="p">,</span><span class="n">m3</span><span class="p">,</span><span class="n">m4</span><span class="p">)</span>
+
+    <span class="c1"># Transform from spherical basis if needed</span>
+    <span class="k">if</span> <span class="n">basis</span> <span class="o">==</span> <span class="s2">&quot;cubic&quot;</span><span class="p">:</span> <span class="n">T</span> <span class="o">=</span> <span class="n">spherical_to_cubic</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">basis</span> <span class="o">==</span> <span class="s2">&quot;other&quot;</span> <span class="ow">and</span> <span class="n">T</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;U_matrix: provide T for other bases.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">T</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="n">U_matrix</span> <span class="o">=</span> <span class="n">transform_U_matrix</span><span class="p">(</span><span class="n">U_matrix</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">U_matrix</span></div>
+
+<span class="c1"># Convert full 4-index U matrix to 2-index density-density form</span>
+<div class="viewcode-block" id="reduce_4index_to_2index"><a class="viewcode-back" href="../../../../reference/operators/util/U_matrix.html#pytriqs.operators.util.U_matrix.reduce_4index_to_2index">[docs]</a><span class="k">def</span> <span class="nf">reduce_4index_to_2index</span><span class="p">(</span><span class="n">U_4index</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reduces the four-index matrix to two-index matrices for parallel and anti-parallel spins.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    U_4index : float numpy array</span>
+<span class="sd">               The four-index interaction matrix.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    U : float numpy array</span>
+<span class="sd">        The two-index interaction matrix for parallel spins.</span>
+<span class="sd">    Uprime : float numpy array</span>
+<span class="sd">             The two-index interaction matrix for anti-parallel spins.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">U_4index</span><span class="p">)</span> <span class="c1"># 2l+1</span>
+    <span class="n">U</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">size</span><span class="p">,</span><span class="n">size</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>      <span class="c1"># matrix for same spin</span>
+    <span class="n">Uprime</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">size</span><span class="p">,</span><span class="n">size</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>  <span class="c1"># matrix for opposite spin</span>
+
+    <span class="n">m_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">m</span><span class="p">,</span><span class="n">mp</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="n">m_range</span><span class="p">,</span><span class="n">m_range</span><span class="p">):</span>
+        <span class="n">U</span><span class="p">[</span><span class="n">m</span><span class="p">,</span><span class="n">mp</span><span class="p">]</span>  <span class="o">=</span> <span class="n">U_4index</span><span class="p">[</span><span class="n">m</span><span class="p">,</span><span class="n">mp</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">mp</span><span class="p">]</span><span class="o">.</span><span class="n">real</span> <span class="o">-</span> <span class="n">U_4index</span><span class="p">[</span><span class="n">m</span><span class="p">,</span><span class="n">mp</span><span class="p">,</span><span class="n">mp</span><span class="p">,</span><span class="n">m</span><span class="p">]</span><span class="o">.</span><span class="n">real</span>
+        <span class="n">Uprime</span><span class="p">[</span><span class="n">m</span><span class="p">,</span><span class="n">mp</span><span class="p">]</span> <span class="o">=</span> <span class="n">U_4index</span><span class="p">[</span><span class="n">m</span><span class="p">,</span><span class="n">mp</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">mp</span><span class="p">]</span><span class="o">.</span><span class="n">real</span>
+
+    <span class="k">return</span> <span class="n">U</span><span class="p">,</span> <span class="n">Uprime</span></div>
+
+<span class="c1"># Construct the 2-index matrices for the density-density form</span>
+<div class="viewcode-block" id="U_matrix_kanamori"><a class="viewcode-back" href="../../../../reference/operators/util/U_matrix.html#pytriqs.operators.util.U_matrix.U_matrix_kanamori">[docs]</a><span class="k">def</span> <span class="nf">U_matrix_kanamori</span><span class="p">(</span><span class="n">n_orb</span><span class="p">,</span> <span class="n">U_int</span><span class="p">,</span> <span class="n">J_hund</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the Kanamori U and Uprime matrices.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n_orb : integer</span>
+<span class="sd">            Number of orbitals in basis.</span>
+<span class="sd">    U_int : scalar</span>
+<span class="sd">            Value of the screened Hubbard interaction.</span>
+<span class="sd">    J_hund : scalar</span>
+<span class="sd">             Value of the Hund&#39;s coupling.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    U : float numpy array</span>
+<span class="sd">        The two-index interaction matrix for parallel spins.</span>
+<span class="sd">    Uprime : float numpy array</span>
+<span class="sd">             The two-index interaction matrix for anti-parallel spins.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">U</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_orb</span><span class="p">,</span><span class="n">n_orb</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>      <span class="c1"># matrix for same spin</span>
+    <span class="n">Uprime</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_orb</span><span class="p">,</span><span class="n">n_orb</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>  <span class="c1"># matrix for opposite spin</span>
+
+    <span class="n">m_range</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_orb</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">m</span><span class="p">,</span><span class="n">mp</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="n">m_range</span><span class="p">,</span><span class="n">m_range</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">m</span> <span class="o">==</span> <span class="n">mp</span><span class="p">:</span>
+            <span class="n">Uprime</span><span class="p">[</span><span class="n">m</span><span class="p">,</span><span class="n">mp</span><span class="p">]</span> <span class="o">=</span> <span class="n">U_int</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">U</span><span class="p">[</span><span class="n">m</span><span class="p">,</span><span class="n">mp</span><span class="p">]</span>  <span class="o">=</span> <span class="n">U_int</span> <span class="o">-</span> <span class="mf">3.0</span><span class="o">*</span><span class="n">J_hund</span>
+            <span class="n">Uprime</span><span class="p">[</span><span class="n">m</span><span class="p">,</span><span class="n">mp</span><span class="p">]</span> <span class="o">=</span> <span class="n">U_int</span> <span class="o">-</span> <span class="mf">2.0</span><span class="o">*</span><span class="n">J_hund</span>
+
+    <span class="k">return</span> <span class="n">U</span><span class="p">,</span> <span class="n">Uprime</span></div>
+
+<span class="c1"># Get t2g or eg components</span>
+<div class="viewcode-block" id="t2g_submatrix"><a class="viewcode-back" href="../../../../reference/operators/util/U_matrix.html#pytriqs.operators.util.U_matrix.t2g_submatrix">[docs]</a><span class="k">def</span> <span class="nf">t2g_submatrix</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">convention</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract the t2g submatrix of the full d-manifold two- or four-index U matrix.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    U : float numpy array</span>
+<span class="sd">        Two- or four-index interaction matrix.</span>
+<span class="sd">    convention : string, optional</span>
+<span class="sd">                 The basis convention.</span>
+<span class="sd">                 Takes the values</span>
+
+<span class="sd">                 - &#39;&#39;: basis ordered as (&quot;xy&quot;,&quot;yz&quot;,&quot;z^2&quot;,&quot;xz&quot;,&quot;x^2-y^2&quot;),</span>
+<span class="sd">                 - &#39;wien2k&#39;: basis ordered as (&quot;z^2&quot;,&quot;x^2-y^2&quot;,&quot;xy&quot;,&quot;yz&quot;,&quot;xz&quot;).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    U_t2g : float numpy array</span>
+<span class="sd">            The t2g component of the interaction matrix.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">convention</span> <span class="o">==</span> <span class="s1">&#39;wien2k&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">subarray</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">*</span><span class="p">[(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">)])</span>
+    <span class="k">elif</span> <span class="n">convention</span><span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">subarray</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">*</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">)])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown convention: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">convention</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="eg_submatrix"><a class="viewcode-back" href="../../../../reference/operators/util/U_matrix.html#pytriqs.operators.util.U_matrix.eg_submatrix">[docs]</a><span class="k">def</span> <span class="nf">eg_submatrix</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">convention</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract the eg submatrix of the full d-manifold two- or four-index U matrix.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    U : float numpy array</span>
+<span class="sd">        Two- or four-index interaction matrix.</span>
+<span class="sd">    convention : string, optional</span>
+<span class="sd">                 The basis convention.</span>
+<span class="sd">                 Takes the values</span>
+
+<span class="sd">                 - &#39;&#39;: basis ordered as (&quot;xy&quot;,&quot;yz&quot;,&quot;z^2&quot;,&quot;xz&quot;,&quot;x^2-y^2&quot;),</span>
+<span class="sd">                 - &#39;wien2k&#39;: basis ordered as (&quot;z^2&quot;,&quot;x^2-y^2&quot;,&quot;xy&quot;,&quot;yz&quot;,&quot;xz&quot;).</span>
+
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    U_eg : float numpy array</span>
+<span class="sd">           The eg component of the interaction matrix.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">convention</span> <span class="o">==</span> <span class="s1">&#39;wien2k&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">subarray</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">*</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)])</span>
+    <span class="k">elif</span> <span class="n">convention</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">subarray</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">*</span><span class="p">[(</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">)])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown convention: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">convention</span><span class="p">))</span></div>
+
+
+<span class="c1"># Transform the interaction matrix into another basis</span>
+<div class="viewcode-block" id="transform_U_matrix"><a class="viewcode-back" href="../../../../reference/operators/util/U_matrix.html#pytriqs.operators.util.U_matrix.transform_U_matrix">[docs]</a><span class="k">def</span> <span class="nf">transform_U_matrix</span><span class="p">(</span><span class="n">U_matrix</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Transform a four-index interaction matrix into another basis.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    U_matrix : float numpy array</span>
+<span class="sd">               The four-index interaction matrix in the original basis.</span>
+<span class="sd">    T : real/complex numpy array, optional</span>
+<span class="sd">        Transformation matrix for basis change.</span>
+<span class="sd">        Must be provided if basis=&#39;other&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    U_matrix : float numpy array</span>
+<span class="sd">               The four-index interaction matrix in the new basis.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;ij,kl,jlmo,mn,op&quot;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">T</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">T</span><span class="p">),</span><span class="n">U_matrix</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">T</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">T</span><span class="p">))</span></div>
+
+<span class="c1"># Rotation matrices: complex harmonics to cubic harmonics</span>
+<span class="c1"># Complex harmonics basis: ..., Y_{-2}, Y_{-1}, Y_{0}, Y_{1}, Y_{2}, ...</span>
+<div class="viewcode-block" id="spherical_to_cubic"><a class="viewcode-back" href="../../../../reference/operators/util/U_matrix.html#pytriqs.operators.util.U_matrix.spherical_to_cubic">[docs]</a><span class="k">def</span> <span class="nf">spherical_to_cubic</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">convention</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the spherical harmonics to cubic harmonics transformation matrix.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    l : integer</span>
+<span class="sd">        Angular momentum of shell being treated (l=2 for d shell, l=3 for f shell).</span>
+<span class="sd">    convention : string, optional</span>
+<span class="sd">                 The basis convention.</span>
+<span class="sd">                 Takes the values</span>
+
+<span class="sd">                 - &#39;&#39;: basis ordered as (&quot;xy&quot;,&quot;yz&quot;,&quot;z^2&quot;,&quot;xz&quot;,&quot;x^2-y^2&quot;),</span>
+<span class="sd">                 - &#39;wien2k&#39;: basis ordered as (&quot;z^2&quot;,&quot;x^2-y^2&quot;,&quot;xy&quot;,&quot;yz&quot;,&quot;xz&quot;).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    T : real/complex numpy array</span>
+<span class="sd">        Transformation matrix for basis change.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">convention</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;wien2k&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown convention: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">convention</span><span class="p">))</span>
+
+    <span class="n">size</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">l</span><span class="o">+</span><span class="mi">1</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">size</span><span class="p">,</span><span class="n">size</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">convention</span> <span class="o">==</span> <span class="s1">&#39;wien2k&#39;</span> <span class="ow">and</span> <span class="n">l</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;spherical_to_cubic: wien2k convention implemented only for l=2&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">l</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">cubic_names</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;s&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">l</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">cubic_names</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">,</span><span class="s2">&quot;z&quot;</span><span class="p">)</span>
+        <span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>   <span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>    <span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">T</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="k">elif</span> <span class="n">l</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">convention</span> <span class="o">==</span> <span class="s1">&#39;wien2k&#39;</span><span class="p">:</span>
+            <span class="n">cubic_names</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;z^2&quot;</span><span class="p">,</span><span class="s2">&quot;x^2-y^2&quot;</span><span class="p">,</span><span class="s2">&quot;xy&quot;</span><span class="p">,</span><span class="s2">&quot;yz&quot;</span><span class="p">,</span><span class="s2">&quot;xz&quot;</span><span class="p">)</span>
+            <span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>   <span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">T</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=-</span><span class="mf">1.0</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>   <span class="n">T</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">T</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>   <span class="n">T</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="o">=-</span><span class="mf">1.0</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">T</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>   <span class="n">T</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cubic_names</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;xy&quot;</span><span class="p">,</span><span class="s2">&quot;yz&quot;</span><span class="p">,</span><span class="s2">&quot;z^2&quot;</span><span class="p">,</span><span class="s2">&quot;xz&quot;</span><span class="p">,</span><span class="s2">&quot;x^2-y^2&quot;</span><span class="p">)</span>
+            <span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>    <span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="n">j</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>    <span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">T</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="n">T</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>   <span class="n">T</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">T</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>   <span class="n">T</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">l</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">cubic_names</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;x(x^2-3y^2)&quot;</span><span class="p">,</span><span class="s2">&quot;z(x^2-y^2)&quot;</span><span class="p">,</span><span class="s2">&quot;xz^2&quot;</span><span class="p">,</span><span class="s2">&quot;z^3&quot;</span><span class="p">,</span><span class="s2">&quot;yz^2&quot;</span><span class="p">,</span><span class="s2">&quot;xyz&quot;</span><span class="p">,</span><span class="s2">&quot;y(3x^2-y^2)&quot;</span><span class="p">)</span>
+        <span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>    <span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>    <span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">T</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>    <span class="n">T</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">T</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="n">T</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>   <span class="n">T</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">T</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>   <span class="n">T</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="n">j</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">T</span><span class="p">[</span><span class="mi">6</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>   <span class="n">T</span><span class="p">[</span><span class="mi">6</span><span class="p">,</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span> <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;spherical_to_cubic: implemented only for l=0,1,2,3&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">T</span><span class="p">)</span></div>
+
+<span class="c1"># Names of cubic harmonics</span>
+<div class="viewcode-block" id="cubic_names"><a class="viewcode-back" href="../../../../reference/operators/util/U_matrix.html#pytriqs.operators.util.U_matrix.cubic_names">[docs]</a><span class="k">def</span> <span class="nf">cubic_names</span><span class="p">(</span><span class="n">l</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the names of the cubic harmonics.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    l : integer or string</span>
+<span class="sd">        Angular momentum of shell being treated.</span>
+<span class="sd">        Also takes &#39;t2g&#39; and &#39;eg&#39; as arguments.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    cubic_names : tuple of strings</span>
+<span class="sd">                  Names of the orbitals.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">l</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">l</span> <span class="o">==</span> <span class="s1">&#39;s&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;s&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">l</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">l</span> <span class="o">==</span> <span class="s1">&#39;p&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span><span class="s2">&quot;y&quot;</span><span class="p">,</span><span class="s2">&quot;z&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">l</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">l</span> <span class="o">==</span> <span class="s1">&#39;d&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;xy&quot;</span><span class="p">,</span><span class="s2">&quot;yz&quot;</span><span class="p">,</span><span class="s2">&quot;z^2&quot;</span><span class="p">,</span><span class="s2">&quot;xz&quot;</span><span class="p">,</span><span class="s2">&quot;x^2-y^2&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">l</span> <span class="o">==</span> <span class="s1">&#39;t2g&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;xy&quot;</span><span class="p">,</span><span class="s2">&quot;yz&quot;</span><span class="p">,</span><span class="s2">&quot;xz&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">l</span> <span class="o">==</span> <span class="s1">&#39;eg&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;z^2&quot;</span><span class="p">,</span><span class="s2">&quot;x^2-y^2&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">l</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">or</span> <span class="n">l</span> <span class="o">==</span> <span class="s1">&#39;f&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;x(x^2-3y^2)&quot;</span><span class="p">,</span><span class="s2">&quot;z(x^2-y^2)&quot;</span><span class="p">,</span><span class="s2">&quot;xz^2&quot;</span><span class="p">,</span><span class="s2">&quot;z^3&quot;</span><span class="p">,</span><span class="s2">&quot;yz^2&quot;</span><span class="p">,</span><span class="s2">&quot;xyz&quot;</span><span class="p">,</span><span class="s2">&quot;y(3x^2-y^2)&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span> <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;cubic_names: implemented only for l=0,1,2,3&quot;</span><span class="p">)</span></div>
+
+<span class="c1"># Convert U,J -&gt; radial integrals F_k</span>
+<div class="viewcode-block" id="U_J_to_radial_integrals"><a class="viewcode-back" href="../../../../reference/operators/util/U_matrix.html#pytriqs.operators.util.U_matrix.U_J_to_radial_integrals">[docs]</a><span class="k">def</span> <span class="nf">U_J_to_radial_integrals</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">U_int</span><span class="p">,</span> <span class="n">J_hund</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determine the radial integrals F_k from U_int and J_hund.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    l : integer</span>
+<span class="sd">        Angular momentum of shell being treated (l=2 for d shell, l=3 for f shell).</span>
+<span class="sd">    U_int : scalar</span>
+<span class="sd">            Value of the screened Hubbard interaction.</span>
+<span class="sd">    J_hund : scalar</span>
+<span class="sd">             Value of the Hund&#39;s coupling.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    radial_integrals : list</span>
+<span class="sd">                       Slater integrals [F0,F2,F4,..].</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">F</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">l</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">l</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">F</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">U_int</span>
+        <span class="n">F</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">5.0</span> <span class="o">*</span> <span class="n">J_hund</span>
+    <span class="k">elif</span> <span class="n">l</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">F</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">U_int</span>
+        <span class="n">F</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">J_hund</span> <span class="o">*</span> <span class="mf">14.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="mf">0.63</span><span class="p">)</span>
+        <span class="n">F</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.630</span> <span class="o">*</span> <span class="n">F</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">l</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">F</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">U_int</span>
+        <span class="n">F</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">6435.0</span> <span class="o">*</span> <span class="n">J_hund</span> <span class="o">/</span> <span class="p">(</span><span class="mf">286.0</span> <span class="o">+</span> <span class="mf">195.0</span> <span class="o">*</span> <span class="mf">451.0</span> <span class="o">/</span> <span class="mf">675.0</span> <span class="o">+</span> <span class="mf">250.0</span> <span class="o">*</span> <span class="mf">1001.0</span> <span class="o">/</span> <span class="mf">2025.0</span><span class="p">)</span>
+        <span class="n">F</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mf">451.0</span> <span class="o">*</span> <span class="n">F</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mf">675.0</span>
+        <span class="n">F</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1001.0</span> <span class="o">*</span> <span class="n">F</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mf">2025.0</span>
+    <span class="k">else</span><span class="p">:</span> <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;U_J_to_radial_integrals: implemented only for l=1,2,3&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">F</span></div>
+
+<span class="c1"># Convert radial integrals F_k -&gt; U,J</span>
+<div class="viewcode-block" id="radial_integrals_to_U_J"><a class="viewcode-back" href="../../../../reference/operators/util/U_matrix.html#pytriqs.operators.util.U_matrix.radial_integrals_to_U_J">[docs]</a><span class="k">def</span> <span class="nf">radial_integrals_to_U_J</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">F</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determine U_int and J_hund from the radial integrals.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    l : integer</span>
+<span class="sd">        Angular momentum of shell being treated (l=2 for d shell, l=3 for f shell).</span>
+<span class="sd">    F : list</span>
+<span class="sd">        Slater integrals [F0,F2,F4,..].</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    U_int : scalar</span>
+<span class="sd">            Value of the screened Hubbard interaction.</span>
+<span class="sd">    J_hund : scalar</span>
+<span class="sd">             Value of the Hund&#39;s coupling.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">l</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">U_int</span> <span class="o">=</span> <span class="n">F</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">J_hund</span> <span class="o">=</span> <span class="n">F</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mf">5.0</span>
+    <span class="k">elif</span> <span class="n">l</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">U_int</span> <span class="o">=</span> <span class="n">F</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">J_hund</span> <span class="o">=</span> <span class="n">F</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="mf">0.63</span><span class="p">)</span> <span class="o">/</span> <span class="mf">14.0</span>
+    <span class="k">elif</span> <span class="n">l</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">U_int</span> <span class="o">=</span> <span class="n">F</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">J_hund</span> <span class="o">=</span> <span class="n">F</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mf">286.0</span> <span class="o">+</span> <span class="mf">195.0</span> <span class="o">*</span> <span class="mf">451.0</span> <span class="o">/</span> <span class="mf">675.0</span> <span class="o">+</span> <span class="mf">250.0</span> <span class="o">*</span> <span class="mf">1001.0</span> <span class="o">/</span> <span class="mf">2025.0</span><span class="p">)</span> <span class="o">/</span> <span class="mf">6435.0</span>
+    <span class="k">else</span><span class="p">:</span> <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;radial_integrals_to_U_J: implemented only for l=1,2,3&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">U_int</span><span class="p">,</span><span class="n">J_hund</span></div>
+
+<span class="c1"># Angular matrix elements of particle-particle interaction</span>
+<span class="c1"># (2l+1)^2 ((l 0) (k 0) (l 0))^2 \sum_{q=-k}^{k} (-1)^{m1+m2+q} ((l -m1) (k q) (l m3)) ((l -m2) (k -q) (l m4))</span>
+<div class="viewcode-block" id="angular_matrix_element"><a class="viewcode-back" href="../../../../reference/operators/util/U_matrix.html#pytriqs.operators.util.U_matrix.angular_matrix_element">[docs]</a><span class="k">def</span> <span class="nf">angular_matrix_element</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">m1</span><span class="p">,</span> <span class="n">m2</span><span class="p">,</span> <span class="n">m3</span><span class="p">,</span> <span class="n">m4</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the angular matrix element</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       (2l+1)^2</span>
+<span class="sd">       \begin{pmatrix}</span>
+<span class="sd">            l &amp; k &amp; l \\</span>
+<span class="sd">            0 &amp; 0 &amp; 0</span>
+<span class="sd">       \end{pmatrix}^2</span>
+<span class="sd">       \sum_{q=-k}^k (-1)^{m_1+m_2+q}</span>
+<span class="sd">       \begin{pmatrix}</span>
+<span class="sd">            l &amp; k &amp; l \\</span>
+<span class="sd">         -m_1 &amp; q &amp; m_3</span>
+<span class="sd">       \end{pmatrix}</span>
+<span class="sd">       \begin{pmatrix}</span>
+<span class="sd">            l &amp; k  &amp; l \\</span>
+<span class="sd">         -m_2 &amp; -q &amp; m_4</span>
+<span class="sd">       \end{pmatrix}.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    l : integer</span>
+<span class="sd">    k : integer</span>
+<span class="sd">    m1 : integer</span>
+<span class="sd">    m2 : integer</span>
+<span class="sd">    m3 : integer</span>
+<span class="sd">    m4 : integer</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ang_mat_ele : scalar</span>
+<span class="sd">                  Angular matrix element.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ang_mat_ele</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="n">k</span><span class="p">,</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">ang_mat_ele</span> <span class="o">+=</span> <span class="n">three_j_symbol</span><span class="p">((</span><span class="n">l</span><span class="p">,</span><span class="o">-</span><span class="n">m1</span><span class="p">),(</span><span class="n">k</span><span class="p">,</span><span class="n">q</span><span class="p">),(</span><span class="n">l</span><span class="p">,</span><span class="n">m3</span><span class="p">))</span><span class="o">*</span><span class="n">three_j_symbol</span><span class="p">((</span><span class="n">l</span><span class="p">,</span><span class="o">-</span><span class="n">m2</span><span class="p">),(</span><span class="n">k</span><span class="p">,</span><span class="o">-</span><span class="n">q</span><span class="p">),(</span><span class="n">l</span><span class="p">,</span><span class="n">m4</span><span class="p">))</span><span class="o">*</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span> <span class="k">if</span> <span class="p">(</span><span class="n">m1</span><span class="o">+</span><span class="n">q</span><span class="o">+</span><span class="n">m2</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="k">else</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">ang_mat_ele</span> <span class="o">*=</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">l</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">three_j_symbol</span><span class="p">((</span><span class="n">l</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="n">k</span><span class="p">,</span><span class="mi">0</span><span class="p">),(</span><span class="n">l</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ang_mat_ele</span></div>
+
+<span class="c1"># Wigner 3-j symbols</span>
+<span class="c1"># ((j1 m1) (j2 m2) (j3 m3))</span>
+<div class="viewcode-block" id="three_j_symbol"><a class="viewcode-back" href="../../../../reference/operators/util/U_matrix.html#pytriqs.operators.util.U_matrix.three_j_symbol">[docs]</a><span class="k">def</span> <span class="nf">three_j_symbol</span><span class="p">(</span><span class="n">jm1</span><span class="p">,</span> <span class="n">jm2</span><span class="p">,</span> <span class="n">jm3</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the three-j symbol</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       \begin{pmatrix}</span>
+<span class="sd">        l_1 &amp; l_2 &amp; l_3\\</span>
+<span class="sd">        m_1 &amp; m_2 &amp; m_3</span>
+<span class="sd">       \end{pmatrix}.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    jm1 : tuple of integers</span>
+<span class="sd">          (j_1 m_1)</span>
+<span class="sd">    jm2 : tuple of integers</span>
+<span class="sd">          (j_2 m_2)</span>
+<span class="sd">    jm3 : tuple of integers</span>
+<span class="sd">          (j_3 m_3)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    three_j_sym : scalar</span>
+<span class="sd">                  Three-j symbol.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">j1</span><span class="p">,</span> <span class="n">m1</span> <span class="o">=</span> <span class="n">jm1</span>
+    <span class="n">j2</span><span class="p">,</span> <span class="n">m2</span> <span class="o">=</span> <span class="n">jm2</span>
+    <span class="n">j3</span><span class="p">,</span> <span class="n">m3</span> <span class="o">=</span> <span class="n">jm3</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">m1</span><span class="o">+</span><span class="n">m2</span><span class="o">+</span><span class="n">m3</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span>
+        <span class="n">m1</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">j1</span> <span class="ow">or</span> <span class="n">m1</span> <span class="o">&gt;</span> <span class="n">j1</span> <span class="ow">or</span>
+        <span class="n">m2</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">j2</span> <span class="ow">or</span> <span class="n">m2</span> <span class="o">&gt;</span> <span class="n">j2</span> <span class="ow">or</span>
+        <span class="n">m3</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">j3</span> <span class="ow">or</span> <span class="n">m3</span> <span class="o">&gt;</span> <span class="n">j3</span> <span class="ow">or</span>
+        <span class="n">j3</span> <span class="o">&gt;</span> <span class="n">j1</span> <span class="o">+</span> <span class="n">j2</span> <span class="ow">or</span>
+        <span class="n">j3</span> <span class="o">&lt;</span> <span class="nb">abs</span><span class="p">(</span><span class="n">j1</span><span class="o">-</span><span class="n">j2</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="o">.</span><span class="mi">0</span>
+
+    <span class="n">three_j_sym</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span> <span class="k">if</span> <span class="p">(</span><span class="n">j1</span><span class="o">-</span><span class="n">j2</span><span class="o">-</span><span class="n">m3</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="k">else</span> <span class="mf">1.0</span>
+    <span class="n">three_j_sym</span> <span class="o">*=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">fact</span><span class="p">(</span><span class="n">j1</span><span class="o">+</span><span class="n">j2</span><span class="o">-</span><span class="n">j3</span><span class="p">)</span><span class="o">*</span><span class="n">fact</span><span class="p">(</span><span class="n">j1</span><span class="o">-</span><span class="n">j2</span><span class="o">+</span><span class="n">j3</span><span class="p">)</span><span class="o">*</span><span class="n">fact</span><span class="p">(</span><span class="o">-</span><span class="n">j1</span><span class="o">+</span><span class="n">j2</span><span class="o">+</span><span class="n">j3</span><span class="p">)</span><span class="o">/</span><span class="n">fact</span><span class="p">(</span><span class="n">j1</span><span class="o">+</span><span class="n">j2</span><span class="o">+</span><span class="n">j3</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">three_j_sym</span> <span class="o">*=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">fact</span><span class="p">(</span><span class="n">j1</span><span class="o">-</span><span class="n">m1</span><span class="p">)</span><span class="o">*</span><span class="n">fact</span><span class="p">(</span><span class="n">j1</span><span class="o">+</span><span class="n">m1</span><span class="p">)</span><span class="o">*</span><span class="n">fact</span><span class="p">(</span><span class="n">j2</span><span class="o">-</span><span class="n">m2</span><span class="p">)</span><span class="o">*</span><span class="n">fact</span><span class="p">(</span><span class="n">j2</span><span class="o">+</span><span class="n">m2</span><span class="p">)</span><span class="o">*</span><span class="n">fact</span><span class="p">(</span><span class="n">j3</span><span class="o">-</span><span class="n">m3</span><span class="p">)</span><span class="o">*</span><span class="n">fact</span><span class="p">(</span><span class="n">j3</span><span class="o">+</span><span class="n">m3</span><span class="p">))</span>
+
+    <span class="n">t_min</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">j2</span><span class="o">-</span><span class="n">j3</span><span class="o">-</span><span class="n">m1</span><span class="p">,</span><span class="n">j1</span><span class="o">-</span><span class="n">j3</span><span class="o">+</span><span class="n">m2</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">t_max</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">j1</span><span class="o">-</span><span class="n">m1</span><span class="p">,</span><span class="n">j2</span><span class="o">+</span><span class="n">m2</span><span class="p">,</span><span class="n">j1</span><span class="o">+</span><span class="n">j2</span><span class="o">-</span><span class="n">j3</span><span class="p">)</span>
+
+    <span class="n">t_sum</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t_min</span><span class="p">,</span><span class="n">t_max</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">t_sum</span> <span class="o">+=</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.0</span> <span class="k">if</span> <span class="n">t</span> <span class="o">%</span> <span class="mi">2</span> <span class="k">else</span> <span class="mf">1.0</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">fact</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="n">fact</span><span class="p">(</span><span class="n">j3</span><span class="o">-</span><span class="n">j2</span><span class="o">+</span><span class="n">m1</span><span class="o">+</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="n">fact</span><span class="p">(</span><span class="n">j3</span><span class="o">-</span><span class="n">j1</span><span class="o">-</span><span class="n">m2</span><span class="o">+</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="n">fact</span><span class="p">(</span><span class="n">j1</span><span class="o">+</span><span class="n">j2</span><span class="o">-</span><span class="n">j3</span><span class="o">-</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="n">fact</span><span class="p">(</span><span class="n">j1</span><span class="o">-</span><span class="n">m1</span><span class="o">-</span><span class="n">t</span><span class="p">)</span><span class="o">*</span><span class="n">fact</span><span class="p">(</span><span class="n">j2</span><span class="o">+</span><span class="n">m2</span><span class="o">-</span><span class="n">t</span><span class="p">))</span>
+
+    <span class="n">three_j_sym</span> <span class="o">*=</span> <span class="n">t_sum</span>
+    <span class="k">return</span> <span class="n">three_j_sym</span></div>
+
+<span class="c1"># Clebsch-Gordan coefficients</span>
+<span class="c1"># &lt; j1 m1 j2 m2 | j3 m3 &gt; = (-1)^{j1-j2+m3} \sqrt{2j3+1} ((j1 m1) (j2 m2) (j3 -m3))</span>
+<div class="viewcode-block" id="clebsch_gordan"><a class="viewcode-back" href="../../../../reference/operators/util/U_matrix.html#pytriqs.operators.util.U_matrix.clebsch_gordan">[docs]</a><span class="k">def</span> <span class="nf">clebsch_gordan</span><span class="p">(</span><span class="n">jm1</span><span class="p">,</span> <span class="n">jm2</span><span class="p">,</span> <span class="n">jm3</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the Clebsh-Gordan coefficient</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       \langle j_1 m_1 j_2 m_2 | j_3 m_3 \rangle = (-1)^{j_1-j_2+m_3} \sqrt{2 j_3 + 1}</span>
+<span class="sd">       \begin{pmatrix}</span>
+<span class="sd">         j_1 &amp; j_2 &amp; j_3\\</span>
+<span class="sd">         m_1 &amp; m_2 &amp; -m_3</span>
+<span class="sd">       \end{pmatrix}.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    jm1 : tuple of integers</span>
+<span class="sd">          (j_1 m_1)</span>
+<span class="sd">    jm2 : tuple of integers</span>
+<span class="sd">          (j_2 m_2)</span>
+<span class="sd">    jm3 : tuple of integers</span>
+<span class="sd">          (j_3 m_3)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    cgcoeff : scalar</span>
+<span class="sd">              Clebsh-Gordan coefficient.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">norm</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">jm3</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="n">jm1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">jm2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">jm3</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">%</span> <span class="mi">2</span> <span class="k">else</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">norm</span><span class="o">*</span><span class="n">three_j_symbol</span><span class="p">(</span><span class="n">jm1</span><span class="p">,</span><span class="n">jm2</span><span class="p">,(</span><span class="n">jm3</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="o">-</span><span class="n">jm3</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span></div>
+
+<span class="c1"># Create subarray containing columns in idxlist</span>
+<span class="c1"># e.g. idxlist = [(0),(2,3),(0,1,2,3)] gives</span>
+<span class="c1">#  column 0 for 1st dim,</span>
+<span class="c1">#  columns 2 and 3 for 2nd dim,</span>
+<span class="c1">#  columns 0,1,2 and 3 for 3rd dim.</span>
+<div class="viewcode-block" id="subarray"><a class="viewcode-back" href="../../../../reference/operators/util/U_matrix.html#pytriqs.operators.util.U_matrix.subarray">[docs]</a><span class="k">def</span> <span class="nf">subarray</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">idxlist</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="p">:</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract a subarray from a matrix-like object.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    a : matrix or array</span>
+<span class="sd">    idxlist : list of tuples</span>
+<span class="sd">              Columns that need to be extracted for each dimension.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    subarray : matrix or array</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    idxlist = [(0),(2,3),(0,1,2,3)] gives</span>
+
+<span class="sd">    - column 0 for 1st dim,</span>
+<span class="sd">    - columns 2 and 3 for 2nd dim,</span>
+<span class="sd">    - columns 0, 1, 2 and 3 for 3rd dim.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+    <span class="n">sa</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="n">n</span><span class="p">])</span> <span class="o">+</span> <span class="p">(</span><span class="n">idxlist</span><span class="p">[</span><span class="n">n</span><span class="p">],)]</span>
+    <span class="k">return</span> <span class="n">subarray</span><span class="p">(</span><span class="n">sa</span><span class="p">,</span><span class="n">idxlist</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">sa</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2015, The TRIQS collaboration.
+    </div>
+  </body>
+</html>
