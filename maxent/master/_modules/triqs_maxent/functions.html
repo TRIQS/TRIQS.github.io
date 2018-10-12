@@ -156,6 +156,18 @@
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
 
 
+<span class="k">def</span> <span class="nf">view_complex</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">reshape</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">reshape</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">A</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex_</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">A</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex_</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+
+<span class="k">def</span> <span class="nf">view_real</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">reshape</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">reshape</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">A</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">A</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="p">(</span><span class="mi">2</span><span class="p">,))</span>
+
+
 <div class="viewcode-block" id="cached"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.cached">[docs]</a><span class="k">def</span> <span class="nf">cached</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; A descriptor for cached functions &quot;&quot;&quot;</span>
     <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
@@ -257,8 +269,9 @@
 <span class="sd">        success : bool</span>
 <span class="sd">            whether the test passed (True) or not (False)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">check_d</span><span class="p">(</span><span class="n">around</span><span class="p">,</span> <span class="n">renorm</span><span class="p">,</span> <span class="n">prec</span><span class="p">)</span> <span class="ow">and</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">check_dd</span><span class="p">(</span><span class="n">around</span><span class="p">,</span> <span class="n">renorm</span><span class="p">,</span> <span class="n">prec</span><span class="p">))</span></div>
+        <span class="n">d_success</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_d</span><span class="p">(</span><span class="n">around</span><span class="p">,</span> <span class="n">renorm</span><span class="p">,</span> <span class="n">prec</span><span class="p">)</span>
+        <span class="n">dd_success</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_dd</span><span class="p">(</span><span class="n">around</span><span class="p">,</span> <span class="n">renorm</span><span class="p">,</span> <span class="n">prec</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">d_success</span> <span class="ow">and</span> <span class="n">dd_success</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="DoublyDerivableFunction.check_d"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.DoublyDerivableFunction.check_d">[docs]</a>    <span class="k">def</span> <span class="nf">check_d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">around</span><span class="p">,</span> <span class="n">renorm</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="mf">1.e-8</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; check first derivative</span>
@@ -299,16 +312,17 @@
         <span class="sd">&quot;&quot;&quot; inverse function value &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="InvertibleFunction.check_inv"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.InvertibleFunction.check_inv">[docs]</a>    <span class="k">def</span> <span class="nf">check_inv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="mf">1.e-8</span><span class="p">):</span>
+<div class="viewcode-block" id="InvertibleFunction.check_inv"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.InvertibleFunction.check_inv">[docs]</a>    <span class="k">def</span> <span class="nf">check_inv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="mf">1.e-8</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; check whether inv is really the inverse of f &quot;&quot;&quot;</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="n">x2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">x2</span><span class="p">))</span> <span class="o">&gt;</span> <span class="n">prec</span><span class="p">:</span>
-            <span class="n">error_message</span><span class="p">(</span>
-                <span class="sd">&quot;&quot;&quot;Inverse of function is not correct:</span>
-<span class="sd">                   {} - difference: {}</span>
-<span class="sd">                &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span>
-                           <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">x2</span><span class="p">))))</span></div></div>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">y2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">y2</span><span class="p">))</span> <span class="o">&gt;</span> <span class="n">prec</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;Inverse of function is not correct:</span>
+<span class="s2">                     {} - difference: {}</span>
+<span class="s2">                  &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span>
+                             <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">y2</span><span class="p">))))</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">True</span></div></div>
 
 
 <div class="viewcode-block" id="NullFunction"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NullFunction">[docs]</a><span class="k">class</span> <span class="nc">NullFunction</span><span class="p">(</span><span class="n">DoublyDerivableFunction</span><span class="p">):</span>
@@ -408,7 +422,15 @@
         <span class="k">if</span> <span class="n">update_chi2</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
 
-    <span class="n">data_variable</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_data_variable</span><span class="p">,</span> <span class="n">set_data_variable</span><span class="p">)</span></div>
+    <span class="n">data_variable</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_data_variable</span><span class="p">,</span> <span class="n">set_data_variable</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">input_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">axes_preference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span></div>
 
 
 <div class="viewcode-block" id="NormalChi2"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NormalChi2">[docs]</a><span class="k">class</span> <span class="nc">NormalChi2</span><span class="p">(</span><span class="n">Chi2</span><span class="p">):</span>
@@ -435,12 +457,12 @@
 
     <span class="nd">@cached</span>
     <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">sum</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">err</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">err</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
 
     <span class="nd">@cached</span>
     <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">)</span> <span class="o">/</span>
-                      <span class="bp">self</span><span class="o">.</span><span class="n">err</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="p">)</span>
+                      <span class="bp">self</span><span class="o">.</span><span class="n">err</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="p">))</span>
 
     <span class="nd">@cached</span>
     <span class="k">def</span> <span class="nf">dd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
@@ -451,8 +473,69 @@
         <span class="sd">&quot;&quot;&quot; Notify that the parameters (either ``K`` or ``err``) have changed &quot;&quot;&quot;</span>
         <span class="c1"># we calculate the value of the second derivative as it is constant</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">err</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">d2</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;il,ik,i-&gt;kl&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">d2</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;il,ik,i-&gt;kl&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="p">),</span>
                                     <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="p">,</span> <span class="mf">1.</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">err</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ComplexChi2"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.ComplexChi2">[docs]</a><span class="k">class</span> <span class="nc">ComplexChi2</span><span class="p">(</span><span class="n">Chi2</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot; A function giving the usual least squares</span>
+
+<span class="sd">    This is calculated as</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \chi^2 = \sum_i \frac{|G_i - \sum_j K_{ij} H_j|^2}{\sigma_i^2}</span>
+
+<span class="sd">    Note that :math:`H = A\Delta\omega` (in the usual case, see :ref:`preblur` for a different definition).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    K : :py:class:`.Kernel`</span>
+<span class="sd">        the kernel to use</span>
+<span class="sd">    G : array</span>
+<span class="sd">        the Green function data</span>
+<span class="sd">    err : array</span>
+<span class="sd">        the error of the Green function data (must have the same length</span>
+<span class="sd">        as G)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="p">,</span> <span class="n">view_complex</span><span class="p">(</span><span class="n">A</span><span class="p">))</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">err</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="p">,</span> <span class="n">view_complex</span><span class="p">(</span><span class="n">A</span><span class="p">))</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span>
+        <span class="k">return</span> <span class="n">view_real</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">diff</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">err</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+                                    <span class="n">np</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="p">)))</span>
+
+    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">dd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="c1"># this is constant</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">d2</span>
+
+<div class="viewcode-block" id="ComplexChi2.parameter_change"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.ComplexChi2.parameter_change">[docs]</a>    <span class="k">def</span> <span class="nf">parameter_change</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Notify that the parameters (either ``K`` or ``err``) have changed &quot;&quot;&quot;</span>
+        <span class="c1"># we calculate the value of the second derivative as it is constant</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">err</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">N_w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">E</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;il,ik,i-&gt;kl&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="p">),</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="p">,</span> <span class="mf">1.</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">err</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">d2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N_w</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">N_w</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">d2</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">d2</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">d2</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">d2</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">E</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">input_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">axes_preference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
+
 
 <span class="c1"># =====================================================================</span>
 <span class="c1">#  Entropy</span>
@@ -494,7 +577,15 @@
         <span class="k">if</span> <span class="n">update_S</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
 
-    <span class="n">omega</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_omega</span><span class="p">,</span> <span class="n">set_omega</span><span class="p">)</span></div>
+    <span class="n">omega</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_omega</span><span class="p">,</span> <span class="n">set_omega</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">input_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">),)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">axes_preference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span></div>
 
 
 <div class="viewcode-block" id="NormalEntropy"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NormalEntropy">[docs]</a><span class="k">class</span> <span class="nc">NormalEntropy</span><span class="p">(</span><span class="n">Entropy</span><span class="p">):</span>
@@ -569,8 +660,62 @@
 
     <span class="nd">@cached</span>
     <span class="k">def</span> <span class="nf">dd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">PlusMinusEntropy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">dd</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_A_plus</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_A_minus</span><span class="p">(</span><span class="n">A</span><span class="p">))</span></div>
+        <span class="n">arg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_A_plus</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_A_minus</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">PlusMinusEntropy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">dd</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ComplexPlusMinusEntropy"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.ComplexPlusMinusEntropy">[docs]</a><span class="k">class</span> <span class="nc">ComplexPlusMinusEntropy</span><span class="p">(</span><span class="n">PlusMinusEntropy</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; The Plus-Minus entropy for complex A</span>
+
+<span class="sd">    This calculates the entropy as</span>
+
+<span class="sd">    .. math ::</span>
+
+<span class="sd">        S = S_{plusminus}(\mathrm{Re}\, H) + S_{plusminus}(\mathrm{Im}\, H),</span>
+
+<span class="sd">    where :math:`S_{plusminus}` is the :py:class:`.PlusMinusEntropy`.</span>
+
+<span class="sd">    Note that :math:`H = A\Delta\omega` (in the usual case, see :ref:`preblur` for a different definition).</span>
+<span class="sd">    Also, the default model usually includes the :math:`\Delta\omega`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    D : DefaultModel</span>
+<span class="sd">        the default model</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="n">A_real</span> <span class="o">=</span> <span class="n">view_complex</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+        <span class="n">A_imag</span> <span class="o">=</span> <span class="n">view_complex</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="o">.</span><span class="n">imag</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">ComplexPlusMinusEntropy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">A_real</span><span class="p">)</span> <span class="o">+</span> \
+            <span class="nb">super</span><span class="p">(</span><span class="n">ComplexPlusMinusEntropy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">A_imag</span><span class="p">)</span>
+
+    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="n">A_real</span> <span class="o">=</span> <span class="n">view_complex</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+        <span class="n">A_imag</span> <span class="o">=</span> <span class="n">view_complex</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="o">.</span><span class="n">imag</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span>
+            <span class="p">(</span><span class="nb">super</span><span class="p">(</span><span class="n">ComplexPlusMinusEntropy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">A_real</span><span class="p">),</span>
+             <span class="nb">super</span><span class="p">(</span><span class="n">ComplexPlusMinusEntropy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">A_imag</span><span class="p">)))</span>
+
+    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">dd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="n">A_real</span> <span class="o">=</span> <span class="n">view_complex</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+        <span class="n">A_imag</span> <span class="o">=</span> <span class="n">view_complex</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="o">.</span><span class="n">imag</span>
+        <span class="n">dd_re</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">ComplexPlusMinusEntropy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">dd</span><span class="p">(</span><span class="n">A_real</span><span class="p">)</span>
+        <span class="n">dd_im</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">ComplexPlusMinusEntropy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">dd</span><span class="p">(</span><span class="n">A_imag</span><span class="p">)</span>
+        <span class="n">dd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dd_re</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dd_re</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">dd</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">dd_re</span>
+        <span class="n">dd</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">dd_im</span>
+        <span class="k">return</span> <span class="n">dd</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">input_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">axes_preference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="AbsoluteEntropy"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.AbsoluteEntropy">[docs]</a><span class="k">class</span> <span class="nc">AbsoluteEntropy</span><span class="p">(</span><span class="n">Entropy</span><span class="p">):</span>
@@ -661,7 +806,15 @@
         <span class="k">if</span> <span class="n">update_H_of_v</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
 
-    <span class="n">omega</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_omega</span><span class="p">,</span> <span class="n">set_omega</span><span class="p">)</span></div>
+    <span class="n">omega</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_omega</span><span class="p">,</span> <span class="n">set_omega</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">input_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">S</span><span class="p">),)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">axes_preference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span></div>
 
 
 <div class="viewcode-block" id="NormalH_of_v"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NormalH_of_v">[docs]</a><span class="k">class</span> <span class="nc">NormalH_of_v</span><span class="p">(</span><span class="n">GenericH_of_v</span><span class="p">):</span>
@@ -739,8 +892,85 @@
 
     <span class="nd">@cached</span>
     <span class="k">def</span> <span class="nf">inv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span> <span class="n">safelog</span><span class="p">(</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span> <span class="n">safelog</span><span class="p">(</span>
             <span class="p">(</span><span class="n">A</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">A</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">)))</span></div>
+
+
+<div class="viewcode-block" id="ComplexPlusMinusH_of_v"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.ComplexPlusMinusH_of_v">[docs]</a><span class="k">class</span> <span class="nc">ComplexPlusMinusH_of_v</span><span class="p">(</span><span class="n">PlusMinusH_of_v</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Complex plus/minus parametrization H(v)</span>
+
+<span class="sd">    This should be used with the :py:class:`.ComplexPlusMinusEntropy`.</span>
+<span class="sd">    The parametrization is</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        H(v) = D (e^{Vv} - e^{-Vv}) TODO</span>
+
+<span class="sd">    where :math:`V` is the matrix of the right-singular vectors of the</span>
+<span class="sd">    kernel.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    D : DefaultModel</span>
+<span class="sd">        the default model to use</span>
+<span class="sd">    K : :py:class:`.Kernel`</span>
+<span class="sd">        the kernel to use</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">view_real</span><span class="p">(</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">ComplexPlusMinusH_of_v</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">f</span><span class="p">(</span>
+                <span class="n">view_complex</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">reshape</span><span class="o">=</span><span class="bp">False</span><span class="p">)))</span>
+
+    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="n">v_cplx</span> <span class="o">=</span> <span class="n">view_complex</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">reshape</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">cW</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cosh</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">,</span> <span class="n">v_cplx</span><span class="p">))</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)))</span>
+        <span class="n">ret</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span> <span class="o">*</span> <span class="n">cW</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span>
+        <span class="n">ret</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span> <span class="o">*</span> <span class="n">cW</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span>
+        <span class="n">ret</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span> <span class="o">*</span> <span class="n">cW</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span>
+        <span class="n">ret</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span> <span class="o">*</span> <span class="n">cW</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">view_real</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">reshape</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">dd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="n">v_cplx</span> <span class="o">=</span> <span class="n">view_complex</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">reshape</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">VVsW</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;jt,jq,j-&gt;jtq&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">,</span>
+                         <span class="n">np</span><span class="o">.</span><span class="n">sinh</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">,</span> <span class="n">v_cplx</span><span class="p">)))</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)))</span>
+        <span class="n">ret</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">VVsW</span><span class="p">)</span>
+        <span class="n">ret</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">ret</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">ret</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">VVsW</span><span class="p">)</span>
+        <span class="n">ret</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">ret</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">ret</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">VVsW</span><span class="p">)</span>
+        <span class="n">ret</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">ret</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">ret</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">VVsW</span><span class="p">)</span>
+        <span class="n">ret</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">ret</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">ret</span>
+
+    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">inv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">view_real</span><span class="p">(</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">ComplexPlusMinusH_of_v</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span>
+                <span class="n">view_complex</span><span class="p">(</span><span class="n">A</span><span class="p">)),</span> <span class="n">reshape</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">input_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">S</span><span class="p">),)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">axes_preference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span></div>
 
 
 <div class="viewcode-block" id="NoExpH_of_v"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NoExpH_of_v">[docs]</a><span class="k">class</span> <span class="nc">NoExpH_of_v</span><span class="p">(</span><span class="n">GenericH_of_v</span><span class="p">):</span>
@@ -816,7 +1046,10 @@
 
     <span class="nd">@cached</span>
     <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">H</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_omega</span><span class="o">.</span><span class="n">delta</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">view_complex</span><span class="p">(</span><span class="n">H</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_omega</span><span class="o">.</span><span class="n">delta</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">H</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_omega</span><span class="o">.</span><span class="n">delta</span>
 
     <span class="nd">@cached</span>
     <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H</span><span class="p">):</span>
@@ -828,7 +1061,7 @@
 
     <span class="nd">@cached</span>
     <span class="k">def</span> <span class="nf">inv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">A</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_omega</span><span class="o">.</span><span class="n">delta</span></div>
+        <span class="k">return</span> <span class="n">view_real</span><span class="p">(</span><span class="n">A</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_omega</span><span class="o">.</span><span class="n">delta</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="PreblurA_of_H"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.PreblurA_of_H">[docs]</a><span class="k">class</span> <span class="nc">PreblurA_of_H</span><span class="p">(</span><span class="n">GenericA_of_H</span><span class="p">):</span>

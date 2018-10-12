@@ -380,6 +380,72 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">tau</span> <span class="o">=</span> <span class="n">value</span></div>
 
 
+<div class="viewcode-block" id="IOmegaKernel"><a class="viewcode-back" href="../../reference/kernels.html#triqs_maxent.kernels.IOmegaKernel">[docs]</a><span class="k">class</span> <span class="nc">IOmegaKernel</span><span class="p">(</span><span class="n">Kernel</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot; A kernel for continuing :math:`G(i\omega)`</span>
+
+<span class="sd">    This kernel is defined as</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        K(i\omega, \omega) = \frac{1}{i\omega - \omega}</span>
+
+<span class="sd">    With this, we have</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        G(i\omega) = \int d\omega\, K(i\omega, \omega) A(\omega).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    iomega : array</span>
+<span class="sd">        the :math:`iomega`-mesh where the data is given</span>
+<span class="sd">        (as a real array, i.e. it is internally multiplied by ``1.0j``)</span>
+<span class="sd">    omega : OmegaMesh</span>
+<span class="sd">        the :math:`\omega`-mesh where the spectral function should be</span>
+<span class="sd">        calculated</span>
+<span class="sd">    beta : float</span>
+<span class="sd">        the inverse temperature; if not given, it is taken from the difference</span>
+<span class="sd">        of the first two :math:`i\omega` values</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iomega</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">IOmegaKernel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iomega</span> <span class="o">=</span> <span class="n">iomega</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="n">omega</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fill_values</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_fill_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># invalidate U, S, V</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_U</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_S</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_V</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span>
+        <span class="k">if</span> <span class="n">beta</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">beta</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iomega</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">iomega</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">oomega</span><span class="p">,</span> <span class="n">iiomega</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">omega</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iomega</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">oomega</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_K</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0j</span> <span class="o">*</span> <span class="n">iiomega</span> <span class="o">-</span> <span class="n">oomega</span><span class="p">)</span>
+
+        <span class="c1"># include trapz integration in the kernel</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_K_delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,j-&gt;ij&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_K</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">omega</span><span class="o">.</span><span class="n">delta</span><span class="p">)</span>
+
+        <span class="n">T</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_T</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="c1"># if self._T is set, the kernel should be transformed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; :math:`i\omega` &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">iomega</span>
+
+    <span class="nd">@data_variable.setter</span>
+    <span class="k">def</span> <span class="nf">data_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iomega</span> <span class="o">=</span> <span class="n">value</span></div>
+
+
 <div class="viewcode-block" id="PreblurKernel"><a class="viewcode-back" href="../../reference/kernels.html#triqs_maxent.kernels.PreblurKernel">[docs]</a><span class="k">class</span> <span class="nc">PreblurKernel</span><span class="p">(</span><span class="n">Kernel</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; A kernel for the preblur formalism</span>
 
