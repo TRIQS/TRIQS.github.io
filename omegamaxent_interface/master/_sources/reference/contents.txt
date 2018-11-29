@@ -16,7 +16,7 @@ where :math:`\omega_n` is a fermionic or boson Matsubara frequency, or
 
 .. math::
 
-    \mathbf{G}(\tau)=\int_{-\infty}^{\infty} d\omega \frac{e^{-\omega\tau}\mathbf{A}(\omega)}{1\pm e^{-\beta\omega}},
+    \mathbf{G}(\tau)=-\int_{-\infty}^{\infty} d\omega \frac{e^{-\omega\tau}\mathbf{A}(\omega)}{1\pm e^{-\beta\omega}},
 
 where the + and - signs apply to the fermionic and bosonic cases, respectively, and :math:`\mathbf{A}(\omega)` is a positive semi-definite matrix in the fermionic case or :math:`\mathbf{A}(\omega)/\omega` is positive semi-definite in the bosonic case.
 
