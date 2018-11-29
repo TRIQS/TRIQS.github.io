@@ -12,6 +12,7 @@ Contents
    index
    install
    reference/contents
+   tutorials
    about
    issues
    changelog
