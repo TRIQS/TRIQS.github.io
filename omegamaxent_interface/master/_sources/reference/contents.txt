@@ -1,4 +1,4 @@
-.. _UserGuide:
+.. _UserGuide_OME_TRIQS:
 
 User Guide
 ==========

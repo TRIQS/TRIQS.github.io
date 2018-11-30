@@ -5,7 +5,7 @@ Analytic continuation with OmegaMaxEnt_TRIQS
 
 OmegaMaxEnt_TRIQS is a python TRIQS interface to the maximum entropy analytic continuation program :math:`\Omega MaxEnt` written in C++ (`program's main page <https://www.physique.usherbrooke.ca/MaxEnt/index.php/Main_Page>`_). It also automates the analytic continuation of matrix-valued Green's functions and therefore extends the functionality of :math:`\Omega MaxEnt` using TRIQS.
 
-The present documentation contains :ref:`installation instructions <install>` and a :ref:`UserGuide`.
+The present documentation contains :ref:`installation <install>` instructions, a :ref:`user guide <UserGuide_OME_TRIQS>`, and :ref:`tutorials <OME_TRIQS_tutorials>`.
 
 See also the :ref:`about` page for citations.
 
