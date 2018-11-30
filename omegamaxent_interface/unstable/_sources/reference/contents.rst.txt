@@ -255,7 +255,7 @@ Alternatively, if you know that the spectrum has a sharp peak at :math:`\omega=0
     GR=OT.compute_GfReFreq(G, comp_grid_params=[Dw,SW], non_uniform_grid=True)
 
 
-For more detailed examples, see the :ref:`tutorials <OME_TRIQS_tutorials>`.
+For more advanced examples, see the :ref:`tutorials <OME_TRIQS_tutorials>`.
 
 .. _`user guide`: https://www.physique.usherbrooke.ca/MaxEnt/index.php/User_Guide
 .. _`maximum entropy`: https://triqs.github.io/maxent/jenkins/basicnotions/mathematics.html
