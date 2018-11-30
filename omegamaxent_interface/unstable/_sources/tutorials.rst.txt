@@ -1,9 +1,9 @@
-.. _tutorials:
+.. _OME_TRIQS_tutorials:
 
-OmegaMaxEnt_TRIQS tutorials
-===========================
+Tutorials
+=========
 
-There are `three tutorials`_, with solved exercises, on OmegaMaxEnt_TRIQS:
+There are three `tutorials <OmegaMaxEnt_TRIQS_tutorials_>`_, with solved exercises, on OmegaMaxEnt_TRIQS:
 
 An introductory_ one using a fictitious Green's functions for which the spectrum is known, which introduces to the features of :math:`\Omega MaxEnt`, the diagnostic tools in particular, with an exercise on the continuation of a matrix-valued Green's function.
 
@@ -13,7 +13,7 @@ A comparison_ between the result of analytic continuation of a Matsubara frequen
 
 The `analytic continuation of a self-energy`_ computed with `DMFT and density functional theory`_ for the material :math:`Sr_2CuO_4`.
 
-.. _`three tutorials`: https://github.com/TRIQS/omegamaxent_interface/tree/master/tutorials
+.. _OmegaMaxEnt_TRIQS_tutorials: https://github.com/TRIQS/omegamaxent_interface/tree/master/tutorials
 
 .. _introductory: https://github.com/TRIQS/omegamaxent_interface/blob/master/tutorials/Introduction%20to%20OmegaMaxEnt_TRIQS.ipynb
 
