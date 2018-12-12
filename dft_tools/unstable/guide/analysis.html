@@ -25,7 +25,7 @@
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="DFT+DMFT tutorial: Ce with Hubbard-I approximation" href="full_tutorial.html" />
+    <link rel="next" title="Transport calculations" href="transport.html" />
     <link rel="prev" title="Full charge self-consistency" href="dftdmft_selfcons.html" />
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
     <script src="../_static/cufon-yui.js" type="text/javascript"></script>
@@ -49,6 +49,8 @@
     
     <li><a href="../documentation.html">Documentation</a></li>
     
+    <li><a href="../tutorials.html">Tutorials</a></li>
+    
     <li><a href="../issues.html">Issues</a></li>
     
     <li><a href="../about.html">About DFTTools</a></li>
@@ -70,7 +72,7 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="full_tutorial.html" title="DFT+DMFT tutorial: Ce with Hubbard-I approximation"
+          <a href="transport.html" title="Transport calculations"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="dftdmft_selfcons.html" title="Full charge self-consistency"
@@ -98,8 +100,8 @@
   <p class="topless"><a href="dftdmft_selfcons.html"
                         title="previous chapter">Full charge self-consistency</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="full_tutorial.html"
-                        title="next chapter">DFT+DMFT tutorial: Ce with Hubbard-I approximation</a></p>
+  <p class="topless"><a href="transport.html"
+                        title="next chapter">Transport calculations</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -165,8 +167,8 @@ class:</p>
 <p>If required, we have to load and initialise the real-frequency self energy. Most conveniently,
 you have your self energy already stored as a real-frequency <a class="reference external" href="https://triqs.github.io/triqs/master/reference/gfs/py/full.html#pytriqs.gf.BlockGf" title="(in TRIQS v2.0.169)"><code class="xref py py-class docutils literal"><span class="pre">BlockGf</span></code></a> object
 in a hdf5 file:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ar</span> <span class="o">=</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="s1">&#39;case.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span>
-<span class="n">SigmaReFreq</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;Sigma_w&#39;</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="s1">&#39;case.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+      <span class="n">SigmaReFreq</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;Sigma_w&#39;</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>You may also have your self energy stored in text files. For this case the <a class="reference external" href="https://triqs.github.io/triqs/master/index.html#welcome" title="(in TRIQS v2.0.169)"><span class="xref std std-ref">TRIQS</span></a> library offers
@@ -199,7 +201,6 @@ of the self energy - exactly in this order! The mesh should be the same for all 
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">chemical_potential</span><span class="p">,</span> <span class="n">dc_imp</span><span class="p">,</span> <span class="n">dc_energ</span> <span class="o">=</span> <span class="n">SK</span><span class="o">.</span><span class="n">load</span><span class="p">([</span><span class="s1">&#39;chemical_potential&#39;</span><span class="p">,</span><span class="s1">&#39;dc_imp&#39;</span><span class="p">,</span><span class="s1">&#39;dc_energ&#39;</span><span class="p">])</span>
 <span class="n">SK</span><span class="o">.</span><span class="n">set_mu</span><span class="p">(</span><span class="n">chemical_potential</span><span class="p">)</span>
 <span class="n">SK</span><span class="o">.</span><span class="n">set_dc</span><span class="p">(</span><span class="n">dc_imp</span><span class="p">,</span><span class="n">dc_energ</span><span class="p">)</span>
-<span class="k">del</span> <span class="n">ar</span>
 </pre></div>
 </div>
 </div>
@@ -254,7 +255,7 @@ The output is written in the same way as described above for the <a class="refer
 <p>Another quantity of interest is the momentum-resolved spectral function, which can directly be compared to ARPES
 experiments. First we have to execute <cite>lapw1</cite>, <cite>lapw2 -almd</cite> and <strong class="program">dmftproj</strong> with the <cite>-band</cite>
 option and use the <code class="xref py py-meth docutils literal"><span class="pre">convert_bands_input</span></code>
-routine, which converts the required files (for a more detailed description see <a class="reference internal" href="conversion.html#conversion"><span class="std std-ref">Orbital construction and conversion</span></a>). The spectral function is then calculated by typing:</p>
+routine, which converts the required files (for a more detailed description see <a class="reference internal" href="conversion.html#conversion"><span class="std std-ref">Supported interfaces</span></a>). The spectral function is then calculated by typing:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">SK</span><span class="o">.</span><span class="n">spaghettis</span><span class="p">(</span><span class="n">broadening</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span><span class="n">plot_shift</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">plot_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">ishell</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">save_to_file</span><span class="o">=</span><span class="s1">&#39;Akw_&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -290,7 +291,7 @@ the files. The default value is <cite>None</cite>. Note for experts: The spectra
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="full_tutorial.html" title="DFT+DMFT tutorial: Ce with Hubbard-I approximation"
+          <a href="transport.html" title="Transport calculations"
              >next</a> |</li>
         <li class="right" >
           <a href="dftdmft_selfcons.html" title="Full charge self-consistency"
@@ -301,7 +302,7 @@ the files. The default value is <cite>None</cite>. Note for experts: The spectra
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2011-2013, M. Aichhorn, L. Pourovskii, V. Vildosola, C. Martins.
+        &#169; Copyright 2011-2019.
     </div>
   </body>
 </html>

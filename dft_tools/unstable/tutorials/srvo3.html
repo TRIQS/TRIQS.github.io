@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>SrVO3 (single-shot) &#8212; TRIQS DFTTools  documentation</title>
+    <title>DFT (Wien2k) and Wannier orbitals &#8212; TRIQS DFTTools  documentation</title>
     <link rel="stylesheet" href="../_static/triqs.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -25,8 +25,6 @@
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Full charge self-consistency" href="dftdmft_selfcons.html" />
-    <link rel="prev" title="Single-shot DFT+DMFT" href="dftdmft_singleshot.html" />
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
     <script src="../_static/cufon-yui.js" type="text/javascript"></script>
     <script src="../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
@@ -49,6 +47,8 @@
     
     <li><a href="../documentation.html">Documentation</a></li>
     
+    <li><a href="../tutorials.html">Tutorials</a></li>
+    
     <li><a href="../issues.html">Issues</a></li>
     
     <li><a href="../about.html">About DFTTools</a></li>
@@ -69,22 +69,20 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="dftdmft_selfcons.html" title="Full charge self-consistency"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="dftdmft_singleshot.html" title="Single-shot DFT+DMFT"
-             accesskey="P">previous</a> |</li>
     <li><a href="../index.html">Home</a> &raquo;</li>
-
-          <li class="nav-item nav-item-1"><a href="../documentation.html" accesskey="U">Documentation</a> &#187;</li> 
+ 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h3><a href="../contents.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">SrVO3 (single-shot)</a><ul>
+<li><a class="reference internal" href="#">DFT (Wien2k) and Wannier orbitals</a><ul>
+<li><a class="reference internal" href="#dft-setup">DFT setup</a></li>
+<li><a class="reference internal" href="#wannier-orbitals">Wannier orbitals</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-dmft-calculation">The DMFT calculation</a><ul>
 <li><a class="reference internal" href="#loading-modules">Loading modules</a></li>
 <li><a class="reference internal" href="#initializing-sumkdft">Initializing SumkDFT</a></li>
 <li><a class="reference internal" href="#initializing-the-solver">Initializing the solver</a></li>
@@ -94,16 +92,10 @@
 </li>
 </ul>
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="dftdmft_singleshot.html"
-                        title="previous chapter">Single-shot DFT+DMFT</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="dftdmft_selfcons.html"
-                        title="next chapter">Full charge self-consistency</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../_sources/guide/SrVO3.rst.txt"
+      <li><a href="../_sources/tutorials/srvo3.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
@@ -125,19 +117,105 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="srvo3-single-shot">
-<span id="srvo3"></span><h1>SrVO3 (single-shot)<a class="headerlink" href="#srvo3-single-shot" title="Permalink to this headline">¶</a></h1>
-<p>We will discuss now how to set up a full working calculation,
+  <p id="srvo3">On the example of SrVO3 we will discuss now how to set up a full working calculation,
 including the initialization of the <a class="reference external" href="https://triqs.github.io/cthyb/master/index.html#welcome" title="(in TRIQS Hybridization Expansion Solver v1.5.59)"><span class="xref std std-ref">CTHYB solver</span></a>.
 Some additional parameter are introduced to make the calculation
 more efficient. This is a more advanced example, which is
-also suited for parallel execution. The conversion, which
-we assume to be carried out already, is discussed <a class="reference internal" href="conversion.html#conversion"><span class="std std-ref">here</span></a>.</p>
+also suited for parallel execution.</p>
 <p>For the convenience of the user, we provide also two
 working python scripts in this documentation. One for a calculation
 using Kanamori definitions (<a class="reference download internal" href="../_downloads/dft_dmft_cthyb.py" download=""><code class="xref download docutils literal"><span class="pre">dft_dmft_cthyb.py</span></code></a>) and one with a
 rotational-invariant Slater interaction Hamiltonian (<a class="reference download internal" href="../_downloads/dft_dmft_cthyb_slater.py" download=""><code class="xref download docutils literal"><span class="pre">dft_dmft_cthyb_slater.py</span></code></a>). The user has to adapt these
 scripts to his own needs. How to execute your script is described <a class="reference internal" href="../basicnotions/structure.html#runpy"><span class="std std-ref">here</span></a>.</p>
+<p>The conversion will now be discussed in detail for the Wien2k and VASP packages.
+For more details we refer to the <a class="reference internal" href="../guide/conversion.html#conversion"><span class="std std-ref">documentation</span></a>.</p>
+<div class="section" id="dft-wien2k-and-wannier-orbitals">
+<h1>DFT (Wien2k) and Wannier orbitals<a class="headerlink" href="#dft-wien2k-and-wannier-orbitals" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="dft-setup">
+<h2>DFT setup<a class="headerlink" href="#dft-setup" title="Permalink to this headline">¶</a></h2>
+<p>First, we do a DFT calculation, using the Wien2k package. As main input file we have to provide the so-called struct file <code class="file docutils literal"><span class="pre">SrVO3.struct</span></code>. We use the following:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">SrVO3</span>                                                                          
+<span class="n">P</span>   <span class="n">LATTICE</span><span class="p">,</span><span class="n">NONEQUIV</span><span class="o">.</span><span class="n">ATOMS</span><span class="p">:</span>  <span class="mi">3221</span><span class="n">_Pm</span><span class="o">-</span><span class="mi">3</span><span class="n">m</span>                                        
+<span class="n">MODE</span> <span class="n">OF</span> <span class="n">CALC</span><span class="o">=</span><span class="n">RELA</span> <span class="n">unit</span><span class="o">=</span><span class="n">bohr</span>                                                    
+  <span class="mf">7.261300</span>  <span class="mf">7.261300</span>  <span class="mf">7.261300</span> <span class="mf">90.000000</span> <span class="mf">90.000000</span> <span class="mf">90.000000</span>                   
+<span class="n">ATOM</span>   <span class="mi">1</span><span class="p">:</span> <span class="n">X</span><span class="o">=</span><span class="mf">0.00000000</span> <span class="n">Y</span><span class="o">=</span><span class="mf">0.00000000</span> <span class="n">Z</span><span class="o">=</span><span class="mf">0.00000000</span>
+          <span class="n">MULT</span><span class="o">=</span> <span class="mi">1</span>          <span class="n">ISPLIT</span><span class="o">=</span> <span class="mi">2</span>
+<span class="n">Sr</span>         <span class="n">NPT</span><span class="o">=</span>  <span class="mi">781</span>  <span class="n">R0</span><span class="o">=</span><span class="mf">0.00001000</span> <span class="n">RMT</span><span class="o">=</span>   <span class="mf">2.50000</span>   <span class="n">Z</span><span class="p">:</span> <span class="mf">38.0</span>                   
+<span class="n">LOCAL</span> <span class="n">ROT</span> <span class="n">MATRIX</span><span class="p">:</span>    <span class="mf">1.0000000</span> <span class="mf">0.0000000</span> <span class="mf">0.0000000</span>
+                     <span class="mf">0.0000000</span> <span class="mf">1.0000000</span> <span class="mf">0.0000000</span>
+                     <span class="mf">0.0000000</span> <span class="mf">0.0000000</span> <span class="mf">1.0000000</span>
+<span class="n">ATOM</span>   <span class="mi">2</span><span class="p">:</span> <span class="n">X</span><span class="o">=</span><span class="mf">0.50000000</span> <span class="n">Y</span><span class="o">=</span><span class="mf">0.50000000</span> <span class="n">Z</span><span class="o">=</span><span class="mf">0.50000000</span>
+          <span class="n">MULT</span><span class="o">=</span> <span class="mi">1</span>          <span class="n">ISPLIT</span><span class="o">=</span> <span class="mi">2</span>
+<span class="n">V</span>          <span class="n">NPT</span><span class="o">=</span>  <span class="mi">781</span>  <span class="n">R0</span><span class="o">=</span><span class="mf">0.00005000</span> <span class="n">RMT</span><span class="o">=</span>   <span class="mf">1.91</span>      <span class="n">Z</span><span class="p">:</span> <span class="mf">23.0</span>                   
+<span class="n">LOCAL</span> <span class="n">ROT</span> <span class="n">MATRIX</span><span class="p">:</span>    <span class="mf">1.0000000</span> <span class="mf">0.0000000</span> <span class="mf">0.0000000</span>
+                     <span class="mf">0.0000000</span> <span class="mf">1.0000000</span> <span class="mf">0.0000000</span>
+                     <span class="mf">0.0000000</span> <span class="mf">0.0000000</span> <span class="mf">1.0000000</span>
+<span class="n">ATOM</span>  <span class="o">-</span><span class="mi">3</span><span class="p">:</span> <span class="n">X</span><span class="o">=</span><span class="mf">0.00000000</span> <span class="n">Y</span><span class="o">=</span><span class="mf">0.50000000</span> <span class="n">Z</span><span class="o">=</span><span class="mf">0.50000000</span>
+          <span class="n">MULT</span><span class="o">=</span> <span class="mi">3</span>          <span class="n">ISPLIT</span><span class="o">=-</span><span class="mi">2</span>
+      <span class="o">-</span><span class="mi">3</span><span class="p">:</span> <span class="n">X</span><span class="o">=</span><span class="mf">0.50000000</span> <span class="n">Y</span><span class="o">=</span><span class="mf">0.00000000</span> <span class="n">Z</span><span class="o">=</span><span class="mf">0.50000000</span>
+      <span class="o">-</span><span class="mi">3</span><span class="p">:</span> <span class="n">X</span><span class="o">=</span><span class="mf">0.50000000</span> <span class="n">Y</span><span class="o">=</span><span class="mf">0.50000000</span> <span class="n">Z</span><span class="o">=</span><span class="mf">0.00000000</span>
+<span class="n">O</span>          <span class="n">NPT</span><span class="o">=</span>  <span class="mi">781</span>  <span class="n">R0</span><span class="o">=</span><span class="mf">0.00010000</span> <span class="n">RMT</span><span class="o">=</span>   <span class="mf">1.70</span>      <span class="n">Z</span><span class="p">:</span>  <span class="mf">8.0</span>                   
+<span class="n">LOCAL</span> <span class="n">ROT</span> <span class="n">MATRIX</span><span class="p">:</span>    <span class="mf">0.0000000</span> <span class="mf">0.0000000</span> <span class="mf">1.0000000</span>
+                     <span class="mf">0.0000000</span> <span class="mf">1.0000000</span> <span class="mf">0.0000000</span>
+                    <span class="o">-</span><span class="mf">1.0000000</span> <span class="mf">0.0000000</span> <span class="mf">0.0000000</span>
+   <span class="mi">0</span>      <span class="n">NUMBER</span> <span class="n">OF</span> <span class="n">SYMMETRY</span> <span class="n">OPERATIONS</span>
+</pre></div>
+</div>
+<p>Instead of going through the whole initialisation process, we can use</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">init</span> <span class="o">-</span><span class="n">b</span> <span class="o">-</span><span class="n">vxc</span> <span class="mi">5</span> <span class="o">-</span><span class="n">numk</span> <span class="mi">5000</span>
+</pre></div>
+</div>
+<p>This is setting up a non-magnetic calculation, using the LDA and 5000 k-points in the full Brillouin zone. As usual, we start the DFT self consistent cycle by the Wien2k script</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">run</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="wannier-orbitals">
+<h2>Wannier orbitals<a class="headerlink" href="#wannier-orbitals" title="Permalink to this headline">¶</a></h2>
+<p>As a next step, we calculate localised orbitals for the t2g orbitals. We use the same input file for <strong class="program">dmftproj</strong> as it was used in the <a class="reference internal" href="../documentation.html#documentation"><span class="std std-ref">Documentation</span></a>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>3                ! Nsort
+1 1 3            ! Mult(Nsort)
+3                ! lmax
+complex          ! choice of angular harmonics
+1 0 0 0          ! l included for each sort
+0 0 0 0          ! If split into ireps, gives number of ireps. for a given orbital (otherwise 0)
+cubic            ! choice of angular harmonics
+1 1 2 0          ! l included for each sort
+0 0 2 0          ! If split into ireps, gives number of ireps. for a given orbital (otherwise 0)
+01               !
+0                ! SO flag
+complex          ! choice of angular harmonics
+1 1 0 0          ! l included for each sort
+0 0 0 0          ! If split into ireps, gives number of ireps. for a given orbital (otherwise 0)
+-0.11 0.14
+</pre></div>
+</div>
+<p>To prepare the input data for <strong class="program">dmftproj</strong> we execute lapw2 with the <cite>-almd</cite> option</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="n">lapw2</span> <span class="o">-</span><span class="n">almd</span>
+</pre></div>
+</div>
+<p>Then  <strong class="program">dmftproj</strong> is executed in its default mode (i.e. without spin-polarization or spin-orbit included)</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">dmftproj</span>
+</pre></div>
+</div>
+<p>This program produces the necessary files for the conversion to the hdf5 file structure. This is done using
+the python module <code class="xref py py-class docutils literal"><span class="pre">Wien2kConverter</span></code>. A simple python script that initialises the converter is:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs_dft_tools.converters.wien2k_converter</span> <span class="k">import</span> <span class="o">*</span>
+<span class="n">Converter</span> <span class="o">=</span> <span class="n">Wien2kConverter</span><span class="p">(</span><span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;SrVO3&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>After initializing the interface module, we can now convert the input
+text files to the hdf5 archive by:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Converter</span><span class="o">.</span><span class="n">convert_dft_input</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>This reads all the data, and stores everything that is necessary for the DMFT calculation in the file <code class="file docutils literal"><span class="pre">SrVO3.h5</span></code>.</p>
+</div>
+</div>
+<div class="section" id="the-dmft-calculation">
+<h1>The DMFT calculation<a class="headerlink" href="#the-dmft-calculation" title="Permalink to this headline">¶</a></h1>
+<p>The DMFT script itself is, except very few details, independent of the DFT package that was used to calculate the local orbitals.
+As soon as one has converted everything to the hdf5 format, the following procedure is practially the same.</p>
 <div class="section" id="loading-modules">
 <h2>Loading modules<a class="headerlink" href="#loading-modules" title="Permalink to this headline">¶</a></h2>
 <p>First, we load the necessary modules:</p>
@@ -234,7 +312,7 @@ library.</p>
 <div class="section" id="dmft-cycle">
 <h2>DMFT cycle<a class="headerlink" href="#dmft-cycle" title="Permalink to this headline">¶</a></h2>
 <p>Now we can go to the definition of the self-consistency step. It consists again
-of the basic steps discussed in the <a class="reference internal" href="dftdmft_singleshot.html#singleshot"><span class="std std-ref">previous section</span></a>, with
+of the basic steps discussed in the <a class="reference internal" href="../guide/dftdmft_singleshot.html#singleshot"><span class="std std-ref">previous section</span></a>, with
 some additional refinements:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">iteration_number</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">loops</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span> <span class="nb">print</span> <span class="s2">&quot;Iteration = &quot;</span><span class="p">,</span> <span class="n">iteration_number</span>
@@ -264,23 +342,21 @@ some additional refinements:</p>
     <span class="c1"># Now mix Sigma and G with factor mix, if wanted:</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">iteration_number</span><span class="o">&gt;</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">previous_present</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
-            <span class="n">ar</span> <span class="o">=</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">dft_filename</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">)</span>
-            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Mixing Sigma and G with factor </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">mix</span><span class="p">)</span>
-            <span class="n">S</span><span class="o">.</span><span class="n">Sigma_iw</span> <span class="o">&lt;&lt;</span> <span class="n">mix</span> <span class="o">*</span> <span class="n">S</span><span class="o">.</span><span class="n">Sigma_iw</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">mix</span><span class="p">)</span> <span class="o">*</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;Sigma_iw&#39;</span><span class="p">]</span>
-            <span class="n">S</span><span class="o">.</span><span class="n">G_iw</span> <span class="o">&lt;&lt;</span> <span class="n">mix</span> <span class="o">*</span> <span class="n">S</span><span class="o">.</span><span class="n">G_iw</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">mix</span><span class="p">)</span> <span class="o">*</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;G_iw&#39;</span><span class="p">]</span>
-            <span class="k">del</span> <span class="n">ar</span>
+            <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">dft_filename</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Mixing Sigma and G with factor </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">mix</span><span class="p">)</span>
+                <span class="n">S</span><span class="o">.</span><span class="n">Sigma_iw</span> <span class="o">&lt;&lt;</span> <span class="n">mix</span> <span class="o">*</span> <span class="n">S</span><span class="o">.</span><span class="n">Sigma_iw</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">mix</span><span class="p">)</span> <span class="o">*</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;Sigma_iw&#39;</span><span class="p">]</span>
+                <span class="n">S</span><span class="o">.</span><span class="n">G_iw</span> <span class="o">&lt;&lt;</span> <span class="n">mix</span> <span class="o">*</span> <span class="n">S</span><span class="o">.</span><span class="n">G_iw</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">mix</span><span class="p">)</span> <span class="o">*</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;G_iw&#39;</span><span class="p">]</span>
         <span class="n">S</span><span class="o">.</span><span class="n">G_iw</span> <span class="o">&lt;&lt;</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">G_iw</span><span class="p">)</span>
         <span class="n">S</span><span class="o">.</span><span class="n">Sigma_iw</span> <span class="o">&lt;&lt;</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Sigma_iw</span><span class="p">)</span>
 
     <span class="c1"># Write the final Sigma and G to the hdf5 archive:</span>
     <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
-        <span class="n">ar</span> <span class="o">=</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">dft_filename</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">)</span>
-        <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;iterations&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">iteration_number</span>
-        <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;G_0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G0_iw</span>
-        <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;G_tau&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G_tau</span>
-        <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;G_iw&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G_iw</span>
-        <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;Sigma_iw&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Sigma_iw</span>
-        <span class="k">del</span> <span class="n">ar</span>
+        <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">dft_filename</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+              <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;iterations&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">iteration_number</span>
+              <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;G_0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G0_iw</span>
+              <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;G_tau&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G_tau</span>
+              <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;G_iw&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G_iw</span>
+              <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;Sigma_iw&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Sigma_iw</span>
 
     <span class="c1"># Set the new double counting:</span>
     <span class="n">dm</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G_iw</span><span class="o">.</span><span class="n">density</span><span class="p">()</span> <span class="c1"># compute the density matrix of the impurity problem</span>
@@ -344,19 +420,12 @@ and <em>fit_max_n</em> also depend on <span class="math">\(\beta\)</span>.</p>
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="dftdmft_selfcons.html" title="Full charge self-consistency"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="dftdmft_singleshot.html" title="Single-shot DFT+DMFT"
-             >previous</a> |</li>
     <li><a href="../index.html">Home</a> &raquo;</li>
-
-          <li class="nav-item nav-item-1"><a href="../documentation.html" >Documentation</a> &#187;</li> 
+ 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2011-2013, M. Aichhorn, L. Pourovskii, V. Vildosola, C. Martins.
+        &#169; Copyright 2011-2019.
     </div>
   </body>
 </html>

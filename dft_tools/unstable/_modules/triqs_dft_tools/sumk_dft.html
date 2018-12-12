@@ -47,6 +47,8 @@
     
     <li><a href="../../documentation.html">Documentation</a></li>
     
+    <li><a href="../../tutorials.html">Tutorials</a></li>
+    
     <li><a href="../../issues.html">Issues</a></li>
     
     <li><a href="../../about.html">About DFTTools</a></li>
@@ -282,23 +284,22 @@
         <span class="n">subgroup_present</span> <span class="o">=</span> <span class="mi">0</span>
 
         <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
-            <span class="n">ar</span> <span class="o">=</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">subgrp</span> <span class="ow">in</span> <span class="n">ar</span><span class="p">:</span>
-                <span class="n">subgroup_present</span> <span class="o">=</span> <span class="kc">True</span>
-                <span class="c1"># first read the necessary things:</span>
-                <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">things_to_read</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">ar</span><span class="p">[</span><span class="n">subgrp</span><span class="p">]:</span>
-                        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">it</span><span class="p">,</span> <span class="n">ar</span><span class="p">[</span><span class="n">subgrp</span><span class="p">][</span><span class="n">it</span><span class="p">])</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Loading </span><span class="si">%s</span><span class="s2"> failed!&quot;</span> <span class="o">%</span> <span class="n">it</span><span class="p">)</span>
-                        <span class="n">value_read</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">things_to_read</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
-                    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span>
-                        <span class="s2">&quot;Loading failed: No </span><span class="si">%s</span><span class="s2"> subgroup in hdf5!&quot;</span> <span class="o">%</span> <span class="n">subgrp</span><span class="p">)</span>
-                <span class="n">subgroup_present</span> <span class="o">=</span> <span class="kc">False</span>
-                <span class="n">value_read</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="k">del</span> <span class="n">ar</span>
+            <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">subgrp</span> <span class="ow">in</span> <span class="n">ar</span><span class="p">:</span>
+                    <span class="n">subgroup_present</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="c1"># first read the necessary things:</span>
+                    <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">things_to_read</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">ar</span><span class="p">[</span><span class="n">subgrp</span><span class="p">]:</span>
+                            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">it</span><span class="p">,</span> <span class="n">ar</span><span class="p">[</span><span class="n">subgrp</span><span class="p">][</span><span class="n">it</span><span class="p">])</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Loading </span><span class="si">%s</span><span class="s2"> failed!&quot;</span> <span class="o">%</span> <span class="n">it</span><span class="p">)</span>
+                            <span class="n">value_read</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">things_to_read</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
+                        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span>
+                            <span class="s2">&quot;Loading failed: No </span><span class="si">%s</span><span class="s2"> subgroup in hdf5!&quot;</span> <span class="o">%</span> <span class="n">subgrp</span><span class="p">)</span>
+                    <span class="n">subgroup_present</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">value_read</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="c1"># now do the broadcasting:</span>
         <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">things_to_read</span><span class="p">:</span>
             <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">it</span><span class="p">,</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">it</span><span class="p">)))</span>
@@ -321,18 +322,16 @@
 
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">()):</span>
             <span class="k">return</span>  <span class="c1"># do nothing on nodes</span>
-        <span class="n">ar</span> <span class="o">=</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf_file</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">subgrp</span> <span class="ow">in</span> <span class="n">ar</span><span class="p">:</span>
-            <span class="n">ar</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="n">subgrp</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">things_to_save</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">it</span> <span class="ow">in</span> <span class="p">[</span> <span class="s2">&quot;gf_struct_sumk&quot;</span><span class="p">,</span> <span class="s2">&quot;gf_struct_solver&quot;</span><span class="p">,</span>
-                    <span class="s2">&quot;solver_to_sumk&quot;</span><span class="p">,</span> <span class="s2">&quot;sumk_to_solver&quot;</span><span class="p">,</span> <span class="s2">&quot;solver_to_sumk_block&quot;</span><span class="p">]:</span>
-                <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;It is not recommended to save &#39;</span><span class="si">{}</span><span class="s2">&#39; individually. Save &#39;block_structure&#39; instead.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">it</span><span class="p">))</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">ar</span><span class="p">[</span><span class="n">subgrp</span><span class="p">][</span><span class="n">it</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">it</span><span class="p">)</span>
-            <span class="k">except</span><span class="p">:</span>
-                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> not found, and so not saved.&quot;</span> <span class="o">%</span> <span class="n">it</span><span class="p">)</span>
-        <span class="k">del</span> <span class="n">ar</span></div>
+        <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf_file</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">subgrp</span> <span class="ow">in</span> <span class="n">ar</span><span class="p">:</span> <span class="n">ar</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="n">subgrp</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">things_to_save</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">it</span> <span class="ow">in</span> <span class="p">[</span> <span class="s2">&quot;gf_struct_sumk&quot;</span><span class="p">,</span> <span class="s2">&quot;gf_struct_solver&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;solver_to_sumk&quot;</span><span class="p">,</span> <span class="s2">&quot;sumk_to_solver&quot;</span><span class="p">,</span> <span class="s2">&quot;solver_to_sumk_block&quot;</span><span class="p">]:</span>
+                    <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;It is not recommended to save &#39;</span><span class="si">{}</span><span class="s2">&#39; individually. Save &#39;block_structure&#39; instead.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">it</span><span class="p">))</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">ar</span><span class="p">[</span><span class="n">subgrp</span><span class="p">][</span><span class="n">it</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">it</span><span class="p">)</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> not found, and so not saved.&quot;</span> <span class="o">%</span> <span class="n">it</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SumkDFT.load"><a class="viewcode-back" href="../../reference/sumk_dft.html#triqs_dft_tools.sumk_dft.SumkDFT.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">things_to_load</span><span class="p">,</span> <span class="n">subgrp</span><span class="o">=</span><span class="s1">&#39;user_data&#39;</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
@@ -353,16 +352,15 @@
 
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">()):</span>
             <span class="k">return</span>  <span class="c1"># do nothing on nodes</span>
-        <span class="n">ar</span> <span class="o">=</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">subgrp</span> <span class="ow">in</span> <span class="n">ar</span><span class="p">:</span>
-            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Loading </span><span class="si">%s</span><span class="s2"> failed!&quot;</span> <span class="o">%</span> <span class="n">subgrp</span><span class="p">)</span>
-        <span class="n">list_to_return</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">things_to_load</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">list_to_return</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ar</span><span class="p">[</span><span class="n">subgrp</span><span class="p">][</span><span class="n">it</span><span class="p">])</span>
-            <span class="k">except</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="s2">&quot;load: </span><span class="si">%s</span><span class="s2"> not found, and so not loaded.&quot;</span> <span class="o">%</span> <span class="n">it</span>
-        <span class="k">del</span> <span class="n">ar</span>
+        <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">subgrp</span> <span class="ow">in</span> <span class="n">ar</span><span class="p">:</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Loading </span><span class="si">%s</span><span class="s2"> failed!&quot;</span> <span class="o">%</span> <span class="n">subgrp</span><span class="p">)</span>
+            <span class="n">list_to_return</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">things_to_load</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">list_to_return</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ar</span><span class="p">[</span><span class="n">subgrp</span><span class="p">][</span><span class="n">it</span><span class="p">])</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="s2">&quot;load: </span><span class="si">%s</span><span class="s2"> not found, and so not loaded.&quot;</span> <span class="o">%</span> <span class="n">it</span>
         <span class="k">return</span> <span class="n">list_to_return</span></div>
 
 <span class="c1">################</span>
@@ -1917,10 +1915,9 @@
             <span class="n">fermi_weights</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="n">band_window</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
-                <span class="n">ar</span> <span class="o">=</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf_file</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
-                <span class="n">fermi_weights</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dft_misc_input&#39;</span><span class="p">][</span><span class="s1">&#39;dft_fermi_weights&#39;</span><span class="p">]</span>
-                <span class="n">band_window</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dft_misc_input&#39;</span><span class="p">][</span><span class="s1">&#39;band_window&#39;</span><span class="p">]</span>
-                <span class="k">del</span> <span class="n">ar</span>
+                <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf_file</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+                    <span class="n">fermi_weights</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dft_misc_input&#39;</span><span class="p">][</span><span class="s1">&#39;dft_fermi_weights&#39;</span><span class="p">]</span>
+                    <span class="n">band_window</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dft_misc_input&#39;</span><span class="p">][</span><span class="s1">&#39;band_window&#39;</span><span class="p">]</span>
             <span class="n">fermi_weights</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">fermi_weights</span><span class="p">)</span>
             <span class="n">band_window</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">band_window</span><span class="p">)</span>
 
@@ -2174,7 +2171,7 @@
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2011-2013, M. Aichhorn, L. Pourovskii, V. Vildosola, C. Martins.
+        &#169; Copyright 2011-2019.
     </div>
   </body>
 </html>

@@ -47,6 +47,8 @@
     
     <li><a href="../../documentation.html">Documentation</a></li>
     
+    <li><a href="../../tutorials.html">Tutorials</a></li>
+    
     <li><a href="../../issues.html">Issues</a></li>
     
     <li><a href="../../about.html">About DFTTools</a></li>
@@ -76,7 +78,7 @@
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../../_sources/guide/images_scripts/Ce-gamma_script.rst.txt"
+      <li><a href="../../_sources/tutorials/images_scripts/Ce-gamma_script.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
@@ -124,15 +126,14 @@
 <span class="n">previous_runs</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="n">previous_present</span> <span class="o">=</span> <span class="bp">False</span>
 <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
-    <span class="n">f</span> <span class="o">=</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">dft_filename</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="s1">&#39;dmft_output&#39;</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
-        <span class="n">ar</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="s1">&#39;iterations&#39;</span> <span class="ow">in</span> <span class="n">ar</span><span class="p">:</span>
-            <span class="n">previous_present</span> <span class="o">=</span> <span class="bp">True</span>
-            <span class="n">previous_runs</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;iterations&#39;</span><span class="p">]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">f</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">)</span>
-    <span class="k">del</span> <span class="n">f</span>
+    <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">dft_filename</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;dmft_output&#39;</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">ar</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s1">&#39;iterations&#39;</span> <span class="ow">in</span> <span class="n">ar</span><span class="p">:</span>
+                <span class="n">previous_present</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="n">previous_runs</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;iterations&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">)</span>
 <span class="n">previous_runs</span>    <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">previous_runs</span><span class="p">)</span>
 <span class="n">previous_present</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">previous_present</span><span class="p">)</span>
 
@@ -149,9 +150,8 @@
 <span class="c1"># load previous data: old self-energy, chemical potential, DC correction</span>
 <span class="k">if</span> <span class="n">previous_present</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
-        <span class="n">ar</span> <span class="o">=</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">dft_filename</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">)</span>
-        <span class="n">S</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">&lt;&lt;</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;Sigma&#39;</span><span class="p">]</span>
-        <span class="k">del</span> <span class="n">ar</span>
+        <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">dft_filename</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+            <span class="n">S</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">&lt;&lt;</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;Sigma&#39;</span><span class="p">]</span>
         <span class="n">SK</span><span class="o">.</span><span class="n">chemical_potential</span><span class="p">,</span><span class="n">SK</span><span class="o">.</span><span class="n">dc_imp</span><span class="p">,</span><span class="n">SK</span><span class="o">.</span><span class="n">dc_energ</span> <span class="o">=</span> <span class="n">SK</span><span class="o">.</span><span class="n">load</span><span class="p">([</span><span class="s1">&#39;chemical_potential&#39;</span><span class="p">,</span><span class="s1">&#39;dc_imp&#39;</span><span class="p">,</span><span class="s1">&#39;dc_energ&#39;</span><span class="p">])</span>
     <span class="n">S</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">&lt;&lt;</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Sigma</span><span class="p">)</span>
     <span class="n">SK</span><span class="o">.</span><span class="n">chemical_potential</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">SK</span><span class="o">.</span><span class="n">chemical_potential</span><span class="p">)</span>
@@ -189,11 +189,10 @@
         <span class="c1"># Now mix Sigma and G with factor Mix, if wanted:</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">iteration_number</span><span class="o">&gt;</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">previous_present</span><span class="p">):</span>
             <span class="k">if</span> <span class="p">(</span><span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">()</span> <span class="ow">and</span> <span class="p">(</span><span class="n">mixing</span><span class="o">&lt;</span><span class="mf">1.0</span><span class="p">)):</span>
-                <span class="n">ar</span> <span class="o">=</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">dft_filename</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">)</span>
-                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Mixing Sigma and G with factor </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">mixing</span><span class="p">)</span>
-                <span class="n">S</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">&lt;&lt;</span> <span class="n">mixing</span> <span class="o">*</span> <span class="n">S</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">mixing</span><span class="p">)</span> <span class="o">*</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;Sigma&#39;</span><span class="p">]</span>
-                <span class="n">S</span><span class="o">.</span><span class="n">G</span> <span class="o">&lt;&lt;</span> <span class="n">mixing</span> <span class="o">*</span> <span class="n">S</span><span class="o">.</span><span class="n">G</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">mixing</span><span class="p">)</span> <span class="o">*</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;G&#39;</span><span class="p">]</span>
-                <span class="k">del</span> <span class="n">ar</span>
+                <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">dft_filename</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+                    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Mixing Sigma and G with factor </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">mixing</span><span class="p">)</span>
+                    <span class="n">S</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">&lt;&lt;</span> <span class="n">mixing</span> <span class="o">*</span> <span class="n">S</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">mixing</span><span class="p">)</span> <span class="o">*</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;Sigma&#39;</span><span class="p">]</span>
+                    <span class="n">S</span><span class="o">.</span><span class="n">G</span> <span class="o">&lt;&lt;</span> <span class="n">mixing</span> <span class="o">*</span> <span class="n">S</span><span class="o">.</span><span class="n">G</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">mixing</span><span class="p">)</span> <span class="o">*</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;G&#39;</span><span class="p">]</span>
             <span class="n">S</span><span class="o">.</span><span class="n">G</span> <span class="o">&lt;&lt;</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">G</span><span class="p">)</span>
             <span class="n">S</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">&lt;&lt;</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Sigma</span><span class="p">)</span>
      
@@ -208,11 +207,10 @@
 
         <span class="c1"># store the impurity self-energy, GF as well as correlation energy in h5</span>
         <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
-            <span class="n">ar</span> <span class="o">=</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">dft_filename</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">)</span>
-            <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;iterations&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">iteration_number</span> <span class="o">+</span> <span class="n">previous_runs</span>
-            <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;G&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G</span>
-            <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;Sigma&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Sigma</span>
-            <span class="k">del</span> <span class="n">ar</span>
+            <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">dft_filename</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+                <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;iterations&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">iteration_number</span> <span class="o">+</span> <span class="n">previous_runs</span>
+                <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;G&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G</span>
+                <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;Sigma&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Sigma</span>
 
         <span class="c1">#Save essential SumkDFT data:</span>
         <span class="n">SK</span><span class="o">.</span><span class="n">save</span><span class="p">([</span><span class="s1">&#39;chemical_potential&#39;</span><span class="p">,</span><span class="s1">&#39;dc_imp&#39;</span><span class="p">,</span><span class="s1">&#39;dc_energ&#39;</span><span class="p">,</span><span class="s1">&#39;correnerg&#39;</span><span class="p">])</span>
@@ -272,7 +270,7 @@
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2011-2013, M. Aichhorn, L. Pourovskii, V. Vildosola, C. Martins.
+        &#169; Copyright 2011-2019.
     </div>
   </body>
 </html>
