@@ -13,7 +13,7 @@ OmegaMaxEnt_TRIQS has been developed by Dominic Bergeron for the Centre for Comp
 Acknowledgment
 --------------
 
-Great thanks to Nils Wentzell for providing technical help with TRIQS and with software tools such as Python, Git, CMake, Sphinx, and more, and with the testing and documentation of the code. Thanks to Manuel Zingl for reviewing the documentation and tutorials, and for useful discussions. Thanks to Antoines Georges and Olivier Parcollet for overseeing the development of OmegaMaxEnt_TRIQS.
+Great thanks to Nils Wentzell for providing technical help with TRIQS and software tools such as Python, Git, CMake, Sphinx, and more, and with the testing and documentation of the code. Thanks to Dylon Simon for setting up the multi-plateform testing, to Manuel Zingl for useful discussions and for reviewing the documentation and tutorials, and thanks to Antoines Georges and Olivier Parcollet for overseeing the development of OmegaMaxEnt_TRIQS.
 
 Copyrights
 ----------
