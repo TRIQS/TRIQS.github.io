@@ -200,15 +200,14 @@ A TRIQS Jupyter notebook environment can be accessed directly at <a class="refer
 <p>We provide Debian packages for the Ubuntu LTS Versions 16.04 (xenial) and 18.04 (bionic).:</p>
 <div class="highlight-bash"><div class="highlight"><pre><span></span>sudo apt-get update <span class="o">&amp;&amp;</span> sudo apt-get install -y software-properties-common apt-transport-https curl
 <span class="nb">source</span> /etc/lsb-release
-curl -L https://users.flatironinstitute.org/~ccq/triqs/master/<span class="nv">$DISTRIB_CODENAME</span>/public.gpg <span class="p">|</span> sudo apt-key add -
-sudo add-apt-repository <span class="s2">&quot;deb https://users.flatironinstitute.org/~ccq/triqs/master/</span><span class="nv">$DISTRIB_CODENAME</span><span class="s2">/ /&quot;</span>
+curl -L https://users.flatironinstitute.org/~ccq/triqs/<span class="nv">$DISTRIB_CODENAME</span>/public.gpg <span class="p">|</span> sudo apt-key add -
+sudo add-apt-repository <span class="s2">&quot;deb https://users.flatironinstitute.org/~ccq/triqs/</span><span class="nv">$DISTRIB_CODENAME</span><span class="s2">/ /&quot;</span>
 sudo apt-get update <span class="o">&amp;&amp;</span> sudo apt-get install -y triqs
 </pre></div>
 </div>
 <p>This will install the minimal runtime packages and triqs into the system tree at /usr.</p>
 <p>If you aim to compile applications against the triqs library, additional <a class="reference internal" href="installation/ubuntu.html#ubuntu"><span class="std std-ref">development libraries</span></a> have to be installed. You should further set the following <a class="reference internal" href="installation/environment_vars.html#environment-vars"><span class="std std-ref">environment variables</span></a> permanently:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">CPLUS_INCLUDE_PATH</span><span class="o">=</span>/usr/include/openmpi:/usr/include/hdf5/serial/:<span class="nv">$CPATH</span>
-<span class="nb">source</span> /usr/share/cpp2pyvars.sh
+<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">CPLUS_INCLUDE_PATH</span><span class="o">=</span>/usr/include/openmpi:/usr/include/hdf5/serial/:<span class="nv">$CPLUS_INCLUDE_PATH</span>
 <span class="nb">source</span> /usr/share/triqsvars.sh
 </pre></div>
 </div>
@@ -237,7 +236,6 @@ install these necessary libraries on two standard systems:</p>
 </div>
 <div class="section" id="installation-steps">
 <h2>Installation steps<a class="headerlink" href="#installation-steps" title="Permalink to this headline">¶</a></h2>
-<p>You need to install first Cpp2Py and then TRIQS.</p>
 <p>We provide hereafter the build instructions in the form of a documented bash script.
 You can adapt INSTALL_PREFIX, NCORES for your local settings.
 Note that, contrary to previous versions of TRIQS,
@@ -250,20 +248,8 @@ the installation directory CMAKE_INSTALL_PREFIX is now mandatory in the cmake co
 <span class="c1"># Set the number of cores for the compilation</span>
 <span class="nv">NCORES</span><span class="o">=</span><span class="m">4</span>
 
-<span class="c1"># Clone the git repositories for cpp2py and triqs</span>
-git clone https://github.com/TRIQS/cpp2py cpp2py.src
+<span class="c1"># Clone the git repository of triqs</span>
 git clone https://github.com/TRIQS/triqs triqs.src
-
-<span class="c1"># Configure the cpp2py build process</span>
-mkdir -p cpp2py.build <span class="o">&amp;&amp;</span> <span class="nb">cd</span> cpp2py.build
-cmake ../cpp2py.src -DCMAKE_INSTALL_PREFIX<span class="o">=</span><span class="nv">$INSTALL_PREFIX</span>
-
-<span class="c1"># Build and install cpp2py</span>
-make -j<span class="nv">$NCORES</span> <span class="o">&amp;&amp;</span> make install
-<span class="nb">cd</span> ../
-
-<span class="c1"># Load the cpp2py installation into your environment</span>
-<span class="nb">source</span> <span class="nv">$INSTALL_PREFIX</span>/share/cpp2pyvars.sh
 
 <span class="c1"># Use cmake to configure the triqs build process</span>
 mkdir -p triqs.build <span class="o">&amp;&amp;</span> <span class="nb">cd</span> triqs.build
@@ -277,22 +263,20 @@ make -j<span class="nv">$NCORES</span> <span class="o">&amp;&amp;</span> make <s
 <span class="nb">source</span> <span class="nv">$INSTALL_PREFIX</span>/share/triqsvars.sh
 
 <span class="nb">echo</span> 
-<span class="nb">echo</span> <span class="s2">&quot;If you want to automatically load triqs and cpp2py into your environment,&quot;</span>
-<span class="nb">echo</span> <span class="s2">&quot;please add the following two lines to your ~/.bash_profile (or ~/.zprofile):&quot;</span>
-<span class="nb">echo</span> <span class="s2">&quot;source </span><span class="nv">$INSTALL_PREFIX</span><span class="s2">/share/cpp2pyvars.sh&quot;</span>
+<span class="nb">echo</span> <span class="s2">&quot;If you want to automatically load triqs into your environment,&quot;</span>
+<span class="nb">echo</span> <span class="s2">&quot;please add the following line to your ~/.bash_profile (or ~/.zprofile):&quot;</span>
 <span class="nb">echo</span> <span class="s2">&quot;source </span><span class="nv">$INSTALL_PREFIX</span><span class="s2">/share/triqsvars.sh&quot;</span>
 </pre></div>
 </div>
 <div class="section" id="environment-setup">
 <h3>Environment setup<a class="headerlink" href="#environment-setup" title="Permalink to this headline">¶</a></h3>
-<p>Cpp2Py and TRIQS both provide a small script (<cite>cpp2pyvars.sh</cite> and <cite>triqsvars.sh</cite>)
-to load their respective installation into your <a class="reference internal" href="installation/environment_vars.html#environment-vars"><span class="std std-ref">environment variables</span></a>.
-Please source them with the proper replacement of INSTALL_PREFIX:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="nb">source</span> <span class="nv">$INSTALL_PREFIX</span>/share/cpp2pyvars.sh
-<span class="nb">source</span> <span class="nv">$INSTALL_PREFIX</span>/share/triqsvars.sh
+<p>TRIQS provides a small script (<cite>triqsvars.sh</cite>)
+to load its installation into your <a class="reference internal" href="installation/environment_vars.html#environment-vars"><span class="std std-ref">environment variables</span></a>.
+Please source it with the proper replacement of INSTALL_PREFIX:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="nb">source</span> <span class="nv">$INSTALL_PREFIX</span>/share/triqsvars.sh
 </pre></div>
 </div>
-<p>To automate this process, please add these two lines to your <a class="reference external" href="https://en.wikipedia.org/wiki/Bash_(Unix_shell)#Startup_scripts">~/.bash_profile</a>
+<p>To automate this process, please add this line to your <a class="reference external" href="https://en.wikipedia.org/wiki/Bash_(Unix_shell)#Startup_scripts">~/.bash_profile</a>
 (or <a class="reference external" href="http://zsh.sourceforge.net/FAQ/zshfaq03.html#l19">~/.zprofile</a>)</p>
 </div>
 </div>
