@@ -3,15 +3,17 @@
 Tutorials
 =========
 
-There are three `tutorials <OmegaMaxEnt_TRIQS_tutorials_>`_, with solved exercises, on OmegaMaxEnt_TRIQS:
+We provide three `tutorials <OmegaMaxEnt_TRIQS_tutorials_>`_, with solved exercises:
 
-An introductory_ one using a fictitious Green's functions for which the spectrum is known, which introduces to the features of :math:`\Omega MaxEnt`, the diagnostic tools in particular, with an exercise on the continuation of a matrix-valued Green's function.
+An introductory_ one using a fictitious Green's functions for which the spectrum is known.
+The aim of this first tutorial is to introduce the main features of :math:`\Omega MaxEnt`,
+in particular its diagnostic tools. The exercise is on the continuation of a matrix-valued Green's function.
 
-Then, there are two tutorials on the analytic continuation of dynamical mean field (DMFT) results:
+Then, there are two tutorials on the analytic continuation of dynamical mean-field theory (DMFT) results:
 
-A comparison_ between the result of analytic continuation of a Matsubara frequency self-energy computed using a continuous-time hybridization expansion (CTHYB_) impurity solver and the real-frequency self-energy obtained directly with a numerical renormalization group (NRG) impurity solver.
+First, a comparison_ between the result of analytic continuation of a Matsubara frequency self-energy computed using a continuous-time hybridization expansion (CTHYB_) impurity solver and the real-frequency self-energy obtained directly with a numerical renormalization group (NRG) impurity solver.
 
-The `analytic continuation of a self-energy`_ computed with `DMFT and density functional theory`_ for the material :math:`Sr_2CuO_4`.
+And second, the `analytic continuation of a self-energy`_ on the example of the `DMFT and density functional theory`_ solution for the material :math:`Sr_2RuO_4`.
 
 .. _OmegaMaxEnt_TRIQS_tutorials: https://github.com/TRIQS/omegamaxent_interface/tree/master/tutorials
 
