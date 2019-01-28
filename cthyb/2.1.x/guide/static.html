@@ -1,0 +1,228 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Measuring static observables &#8212; TRIQS Hybridization Expansion Solver  documentation</title>
+    <link rel="stylesheet" href="../_static/triqs.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=default"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Solver" href="../reference/solver.html" />
+    <link rel="prev" title="Another example: a multiorbital impurity model" href="slater_five_band.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head>
+  <body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../install.html">Install</a></li>
+    
+    <li><a href="../documentation.html">Documentation</a></li>
+    
+    <li><a href="../issues.html">Issues</a></li>
+    
+    <li><a href="../about.html">About CTHYB</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../index.html">cthyb</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">a generic quantum impurity solver based on the <a class="triqs" style="font-size: 12px" href="http://ipht.cea.fr/triqs">TRIQS</a> library</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../reference/solver.html" title="Solver"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="slater_five_band.html" title="Another example: a multiorbital impurity model"
+             accesskey="P">previous</a> |</li>
+    <li><a href="../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../documentation.html" accesskey="U">Documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="slater_five_band.html"
+                        title="previous chapter">Another example: a multiorbital impurity model</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../reference/solver.html"
+                        title="next chapter">Solver</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/guide/static.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="measuring-static-observables">
+<span id="static"></span><h1>Measuring static observables<a class="headerlink" href="#measuring-static-observables" title="Permalink to this headline">¶</a></h1>
+<p>In addition to the interacting Green’s functions one is often
+interested in such observables, as orbital occupation numbers and
+double occupancy on the impurity. Expectation values of these
+time-independent operators are readily expressed in terms of
+the reduced density matrix of the system,</p>
+<div class="math">
+\[\hat\rho_\mathrm{imp} = \mathrm{Tr}_\mathrm{bath}[e^{-\beta\hat H}/Z].\]</div>
+<p>Here, <span class="math">\(e^{-\beta\hat H}/Z\)</span> is the density matrix of the full system
+(impurity + bath) described by the Hamiltonian <span class="math">\(\hat H\)</span>.</p>
+<p>Let us consider a single-orbital Anderson impurity in a weak
+external magnetic field [<a class="reference download internal" href="../_downloads/static.py" download=""><code class="xref download docutils literal"><span class="pre">script</span></code></a>].</p>
+<p>At first, we import all necessary modules, define some input parameters
+and construct a <code class="docutils literal"><span class="pre">Solver</span></code> object in the usual way.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pytriqs.gf</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">pytriqs.operators</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">pytriqs.applications.impurity_solvers.cthyb</span> <span class="k">import</span> <span class="n">Solver</span>
+
+<span class="c1"># Parameters</span>
+<span class="n">D</span> <span class="o">=</span> <span class="mf">1.0</span>         <span class="c1"># Half-bandwidth of the bath</span>
+<span class="n">V</span> <span class="o">=</span> <span class="mf">0.2</span>         <span class="c1"># Hybridisation amplitude</span>
+<span class="n">U</span> <span class="o">=</span> <span class="mf">4.0</span>         <span class="c1"># Coulomb interaction</span>
+<span class="n">e_f</span> <span class="o">=</span> <span class="o">-</span><span class="n">U</span><span class="o">/</span><span class="mi">2</span>      <span class="c1"># Local energy level</span>
+<span class="n">h</span> <span class="o">=</span> <span class="mf">0.01</span>        <span class="c1"># External field</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="mi">50</span>       <span class="c1"># Inverse temperature</span>
+
+<span class="c1"># Construct the impurity solver with the inverse temperature</span>
+<span class="c1"># and the structure of the Green&#39;s functions</span>
+<span class="n">S</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span><span class="p">,</span> <span class="n">gf_struct</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,[</span><span class="mi">0</span><span class="p">]),</span> <span class="p">(</span><span class="s1">&#39;down&#39;</span><span class="p">,[</span><span class="mi">0</span><span class="p">])</span> <span class="p">])</span>
+
+<span class="c1"># Initialize the non-interacting Green&#39;s function S.G0_iw</span>
+<span class="c1"># External magnetic field introduces Zeeman energy splitting between</span>
+<span class="c1"># different spin components</span>
+<span class="n">S</span><span class="o">.</span><span class="n">G0_iw</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">]</span>   <span class="o">&lt;&lt;</span> <span class="n">inverse</span><span class="p">(</span><span class="n">iOmega_n</span> <span class="o">-</span> <span class="n">e_f</span> <span class="o">+</span> <span class="n">h</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="n">V</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Wilson</span><span class="p">(</span><span class="n">D</span><span class="p">))</span>
+<span class="n">S</span><span class="o">.</span><span class="n">G0_iw</span><span class="p">[</span><span class="s1">&#39;down&#39;</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">inverse</span><span class="p">(</span><span class="n">iOmega_n</span> <span class="o">-</span> <span class="n">e_f</span> <span class="o">-</span> <span class="n">h</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="n">V</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Wilson</span><span class="p">(</span><span class="n">D</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>We instruct the <code class="docutils literal"><span class="pre">solve</span></code> function to accumulate the density matrix by passing
+<code class="docutils literal"><span class="pre">measure_density_matrix</span> <span class="pre">=</span> <span class="pre">True</span></code> and <code class="docutils literal"><span class="pre">use_norm_as_weight</span> <span class="pre">=</span> <span class="pre">True</span></code>. The
+latter parameter tells the solver to employ a reweighting scheme – use a
+spherical norm instead of the trace to calculate the atomic weight.
+The reweighting allows to take into account important contributions to
+<span class="math">\(\hat\rho_\mathrm{imp}\)</span>, which otherwise would be missed.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Run the solver</span>
+<span class="n">S</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">h_int</span> <span class="o">=</span> <span class="n">U</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;down&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>     <span class="c1"># Local Hamiltonian</span>
+        <span class="n">n_cycles</span>  <span class="o">=</span> <span class="mi">500000</span><span class="p">,</span>                      <span class="c1"># Number of QMC cycles</span>
+        <span class="n">length_cycle</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>                      <span class="c1"># Length of one cycle</span>
+        <span class="n">n_warmup_cycles</span> <span class="o">=</span> <span class="mi">10000</span><span class="p">,</span>                 <span class="c1"># Warmup cycles</span>
+        <span class="n">measure_density_matrix</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>           <span class="c1"># Measure the reduced density matrix</span>
+        <span class="n">use_norm_as_weight</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>               <span class="c1"># Required to measure the density matrix</span>
+</pre></div>
+</div>
+<p>Results of density matrix accumulation are accessible via <cite>density_matrix</cite> attribute.
+We also need information about the structure of the local Hilbert space to compute
+expectation values of static observables. This information is stored as a special
+object in <cite>h_loc_diagonalization</cite>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Extract accumulated density matrix</span>
+<span class="n">rho</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">density_matrix</span>
+
+<span class="c1"># Object containing eigensystem of the local Hamiltonian</span>
+<span class="n">h_loc_diag</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">h_loc_diagonalization</span>
+</pre></div>
+</div>
+<p>According to a well known formula, an expectation value of an operator <span class="math">\(\hat O\)</span>
+acting on the impurity degrees of freedom is given by</p>
+<div class="math">
+\[\langle\hat O\rangle = \mathrm{Tr}_\mathrm{at}[\hat\rho_\mathrm{imp} \hat O].\]</div>
+<p>There is a function called <cite>trace_rho_op()</cite>, which does this trace and returns the
+expectation value of <span class="math">\(\hat O\)</span>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pytriqs.applications.impurity_solvers.cthyb</span> <span class="k">import</span> <span class="n">trace_rho_op</span>
+
+<span class="c1"># Evaluate occupations</span>
+<span class="nb">print</span> <span class="s2">&quot;&lt;N_up&gt; =&quot;</span><span class="p">,</span> <span class="n">trace_rho_op</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">h_loc_diag</span><span class="p">)</span>
+<span class="nb">print</span> <span class="s2">&quot;&lt;N_down&gt; = &quot;</span><span class="p">,</span> <span class="n">trace_rho_op</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;down&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">h_loc_diag</span><span class="p">)</span>
+
+<span class="c1"># Evaluate double occupancy</span>
+<span class="nb">print</span> <span class="s2">&quot;&lt;N_up*N_down&gt; =&quot;</span><span class="p">,</span> <span class="n">trace_rho_op</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="n">n</span><span class="p">(</span><span class="s1">&#39;down&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">h_loc_diag</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Typical output of the script may look like:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">N_up</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mf">0.620679103675</span>
+<span class="o">&lt;</span><span class="n">N_down</span><span class="o">&gt;</span> <span class="o">=</span>  <span class="mf">0.379442861526</span>
+<span class="o">&lt;</span><span class="n">N_up</span><span class="o">*</span><span class="n">N_down</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mf">0.00369097179335</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../reference/solver.html" title="Solver"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="slater_five_band.html" title="Another example: a multiorbital impurity model"
+             >previous</a> |</li>
+    <li><a href="../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../documentation.html" >Documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2017, P. Seth, I. Krivenko, H. Strand, M. Ferrero, O. Parcollet.
+    </div>
+  </body>
+</html>
