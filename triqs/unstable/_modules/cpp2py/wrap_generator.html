@@ -293,41 +293,6 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dict_call</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="p">:</span> <span class="k">return</span> <span class="n">doc</span>
         <span class="k">return</span> <span class="s2">&quot;Signature : </span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_signature</span><span class="p">(),</span><span class="n">doc</span><span class="p">)</span></div>
 
-<span class="k">class</span> <span class="nc">pure_pyfunction_from_module</span> <span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">       Representation of one python function defined in Python code in an external module.</span>
-<span class="sd">       Will be use to make a pure python method of an object, or or a module.</span>
-<span class="sd">       Data :</span>
-<span class="sd">        - name : name given in Python</span>
-<span class="sd">        - doc : the doc string.</span>
-<span class="sd">        - module : module path to the function [pure python only]</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">module</span><span class="p">)</span> <span class="p">:</span>
-      <span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">py_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span> <span class="o">=</span> <span class="n">name</span><span class="p">,</span> <span class="n">module</span>
-      <span class="k">try</span> <span class="p">:</span>
-          <span class="n">m</span> <span class="o">=</span> <span class="nb">__import__</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-          <span class="n">f</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">name</span><span class="p">)</span>
-          <span class="bp">self</span><span class="o">.</span><span class="n">doc</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="vm">__doc__</span> <span class="c1"># get the doc and check the function can be loaded.</span>
-      <span class="k">except</span> <span class="p">:</span>
-          <span class="nb">print</span> <span class="s2">&quot; I cannot import the function </span><span class="si">%s</span><span class="s2"> from the module </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="n">module</span><span class="p">)</span>
-          <span class="k">raise</span>
-
-    <span class="k">def</span> <span class="nf">_generate_doc</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">doc</span>
-
-<span class="k">class</span> <span class="nc">python_function</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A python function, given as a function.</span>
-<span class="sd">    Its code gets analysed and will be put into the C++ wrapper, to avoid import.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span> <span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">name</span><span class="p">,</span><span class="n">f</span>
-        <span class="kn">import</span> <span class="nn">inspect</span> <span class="k">as</span> <span class="nn">ins</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">code</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;&quot;</span><span class="si">%s</span><span class="se">\\</span><span class="s1">n&quot;&#39;</span><span class="o">%</span><span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&quot;&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">ins</span><span class="o">.</span><span class="n">getsourcelines</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">)[</span><span class="mi">0</span><span class="p">]])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">doc</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="vm">__doc__</span> <span class="c1"># UNUSED AT THE MOMENT ??? REALLY ???</span>
-
 <span class="k">class</span> <span class="nc">pyfunction</span> <span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">       Representation of one python function of the extension</span>
@@ -350,8 +315,6 @@
       <span class="bp">self</span><span class="o">.</span><span class="n">is_method</span> <span class="o">=</span> <span class="n">is_method</span>  <span class="c1"># can be a method, a function...</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">is_static</span> <span class="o">=</span> <span class="n">is_static</span>  <span class="c1">#</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">doc</span> <span class="o">=</span> <span class="n">doc</span>
-      <span class="k">def</span> <span class="nf">analyse</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
-          <span class="k">return</span> <span class="n">python_function</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span> <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">else</span> <span class="n">f</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">overloads</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># List of all C++ overloads</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">do_implement</span> <span class="o">=</span> <span class="kc">True</span> <span class="c1"># in some cases, we do not want to implement it automatically, (special methods).</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">is_constructor</span> <span class="o">=</span> <span class="kc">False</span>
@@ -419,7 +382,6 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">       Representation of a wrapped type</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">hidden_python_function</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1"># global dict of the python function to add to the module, hidden for the user, for precompute and so on</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">py_type</span><span class="p">,</span> <span class="n">c_type</span><span class="p">,</span> <span class="n">c_type_absolute</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">hdf5</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">arithmetic</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">serializable</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
             <span class="n">export</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">is_printable</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">doc</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">comparisons</span> <span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="p">:</span>
       <span class="sd">&quot;&quot;&quot;</span>
@@ -461,9 +423,6 @@
 <span class="sd">           Whether and how the object is to be serialized.  Possible values are :</span>
 <span class="sd">           - &quot;tuple&quot; : reduce it to a tuple of smaller objects, using the</span>
 <span class="sd">              boost serialization compatible template in C++, and the converters of the smaller objects.</span>
-<span class="sd">           - &quot;h5&quot; : serialize via a string, made by</span>
-<span class="sd">              triqs::serialize/triqs::deserialize.</span>
-<span class="sd">              Requires hdf5 &gt;1.8.9.</span>
 <span class="sd">           - &quot;repr&quot; : serialize via a string produced by python repr, reconstructed by eval.</span>
 
 <span class="sd">        is_printable : boolean</span>
@@ -481,19 +440,23 @@
       <span class="bp">self</span><span class="o">.</span><span class="n">py_type</span> <span class="o">=</span> <span class="n">py_type</span>
       <span class="n">c_to_py_type</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">c_type</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">py_type</span> <span class="c1"># register the name translation for the doc generation</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">hdf5</span> <span class="o">=</span> <span class="n">hdf5</span>
-      <span class="k">assert</span> <span class="n">serializable</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;h5&quot;</span><span class="p">,</span> <span class="s2">&quot;tuple&quot;</span><span class="p">,</span> <span class="s2">&quot;repr&quot;</span><span class="p">]</span>
+      <span class="k">assert</span> <span class="n">serializable</span> <span class="ow">in</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;tuple&quot;</span><span class="p">,</span> <span class="s2">&quot;repr&quot;</span><span class="p">]</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">serializable</span> <span class="o">=</span> <span class="n">serializable</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">is_printable</span> <span class="o">=</span> <span class="n">is_printable</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">comparisons</span> <span class="o">=</span> <span class="n">comparisons</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span> <span class="o">=</span> <span class="kc">None</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">doc</span> <span class="o">=</span> <span class="n">doc</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">methods</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1">#  a dict : string -&gt; pyfunction for each method name</span>
-      <span class="bp">self</span><span class="o">.</span><span class="n">pure_python_methods</span><span class="o">=</span> <span class="p">{}</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">constructor</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># a pyfunction  for the constructors.</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="o">=</span> <span class="p">[]</span> <span class="c1"># a list of _member</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="o">=</span> <span class="p">[]</span> <span class="c1"># a list of _property</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">export</span> <span class="o">=</span> <span class="n">export</span> 
 
+      <span class="c1"># Init hdf5</span>
+      <span class="c1"># If hdf5 is True, wrap the C++, else set an error message </span>
+      <span class="n">cp</span> <span class="o">=</span> <span class="s2">&quot;h5_write(gr, key, self_c);&quot;</span> <span class="k">if</span> <span class="n">hdf5</span> <span class="k">else</span> <span class="s1">&#39;PyErr_SetString(PyExc_NotImplementedError, &quot;No hdf5 support for </span><span class="si">%s</span><span class="s1">&quot;); return NULL;&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">py_type</span><span class="p">;</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">add_method</span><span class="p">(</span><span class="s2">&quot;void __write_hdf5__(triqs::h5::group gr, std::string key)&quot;</span><span class="p">,</span> <span class="n">calling_pattern</span> <span class="o">=</span> <span class="n">cp</span><span class="p">,</span> <span class="n">doc</span> <span class="o">=</span> <span class="s2">&quot;hdf5 writing&quot;</span><span class="p">)</span>
+    
       <span class="c1"># Init arithmetic</span>
       <span class="c1"># expect a tuple : &quot;algebra&quot;, &quot;scalar1&quot;, &quot;scalar2&quot;, etc...</span>
       <span class="bp">self</span><span class="o">.</span><span class="n">number_protocol</span> <span class="o">=</span> <span class="p">{}</span>
@@ -708,33 +671,6 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iterator</span><span class="p">(</span><span class="n">c_type</span><span class="p">,</span> <span class="n">c_cast_type</span><span class="p">,</span> <span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="class_.add_pure_python_method"><a class="viewcode-back" href="../../reference/cpp2py/class.html#cpp2py.wrap_generator.class_.add_pure_python_method">[docs]</a>    <span class="k">def</span> <span class="nf">add_pure_python_method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">rename</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Add a method name (or an overload of method name).</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        </span>
-<span class="sd">        f : string or function</span>
-<span class="sd">           - a string module1.module2.fnt_name</span>
-<span class="sd">           - a function in python</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">def</span> <span class="nf">process_doc</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span> <span class="p">:</span>
-            <span class="k">return</span> <span class="n">doc</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">n&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">doc</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">==</span><span class="nb">type</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="p">:</span>
-           <span class="n">module</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
-           <span class="k">try</span> <span class="p">:</span>
-               <span class="n">m</span> <span class="o">=</span> <span class="nb">__import__</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-               <span class="n">doc</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="vm">__doc__</span>
-           <span class="k">except</span> <span class="p">:</span>
-               <span class="k">raise</span>
-           <span class="bp">self</span><span class="o">.</span><span class="n">pure_python_methods</span><span class="p">[</span><span class="n">rename</span> <span class="ow">or</span> <span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">pure_pyfunction_from_module</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">,</span> <span class="n">module</span> <span class="o">=</span> <span class="n">module</span><span class="p">),</span> <span class="s1">&#39;module&#39;</span><span class="p">,</span> <span class="n">process_doc</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">callable</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="p">:</span>
-           <span class="k">assert</span> <span class="n">rename</span> <span class="o">==</span> <span class="kc">None</span>
-           <span class="bp">self</span><span class="o">.</span><span class="n">hidden_python_function</span><span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="vm">__name__</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span>
-           <span class="bp">self</span><span class="o">.</span><span class="n">pure_python_methods</span><span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="vm">__name__</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="s1">&#39;inline&#39;</span><span class="p">,</span> <span class="n">process_doc</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">)</span>
-        <span class="k">else</span> <span class="p">:</span> <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="s2">&quot;argument f must be callable or a string&quot;</span></div>
-
     <span class="k">class</span> <span class="nc">_member</span> <span class="p">:</span>
         <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c_name</span><span class="p">,</span> <span class="n">c_type</span><span class="p">,</span> <span class="n">py_name</span><span class="p">,</span> <span class="n">read_only</span><span class="p">,</span> <span class="n">doc</span><span class="p">):</span>
             <span class="sd">&quot;&quot;&quot;</span>
@@ -863,8 +799,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">include_list</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">enums</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">using</span> <span class="o">=</span><span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">python_functions</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">hidden_python_functions</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_preamble</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
 
 <div class="viewcode-block" id="module_.add_class"><a class="viewcode-back" href="../../reference/cpp2py/module.html#cpp2py.wrap_generator.module_.add_class">[docs]</a>    <span class="k">def</span> <span class="nf">add_class</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">cls</span><span class="p">):</span>
@@ -933,13 +867,6 @@
         <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">functions</span> <span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">pyfunction</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">,</span> <span class="n">doc</span> <span class="o">=</span> <span class="n">doc</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">overloads</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="module_.add_python_function"><a class="viewcode-back" href="../../reference/cpp2py/module.html#cpp2py.wrap_generator.module_.add_python_function">[docs]</a>    <span class="k">def</span> <span class="nf">add_python_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">hidden</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="p">:</span>
-        <span class="k">assert</span> <span class="n">callable</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">hidden</span> <span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">python_functions</span><span class="p">[</span><span class="n">name</span> <span class="ow">or</span> <span class="n">f</span><span class="o">.</span><span class="vm">__name__</span><span class="p">]</span> <span class="o">=</span> <span class="n">python_function</span><span class="p">(</span><span class="n">name</span> <span class="ow">or</span> <span class="n">f</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
-        <span class="k">else</span> <span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">hidden_python_functions</span><span class="p">[</span><span class="n">name</span> <span class="ow">or</span> <span class="n">f</span><span class="o">.</span><span class="vm">__name__</span><span class="p">]</span> <span class="o">=</span> <span class="n">python_function</span><span class="p">(</span><span class="n">name</span> <span class="ow">or</span> <span class="n">f</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="module_.add_include"><a class="viewcode-back" href="../../reference/cpp2py/module.html#cpp2py.wrap_generator.module_.add_include">[docs]</a>    <span class="k">def</span> <span class="nf">add_include</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">filenames</span><span class="p">)</span> <span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1010,12 +937,10 @@
  
         <span class="c1"># prepare generation</span>
         <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">classes</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">_prepare_for_generation</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">n</span><span class="p">,</span><span class="n">f</span> <span class="ow">in</span> <span class="n">class_</span><span class="o">.</span><span class="n">hidden_python_function</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_python_function</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">name</span> <span class="o">=</span> <span class="n">n</span><span class="p">,</span> <span class="n">hidden</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
            
         <span class="c1"># call mako</span>
         <span class="n">tpl</span> <span class="o">=</span> <span class="n">Template</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">mako_template</span><span class="p">,</span> <span class="n">strict_undefined</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">rendered</span> <span class="o">=</span> <span class="n">tpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">module</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> 
-                   <span class="n">python_function</span> <span class="o">=</span> <span class="n">python_function</span><span class="p">,</span> 
                    <span class="n">sys_modules</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">)</span>
        
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">wrap_file</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
