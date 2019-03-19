@@ -130,70 +130,51 @@
 the previous single-impurity example to the case of a bath with semi-circular density of states and adding a python loop to update <span class="math">\(G_0\)</span> as function of <span class="math">\(G\)</span>.</p>
 <p>Here is a complete program doing this plain-vanilla DMFT on a half-filled one-band Bethe lattice:</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pytriqs.gf</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">pytriqs.gf</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">pytriqs.operators</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">pytriqs.archive</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">import</span> <span class="nn">pytriqs.utility.mpi</span> <span class="kn">as</span> <span class="nn">mpi</span>
+<span class="kn">from</span> <span class="nn">triqs_cthyb</span> <span class="kn">import</span> <span class="n">Solver</span>
 
-<span class="c1"># Set up a few parameters</span>
+<span class="c1"># Parameters of the model</span>
 <span class="n">U</span> <span class="o">=</span> <span class="mf">2.5</span>
-<span class="n">half_bandwidth</span> <span class="o">=</span> <span class="mf">1.0</span>
-<span class="n">chemical_potential</span> <span class="o">=</span> <span class="n">U</span><span class="o">/</span><span class="mf">2.0</span>
-<span class="n">beta</span> <span class="o">=</span> <span class="mi">100</span>
-<span class="n">n_loops</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">t</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="n">mu</span> <span class="o">=</span> <span class="n">U</span><span class="o">/</span><span class="mf">2.0</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="mf">100.0</span>
+<span class="n">n_loops</span> <span class="o">=</span> <span class="mi">10</span>
 
-<span class="c1"># Construct the CTQMC solver</span>
-<span class="kn">from</span> <span class="nn">pytriqs.applications.impurity_solvers.cthyb</span> <span class="kn">import</span> <span class="n">Solver</span>
-<span class="n">S</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span><span class="p">,</span> <span class="n">gf_struct</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;up&#39;</span><span class="p">:[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;down&#39;</span><span class="p">:[</span><span class="mi">0</span><span class="p">]</span> <span class="p">})</span>
+<span class="c1"># Construct the impurity solver</span>
+<span class="n">S</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span><span class="p">,</span> <span class="n">gf_struct</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;up&#39;</span><span class="p">,[</span><span class="mi">0</span><span class="p">]),</span> <span class="p">(</span><span class="s1">&#39;down&#39;</span><span class="p">,[</span><span class="mi">0</span><span class="p">])]</span> <span class="p">)</span>
 
-<span class="c1"># Set the solver parameters</span>
-<span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="n">params</span><span class="p">[</span><span class="s1">&#39;n_cycles&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1000000</span>                <span class="c1"># Number of QMC cycles</span>
-<span class="n">params</span><span class="p">[</span><span class="s1">&#39;length_cycle&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">200</span>                <span class="c1"># Length of one cycle</span>
-<span class="n">params</span><span class="p">[</span><span class="s1">&#39;n_warmup_cycles&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10000</span>           <span class="c1"># Warmup cycles</span>
+<span class="c1"># This is a first guess for G</span>
+<span class="n">S</span><span class="o">.</span><span class="n">G_iw</span> <span class="o">&lt;&lt;</span> <span class="n">SemiCircular</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">t</span><span class="p">)</span>
 
-<span class="c1"># Initalize the Green&#39;s function to a semi-circular density of states</span>
-<span class="n">g0_iw</span> <span class="o">=</span> <span class="n">GfImFreq</span><span class="p">(</span><span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">beta</span> <span class="o">=</span> <span class="mi">100</span><span class="p">)</span>
-<span class="n">g0_iw</span> <span class="o">&lt;&lt;</span> <span class="n">SemiCircular</span><span class="p">(</span><span class="n">half_bandwidth</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">g0block</span> <span class="ow">in</span> <span class="n">S</span><span class="o">.</span><span class="n">G_tau</span><span class="p">:</span>
-    <span class="n">g0block</span> <span class="o">&lt;&lt;</span> <span class="n">InverseFourier</span><span class="p">(</span><span class="n">g0_iw</span><span class="p">)</span>
+<span class="c1"># DMFT loop with self-consistency</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_loops</span><span class="p">):</span>
 
-<span class="c1"># Now do the DMFT loop</span>
-<span class="k">for</span> <span class="n">IterationNumber</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_loops</span><span class="p">):</span>
+    <span class="k">print</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">Iteration = </span><span class="si">%i</span><span class="s2"> / </span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_loops</span><span class="p">)</span>
 
-    <span class="c1"># Compute S.G0_iw with the self-consistency condition while imposing paramagnetism</span>
-    <span class="n">g</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">Fourier</span><span class="p">(</span> <span class="n">S</span><span class="o">.</span><span class="n">G_tau</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">S</span><span class="o">.</span><span class="n">G_tau</span><span class="p">[</span><span class="s1">&#39;down&#39;</span><span class="p">]</span> <span class="p">)</span>
+    <span class="c1"># Symmetrize the Green&#39;s function imposing paramagnetism and use self-consistency</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span> <span class="n">S</span><span class="o">.</span><span class="n">G_iw</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">S</span><span class="o">.</span><span class="n">G_iw</span><span class="p">[</span><span class="s1">&#39;down&#39;</span><span class="p">]</span> <span class="p">)</span>
     <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">g0</span> <span class="ow">in</span> <span class="n">S</span><span class="o">.</span><span class="n">G0_iw</span><span class="p">:</span>
-        <span class="n">g0</span> <span class="o">&lt;&lt;</span> <span class="n">inverse</span><span class="p">(</span> <span class="n">iOmega_n</span> <span class="o">+</span> <span class="n">chemical_potential</span> <span class="o">-</span> <span class="p">(</span><span class="n">half_bandwidth</span><span class="o">/</span><span class="mf">2.0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>  <span class="o">*</span> <span class="n">g</span> <span class="p">)</span>
+        <span class="n">g0</span> <span class="o">&lt;&lt;</span> <span class="n">inverse</span><span class="p">(</span> <span class="n">iOmega_n</span> <span class="o">+</span> <span class="n">mu</span> <span class="o">-</span> <span class="n">t</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">g</span> <span class="p">)</span>
 
-    <span class="c1"># Run the solver</span>
-    <span class="n">S</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">h_int</span> <span class="o">=</span> <span class="n">U</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;down&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="o">**</span><span class="n">params</span><span class="p">)</span>
+    <span class="c1"># Solve the impurity problem</span>
+    <span class="n">S</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">h_int</span> <span class="o">=</span> <span class="n">U</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;down&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>   <span class="c1"># Local Hamiltonian</span>
+        <span class="n">n_cycles</span>  <span class="o">=</span> <span class="mi">100000</span><span class="p">,</span>                        <span class="c1"># Number of QMC cycles</span>
+        <span class="n">length_cycle</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>                        <span class="c1"># Length of one cycle</span>
+        <span class="n">n_warmup_cycles</span> <span class="o">=</span> <span class="mi">5000</span>                     <span class="c1"># Warmup cycles</span>
+        <span class="p">)</span>
 
-    <span class="c1"># Some intermediate saves</span>
-    <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
-      <span class="n">R</span> <span class="o">=</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="s2">&quot;single_site_bethe.h5&quot;</span><span class="p">)</span>
-      <span class="n">R</span><span class="p">[</span><span class="s2">&quot;G_tau-</span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">IterationNumber</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G_tau</span>
-      <span class="k">del</span> <span class="n">R</span>
+    <span class="c1"># Save iteration in archive</span>
+    <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="s2">&quot;single_site_bethe.h5&quot;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">A</span><span class="p">:</span>
+        <span class="n">A</span><span class="p">[</span><span class="s1">&#39;G-</span><span class="si">%i</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G_iw</span>
+        <span class="n">A</span><span class="p">[</span><span class="s1">&#39;Sigma-</span><span class="si">%i</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Sigma_iw</span>
 
  <span class="o">---</span><span class="n">Output</span><span class="p">:</span><span class="o">---</span>
-<span class="n">triqs_cthyb</span> <span class="n">package</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">installed</span>
-<span class="n">Starting</span> <span class="n">run</span> <span class="k">with</span> <span class="mi">1</span> <span class="n">MPI</span> <span class="n">threads</span> <span class="n">at</span> <span class="p">:</span> <span class="mi">2019</span><span class="o">-</span><span class="mo">03</span><span class="o">-</span><span class="mi">18</span> <span class="mi">16</span><span class="p">:</span><span class="mi">09</span><span class="p">:</span><span class="mf">53.866255</span>
-<span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">build</span><span class="o">/</span><span class="n">triqs</span><span class="o">/</span><span class="n">pytriqs</span><span class="o">/</span><span class="n">applications</span><span class="o">/</span><span class="n">impurity_solvers</span><span class="o">/</span><span class="n">cthyb</span><span class="o">.</span><span class="n">py</span><span class="p">:</span><span class="mi">15</span><span class="p">:</span> <span class="ne">UserWarning</span><span class="p">:</span> 
-<span class="o">***************************************************</span>
-
-<span class="kn">from</span> <span class="nn">pytriqs.applications.impurity_solvers.cthyb</span> <span class="kn">import</span> <span class="n">XXX</span>
-
-<span class="ow">is</span> <span class="n">deprecated</span><span class="o">.</span> <span class="n">Replace</span> <span class="n">it</span> <span class="n">by</span> 
-      
-<span class="kn">from</span> <span class="nn">triqs_cthyb</span> <span class="kn">import</span> <span class="n">XXX</span> 
-
-<span class="o">****************************************************</span>
-  <span class="o">****************************************************</span><span class="s2">&quot;&quot;&quot;)</span>
-<span class="s2">Traceback (most recent call last):</span>
-<span class="s2">  File &quot;&lt;stdin&gt;&quot;, line 15, in &lt;module&gt;</span>
-<span class="s2">  File &quot;/home/build/triqs/pytriqs/applications/impurity_solvers/cthyb.py&quot;, line 18, in &lt;module&gt;</span>
-<span class="s2">    from triqs_cthyb import *</span>
-<span class="s2">ImportError: No module named triqs_cthyb</span>
+<span class="n">Starting</span> <span class="n">run</span> <span class="k">with</span> <span class="mi">1</span> <span class="n">MPI</span> <span class="n">threads</span> <span class="n">at</span> <span class="p">:</span> <span class="mi">2019</span><span class="o">-</span><span class="mo">03</span><span class="o">-</span><span class="mi">19</span> <span class="mi">15</span><span class="p">:</span><span class="mi">09</span><span class="p">:</span><span class="mf">03.351971</span>
+<span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
+  <span class="n">File</span> <span class="s2">&quot;&lt;stdin&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">5</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
+<span class="ne">ImportError</span><span class="p">:</span> <span class="n">No</span> <span class="n">module</span> <span class="n">named</span> <span class="n">triqs_cthyb</span>
 </pre></div>
 </div>
 </div>
