@@ -131,9 +131,10 @@ impurity and the bath. Let us solve this problem with the CTQMC solver. Here is
 the python <a class="reference download internal" href="../_downloads/aim.py" download=""><code class="xref download docutils literal"><span class="pre">script</span></code></a>:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pytriqs.gf</span> <span class="k">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">pytriqs.operators</span> <span class="k">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">pytriqs.applications.impurity_solvers.cthyb</span> <span class="k">import</span> <span class="n">Solver</span>
 <span class="kn">from</span> <span class="nn">pytriqs.archive</span> <span class="k">import</span> <span class="n">HDFArchive</span>
 <span class="kn">import</span> <span class="nn">pytriqs.utility.mpi</span> <span class="k">as</span> <span class="nn">mpi</span>
+
+<span class="kn">from</span> <span class="nn">w2dyn_cthyb</span> <span class="k">import</span> <span class="n">Solver</span>
 
 <span class="c1"># Parameters</span>
 <span class="n">D</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">U</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">4.0</span>
@@ -180,22 +181,22 @@ function (the real part vanishes up to the statistical noise).</p>
 <p>Let us now go through the script in some more details.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pytriqs.gf</span> <span class="k">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">pytriqs.operators</span> <span class="k">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">pytriqs.applications.impurity_solvers.cthyb</span> <span class="k">import</span> <span class="n">Solver</span>
 <span class="kn">from</span> <span class="nn">pytriqs.archive</span> <span class="k">import</span> <span class="n">HDFArchive</span>
 <span class="kn">import</span> <span class="nn">pytriqs.utility.mpi</span> <span class="k">as</span> <span class="nn">mpi</span>
+
 </pre></div>
 </div>
 <p>These lines import the classes to manipulate Green’s functions, fermionic
 operators, and the CTQMC solver.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Parameters</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span>
+<span class="c1"># Parameters</span>
 <span class="n">D</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">U</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">4.0</span>
-<span class="n">e_f</span><span class="p">,</span> <span class="n">beta</span> <span class="o">=</span> <span class="o">-</span><span class="n">U</span><span class="o">/</span><span class="mf">2.0</span><span class="p">,</span> <span class="mi">50</span>
 </pre></div>
 </div>
 <p>This just sets the parameters of the problem.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Construct the impurity solver with the inverse temperature</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span>
+<span class="c1"># Construct the impurity solver with the inverse temperature</span>
 <span class="c1"># and the structure of the Green&#39;s functions</span>
-<span class="n">S</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span><span class="p">,</span> <span class="n">gf_struct</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,[</span><span class="mi">0</span><span class="p">]),</span> <span class="p">(</span><span class="s1">&#39;down&#39;</span><span class="p">,[</span><span class="mi">0</span><span class="p">])</span> <span class="p">],</span> <span class="n">n_l</span> <span class="o">=</span> <span class="mi">100</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>This is the construction of the Solver object. The class is described
@@ -211,18 +212,18 @@ and in particular that the block structure of all Green’s function objects is 
 of the impurity is. From this information, the Solver will deduce the hybridization function
 which is used in the algorithm. The non-interacting Green’s function must be put in the
 class member <code class="docutils literal"><span class="pre">S.G0_iw</span></code>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Initialize the non-interacting Green&#39;s function S.G0_iw</span>
-<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">g0</span> <span class="ow">in</span> <span class="n">S</span><span class="o">.</span><span class="n">G0_iw</span><span class="p">:</span> <span class="n">g0</span> <span class="o">&lt;&lt;</span> <span class="n">inverse</span><span class="p">(</span><span class="n">iOmega_n</span> <span class="o">-</span> <span class="n">e_f</span> <span class="o">-</span> <span class="n">V</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Wilson</span><span class="p">(</span><span class="n">D</span><span class="p">))</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span>
+<span class="c1"># Initialize the non-interacting Green&#39;s function S.G0_iw</span>
 </pre></div>
 </div>
 <p>At this stage, everything is ready for the Solver and we just run it calling its member
 function <code class="docutils literal"><span class="pre">solve</span></code>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Run the solver. The results will be in S.G_tau, S.G_iw and S.G_l</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span>
+<span class="c1"># Run the solver. The results will be in S.G_tau, S.G_iw and S.G_l</span>
 <span class="n">S</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">h_int</span> <span class="o">=</span> <span class="n">U</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;down&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>     <span class="c1"># Local Hamiltonian</span>
         <span class="n">n_cycles</span>  <span class="o">=</span> <span class="mi">500000</span><span class="p">,</span>                      <span class="c1"># Number of QMC cycles</span>
         <span class="n">length_cycle</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>                      <span class="c1"># Length of one cycle</span>
         <span class="n">n_warmup_cycles</span> <span class="o">=</span> <span class="mi">10000</span><span class="p">,</span>                 <span class="c1"># Warmup cycles</span>
-        <span class="n">measure_g_l</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>                      <span class="c1"># Measure G_l</span>
 </pre></div>
 </div>
 <p>The run is controlled by the parameters of <code class="docutils literal"><span class="pre">solve()</span></code>:</p>

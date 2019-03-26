@@ -19,7 +19,7 @@ At first you need to create an instance of the CTQMC solver class. This is done
 with::
 
     from pytriqs.operators import *
-    from pytriqs.applications.impurity_solvers.cthyb import Solver
+    from w2dyn_cthyb import Solver
 
     # Create a solver instance
     S = Solver(beta = beta, gf_struct = gf_struct)

@@ -1,8 +1,9 @@
 from pytriqs.gf import *
 from pytriqs.operators import *
-from pytriqs.applications.impurity_solvers.cthyb import Solver
 from pytriqs.archive import HDFArchive
 import pytriqs.utility.mpi as mpi
+
+from w2dyn_cthyb import Solver
 
 # Parameters
 D, V, U = 1.0, 0.2, 4.0
