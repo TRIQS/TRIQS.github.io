@@ -117,11 +117,10 @@
 <span class="c1"># TRIQS. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
 <span class="c1">#</span>
 <span class="c1">################################################################################</span>
-<span class="kn">import</span> <span class="nn">lazy_expressions</span><span class="o">,</span> <span class="nn">descriptors</span>
+<span class="kn">import</span> <span class="nn">lazy_expressions</span><span class="o">,</span> <span class="nn">descriptors</span><span class="o">,</span> <span class="nn">gf_fnt</span>
 <span class="kn">from</span> <span class="nn">meshes</span> <span class="k">import</span> <span class="n">MeshImFreq</span><span class="p">,</span> <span class="n">MeshReFreq</span><span class="p">,</span> <span class="n">MeshImTime</span><span class="p">,</span> <span class="n">MeshLegendre</span>
 <span class="kn">from</span> <span class="nn">block_gf</span> <span class="k">import</span> <span class="n">BlockGf</span>
 <span class="kn">from</span> <span class="nn">gf</span> <span class="k">import</span> <span class="n">Gf</span>
-<span class="kn">from</span> <span class="nn">descriptor_base</span> <span class="k">import</span> <span class="n">A_Omega_Plus_B</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">product</span>
 <span class="kn">from</span> <span class="nn">backwd_compat.gf_refreq</span> <span class="k">import</span> <span class="n">GfReFreq</span> 
@@ -158,6 +157,9 @@
 <div class="viewcode-block" id="delta"><a class="viewcode-back" href="../../../reference/gfs/py/tools.html#pytriqs.gf.tools.delta">[docs]</a><span class="k">def</span> <span class="nf">delta</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compute Delta_iw from G0_iw.</span>
+<span class="sd">    CAUTION: This function assumes the following properties of g</span>
+<span class="sd">      * The diagonal components of g should decay as 1/iOmega</span>
+<span class="sd">      * g should fullfill the property g[iw][i,j] = conj(g[-iw][j,i])</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -170,14 +172,16 @@
 <span class="sd">               Hybridization function.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">,</span> <span class="s2">&quot;OBSOLETE : TO BE REPLACED&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">BlockGf</span><span class="p">):</span>
-    	<span class="k">return</span> <span class="n">BlockGf</span><span class="p">(</span><span class="n">name_block_generator</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">delta</span><span class="p">(</span><span class="n">g0</span><span class="p">))</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span><span class="n">g0</span> <span class="ow">in</span> <span class="n">g</span><span class="p">],</span> <span class="n">make_copies</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">BlockGf</span><span class="p">(</span><span class="n">name_block_generator</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">delta</span><span class="p">(</span><span class="n">g0</span><span class="p">))</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span><span class="n">g0</span> <span class="ow">in</span> <span class="n">g</span><span class="p">],</span> <span class="n">make_copies</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">MeshImFreq</span><span class="p">):</span>
-    	<span class="n">g0_iw_inv</span> <span class="o">=</span> <span class="n">inverse</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
-    	<span class="n">delta_iw</span> <span class="o">=</span> <span class="n">g0_iw_inv</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-    	<span class="n">delta_iw</span> <span class="o">&lt;&lt;</span> <span class="n">A_Omega_Plus_B</span><span class="p">(</span><span class="n">g0_iw_inv</span><span class="o">.</span><span class="n">tail</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">g0_iw_inv</span><span class="o">.</span><span class="n">tail</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-    	<span class="n">delta_iw</span> <span class="o">-=</span> <span class="n">g0_iw_inv</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="s2">&quot;delta(g) requires a matrix or scalar_valued Green function&quot;</span>
+        <span class="k">assert</span> <span class="n">gf_fnt</span><span class="o">.</span><span class="n">is_gf_hermitian</span><span class="p">(</span><span class="n">g</span><span class="p">),</span> <span class="s2">&quot;delta(g) requires a Green function with the property g[iw][i,j] = conj(g[-iw][j,i])&quot;</span>
+        <span class="n">delta_iw</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">delta_iw</span> <span class="o">&lt;&lt;</span> <span class="n">descriptors</span><span class="o">.</span><span class="n">iOmega_n</span> <span class="o">-</span> <span class="n">inverse</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+        <span class="n">tail</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">gf_fnt</span><span class="o">.</span><span class="n">fit_hermitian_tail</span><span class="p">(</span><span class="n">delta_iw</span><span class="p">)</span>
+        <span class="n">delta_iw</span> <span class="o">&lt;&lt;</span> <span class="n">delta_iw</span> <span class="o">-</span> <span class="n">tail</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">err</span> <span class="o">&gt;</span> <span class="mf">1e-5</span><span class="p">:</span> <span class="nb">print</span> <span class="s2">&quot;WARNING: delta extraction encountered a sizeable tail-fit error: &quot;</span><span class="p">,</span> <span class="n">err</span>
         <span class="k">return</span> <span class="n">delta_iw</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="s2">&quot;No function delta for g0 object of type </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="nb">type</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> </div>
