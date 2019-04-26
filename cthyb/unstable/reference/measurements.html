@@ -176,7 +176,7 @@ The number of Legendre coefficients to be measured is specified through construc
 <div class="math">
 \[\chi_{\hat{O}_1, \hat{O}_2}(\tau) \equiv \langle \hat{O}_1(\tau) \hat{O}_2 \rangle\]</div>
 <p>can be sampled (by insertion) in the trace. This approach is limited to operators <span class="math">\(\hat{O}_1\)</span> and <span class="math">\(\hat{O}_2\)</span> that commutes with each other and the local Hamiltonian, <span class="math">\([\hat{O}_1, \hat{O}_2] = 0\)</span>, <span class="math">\([\hat{O}_i, H_{loc}]=0\)</span>.</p>
-<p>This measurement is controlled by the argument <code class="docutils literal"><span class="pre">measure_O_tau</span></code>. To enable the measurement pass a tuple of the operators to be sampled, e.g. <code class="docutils literal"><span class="pre">measure_O_tau</span> <span class="pre">=</span> <span class="pre">(n('up',0),</span> <span class="pre">n('do',0))</span></code> will measure the response function <span class="math">\(\langle \hat{n}_\uparrow(\tau) \hat{n}_\downarrow \rangle\)</span>. The resulting response function is accessible as the <code class="docutils literal"><span class="pre">O_tau</span></code> attribute of the solver object.</p>
+<p>This measurement is controlled by the argument <code class="docutils literal"><span class="pre">measure_O_tau</span></code>. To enable the measurement pass a tuple of the operators to be sampled, e.g. <code class="docutils literal"><span class="pre">measure_O_tau</span> <span class="pre">=</span> <span class="pre">(n('up',0),</span> <span class="pre">n('do',0))</span></code> will measure the response function <span class="math">\(\langle \hat{n}_\uparrow(\tau) \hat{n}_\downarrow \rangle\)</span>. The resulting response function is accessible as the <code class="docutils literal"><span class="pre">O_tau</span></code> attribute of the solver object. The number of operator insertions is by default taken to be the square of the perturbation order of each configuration, however, for cases with perturbation order lower than the parameter <code class="docutils literal"><span class="pre">measure_O_tau_min_ins</span></code> the number of insertions is kept fixed to this minimum value, the default value is a minimum of 10 insertions.</p>
 </div>
 <div class="section" id="two-particle-green-s-functions">
 <h2>Two-particle Green’s functions<a class="headerlink" href="#two-particle-green-s-functions" title="Permalink to this headline">¶</a></h2>
@@ -250,9 +250,17 @@ G^{(2)}_{\alpha\beta\gamma\delta}(\tau_1,\tau_2,\tau_3,\tau_4).\]</div>
 <p>Accumulation result is available via <code class="docutils literal"><span class="pre">G2_iw_pp</span></code> solver attribute.</p>
 </li>
 </ul>
-<p>The number of Bosonic and Fermionic Matsubara frequencies are set by the <code class="docutils literal"><span class="pre">measure_G2_n_iw</span></code>
-and <code class="docutils literal"><span class="pre">measure_G2_n_inu</span></code> parameters respectively.</p>
-<p>All frequency measurements use non-equidistant fast fourier transform (NFFT) to speed up the sampling procedure. Depending on the impurity model the NFFT buffer can be adjusted for maximum performance by setting <code class="docutils literal"><span class="pre">nfft_buf_sizes</span></code>.</p>
+<p>The number of Bosonic and Fermionic Matsubara frequencies are set by the <code class="docutils literal"><span class="pre">measure_G2_n_bosonic</span></code>
+and <code class="docutils literal"><span class="pre">measure_G2_n_fermionic</span></code> parameters respectively.</p>
+<p>All these frequency measurements use direct evaluation in frequency space, using an optimized frequency spreader that avoids the re-evaluation of exponential functions. This implementation performs well for low perturbation order and small number of sampled Matsubara frequencies.</p>
+<p>As an alternative all frequency measurements are also implemented using non-equidistant fast fourier transform (NFFT) to speed up the sampling procedure. The corresponding flags and attributes are:</p>
+<ul class="simple">
+<li>(<code class="docutils literal"><span class="pre">measure_G2_iw_nfft</span></code>, <code class="docutils literal"><span class="pre">G2_iw_nfft</span></code>),</li>
+<li>(<code class="docutils literal"><span class="pre">measure_G2_iw_ph_nfft</span></code>, <code class="docutils literal"><span class="pre">G2_iw_ph_nfft</span></code>), and</li>
+<li>(<code class="docutils literal"><span class="pre">measure_G2_pp_nfft</span></code>, <code class="docutils literal"><span class="pre">G2_iw_ph_nfft</span></code>).</li>
+</ul>
+<p>Depending on the impurity model the NFFT buffer can be adjusted for maximum performance by setting <code class="docutils literal"><span class="pre">nfft_buf_sizes</span></code>.</p>
+<p>Whether the direct frequency evaluation or NFFT performs better is problem dependent and has to be tested case by case.</p>
 </div>
 <div class="section" id="mixed-matsubara-frequency-and-legendre-measurements">
 <h3>Mixed Matsubara Frequency and Legendre measurements<a class="headerlink" href="#mixed-matsubara-frequency-and-legendre-measurements" title="Permalink to this headline">¶</a></h3>
