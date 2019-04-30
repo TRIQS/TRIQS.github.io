@@ -1,0 +1,346 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>triqs_tprf.super_lattice &#8212; TPRF - Two-Particle Response Function tool box for TRIQS  documentation</title>
+    <link rel="stylesheet" href="../../_static/triqs.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=default"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head>
+  <body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../install.html">Install</a></li>
+    
+    <li><a href="../../documentation.html">Documentation</a></li>
+    
+    <li><a href="../../issues.html">Issues</a></li>
+    
+    <li><a href="../../about.html">About tprf</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../index.html">tprf</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">two-particle response function tools based on the <a class="triqs" style="font-size: 12px" href="http://ipht.cea.fr/triqs">TRIQS</a> library</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+    <li><a href="../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for triqs_tprf.super_lattice</h1><div class="highlight"><pre>
+<span></span>
+<span class="c1">################################################################################</span>
+<span class="c1">#</span>
+<span class="c1"># TRIQS: a Toolbox for Research in Interacting Quantum Systems</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (C) 2011 by M. Ferrero, O. Parcollet</span>
+<span class="c1"># Copyright (C) 2018 The Simons Foundation</span>
+<span class="c1"># Author: Hugo U. R. Strand</span>
+<span class="c1">#</span>
+<span class="c1"># TRIQS is free software: you can redistribute it and/or modify it under the</span>
+<span class="c1"># terms of the GNU General Public License as published by the Free Software</span>
+<span class="c1"># Foundation, either version 3 of the License, or (at your option) any later</span>
+<span class="c1"># version.</span>
+<span class="c1">#</span>
+<span class="c1"># TRIQS is distributed in the hope that it will be useful, but WITHOUT ANY</span>
+<span class="c1"># WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS</span>
+<span class="c1"># FOR A PARTICULAR PURPOSE. See the GNU General Public License for more</span>
+<span class="c1"># details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License along with</span>
+<span class="c1"># TRIQS. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1">################################################################################</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span>
+
+<span class="c1">#from pytriqs.lattice.tight_binding import TBLattice</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.tight_binding</span> <span class="k">import</span> <span class="n">TBLattice</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;TBSuperLattice&#39;</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">nint_strict</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mf">1.e-9</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Round array x to the closest integer and asserts that its distance to this integer is less than precision.</span>
+<span class="sd">        precision must satisfy :  precision &gt;0 and precision &lt;0.5</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">precision</span> <span class="o">&gt;</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">precision</span> <span class="o">&lt;</span><span class="mf">0.5</span><span class="p">,</span> <span class="s2">&quot;nint_strict : precision makes no sense !&quot;</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="n">i</span><span class="o">-</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">precision</span><span class="p">,</span> <span class="nb">repr</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> &quot;</span><span class="o">+</span><span class="nb">repr</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> The Float is not close enough to the integer &quot;</span>
+    <span class="k">return</span> <span class="n">i</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="TBSuperLattice"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.super_lattice.TBSuperLattice">[docs]</a><span class="k">class</span> <span class="nc">TBSuperLattice</span><span class="p">(</span><span class="n">TBLattice</span><span class="p">):</span>
+    
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Class building a superlattice on top of a base lattice (TBLattice).</span>
+
+<span class="sd">    The class inherits from TBLattice and has all the basic TBLattice methods, especially the ``on_mesh_brillouin_zone``-method.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    tb_lattice : TBLattice instance</span>
+<span class="sd">        The base tight binding lattice.</span>
+
+<span class="sd">    super_lattice_units : ndarray (2D)</span>
+<span class="sd">        The unit vectors of the superlattice in the ``tb_lattice`` (integer) coordinates.</span>
+
+<span class="sd">    cluster_sites : </span>
+<span class="sd">        Coordinates of the cluster in tb_lattice coordinates. </span>
+<span class="sd">        If ``None``, an automatic computation of cluster positions </span>
+<span class="sd">        is made as follows: it takes all points whose coordinates </span>
+<span class="sd">        in the basis of the superlattice are in [0, 1[^dimension.</span>
+
+<span class="sd">    remove_internal_hoppings : bool</span>
+<span class="sd">        If ``true``, the hopping terms are removed inside the cluster. </span>
+<span class="sd">        Useful to add Hartree Fock terms at the boundary of a cluster, e.g.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tb_lattice</span><span class="p">,</span> <span class="n">super_lattice_units</span><span class="p">,</span> <span class="n">cluster_sites</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">remove_internal_hoppings</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+
+        <span class="c1">#if not isinstance(tb_lattice, TBLattice): raise ValueError, &quot;tb_lattice should be an instance of TBLattice&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__BaseLattice</span> <span class="o">=</span> <span class="n">tb_lattice</span>
+        <span class="n">dim</span> <span class="o">=</span> <span class="n">tb_lattice</span><span class="o">.</span><span class="n">dim</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__super_lattice_units</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">super_lattice_units</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">__super_lattice_units</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="s2">&quot;super_lattice_units is not correct. Cf Doc. value is </span><span class="si">%s</span><span class="s2">, dim = </span><span class="si">%s</span><span class="s2"> &quot;</span><span class="o">%</span><span class="p">(</span><span class="n">super_lattice_units</span><span class="p">,</span><span class="n">dim</span><span class="p">)</span>
+
+        <span class="n">Ncluster_sites</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">rint</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__super_lattice_units</span> <span class="p">))))</span>
+        <span class="k">assert</span> <span class="n">Ncluster_sites</span> <span class="o">&gt;</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Superlattice vectors are not independant !&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__super_lattice_units</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Mtilde</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">rint</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_M</span><span class="p">)</span><span class="o">*</span><span class="n">Ncluster_sites</span><span class="p">),</span> <span class="n">dtype</span> <span class="o">=</span> <span class="nb">int</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__remove_internal_hoppings</span> <span class="o">=</span> <span class="n">remove_internal_hoppings</span>
+        <span class="c1">#self.norb = tb_lattice.NOrbitalsInUnitCell</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Norb</span> <span class="o">=</span> <span class="n">tb_lattice</span><span class="o">.</span><span class="n">NOrbitalsInUnitCell</span> <span class="o">*</span> <span class="n">Ncluster_sites</span>
+
+        <span class="c1"># cluster_sites computation</span>
+        <span class="k">if</span> <span class="n">cluster_sites</span><span class="o">!=</span><span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__cluster_sites</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cluster_sites</span><span class="p">)[:]</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c1"># Computes the position of the cluster automatically</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__cluster_sites</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="c1">#We tile the super-cell with the tb_lattice points and retains</span>
+            <span class="c1"># the points inside it and store it.</span>
+            <span class="c1">#M=numpy.array(self.__super_lattice_units) # BUG!</span>
+            <span class="n">M</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__super_lattice_units</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span>
+            <span class="k">assert</span> <span class="n">M</span><span class="o">.</span><span class="n">shape</span><span class="o">==</span><span class="nb">tuple</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">[</span><span class="n">dim</span><span class="p">]),</span> <span class="s2">&quot;Tiling Construct: super_lattice_units does not have the correct size&quot;</span>
+            <span class="c1">#Minv = Ncluster_sites*numpy.linalg.inverse(M)  #+0.5  # +0.5 is for the round</span>
+            <span class="c1">#Mtilde = Minv.astype(numpy.Int)  # now is integer.</span>
+            <span class="n">Mtilde</span> <span class="o">=</span> <span class="n">nint_strict</span><span class="p">(</span><span class="n">Ncluster_sites</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">M</span><span class="p">))</span>
+            <span class="c1">#print &#39;Mtilde (inside cluster sites) =\n&#39;, Mtilde.__repr__()</span>
+            <span class="c1"># round to the closest integer, with assert that precision is &lt;1.e-9</span>
+            <span class="k">if</span> <span class="n">dim</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>  <span class="n">a</span><span class="o">=</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">M</span><span class="p">[</span><span class="mi">0</span><span class="p">,:]),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span> <span class="p">)</span>
+            <span class="k">elif</span> <span class="n">dim</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>  <span class="n">a</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="nb">max</span><span class="p">(</span><span class="n">M</span><span class="p">[</span><span class="mi">0</span><span class="p">,:]),</span> <span class="mi">2</span><span class="o">*</span><span class="nb">max</span><span class="p">(</span><span class="n">M</span><span class="p">[</span><span class="mi">1</span><span class="p">,:]),</span> <span class="mi">0</span> <span class="p">)</span>
+            <span class="k">elif</span> <span class="n">dim</span><span class="o">==</span><span class="mi">3</span><span class="p">:</span> <span class="n">a</span><span class="o">=</span> <span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="nb">max</span><span class="p">(</span><span class="n">M</span><span class="p">[</span><span class="mi">0</span><span class="p">,:]),</span> <span class="mi">3</span><span class="o">*</span><span class="nb">max</span><span class="p">(</span><span class="n">M</span><span class="p">[</span><span class="mi">1</span><span class="p">,:]),</span> <span class="mi">3</span><span class="o">*</span><span class="nb">max</span><span class="p">(</span><span class="n">M</span><span class="p">[</span><span class="mi">2</span><span class="p">,:]))</span>
+            <span class="k">else</span><span class="p">:</span> <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="s2">&quot;dim is not between 1 and 3 !!&quot;</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">i</span><span class="p">:</span>  <span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="p">,</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">nx</span> <span class="ow">in</span> <span class="n">r</span><span class="p">(</span><span class="mi">0</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">ny</span> <span class="ow">in</span> <span class="n">r</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">nz</span> <span class="ow">in</span> <span class="n">r</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+                        <span class="n">nv</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">nz</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="n">dim</span><span class="p">])</span>
+                        <span class="n">k_sl</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Mtilde</span><span class="p">,</span> <span class="n">nv</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">k_sl</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">k_sl</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">Ncluster_sites</span> <span class="p">):</span> <span class="c1"># The point is a point of the cluster. We store it.</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">__cluster_sites</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nv</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__cluster_sites</span><span class="p">)</span> <span class="o">==</span> <span class="n">Ncluster_sites</span><span class="p">,</span> <span class="s2">&quot;&quot;&quot;Number of cluster positions incorrect (compared to the volume of unit cell of the Superlattice)&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ncluster_sites</span> <span class="o">=</span> <span class="n">Ncluster_sites</span>
+
+        <span class="c1"># creating a dictionnary position_of_sites -&gt; number e.g. (1, 0): 2 etc...</span>
+        <span class="c1"># self._clustersites_hash =  dict ([ (tuple(pos), n) for n, pos in enumerate(self.cluster_sites)])</span>
+
+        <span class="c1">#print &#39;Ns = &#39;, self.Ncluster_sites</span>
+        <span class="c1">#print &#39;cluster_sites =&#39;, self.__cluster_sites</span>
+        <span class="c1">#print &#39;M =\n&#39;, self._M.__repr__()</span>
+        <span class="c1">#print &#39;Mtilde =\n&#39;, self._Mtilde.__repr__()</span>
+        <span class="c1">#import numpy as np</span>
+        <span class="c1">#print &#39;M*Mtilde =\n&#39;, np.dot(self._M, self._Mtilde)</span>
+        <span class="c1">#exit()</span>
+        
+        <span class="c1"># Compute the new Hopping in the supercell</span>
+        <span class="n">Hopping</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fold</span><span class="p">(</span><span class="n">tb_lattice</span><span class="o">.</span><span class="n">hopping_dict</span><span class="p">(),</span> <span class="n">remove_internal_hoppings</span><span class="p">)</span>
+        <span class="k">if</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">Hopping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="nb">print</span> <span class="n">k</span>
+                <span class="nb">print</span> <span class="n">v</span><span class="o">.</span><span class="n">real</span>
+
+        <span class="c1"># Compute the new units of the lattice in real coordinates</span>
+        <span class="n">Units</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__super_lattice_units</span><span class="p">,</span> <span class="n">tb_lattice</span><span class="o">.</span><span class="n">Units</span><span class="p">)</span>
+
+        <span class="c1"># Positions and names of orbitals in the supercell: just translate all orbitals for cluster site positions</span>
+        <span class="c1"># in R^3 coordinates.</span>
+        <span class="n">Orbital_Positions</span> <span class="o">=</span> <span class="p">[</span><span class="n">POS</span> <span class="o">+</span> <span class="n">tb_lattice</span><span class="o">.</span><span class="n">latt_to_real_x</span><span class="p">(</span><span class="n">CS</span><span class="p">)</span> <span class="k">for</span> <span class="n">POS</span> <span class="ow">in</span> <span class="n">tb_lattice</span><span class="o">.</span><span class="n">OrbitalPositions</span> <span class="k">for</span> <span class="n">CS</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__cluster_sites</span><span class="p">]</span>
+
+        <span class="c1">#Orbital_Names = [ &#39;%s%s&#39;%(n, s) for n in tb_lattice.OrbitalNames for s in range(Ncluster_sites)]</span>
+        <span class="n">site_index_list</span><span class="p">,</span> <span class="n">orbital_index_list</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">Ncluster_sites</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="n">tb_lattice</span><span class="o">.</span><span class="n">OrbitalNames</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">orbital_index_list</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">Orbital_Names</span><span class="o">=</span> <span class="p">[</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">site_index_list</span> <span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">site_index_list</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">orbital_index_list</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">Orbital_Names</span><span class="o">=</span> <span class="p">[</span> <span class="n">o</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">orbital_index_list</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">site_index_list</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">orbital_index_list</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">Orbital_Names</span><span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">o</span><span class="p">)</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">orbital_index_list</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">site_index_list</span><span class="p">]</span>
+
+        <span class="c1">#print tb_lattice.OrbitalNames #Orbital_Names</span>
+        <span class="n">TBLattice</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Units</span><span class="p">,</span> <span class="n">Hopping</span><span class="p">,</span> <span class="n">Orbital_Positions</span><span class="p">,</span> <span class="n">Orbital_Names</span><span class="p">)</span>
+        <span class="c1"># we pass False since the folding has arealdy been done in tb_lattice</span>
+
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">Norb</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">NOrbitalsInUnitCell</span>
+
+    <span class="n">__HDF_reduction__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;__BaseLattice&#39;</span><span class="p">,</span> <span class="s1">&#39;__super_lattice_units&#39;</span><span class="p">,</span> <span class="s1">&#39;__cluster_sites&#39;</span><span class="p">,</span> <span class="s1">&#39;__remove_internal_hoppings&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__reduce__</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">([</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__HDF_reduction__</span><span class="p">])</span>
+
+<div class="viewcode-block" id="TBSuperLattice.fold"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.super_lattice.TBSuperLattice.fold">[docs]</a>    <span class="k">def</span> <span class="nf">fold</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D1</span><span class="p">,</span> <span class="n">remove_internal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">create_zero</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Input: a function  r-&gt; f(r) on the tb_lattice given as a dictionnary</span>
+<span class="sd">            Output: the function R-&gt; F(R) folded on the superlattice.</span>
+<span class="sd">            Only requirement is that f(r)[orbital1, orbital2] is properly defined.</span>
+<span class="sd">            Hence f(r) can be a numpy, a GFBloc, etc...</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+        <span class="c1">#Res , norb = {} , self.__BaseLattice.NOrbitalsInUnitCell</span>
+        <span class="n">Res</span> <span class="p">,</span> <span class="n">norb</span> <span class="o">=</span> <span class="p">{}</span> <span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">D1</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">pack</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pack_index_site_orbital</span>
+        <span class="k">for</span> <span class="n">nsite</span><span class="p">,</span> <span class="n">CS</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__cluster_sites</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">disp</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">D1</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="c1">#print &#39;CS, disp =&#39;, CS, disp</span>
+                <span class="n">R</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">change_coordinates_L_to_SL</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">CS</span><span class="p">)</span><span class="o">+</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">disp</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">R</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">Res</span><span class="p">:</span> <span class="n">Res</span><span class="p">[</span><span class="n">R</span><span class="p">]</span> <span class="o">=</span> <span class="n">create_zero</span><span class="p">()</span> <span class="k">if</span> <span class="n">create_zero</span> <span class="k">else</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">Norb</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Norb</span><span class="p">),</span> <span class="n">dtype</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]))</span>
+                <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">remove_internal</span><span class="p">)</span> <span class="ow">or</span> <span class="n">R</span><span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tb_lattice</span><span class="o">.</span><span class="n">dim</span><span class="o">*</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">):</span>
+                    <span class="k">for</span> <span class="n">orb1</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">):</span>
+                        <span class="k">for</span> <span class="n">orb2</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">):</span>
+                            <span class="n">Res</span><span class="p">[</span><span class="n">R</span><span class="p">][</span><span class="n">pack</span><span class="p">(</span><span class="n">nsite</span><span class="p">,</span> <span class="n">orb1</span><span class="p">),</span> <span class="n">pack</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">orb2</span><span class="p">)]</span> <span class="o">+=</span> <span class="n">t</span><span class="p">[</span><span class="n">orb1</span><span class="p">,</span> <span class="n">orb2</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">Res</span></div>
+
+<div class="viewcode-block" id="TBSuperLattice.change_coordinates_SL_to_L"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.super_lattice.TBSuperLattice.change_coordinates_SL_to_L">[docs]</a>    <span class="k">def</span> <span class="nf">change_coordinates_SL_to_L</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">R</span> <span class="p">,</span> <span class="n">alpha</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Given a point in the supercell R, site (number) alpha, it computes its position on the tb_lattice in lattice coordinates&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_M</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">R</span><span class="p">))</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">__cluster_sites</span><span class="p">[</span><span class="n">alpha</span><span class="p">,:]</span></div>
+
+<div class="viewcode-block" id="TBSuperLattice.change_coordinates_L_to_SL"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.super_lattice.TBSuperLattice.change_coordinates_L_to_SL">[docs]</a>    <span class="k">def</span> <span class="nf">change_coordinates_L_to_SL</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Given a point on the tb_lattice in lattice coordinates, returns its coordinates (R, alpha) in the Superlattice&quot;&quot;&quot;</span>
+        <span class="n">aux</span>  <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_Mtilde</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="n">aux</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ncluster_sites</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="nb">list</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_M</span><span class="p">,</span> <span class="n">R</span><span class="p">)</span> <span class="p">)</span> <span class="c1"># force int ?</span>
+
+        <span class="k">if</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="c1">#dr = numpy.dot(self._Mtilde, dx)</span>
+            <span class="c1">#dr = aux - self.Ncluster_sites * R</span>
+
+            <span class="nb">print</span> <span class="s1">&#39;M * R =&#39;</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_M</span><span class="p">,</span> <span class="n">R</span><span class="p">)</span>
+            <span class="nb">print</span> <span class="s1">&#39;aux =&#39;</span><span class="p">,</span> <span class="n">aux</span>
+            <span class="nb">print</span> <span class="s1">&#39;R, dx =&#39;</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">dx</span>
+            <span class="nb">print</span> <span class="s1">&#39;dr =&#39;</span><span class="p">,</span> <span class="n">dr</span>
+        
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">R</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">__cluster_sites</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TBSuperLattice.pack_index_site_orbital"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.super_lattice.TBSuperLattice.pack_index_site_orbital">[docs]</a>    <span class="k">def</span> <span class="nf">pack_index_site_orbital</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_site</span><span class="p">,</span> <span class="n">n_orbital</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; nsite and n_orbital must start at 0&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">n_site</span> <span class="o">+</span> <span class="p">(</span><span class="n">n_orbital</span> <span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ncluster_sites</span></div>
+
+<div class="viewcode-block" id="TBSuperLattice.unpack_index_site_orbital"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.super_lattice.TBSuperLattice.unpack_index_site_orbital">[docs]</a>    <span class="k">def</span> <span class="nf">unpack_index_site_orbital</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Inverse of pack_index_site_orbital&quot;&quot;&quot;</span>
+	<span class="n">n_orbital</span>  <span class="o">=</span>   <span class="p">(</span><span class="n">index</span><span class="p">)</span><span class="o">//</span><span class="bp">self</span><span class="o">.</span><span class="n">Ncluster_sites</span>
+	<span class="n">n_site</span> <span class="o">=</span>  <span class="n">index</span> <span class="o">-</span> <span class="n">n_orbital</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">Ncluster_sites</span>
+	<span class="k">return</span> <span class="n">n_site</span><span class="p">,</span> <span class="n">n_orbital</span></div>
+
+<div class="viewcode-block" id="TBSuperLattice.cluster_sites"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.super_lattice.TBSuperLattice.cluster_sites">[docs]</a>    <span class="k">def</span> <span class="nf">cluster_sites</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">           Generate the position of the cluster site in the tb_lattice coordinates.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__cluster_sites</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">pos</span></div>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">([</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">A</span><span class="p">])</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;&quot;SuperLattice class: </span><span class="se">\n</span><span class="s2"></span>
+<span class="s2">   Base TBLattice: </span><span class="si">%s</span><span class="s2"></span>
+<span class="s2">   SuperLattice Units: </span><span class="si">%s</span><span class="s2"></span>
+<span class="s2">   Remove internal Hoppings: </span><span class="si">%s</span><span class="s2"></span>
+<span class="s2">   Cluster site positions: </span><span class="si">%s</span><span class="s2">&quot;&quot;&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__BaseLattice</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__super_lattice_units</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">__cluster_sites</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__remove_internal_hoppings</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+    <li><a href="../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, H. U.R. Strand.
+    </div>
+  </body>
+</html>

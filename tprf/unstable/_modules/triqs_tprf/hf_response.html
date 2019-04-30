@@ -1,0 +1,429 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>triqs_tprf.hf_response &#8212; TPRF - Two-Particle Response Function tool box for TRIQS  documentation</title>
+    <link rel="stylesheet" href="../../_static/triqs.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=default"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head>
+  <body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../install.html">Install</a></li>
+    
+    <li><a href="../../documentation.html">Documentation</a></li>
+    
+    <li><a href="../../issues.html">Issues</a></li>
+    
+    <li><a href="../../about.html">About tprf</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../index.html">tprf</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">two-particle response function tools based on the <a class="triqs" style="font-size: 12px" href="http://ipht.cea.fr/triqs">TRIQS</a> library</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+    <li><a href="../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for triqs_tprf.hf_response</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="c1">################################################################################</span>
+<span class="c1">#</span>
+<span class="c1"># TPRF: Two-Particle Response Function (TPRF) Toolbox for TRIQS</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (C) 2018 by The Simons Foundation</span>
+<span class="c1"># Author: H. U.R. Strand</span>
+<span class="c1">#</span>
+<span class="c1"># TPRF is free software: you can redistribute it and/or modify it under the</span>
+<span class="c1"># terms of the GNU General Public License as published by the Free Software</span>
+<span class="c1"># Foundation, either version 3 of the License, or (at your option) any later</span>
+<span class="c1"># version.</span>
+<span class="c1">#</span>
+<span class="c1"># TPRF is distributed in the hope that it will be useful, but WITHOUT ANY</span>
+<span class="c1"># WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS</span>
+<span class="c1"># FOR A PARTICULAR PURPOSE. See the GNU General Public License for more</span>
+<span class="c1"># details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License along with</span>
+<span class="c1"># TPRF. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1">################################################################################</span>
+
+<span class="sd">&quot;&quot;&quot; TRIQS, TPRF: Hartree-Fock static response function calculator</span>
+
+<span class="sd">Author: Hugo U. R. Strand, hugo.strand@gmail.com (2018)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy_compat</span> <span class="k">import</span> <span class="n">np_eigh</span>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+<span class="k">class</span> <span class="nc">BaseResponse</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">solver</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">):</span>
+
+        <span class="nb">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">logo</span><span class="p">()</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver</span> <span class="o">=</span> <span class="n">solver</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eps</span> <span class="o">=</span> <span class="n">eps</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">beta</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">e_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">e_k_MF</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_k</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">norb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="o">.</span><span class="n">target_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shape_ab</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="o">.</span><span class="n">target_shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shape_abcd</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape_ab</span><span class="p">)</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape_ab</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shape_AB</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">norb</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">norb</span><span class="o">**</span><span class="mi">2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shape_kabcd</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">n_k</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape_abcd</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shape_kAB</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">n_k</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape_AB</span>
+
+        <span class="n">I_ab</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">norb</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">mu</span> <span class="o">*</span> <span class="n">I_ab</span>
+
+        <span class="nb">print</span> <span class="s1">&#39;norb =&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">norb</span>
+        <span class="nb">print</span> <span class="s1">&#39;shape_abcd =&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape_abcd</span>
+        <span class="nb">print</span> <span class="s1">&#39;shape_AB =&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape_AB</span>
+        <span class="nb">print</span> <span class="s1">&#39;beta =&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span>
+        
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="k">def</span> <span class="nf">_compute_drho_dop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+
+        <span class="n">drho_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_drho_k_dop</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+        <span class="n">drho</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">drho_k</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_k</span>
+
+        <span class="k">return</span> <span class="n">drho</span>
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="k">def</span> <span class="nf">_compute_drho_k_dop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+
+        <span class="n">beta</span><span class="p">,</span> <span class="n">eps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span>
+        
+        <span class="n">E_p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="o">+</span> <span class="n">eps</span><span class="o">*</span><span class="n">op</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+        <span class="n">E_m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="o">-</span> <span class="n">eps</span><span class="o">*</span><span class="n">op</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+
+        <span class="n">e_p</span><span class="p">,</span> <span class="n">U_p</span> <span class="o">=</span> <span class="n">np_eigh</span><span class="p">(</span><span class="n">E_p</span><span class="p">)</span>
+        <span class="n">e_m</span><span class="p">,</span> <span class="n">U_m</span> <span class="o">=</span> <span class="n">np_eigh</span><span class="p">(</span><span class="n">E_m</span><span class="p">)</span>
+
+        <span class="n">fermi</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">e</span><span class="p">,</span> <span class="n">beta</span><span class="p">:</span> <span class="mf">1.</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">beta</span> <span class="o">*</span> <span class="n">e</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">rho_k_p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;kab,kb,kcb-&gt;kac&#39;</span><span class="p">,</span> <span class="n">U_p</span><span class="p">,</span> <span class="n">fermi</span><span class="p">(</span><span class="n">e_p</span><span class="p">,</span> <span class="n">beta</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">U_p</span><span class="p">))</span>
+        <span class="n">rho_k_m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;kab,kb,kcb-&gt;kac&#39;</span><span class="p">,</span> <span class="n">U_m</span><span class="p">,</span> <span class="n">fermi</span><span class="p">(</span><span class="n">e_m</span><span class="p">,</span> <span class="n">beta</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">U_m</span><span class="p">))</span>
+
+        <span class="n">drho_k</span> <span class="o">=</span> <span class="p">(</span><span class="n">rho_k_p</span> <span class="o">-</span> <span class="n">rho_k_m</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.</span> <span class="o">*</span> <span class="n">eps</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">drho_k</span>
+
+    <span class="c1"># ----------------------------------------------------------------------</span>
+    <span class="k">def</span> <span class="nf">_compute_chi0_ab</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">chi0_ab</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape_ab</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">norb</span><span class="p">):</span>
+            <span class="n">F_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape_ab</span><span class="p">)</span>
+            <span class="n">F_a</span><span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.</span>
+
+            <span class="n">chi0_b</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_compute_drho_dop</span><span class="p">(</span><span class="n">F_a</span><span class="p">))</span>
+            <span class="n">chi0_ab</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="o">=</span> <span class="n">chi0_b</span>
+
+        <span class="k">return</span> <span class="n">chi0_ab</span>
+
+    <span class="c1"># ----------------------------------------------------------------------</span>
+    <span class="k">def</span> <span class="nf">_compute_R_abcd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_prefactor</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+
+        <span class="n">R_abcd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape_abcd</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">norb</span><span class="p">),</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+
+            <span class="n">F_ab</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape_ab</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex</span><span class="p">)</span>
+            <span class="n">F_ab</span><span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">]</span> <span class="o">+=</span> <span class="n">field_prefactor</span>
+            <span class="n">F_ab</span><span class="p">[</span><span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">field_prefactor</span><span class="p">)</span>
+
+            <span class="n">R_cd</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_compute_drho_dop</span><span class="p">(</span><span class="n">F_ab</span><span class="p">)</span>
+            <span class="n">R_abcd</span><span class="p">[</span><span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">R_cd</span>
+
+        <span class="k">return</span> <span class="n">R_abcd</span>
+
+    <span class="c1"># ----------------------------------------------------------------------</span>
+    <span class="k">def</span> <span class="nf">_compute_R_kabcd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_prefactor</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+
+        <span class="n">R_kabcd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape_kabcd</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">norb</span><span class="p">),</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+
+            <span class="n">F_ab</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape_ab</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex</span><span class="p">)</span>
+            <span class="n">F_ab</span><span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">]</span> <span class="o">+=</span> <span class="n">field_prefactor</span>
+            <span class="n">F_ab</span><span class="p">[</span><span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">field_prefactor</span><span class="p">)</span>
+
+            <span class="n">R_kcd</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_compute_drho_k_dop</span><span class="p">(</span><span class="n">F_ab</span><span class="p">)</span>
+            <span class="n">R_kabcd</span><span class="p">[:,</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">R_kcd</span>
+
+        <span class="k">return</span> <span class="n">R_kabcd</span>
+    
+    <span class="c1"># ----------------------------------------------------------------------</span>
+    <span class="k">def</span> <span class="nf">_compute_chi0_abcd</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">chi0_kabcd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_chi0_kabcd</span><span class="p">()</span>
+        <span class="n">chi0_abcd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">chi0_kabcd</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_k</span>
+
+        <span class="k">return</span> <span class="n">chi0_abcd</span>
+
+    <span class="c1"># ----------------------------------------------------------------------</span>
+    <span class="k">def</span> <span class="nf">_compute_chi0_kabcd</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">R_r_kabcd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_R_kabcd</span><span class="p">(</span><span class="n">field_prefactor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span> 
+        <span class="n">R_i_kabcd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_R_kabcd</span><span class="p">(</span><span class="n">field_prefactor</span><span class="o">=</span><span class="mf">1.</span><span class="n">j</span><span class="p">)</span>
+
+        <span class="n">chi0_kabcd</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">R_r_kabcd</span> <span class="o">+</span> <span class="n">R_i_kabcd</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">chi0_kabcd</span>
+    
+    <span class="c1"># ----------------------------------------------------------------------</span>
+    <span class="k">def</span> <span class="nf">logo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">txt</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐  ┬─┐┌─┐┌─┐</span>
+<span class="s2"> ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤───├┬┘├─┘├─┤</span>
+<span class="s2"> ╩ ╩╚═╩╚═╝╚╚═╝  ┴ ┴└    ┴└─┴  ┴ ┴</span>
+<span class="s2">Triqs: Hartree-Fock Random Phase Approximation susceptibility</span>
+<span class="s2">&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">txt</span>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+<div class="viewcode-block" id="HartreeFockResponse"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.hf_response.HartreeFockResponse">[docs]</a><span class="k">class</span> <span class="nc">HartreeFockResponse</span><span class="p">(</span><span class="n">BaseResponse</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot; Hartree-Fock linear response calculator.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    hartree_fock_solver : HartreeFockSolver instance</span>
+<span class="sd">        Converged Hartree-Fock solver.</span>
+
+<span class="sd">    eps : float</span>
+<span class="sd">        Step size in finite difference linear response calculation.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hartree_fock_solver</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">):</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">HartreeFockResponse</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">hartree_fock_solver</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hfs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span>
+        
+        <span class="n">I_AB</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape_AB</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">U_AB</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_matrix_AB</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hfs</span><span class="o">.</span><span class="n">U_abcd</span><span class="p">)</span>
+        <span class="n">chi0_AB</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_matrix_AB</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_compute_chi0_abcd</span><span class="p">())</span>
+
+        <span class="n">chi_AB</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">I_AB</span> <span class="o">-</span> <span class="n">chi0_AB</span> <span class="o">*</span> <span class="n">U_AB</span><span class="p">)</span> <span class="o">*</span> <span class="n">chi0_AB</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">chi0_abcd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_tensor_abcd</span><span class="p">(</span><span class="n">chi0_AB</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chi_abcd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_tensor_abcd</span><span class="p">(</span><span class="n">chi_AB</span><span class="p">)</span>
+
+        <span class="c1">#self.chi0_kabcd = self._compute_chi0_kabcd()</span>
+        <span class="c1">#np.testing.assert_array_almost_equal(</span>
+        <span class="c1">#    self.chi0_abcd, np.sum(self.chi0_kabcd, axis=0)/self.n_k)</span>
+
+    <span class="k">def</span> <span class="nf">mode_decomposition</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="n">U_AB</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_matrix_AB</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hfs</span><span class="o">.</span><span class="n">U_abcd</span><span class="p">)</span>
+        <span class="n">chi0_AB</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_matrix_AB</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chi0_abcd</span><span class="p">)</span>
+
+        <span class="n">e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvals</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mat</span><span class="p">(</span><span class="n">chi0_AB</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">mat</span><span class="p">(</span><span class="n">U_AB</span><span class="p">))</span>
+        
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">e</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">e</span>
+        
+    <span class="k">def</span> <span class="nf">_to_matrix_AB</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor_abcd</span><span class="p">):</span>
+        <span class="n">matrix_AB</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">tensor_abcd</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape_AB</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">matrix_AB</span>
+
+    <span class="k">def</span> <span class="nf">_to_tensor_abcd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matrix_AB</span><span class="p">):</span>
+        <span class="n">tensor_abcd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">matrix_AB</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape_abcd</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tensor_abcd</span>
+    
+    <span class="k">def</span> <span class="nf">__check_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+        <span class="k">assert</span><span class="p">(</span> <span class="n">op</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape_ab</span> <span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">bare_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op1</span><span class="p">,</span> <span class="n">op2</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__check_op</span><span class="p">(</span><span class="n">op1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__check_op</span><span class="p">(</span><span class="n">op2</span><span class="p">)</span>
+        
+        <span class="n">chi0_op1op2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ab,abcd,cd-&gt;&#39;</span><span class="p">,</span> <span class="n">op1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi0_abcd</span><span class="p">,</span> <span class="n">op2</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">chi0_op1op2</span>
+
+    <span class="k">def</span> <span class="nf">response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op1</span><span class="p">,</span> <span class="n">op2</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__check_op</span><span class="p">(</span><span class="n">op1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__check_op</span><span class="p">(</span><span class="n">op2</span><span class="p">)</span>
+        
+        <span class="n">chi_op1op2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ab,abcd,cd-&gt;&#39;</span><span class="p">,</span> <span class="n">op1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi_abcd</span><span class="p">,</span> <span class="n">op2</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">chi_op1op2</span>
+
+    <span class="k">def</span> <span class="nf">compute_chi0_k</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="kn">from</span> <span class="nn">pytriqs.gf</span> <span class="k">import</span> <span class="n">Gf</span>
+
+        <span class="n">chi0_k</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape_abcd</span><span class="p">)</span>
+        <span class="n">chi0_k</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi0_kabcd</span>
+
+        <span class="k">return</span> <span class="n">chi0_k</span></div>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+<div class="viewcode-block" id="HartreeResponse"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.hf_response.HartreeResponse">[docs]</a><span class="k">class</span> <span class="nc">HartreeResponse</span><span class="p">(</span><span class="n">BaseResponse</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot; Hartree linear response calculator.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    hartree_solver : HartreeSolver instance</span>
+<span class="sd">        Converged Hartree solver.</span>
+
+<span class="sd">    eps : float</span>
+<span class="sd">        Step size in finite difference linear response calculation.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hartree_solver</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">):</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">HartreeResponse</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">hartree_solver</span><span class="p">)</span>
+        
+        <span class="n">I_ab</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">norb</span><span class="p">)</span>
+        <span class="n">U_ab</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">extract_dens_dens</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">U_abcd</span><span class="p">))</span>
+        <span class="n">chi0_ab</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_compute_chi0_ab</span><span class="p">())</span>
+        <span class="n">chi_ab</span> <span class="o">=</span> <span class="n">chi0_ab</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">I_ab</span> <span class="o">-</span> <span class="n">U_ab</span> <span class="o">*</span> <span class="n">chi0_ab</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">chi0_ab</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">chi0_ab</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chi_ab</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">chi_ab</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__check_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Operators have to be diagonal in the Hartree approx &quot;&quot;&quot;</span>
+        
+        <span class="k">assert</span><span class="p">(</span> <span class="n">op</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="o">.</span><span class="n">target_shape</span> <span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_almost_equal</span><span class="p">(</span>
+            <span class="n">op</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">op</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">op</span><span class="p">))</span>
+        
+    <span class="k">def</span> <span class="nf">bare_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op1</span><span class="p">,</span> <span class="n">op2</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__check_op</span><span class="p">(</span><span class="n">op1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__check_op</span><span class="p">(</span><span class="n">op2</span><span class="p">)</span>
+        
+        <span class="n">chi0_op1op2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;aa,ab,bb-&gt;&#39;</span><span class="p">,</span> <span class="n">op1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi0_ab</span><span class="p">,</span> <span class="n">op2</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">chi0_op1op2</span>
+
+    <span class="k">def</span> <span class="nf">response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op1</span><span class="p">,</span> <span class="n">op2</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__check_op</span><span class="p">(</span><span class="n">op1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__check_op</span><span class="p">(</span><span class="n">op2</span><span class="p">)</span>
+        
+        <span class="n">chi_op1op2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;aa,ab,bb-&gt;&#39;</span><span class="p">,</span> <span class="n">op1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi_ab</span><span class="p">,</span> <span class="n">op2</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">chi_op1op2</span>
+
+    <span class="k">def</span> <span class="nf">extract_dens_dens</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chi_abcd</span><span class="p">):</span>
+        <span class="n">norb</span> <span class="o">=</span> <span class="n">chi_abcd</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">chi_ab</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">norb</span><span class="p">,</span> <span class="n">norb</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i1</span><span class="p">,</span> <span class="n">i2</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">),</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+            <span class="n">chi_ab</span><span class="p">[</span><span class="n">i1</span><span class="p">,</span> <span class="n">i2</span><span class="p">]</span> <span class="o">=</span> <span class="n">chi_abcd</span><span class="p">[</span><span class="n">i1</span><span class="p">,</span> <span class="n">i1</span><span class="p">,</span> <span class="n">i2</span><span class="p">,</span> <span class="n">i2</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">chi_ab</span>    </div>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+    <li><a href="../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, H. U.R. Strand.
+    </div>
+  </body>
+</html>
