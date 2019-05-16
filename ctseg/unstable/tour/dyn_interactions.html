@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Example with dynamical charge and spin interactions &#8212; TRIQS Hybridization Expansion Segment Solver  documentation</title>
+    <title>Example with dynamical charge and spin interactions &#8212; CTSEG - TRIQS Hybridization Expansion Segment Solver  documentation</title>
     <link rel="stylesheet" href="../_static/triqs.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -25,8 +25,6 @@
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Measurements" href="measures.html" />
-    <link rel="prev" title="triqs_ctseg::solver_core::percent_done" href="../reference/triqs_ctseg/solver_core/percent_done.html" />
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
     <script src="../_static/cufon-yui.js" type="text/javascript"></script>
     <script src="../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
@@ -69,25 +67,12 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="measures.html" title="Measurements"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="../reference/triqs_ctseg/solver_core/percent_done.html" title="triqs_ctseg::solver_core::percent_done"
-             accesskey="P">previous</a> |</li>
     <li><a href="../index.html">Home</a> &raquo;</li>
-
-          <li class="nav-item nav-item-1"><a href="contents.html" accesskey="U">Guided tour</a> &#187;</li> 
+ 
       </ul>
     </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="../reference/triqs_ctseg/solver_core/percent_done.html"
-                        title="previous chapter">triqs_ctseg::solver_core::percent_done</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="measures.html"
-                        title="next chapter">Measurements</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -116,74 +101,78 @@
   <div class="section" id="example-with-dynamical-charge-and-spin-interactions">
 <span id="documentation"></span><h1>Example with dynamical charge and spin interactions<a class="headerlink" href="#example-with-dynamical-charge-and-spin-interactions" title="Permalink to this headline">¶</a></h1>
 <p>Below is a short example demonstrating how to set up a computation in the presence of dynamical interactions in the charge and longitudinal and transverse spin channels.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pytriqs.gf</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">import</span> <span class="nn">pytriqs.utility.mpi</span> <span class="kn">as</span> <span class="nn">mpi</span>
-<span class="kn">from</span> <span class="nn">triqs_ctseg</span> <span class="kn">import</span> <span class="n">Solver</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span>from pytriqs.gf import *
+import pytriqs.utility.mpi as mpi
+from triqs_ctseg import Solver
 
-<span class="n">gf_struct</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;up&quot;</span><span class="p">,[</span><span class="mi">0</span><span class="p">]),</span> <span class="p">(</span><span class="s2">&quot;down&quot;</span><span class="p">,[</span><span class="mi">0</span><span class="p">])]</span>
-<span class="n">S</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="n">beta</span> <span class="o">=</span> <span class="mf">20.0</span><span class="p">,</span>  <span class="n">gf_struct</span> <span class="o">=</span> <span class="n">gf_struct</span><span class="p">)</span>
-<span class="c1">#set noninteracting Green&#39;s function</span>
-<span class="n">mu</span><span class="p">,</span> <span class="n">eps0</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">1.0</span>
-<span class="n">S</span><span class="o">.</span><span class="n">G0_iw</span> <span class="o">&lt;&lt;</span> <span class="n">inverse</span><span class="p">(</span><span class="n">iOmega_n</span> <span class="o">+</span> <span class="n">mu</span> <span class="o">-</span> <span class="n">V</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">inverse</span><span class="p">(</span><span class="n">iOmega_n</span> <span class="o">-</span> <span class="n">eps0</span><span class="p">))</span>
+gf_struct = [(&quot;up&quot;,[0]), (&quot;down&quot;,[0])]
+S = Solver(beta = 20.0,  gf_struct = gf_struct)
+#set noninteracting Green&#39;s function
+mu, eps0, V = 2.0, 0.3, 1.0
+S.G0_iw &lt;&lt; inverse(iOmega_n + mu - V**2 * inverse(iOmega_n - eps0))
 
-<span class="c1">#set dynamical charge and longitudinal spin interactions</span>
-<span class="n">w_ch</span><span class="p">,</span> <span class="n">w_sp</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.8</span> <span class="c1">#screening frequencies</span>
-<span class="n">g_ch</span><span class="p">,</span> <span class="n">g_sp</span> <span class="o">=</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.7</span> <span class="c1">#coupling strengths</span>
-<span class="n">sigz</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span> <span class="p">:</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">s1</span><span class="o">==</span><span class="n">s2</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
-<span class="kn">import</span> <span class="nn">itertools</span>
-<span class="kn">from</span> <span class="nn">pytriqs.gf.descriptors</span> <span class="kn">import</span> <span class="n">Function</span>
-<span class="k">for</span> <span class="n">b1</span><span class="p">,</span> <span class="n">b2</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
- <span class="n">S</span><span class="o">.</span><span class="n">D0_iw</span><span class="p">[</span><span class="n">b1</span><span class="o">+</span><span class="s2">&quot;|&quot;</span><span class="o">+</span><span class="n">b2</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">Function</span><span class="p">(</span><span class="k">lambda</span> <span class="n">w</span> <span class="p">:</span> <span class="n">g_ch</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="mi">2</span><span class="o">*</span><span class="n">w_ch</span><span class="o">/</span><span class="p">(</span><span class="n">w</span><span class="o">**</span><span class="mi">2</span><span class="o">-</span><span class="n">w_ch</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>\
-                                         <span class="o">+</span> <span class="n">g_sp</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="mi">2</span><span class="o">*</span><span class="n">w_sp</span><span class="o">/</span><span class="p">(</span><span class="n">w</span><span class="o">**</span><span class="mi">2</span><span class="o">-</span><span class="n">w_sp</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">sigz</span><span class="p">(</span><span class="n">b1</span><span class="p">,</span><span class="n">b2</span><span class="p">)</span> <span class="p">)</span>
-<span class="c1">#set transverse spin interaction</span>
-<span class="n">S</span><span class="o">.</span><span class="n">Jperp_iw</span> <span class="o">&lt;&lt;</span> <span class="n">Function</span><span class="p">(</span><span class="k">lambda</span> <span class="n">w</span> <span class="p">:</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">g_sp</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="mi">2</span><span class="o">*</span><span class="n">w_sp</span><span class="o">/</span><span class="p">(</span><span class="n">w</span><span class="o">**</span><span class="mi">2</span><span class="o">-</span><span class="n">w_sp</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+#set dynamical charge and longitudinal spin interactions
+w_ch, w_sp = 1.0, 0.8 #screening frequencies
+g_ch, g_sp = 0.4, 0.7 #coupling strengths
+sigz = lambda s1, s2 : 1 if s1==s2 else -1
+import itertools
+from pytriqs.gf.descriptors import Function
+for b1, b2 in itertools.product(dict(gf_struct).keys(), repeat=2):
+ S.D0_iw[b1+&quot;|&quot;+b2] &lt;&lt; Function(lambda w : g_ch**2*2*w_ch/(w**2-w_ch**2)\
+                                         + g_sp**2*2*w_sp/(w**2-w_sp**2)*sigz(b1,b2) )
+#set transverse spin interaction
+S.Jperp_iw &lt;&lt; Function(lambda w : 4 * g_sp**2 * 2*w_sp/(w**2-w_sp**2))
 
-<span class="kn">from</span> <span class="nn">pytriqs.operators</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="n">U</span> <span class="o">=</span> <span class="mf">2.0</span>
-<span class="n">S</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">h_int</span> <span class="o">=</span> <span class="n">U</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="n">n</span><span class="p">(</span><span class="s1">&#39;down&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>
-        <span class="n">n_cycles</span> <span class="o">=</span> <span class="mi">10000</span><span class="p">,</span> <span class="n">length_cycle</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">n_warmup_cycles</span> <span class="o">=</span> <span class="mi">100</span><span class="p">)</span>
+from pytriqs.operators import *
+U = 2.0
+S.solve(h_int = U * n(&#39;up&#39;,0)*n(&#39;down&#39;,0),
+        n_cycles = 10000, length_cycle = 100, n_warmup_cycles = 100)
 
-<span class="kn">from</span> <span class="nn">pytriqs.archive</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
- <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="s2">&quot;dyn_interactions.h5&quot;</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">A</span><span class="p">:</span>
-  <span class="n">A</span><span class="p">[</span><span class="s1">&#39;G_tau&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G_tau</span>
+from pytriqs.archive import *
+if mpi.is_master_node():
+ with HDFArchive(&quot;dyn_interactions.h5&quot;,&#39;w&#39;) as A:
+  A[&#39;G_tau&#39;] = S.G_tau
 
- <span class="o">---</span><span class="n">Output</span><span class="p">:</span><span class="o">---</span>
-<span class="n">mu</span> <span class="o">=</span> <span class="p">[</span><span class="mf">2.7725</span><span class="p">,</span><span class="mf">2.7725</span><span class="p">]</span>
-<span class="n">U</span> <span class="o">=</span> 
-<span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mf">2.905</span><span class="p">]</span>
- <span class="p">[</span><span class="mf">2.905</span><span class="p">,</span><span class="mi">0</span><span class="p">]]</span>
-<span class="n">dynamical_U</span>
-<span class="n">jperp_interactions</span> <span class="k">with</span> <span class="n">full</span> <span class="n">spin</span> <span class="n">rotational</span> <span class="n">invariance</span>
+ ---Output:---
 
-<span class="n">Warming</span> <span class="n">up</span> <span class="o">...</span>
+╔╦╗╦═╗╦╔═╗ ╔═╗  ┌─┐┌┬┐┌─┐┌─┐┌─┐
+ ║ ╠╦╝║║═╬╗╚═╗  │   │ └─┐├┤ │ ┬
+ ╩ ╩╚═╩╚═╝╚╚═╝  └─┘ ┴ └─┘└─┘└─┘
+mu = [2.7725,2.7725]
+U = 
+[[0,2.905]
+ [2.905,0]]
+dynamical_U
+jperp_interactions with full spin rotational invariance
 
-
-
-<span class="n">Accumulating</span> <span class="o">...</span>
-<span class="mi">17</span><span class="p">:</span><span class="mi">11</span><span class="p">:</span><span class="mi">10</span>   <span class="mi">4</span><span class="o">%</span> <span class="n">ETA</span> <span class="mo">00</span><span class="p">:</span><span class="mo">00</span><span class="p">:</span><span class="mo">02</span> <span class="n">cycle</span> <span class="mi">452</span> <span class="n">of</span> <span class="mi">10000</span>
-<span class="mi">17</span><span class="p">:</span><span class="mi">11</span><span class="p">:</span><span class="mi">12</span>  <span class="mi">94</span><span class="o">%</span> <span class="n">ETA</span> <span class="mo">00</span><span class="p">:</span><span class="mo">00</span><span class="p">:</span><span class="mo">00</span> <span class="n">cycle</span> <span class="mi">9492</span> <span class="n">of</span> <span class="mi">10000</span>
+Warming up ...
 
 
-<span class="p">[</span><span class="n">Rank</span> <span class="mi">0</span><span class="p">]</span> <span class="n">Collect</span> <span class="n">results</span><span class="p">:</span> <span class="n">Waiting</span> <span class="k">for</span> <span class="nb">all</span> <span class="n">mpi</span><span class="o">-</span><span class="n">threads</span> <span class="n">to</span> <span class="n">finish</span> <span class="n">accumulating</span><span class="o">...</span>
-<span class="p">[</span><span class="n">Rank</span> <span class="mi">0</span><span class="p">]</span> <span class="n">Timings</span> <span class="k">for</span> <span class="nb">all</span> <span class="n">measures</span><span class="p">:</span>
-<span class="n">Measure</span>                    <span class="o">|</span> <span class="n">seconds</span>   
-<span class="n">G</span><span class="p">(</span><span class="n">tau</span><span class="p">)</span> <span class="n">measurement</span>         <span class="o">|</span> <span class="mf">0.0550609</span> 
-<span class="n">measurement</span> <span class="n">of</span> <span class="n">the</span> <span class="n">MC</span> <span class="n">sign</span> <span class="o">|</span> <span class="mf">0.000865253</span>
-<span class="n">Total</span> <span class="n">measure</span> <span class="n">time</span>         <span class="o">|</span> <span class="mf">0.0559261</span> 
-<span class="p">[</span><span class="n">Rank</span> <span class="mi">0</span><span class="p">]</span> <span class="n">Acceptance</span> <span class="n">rate</span> <span class="k">for</span> <span class="nb">all</span> <span class="n">moves</span><span class="p">:</span>
-<span class="n">Move</span>  <span class="n">segment</span> <span class="n">insertion</span><span class="p">:</span> <span class="mf">0.4986</span>
-<span class="n">Move</span>  <span class="n">segment</span> <span class="n">removal</span><span class="p">:</span> <span class="mf">0.500748</span>
-<span class="n">Move</span>  <span class="n">insert</span> <span class="n">composite</span> <span class="n">segment</span><span class="p">:</span> <span class="mf">0.453249</span>
-<span class="n">Move</span>  <span class="n">remove</span> <span class="n">composite</span> <span class="n">segment</span><span class="p">:</span> <span class="mf">0.451513</span>
-<span class="n">Move</span>  <span class="n">swap</span> <span class="n">bosonic</span> <span class="n">lines</span><span class="p">:</span> <span class="mf">0.105738</span>
-<span class="p">[</span><span class="n">Rank</span> <span class="mi">0</span><span class="p">]</span> <span class="n">Warmup</span> <span class="n">lasted</span><span class="p">:</span> <span class="mf">0.0217232</span> <span class="n">seconds</span> <span class="p">[</span><span class="mo">00</span><span class="p">:</span><span class="mo">00</span><span class="p">:</span><span class="mo">00</span><span class="p">]</span>
-<span class="p">[</span><span class="n">Rank</span> <span class="mi">0</span><span class="p">]</span> <span class="n">Simulation</span> <span class="n">lasted</span><span class="p">:</span> <span class="mf">2.23664</span> <span class="n">seconds</span> <span class="p">[</span><span class="mo">00</span><span class="p">:</span><span class="mo">00</span><span class="p">:</span><span class="mo">02</span><span class="p">]</span>
-<span class="p">[</span><span class="n">Rank</span> <span class="mi">0</span><span class="p">]</span> <span class="n">Number</span> <span class="n">of</span> <span class="n">measures</span><span class="p">:</span> <span class="mi">10000</span>
-<span class="n">Total</span> <span class="n">number</span> <span class="n">of</span> <span class="n">measures</span><span class="p">:</span> <span class="mi">10000</span>
-<span class="n">Starting</span> <span class="n">run</span> <span class="k">with</span> <span class="mi">1</span> <span class="n">MPI</span> <span class="n">rank</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="n">at</span> <span class="p">:</span> <span class="mi">2019</span><span class="o">-</span><span class="mo">05</span><span class="o">-</span><span class="mi">13</span> <span class="mi">17</span><span class="p">:</span><span class="mi">11</span><span class="p">:</span><span class="mf">10.536267</span>
-<span class="ne">Warning</span><span class="p">:</span> <span class="n">The</span> <span class="n">Delta</span><span class="p">(</span><span class="n">tau</span><span class="p">)</span> <span class="n">block</span> <span class="n">number</span> <span class="mi">0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">real</span> <span class="ow">in</span> <span class="n">tau</span> <span class="n">space</span>
-<span class="ne">Warning</span><span class="p">:</span> <span class="n">The</span> <span class="n">Delta</span><span class="p">(</span><span class="n">tau</span><span class="p">)</span> <span class="n">block</span> <span class="n">number</span> <span class="mi">1</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">real</span> <span class="ow">in</span> <span class="n">tau</span> <span class="n">space</span>
+
+Accumulating ...
+21:55:40   4% ETA 00:00:01 cycle 490 of 10000
+21:55:42  93% ETA 00:00:00 cycle 9390 of 10000
+
+
+[Rank 0] Collect results: Waiting for all mpi-threads to finish accumulating...
+[Rank 0] Timings for all measures:
+Measure                    | seconds   
+G(tau) measurement         | 0.0410853 
+measurement of the MC sign | 0.00118418
+Total measure time         | 0.0422695 
+[Rank 0] Acceptance rate for all moves:
+Move  segment insertion: 0.4986
+Move  segment removal: 0.500748
+Move  insert composite segment: 0.453249
+Move  remove composite segment: 0.451513
+Move  swap bosonic lines: 0.105738
+[Rank 0] Warmup lasted: 0.0209222 seconds [00:00:00]
+[Rank 0] Simulation lasted: 2.26402 seconds [00:00:02]
+[Rank 0] Number of measures: 10000
+Total number of measures: 10000
+Starting run with 1 MPI rank(s) at : 2019-05-16 21:55:40.181206
+Warning: The Delta(tau) block number 0 is not real in tau space
+Warning: The Delta(tau) block number 1 is not real in tau space
 </pre></div>
 </div>
 <p>Let us decompose the various steps:</p>
@@ -258,15 +247,8 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="right" >
-          <a href="measures.html" title="Measurements"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="../reference/triqs_ctseg/solver_core/percent_done.html" title="triqs_ctseg::solver_core::percent_done"
-             >previous</a> |</li>
     <li><a href="../index.html">Home</a> &raquo;</li>
-
-          <li class="nav-item nav-item-1"><a href="contents.html" >Guided tour</a> &#187;</li> 
+ 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
