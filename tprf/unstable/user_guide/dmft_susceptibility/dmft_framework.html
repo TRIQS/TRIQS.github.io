@@ -1,0 +1,304 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>DMFT self consistent framework &#8212; TPRF - Two-Particle Response Function tool box for TRIQS  documentation</title>
+    <link rel="stylesheet" href="../../_static/triqs.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=default"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head>
+  <body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../install.html">Install</a></li>
+    
+    <li><a href="../../documentation.html">Documentation</a></li>
+    
+    <li><a href="../../issues.html">Issues</a></li>
+    
+    <li><a href="../../about.html">About tprf</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../index.html">tprf</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">two-particle response function tools based on the <a class="triqs" style="font-size: 12px" href="http://ipht.cea.fr/triqs">TRIQS</a> library</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+    <li><a href="../../index.html">Home</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">DMFT self consistent framework</a><ul>
+<li><a class="reference internal" href="#implementation-details">Implementation details</a><ul>
+<li><a class="reference internal" href="#setup-dmft-calculation">Setup DMFT Calculation</a></li>
+<li><a class="reference internal" href="#solve-self-consistent-dmft">Solve Self-Consistent DMFT</a></li>
+<li><a class="reference internal" href="#dmft-self-consistent-step">DMFT Self-Consistent Step</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/user_guide/dmft_susceptibility/dmft_framework.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="dmft-self-consistent-framework">
+<span id="dmft-framework"></span><h1>DMFT self consistent framework<a class="headerlink" href="#dmft-self-consistent-framework" title="Permalink to this headline">¶</a></h1>
+<p>This is a small framework for doing self consistent DMFT calculations for the Hubbard model on the square lattice using the <cite>triqs_cthyb</cite> impurity solver. The framework is based on the <cite>TPRF</cite> helper class <cite>ParameterCollection</cite> that makes it easier to keep the results of a calculation in a single object that can be stored and passed as argument.</p>
+<p>A script performing a self consisten calculation using the framework takes the form</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">common</span> <span class="k">import</span> <span class="o">*</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">ParameterCollection</span><span class="p">(</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="mf">1.</span><span class="p">,</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="mf">0.</span><span class="p">,</span>
+    <span class="n">U</span> <span class="o">=</span> <span class="mf">10.</span><span class="p">,</span>
+    <span class="n">mu</span> <span class="o">=</span> <span class="mf">0.</span><span class="p">,</span>
+    <span class="n">n_k</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span>
+    <span class="n">n_iter</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="n">G_l_tol</span> <span class="o">=</span> <span class="mf">1e-5</span><span class="p">,</span>
+    <span class="p">)</span>
+
+<span class="n">p</span><span class="o">.</span><span class="n">solve</span> <span class="o">=</span> <span class="n">ParameterCollection</span><span class="p">(</span>
+    <span class="n">length_cycle</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="n">n_warmup_cycles</span> <span class="o">=</span> <span class="mi">10000</span><span class="p">,</span>
+    <span class="n">n_cycles</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">8e6</span><span class="p">),</span>
+    <span class="n">move_double</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">measure_G_l</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+<span class="n">p</span><span class="o">.</span><span class="n">init</span> <span class="o">=</span> <span class="n">ParameterCollection</span><span class="p">(</span>
+    <span class="n">beta</span> <span class="o">=</span> <span class="mf">1.</span><span class="p">,</span>
+    <span class="n">n_l</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="n">n_iw</span> <span class="o">=</span> <span class="mi">400</span><span class="p">,</span>
+    <span class="n">n_tau</span> <span class="o">=</span> <span class="mi">4000</span><span class="p">,</span>
+    <span class="n">gf_struct</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;up&#39;</span><span class="p">,[</span><span class="mi">0</span><span class="p">]),</span> <span class="p">(</span><span class="s1">&#39;do&#39;</span><span class="p">,[</span><span class="mi">0</span><span class="p">])])</span>
+
+<span class="n">p0</span> <span class="o">=</span> <span class="n">setup_dmft_calculation</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<span class="n">ps</span> <span class="o">=</span> <span class="n">solve_self_consistent_dmft</span><span class="p">(</span><span class="n">p0</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+    <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="s1">&#39;data_sc.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">a</span><span class="p">:</span>
+        <span class="n">a</span><span class="p">[</span><span class="s1">&#39;ps&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ParameterCollections</span><span class="p">(</span><span class="n">ps</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where the framework is used to setup the calcuation by calling the function <cite>setup_dmft_calculation</cite> and the self consistent solution i obtained by calling <cite>solve_self_consistent_dmft</cite>. For details on these function please se next section.</p>
+<p>The result is the self consistent DMFT solution of the system, plotted below.</p>
+<img alt="../../_images/figure_sc.svg" src="../../_images/figure_sc.svg" /><p>The visulaization script is available here: <a class="reference download internal" href="../../_downloads/plot_sc.py" download=""><code class="xref download docutils literal"><span class="pre">plot_sc.py</span></code></a>.</p>
+<div class="section" id="implementation-details">
+<h2>Implementation details<a class="headerlink" href="#implementation-details" title="Permalink to this headline">¶</a></h2>
+<p>The above script uses the <cite>common.py</cite> python module, available for download here: <a class="reference download internal" href="../../_downloads/common.py" download=""><code class="xref download docutils literal"><span class="pre">common.py</span></code></a>. This section goes through the details of the routines in the module.</p>
+<p>The <cite>common.py</cite> module includes ther modules from <cite>TRIQS</cite>, <cite>triqs_cthyb</cite>, and <cite>TPRF</cite>, etc..</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">import</span> <span class="nn">pytriqs.utility.mpi</span> <span class="k">as</span> <span class="nn">mpi</span>
+<span class="kn">from</span> <span class="nn">pytriqs.archive</span> <span class="k">import</span> <span class="n">HDFArchive</span>
+<span class="kn">from</span> <span class="nn">pytriqs.gf</span> <span class="k">import</span> <span class="n">Gf</span><span class="p">,</span> <span class="n">MeshImFreq</span><span class="p">,</span> <span class="n">Fourier</span><span class="p">,</span> <span class="n">LegendreToMatsubara</span><span class="p">,</span> <span class="n">BlockGf</span><span class="p">,</span> <span class="n">inverse</span><span class="p">,</span> <span class="n">Idx</span>
+
+<span class="kn">import</span> <span class="nn">triqs_cthyb</span>
+
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="k">import</span> <span class="n">lattice_dyson_g_w</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.ParameterCollection</span> <span class="k">import</span> <span class="n">ParameterCollection</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.ParameterCollection</span> <span class="k">import</span> <span class="n">ParameterCollections</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.utilities</span> <span class="k">import</span> <span class="n">BlockGf_data</span>
+</pre></div>
+</div>
+<div class="section" id="setup-dmft-calculation">
+<h3>Setup DMFT Calculation<a class="headerlink" href="#setup-dmft-calculation" title="Permalink to this headline">¶</a></h3>
+<p>The function <cite>setup_dmft_calculation</cite> takes a <cite>ParameterCollection</cite> as input and constructs</p>
+<ul class="simple">
+<li>the local interaction <span class="math">\(H_{\textrm{int}} = Un_\uparrow n_\downarrow - \frac{U}{2} (n_\uparrow + n_\downarrow)\)</span> in <cite>p.solve.h_int</cite>,</li>
+<li>the lattice dispersion <span class="math">\(\epsilon_{\mathbf{k}}\)</span> in <cite>p.e_k</cite>, and</li>
+<li>the initial (zero) guess for the self-energy <span class="math">\(\Sigma\)</span> in <cite>p.sigma_w</cite>.</li>
+</ul>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">setup_dmft_calculation</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+
+    <span class="n">p</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># -- Local Hubbard interaction</span>
+    <span class="kn">from</span> <span class="nn">pytriqs.operators</span> <span class="k">import</span> <span class="n">n</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">solve</span><span class="o">.</span><span class="n">h_int</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">U</span><span class="o">*</span><span class="n">n</span><span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="n">n</span><span class="p">(</span><span class="s1">&#39;do&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">p</span><span class="o">.</span><span class="n">U</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;do&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+    <span class="c1"># -- 2D square lattice w. nearest neighbour hopping t</span>
+    <span class="kn">from</span> <span class="nn">triqs_tprf.tight_binding</span> <span class="k">import</span> <span class="n">TBLattice</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="o">-</span><span class="n">p</span><span class="o">.</span><span class="n">t</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">TBLattice</span><span class="p">(</span>
+        <span class="n">units</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span>
+        <span class="n">orbital_positions</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)]</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">orbital_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">,</span> <span class="s1">&#39;do&#39;</span><span class="p">],</span>
+        <span class="n">hopping</span> <span class="o">=</span> <span class="p">{(</span><span class="mi">0</span><span class="p">,</span> <span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="p">(</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="p">:</span> <span class="n">T</span><span class="p">})</span>
+    
+    <span class="n">p</span><span class="o">.</span><span class="n">e_k</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">on_mesh_brillouin_zone</span><span class="p">(</span><span class="n">n_k</span> <span class="o">=</span> <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">n_k</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">n_k</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="c1"># -- Initial zero guess for the self-energy    </span>
+    <span class="n">p</span><span class="o">.</span><span class="n">sigma_w</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">MeshImFreq</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="s1">&#39;Fermion&#39;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">n_iw</span><span class="p">),</span> <span class="n">target_shape</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">sigma_w</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">p</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="solve-self-consistent-dmft">
+<h3>Solve Self-Consistent DMFT<a class="headerlink" href="#solve-self-consistent-dmft" title="Permalink to this headline">¶</a></h3>
+<p>The function <cite>solve_self_consistent_dmft</cite> repeatedly runs the DMFT self consistency step and looks for convergence in the local Legendre Green’s function <span class="math">\(G_l\)</span>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">solve_self_consistent_dmft</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+
+    <span class="n">ps</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">dmft_iter</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">n_iter</span><span class="p">):</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;--&gt; DMFT Iteration: </span><span class="si">{:d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">iter</span><span class="p">))</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">dmft_self_consistent_step</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="n">ps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;--&gt; DMFT Convergence: dG_l = </span><span class="si">{:f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">dG_l</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">dG_l</span> <span class="o">&lt;</span> <span class="n">p</span><span class="o">.</span><span class="n">G_l_tol</span><span class="p">:</span> <span class="k">break</span>
+
+    <span class="k">if</span> <span class="n">dmft_iter</span> <span class="o">&gt;=</span> <span class="n">p</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span> <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;--&gt; Warning: DMFT Not converged!&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span> <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;--&gt; DMFT Converged: dG_l = </span><span class="si">{:f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">dG_l</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">ps</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="dmft-self-consistent-step">
+<h3>DMFT Self-Consistent Step<a class="headerlink" href="#dmft-self-consistent-step" title="Permalink to this headline">¶</a></h3>
+<p>The function <cite>dmft_self_consistent_step</cite> performs a complete DMFT step starting from the given self-energy <span class="math">\(\Sigma\)</span> it takes the steps,</p>
+<ul class="simple">
+<li>compute the lattice local Green’s function <span class="math">\(g(i\omega_n)\)</span> in <cite>p.g_w</cite></li>
+<li>compute the local Weiss field <span class="math">\(g_0(i\omega_n) = [ g^{-1} + \Sigma ]^{-1}\)</span> in <cite>p.g0_w</cite></li>
+<li>setup the <cite>triqs_cthyb</cite> solver</li>
+<li>set the Weiss field of the solver in <cite>cthyb.G0_iw</cite> from the lattice <cite>p.g0_w</cite>.</li>
+<li>run the <cite>triqs_cthyb</cite> solver and sample the Legendre Green’s function <span class="math">\(G_l\)</span> in <cite>p.G_l</cite></li>
+<li>compute a new self energy <span class="math">\(\Sigma\)</span> from the sampled Greens function <cite>p.G_l</cite> and Weiss field <cite>p.G0_w</cite></li>
+<li>set the lattice self energy <cite>p.sigma_w</cite> from the impurity self energy <cite>p.Sigma_w</cite></li>
+</ul>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">dmft_self_consistent_step</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+
+    <span class="n">p</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">iter</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">p</span><span class="o">.</span><span class="n">g_w</span> <span class="o">=</span> <span class="n">lattice_dyson_g_w</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">e_k</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">sigma_w</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">B</span><span class="p">,</span> <span class="o">-</span><span class="n">p</span><span class="o">.</span><span class="n">B</span><span class="p">]))</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">g0_w</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">g_w</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">g0_w</span> <span class="o">&lt;&lt;</span> <span class="n">inverse</span><span class="p">(</span><span class="n">inverse</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">g_w</span><span class="p">)</span> <span class="o">+</span> <span class="n">p</span><span class="o">.</span><span class="n">sigma_w</span><span class="p">)</span>
+
+    <span class="n">cthyb</span> <span class="o">=</span> <span class="n">triqs_cthyb</span><span class="o">.</span><span class="n">Solver</span><span class="p">(</span><span class="o">**</span><span class="n">p</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">dict</span><span class="p">())</span>
+
+    <span class="c1"># -- set impurity from lattice</span>
+    <span class="n">cthyb</span><span class="o">.</span><span class="n">G0_iw</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">p</span><span class="o">.</span><span class="n">g0_w</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">cthyb</span><span class="o">.</span><span class="n">G0_iw</span><span class="p">[</span><span class="s1">&#39;do&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">p</span><span class="o">.</span><span class="n">g0_w</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">cthyb</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="o">**</span><span class="n">p</span><span class="o">.</span><span class="n">solve</span><span class="o">.</span><span class="n">dict</span><span class="p">())</span>
+
+    <span class="n">p</span><span class="o">.</span><span class="n">dG_l</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">BlockGf_data</span><span class="p">(</span><span class="n">cthyb</span><span class="o">.</span><span class="n">G_l</span><span class="o">-</span><span class="n">p</span><span class="o">.</span><span class="n">G_l</span><span class="p">)))</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="s1">&#39;G_l&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;nan&#39;</span><span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">G_l</span> <span class="o">=</span> <span class="n">cthyb</span><span class="o">.</span><span class="n">G_l</span>
+
+    <span class="n">p</span><span class="o">.</span><span class="n">G_tau</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">G_tau_raw</span> <span class="o">=</span> <span class="n">cthyb</span><span class="o">.</span><span class="n">G_tau</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">cthyb</span><span class="o">.</span><span class="n">G_tau</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">G0_w</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">G_w</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">Sigma_w</span> <span class="o">=</span> <span class="n">cthyb</span><span class="o">.</span><span class="n">G0_iw</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">cthyb</span><span class="o">.</span><span class="n">G0_iw</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">cthyb</span><span class="o">.</span><span class="n">G0_iw</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="n">p</span><span class="o">.</span><span class="n">G_tau</span> <span class="o">&lt;&lt;</span> <span class="n">LegendreToMatsubara</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">G_l</span><span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">G_w</span> <span class="o">&lt;&lt;</span> <span class="n">Fourier</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">G_tau</span><span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">Sigma_w</span> <span class="o">&lt;&lt;</span> <span class="n">inverse</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">G0_w</span><span class="p">)</span> <span class="o">-</span> <span class="n">inverse</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">G_w</span><span class="p">)</span>
+
+    <span class="c1"># -- set lattice from impurity</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">sigma_w</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">p</span><span class="o">.</span><span class="n">Sigma_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">sigma_w</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">p</span><span class="o">.</span><span class="n">Sigma_w</span><span class="p">[</span><span class="s1">&#39;do&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># -- local observables</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">rho</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">g_w</span><span class="o">.</span><span class="n">density</span><span class="p">()</span>
+    <span class="n">M_old</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">M</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s1">&#39;M&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;nan&#39;</span><span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">M</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">rho</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">p</span><span class="o">.</span><span class="n">rho</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">dM</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">M</span> <span class="o">-</span> <span class="n">M_old</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">p</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+    <li><a href="../../index.html">Home</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, H. U.R. Strand.
+    </div>
+  </body>
+</html>
