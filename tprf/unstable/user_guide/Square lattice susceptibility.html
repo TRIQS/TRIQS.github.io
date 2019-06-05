@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Square lattice susceptibility &#8212; TPRF - Two-Particle Response Function tool box for TRIQS  documentation</title>
+    <title>Square lattice susceptibility and the Random Phase Approximation (RPA) &#8212; TPRF - Two-Particle Response Function tool box for TRIQS  documentation</title>
     <link rel="stylesheet" href="../_static/triqs.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -81,14 +81,14 @@
         <div class="sphinxsidebarwrapper">
   <h3><a href="../contents.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Square lattice susceptibility</a><ul>
+<li><a class="reference internal" href="#">Square lattice susceptibility and the Random Phase Approximation (RPA)</a><ul>
 <li><a class="reference internal" href="#Tight-binding-Hamiltonian">Tight binding Hamiltonian</a></li>
 <li><a class="reference internal" href="#Dispersion--and-Fermi-surface">Dispersion <span class="math">\(\epsilon(\mathbf{k})\)</span> and Fermi surface</a></li>
 <li><a class="reference internal" href="#Bare-generalized-susceptibility-">Bare generalized susceptibility <span class="math">\(\chi_0\)</span></a></li>
 <li><a class="reference internal" href="#Physical-response-function-">Physical response function <span class="math">\(\chi_{S_z, S_z}\)</span></a></li>
+<li><a class="reference internal" href="#Random-phase-approximation-(RPA)">Random phase approximation (RPA)</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#Random-phase-approximation-(RPA)">Random phase approximation (RPA)</a></li>
 </ul>
 
   <h4>Previous topic</h4>
@@ -288,8 +288,8 @@ div.nboutput div.output_area.stderr {
 .ansi-bold { font-weight: bold; }
 .ansi-underline { text-decoration: underline; }
 </style>
-<div class="section" id="Square-lattice-susceptibility">
-<h1>Square lattice susceptibility<a class="headerlink" href="#Square-lattice-susceptibility" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="Square-lattice-susceptibility-and-the-Random-Phase-Approximation-(RPA)">
+<h1>Square lattice susceptibility and the Random Phase Approximation (RPA)<a class="headerlink" href="#Square-lattice-susceptibility-and-the-Random-Phase-Approximation-(RPA)" title="Permalink to this headline">¶</a></h1>
 <p>A nice example of two-particle response functions is the two-dimensional
 square lattice with nearest neighbour hopping <span class="math">\(t\)</span>. Here we will
 use <code class="docutils literal"><span class="pre">TRIQS</span></code> and <code class="docutils literal"><span class="pre">TPRF</span></code> routines to compute the bare generalized
@@ -350,7 +350,7 @@ local orbitals and names also needs to be setup, see below.</p>
 </div>
 <div class="stderr output_area docutils container">
 <div class="highlight"><pre>
-Starting on 1 Nodes at : 2018-06-14 11:47:05.837080
+Starting on 1 Nodes at : 2019-06-05 17:03:01.636154
 </pre></div></div>
 </div>
 </div>
@@ -372,7 +372,7 @@ discretized representation with an equidistant mesh in <span class="math">\(k_x\
 </pre></div>
 </div>
 <div class="input_area highlight-ipython2"><div class="highlight"><pre>
-<span></span><span class="n">e_k</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">on_mesh_brillouin_zone</span><span class="p">(</span><span class="n">n_k</span> <span class="o">=</span> <span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span></span><span class="n">e_k</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">on_mesh_brillouin_zone</span><span class="p">(</span><span class="n">n_k</span> <span class="o">=</span> <span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
 <span class="k">print</span><span class="p">(</span><span class="n">e_k</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -382,7 +382,16 @@ discretized representation with an equidistant mesh in <span class="math">\(k_x\
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Green Function  with mesh Brillouin Zone Mesh with linear dimensions (64 64 1), Domain: Brillouin Zone with repiprocal matrix
+Green Function  with mesh Brillouin Zone Mesh with linear dimensions (32 32 1)
+ -- units =
+[[0.19635,0,0]
+ [0,0.19635,0]
+ [0,0,6.28319]]
+ -- periodization_matrix =
+[[32,0,0]
+ [0,32,0]
+ [0,0,1]]
+ -- Domain: Brillouin Zone with dimension 2, reciprocal matrix
 [[6.28319,0,0]
  [0,6.28319,0]
  [0,0,6.28319]] and target_rank 2:
@@ -519,13 +528,11 @@ frequency and momentum space, i.e.</p>
 <span class="eqno">(8)<a class="headerlink" href="#equation-user-guide-square-lattice-susceptibility-7" title="Permalink to this equation">¶</a></span>\[\chi_0(i\omega_n, \mathbf{k}) =
 \mathcal{F}_{ \{ \tau, \mathbf{r} \} \rightarrow \{ i\omega_n, \mathbf{k} \} }
 \{ -G(\tau, \mathbf{r}) G(-\tau, -\mathbf{r}) \}\]</div>
-<p>To do this we first construct the single particle Green’s function of
-the lattice using the lattice Dyson equation</p>
+<p>To do this we first compute the single particle Green’s function of the
+lattice using the lattice Dyson equation</p>
 <div class="math" id="equation-user-guide-square-lattice-susceptibility-8">
 <span class="eqno">(9)<a class="headerlink" href="#equation-user-guide-square-lattice-susceptibility-8" title="Permalink to this equation">¶</a></span>\[G(i\omega_n, \mathbf{k})  =
-\Big[ i\omega_n + \mu - \epsilon(\mathbf{k}) - \Sigma(i\omega_n) \Big]^{-1}\]</div>
-<p>assuming a momentum independent self energy
-<span class="math">\(\Sigma(i\omega_n, \mathbf{k}) \approx \Sigma(i\omega_n)\)</span>.</p>
+\Big[ i\omega_n + \mu - \epsilon(\mathbf{k}) \Big]^{-1}\]</div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none"><div class="highlight"><pre>
 <span></span>In [8]:
@@ -564,11 +571,11 @@ the lattice using the lattice Dyson equation</p>
 Two-Particle Response Function tool-box
 
 beta  = 5.0
-nk    = 4096
+nk    = 1024
 nw    = 60
 norb  = 2
 
-Approx. Memory Utilization: 0.07 GB
+Approx. Memory Utilization: 0.01 GB
 
 --&gt; fourier_wk_to_wr
 --&gt; fourier_wr_to_tr
@@ -627,7 +634,7 @@ Green’s function on <code class="docutils literal"><span class="pre">MeshBrill
 spin-spin response</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none"><div class="highlight"><pre>
-<span></span>In [20]:
+<span></span>In [12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython2"><div class="highlight"><pre>
@@ -641,14 +648,14 @@ spin-spin response</p>
     <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">()</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">K_plot</span><span class="p">)</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">([</span><span class="n">K_plot</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">K_plot</span><span class="o">.</span><span class="n">max</span><span class="p">()])</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">()</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;$\Gamma$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$M$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$X$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$\Gamma$&#39;</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">()</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;$\Gamma$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$X$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$M$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$\Gamma$&#39;</span><span class="p">])</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Spin-response $\chi_{S_z S_z}(\mathbf{q}, \omega=0)$&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none"><div class="highlight"><pre>
-<span></span>In [21]:
+<span></span>In [13]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython2"><div class="highlight"><pre>
@@ -664,7 +671,7 @@ spin-spin response</p>
 </div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none"><div class="highlight"><pre>
-<span></span>In [22]:
+<span></span>In [14]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython2"><div class="highlight"><pre>
@@ -690,7 +697,7 @@ spin-spin response</p>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none"><div class="highlight"><pre>
-<span></span>In [23]:
+<span></span>In [15]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython2"><div class="highlight"><pre>
@@ -707,9 +714,8 @@ spin-spin response</p>
 <img alt="../_images/user_guide_Square_lattice_susceptibility_28_0.svg" src="../_images/user_guide_Square_lattice_susceptibility_28_0.svg" /></div>
 </div>
 </div>
-</div>
 <div class="section" id="Random-phase-approximation-(RPA)">
-<h1>Random phase approximation (RPA)<a class="headerlink" href="#Random-phase-approximation-(RPA)" title="Permalink to this headline">¶</a></h1>
+<h2>Random phase approximation (RPA)<a class="headerlink" href="#Random-phase-approximation-(RPA)" title="Permalink to this headline">¶</a></h2>
 <p>The full Bethe-Salpeter equation in the particle-hole channel has the
 form</p>
 <div class="math" id="equation-user-guide-square-lattice-susceptibility-10">
@@ -721,7 +727,7 @@ apprximated by the (frequency independent) local interaction
 <p>The locality and frequency independence simplifies the BSE which
 formally is solved as</p>
 <div class="math" id="equation-user-guide-square-lattice-susceptibility-11">
-<span class="eqno">(12)<a class="headerlink" href="#equation-user-guide-square-lattice-susceptibility-11" title="Permalink to this equation">¶</a></span>\[[ 1 - \chi_0 V ]^{-1} \, \chi_0 = \chi\]</div>
+<span class="eqno">(12)<a class="headerlink" href="#equation-user-guide-square-lattice-susceptibility-11" title="Permalink to this equation">¶</a></span>\[\chi = [ 1 - \chi_0 V ]^{-1} \, \chi_0\]</div>
 <p>in <code class="docutils literal"><span class="pre">TPRF</span></code> there is the dedicated routine for RPA
 (<code class="docutils literal"><span class="pre">triqs_tprf.lattice.solve_rpa_PH</span></code>) that can treat the general
 multiorbital case.</p>
@@ -730,7 +736,7 @@ tensor <span class="math">\(V\)</span> from the operator expression of the Hubba
 interaction.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none"><div class="highlight"><pre>
-<span></span>In [24]:
+<span></span>In [16]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython2"><div class="highlight"><pre>
@@ -754,7 +760,7 @@ interaction.</p>
 RPA generalized susceptibility.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none"><div class="highlight"><pre>
-<span></span>In [25]:
+<span></span>In [17]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython2"><div class="highlight"><pre>
@@ -770,7 +776,7 @@ RPA generalized susceptibility.</p>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none"><div class="highlight"><pre>
-<span></span>In [26]:
+<span></span>In [18]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython2"><div class="highlight"><pre>
@@ -792,7 +798,7 @@ RPA generalized susceptibility.</p>
 <p>We see that the system has an instability at the <span class="math">\(M\)</span> point</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none"><div class="highlight"><pre>
-<span></span>In [27]:
+<span></span>In [19]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython2"><div class="highlight"><pre>
@@ -816,6 +822,7 @@ RPA generalized susceptibility.</p>
 </div>
 <div class="output_area docutils container">
 <img alt="../_images/user_guide_Square_lattice_susceptibility_35_0.svg" src="../_images/user_guide_Square_lattice_susceptibility_35_0.svg" /></div>
+</div>
 </div>
 </div>
 
