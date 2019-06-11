@@ -306,6 +306,13 @@ account. Other Hamiltonians with, e.g. with full rotational invariant interactio
 <p>For other choices of the interaction matrices (e.g Slater representation) or
 Hamiltonians, we refer to the reference manual of the <span class="xref std std-ref">TRIQS</span>
 library.</p>
+<p>As a last step, we initialize the subgroup in the hdf5 archive to store the results:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+    <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">dft_filename</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">ar</span><span class="o">.</span><span class="n">is_group</span><span class="p">(</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">)):</span>
+            <span class="n">ar</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="dmft-cycle">
 <h2>DMFT cycle<a class="headerlink" href="#dmft-cycle" title="Permalink to this headline">¶</a></h2>
@@ -321,8 +328,8 @@ some additional refinements:</p>
     <span class="n">S</span><span class="o">.</span><span class="n">G_iw</span> <span class="o">&lt;&lt;</span> <span class="n">SK</span><span class="o">.</span><span class="n">extract_G_loc</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>                         <span class="c1"># calc the local Green function</span>
     <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Total charge of Gloc : </span><span class="si">%.6f</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">S</span><span class="o">.</span><span class="n">G_iw</span><span class="o">.</span><span class="n">total_density</span><span class="p">())</span>
 
-    <span class="c1"># Init the DC term and the real part of Sigma, if no previous runs found:</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">iteration_number</span><span class="o">==</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">previous_present</span><span class="o">==</span><span class="kc">False</span><span class="p">):</span>
+    <span class="c1"># In the first loop, init the DC term and the real part of Sigma:</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">iteration_number</span><span class="o">==</span><span class="mi">1</span><span class="p">):</span>
         <span class="n">dm</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G_iw</span><span class="o">.</span><span class="n">density</span><span class="p">()</span>
         <span class="n">SK</span><span class="o">.</span><span class="n">calc_dc</span><span class="p">(</span><span class="n">dm</span><span class="p">,</span> <span class="n">U_interact</span> <span class="o">=</span> <span class="n">U</span><span class="p">,</span> <span class="n">J_hund</span> <span class="o">=</span> <span class="n">J</span><span class="p">,</span> <span class="n">orb</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">use_dc_formula</span> <span class="o">=</span> <span class="n">dc_type</span><span class="p">)</span>
         <span class="n">S</span><span class="o">.</span><span class="n">Sigma_iw</span> <span class="o">&lt;&lt;</span> <span class="n">SK</span><span class="o">.</span><span class="n">dc_imp</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
@@ -338,7 +345,7 @@ some additional refinements:</p>
     <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Total charge of impurity problem : </span><span class="si">%.6f</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">S</span><span class="o">.</span><span class="n">G_iw</span><span class="o">.</span><span class="n">total_density</span><span class="p">())</span>
 
     <span class="c1"># Now mix Sigma and G with factor mix, if wanted:</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">iteration_number</span><span class="o">&gt;</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">previous_present</span><span class="p">):</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">iteration_number</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
             <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">dft_filename</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
                 <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Mixing Sigma and G with factor </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">mix</span><span class="p">)</span>
@@ -349,7 +356,7 @@ some additional refinements:</p>
 
     <span class="c1"># Write the final Sigma and G to the hdf5 archive:</span>
     <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
-        <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">dft_filename</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">dft_filename</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
               <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;iterations&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">iteration_number</span>
               <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;G_0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G0_iw</span>
               <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;G_tau&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G_tau</span>
