@@ -140,6 +140,7 @@
 
 <span class="kn">from</span> <span class="nn">triqs_tprf.rpa_tensor</span> <span class="k">import</span> <span class="n">get_rpa_tensor</span>
 <span class="kn">from</span> <span class="nn">triqs_tprf.rpa_tensor</span> <span class="k">import</span> <span class="n">fundamental_operators_from_gf_struct</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.OperatorUtils</span> <span class="k">import</span> <span class="n">is_operator_composed_of_only_fundamental_operators</span>
 
 <span class="c1"># ----------------------------------------------------------------------</span>
 <div class="viewcode-block" id="HartreeFockSolver"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.hf_solver.HartreeFockSolver">[docs]</a><span class="k">class</span> <span class="nc">HartreeFockSolver</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -194,11 +195,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">triu_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu_indices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">norb</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
-            <span class="nb">print</span> <span class="s1">&#39;H_int =&#39;</span><span class="p">,</span> <span class="n">H_int</span>
             <span class="nb">print</span> <span class="s1">&#39;beta =&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span>
             <span class="nb">print</span> <span class="s1">&#39;mu =&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span>
             <span class="nb">print</span> <span class="s1">&#39;bands =&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">norb</span>
             <span class="nb">print</span> <span class="s1">&#39;n_k =&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+            <span class="nb">print</span> <span class="s1">&#39;H_int =&#39;</span><span class="p">,</span> <span class="n">H_int</span>
             <span class="nb">print</span>
 
         <span class="k">if</span> <span class="n">gf_struct</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -210,15 +211,21 @@
                 <span class="s1">&#39;Error: H_int = None, but gf_struct is not None&#39;</span>
 
             <span class="n">fundamental_operators</span> <span class="o">=</span> <span class="n">fundamental_operators_from_gf_struct</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">U_abcd</span> <span class="o">=</span> <span class="n">get_rpa_tensor</span><span class="p">(</span><span class="n">H_int</span><span class="p">,</span> <span class="n">fundamental_operators</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
                 <span class="nb">print</span> <span class="s1">&#39;gf_struct =&#39;</span><span class="p">,</span> <span class="n">gf_struct</span>
                 <span class="nb">print</span> <span class="s1">&#39;fundamental_operators =&#39;</span><span class="p">,</span> <span class="n">fundamental_operators</span>
+                <span class="nb">print</span>
+
+            <span class="k">assert</span><span class="p">(</span> <span class="n">is_operator_composed_of_only_fundamental_operators</span><span class="p">(</span>
+                <span class="n">H_int</span><span class="p">,</span> <span class="n">fundamental_operators</span><span class="p">)</span> <span class="p">),</span> \
+                <span class="s1">&#39;Error: H_int is incompatible with gf_struct and its fundamental_operators&#39;</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">U_abcd</span> <span class="o">=</span> <span class="n">get_rpa_tensor</span><span class="p">(</span><span class="n">H_int</span><span class="p">,</span> <span class="n">fundamental_operators</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">U_abcd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape_abcd</span><span class="p">)</span>
-        
+
     <span class="c1"># ------------------------------------------------------------------</span>
     <span class="k">def</span> <span class="nf">update_mean_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rho_ab</span><span class="p">):</span>
 
