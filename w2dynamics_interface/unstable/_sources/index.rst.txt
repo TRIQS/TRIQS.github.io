@@ -3,8 +3,18 @@
 The w2dynamics interface
 ========================
 
+.. sidebar:: w2dynamics_interface 2.2.0
+
+   This is the homepage of w2dynamics_interface v2.2.0.
+   For changes see the :ref:`changelog page <changelog>`.
+
 w2dynamics_interface is a python interface of the Würzburg / Wien strong coupling impurity solver `w2dynamics <https://github.com/w2dynamics/w2dynamics>`_.
 
 The present documentation contains :ref:`installation <install>` instructions.
 
 See also the :ref:`about` page for citations.
+
+Learn how to use w2dynamics_interface in the :ref:`documentation`.
+
+.. toctree::
+   :maxdepth: 2

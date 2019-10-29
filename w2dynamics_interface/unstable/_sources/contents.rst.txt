@@ -1,32 +1,12 @@
-.. _documentation:
-
-Documentation
-=============
-
-Basic notions
--------------
+Table of contents
+=================
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   w2dyn_cthyb
-
-User guide
-----------
-
-.. toctree::
-   :maxdepth: 1
-
-   guide/aim.rst
-   guide/settingparameters
-   guide/additional_remarks
-
-Reference manual
-----------------
-
-.. toctree::
-   :maxdepth: 1
-
-   reference/solver
-   reference/constr_parameters
-   reference/solve_parameters
+   index
+   install
+   documentation
+   issues
+   changelog
+   about
