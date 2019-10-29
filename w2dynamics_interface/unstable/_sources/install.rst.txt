@@ -33,6 +33,7 @@ Installation steps
 
 #. Compile the code, run the tests and install the application::
 
+     $ make
      $ make test
      $ make install
 
@@ -48,7 +49,7 @@ To use a particular version, go into the directory with the sources, and look at
 
 Checkout the version of the code that you want::
 
-     $ git checkout 2.1.0
+     $ git checkout 2.2.0
 
 and follow steps 2 to 4 above to compile the code.
 
@@ -59,14 +60,14 @@ The compilation of ``w2dynamics_interface`` can be configured using CMake-option
 
     cmake ../w2dynamics_interface.src -DOPTION1=value1 -DOPTION2=value2 ... ../w2dynamics_interface.src
 
-+-----------------------------------------------------------------+-----------------------------------------------+
-| Options                                                         | Syntax                                        |
-+=================================================================+===============================================+
++-----------------------------------------------------------------+----------------------------------------------------------+
+| Options                                                         | Syntax                                                   |
++=================================================================+==========================================================+
 | Specify an installation path other than path_to_triqs           | -DCMAKE_INSTALL_PREFIX=path_to_w2dynamics_interface      |
-+-----------------------------------------------------------------+-----------------------------------------------+
-| Build in Debugging Mode                                         | -DCMAKE_BUILD_TYPE=Debug                      |
-+-----------------------------------------------------------------+-----------------------------------------------+
-| Disable testing (not recommended)                               | -DBuild_Tests=OFF                             |
-+-----------------------------------------------------------------+-----------------------------------------------+
-| Build the documentation                                         | -DBuild_Documentation=ON                      |
-+-----------------------------------------------------------------+-----------------------------------------------+
++-----------------------------------------------------------------+----------------------------------------------------------+
+| Build in Debugging Mode                                         | -DCMAKE_BUILD_TYPE=Debug                                 |
++-----------------------------------------------------------------+----------------------------------------------------------+
+| Disable testing (not recommended)                               | -DBuild_Tests=OFF                                        |
++-----------------------------------------------------------------+----------------------------------------------------------+
+| Build the documentation                                         | -DBuild_Documentation=ON                                 |
++-----------------------------------------------------------------+----------------------------------------------------------+
