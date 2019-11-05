@@ -15,13 +15,13 @@ First, a comparison_ between the result of analytic continuation of a Matsubara 
 
 And second, the `analytic continuation of a self-energy`_ on the example of the `DMFT and density functional theory`_ solution for the material :math:`Sr_2RuO_4`.
 
-.. _omegamaxent_interface_tutorials: https://github.com/TRIQS/omegamaxent_interface/tree/master/tutorials
+.. _omegamaxent_interface_tutorials: https://github.com/TRIQS/omegamaxent_interface/tree/unstable/tutorials
 
-.. _introductory: https://github.com/TRIQS/omegamaxent_interface/blob/master/tutorials/Introduction%20to%20OmegaMaxEnt_TRIQS.ipynb
+.. _introductory: https://github.com/TRIQS/omegamaxent_interface/blob/unstable/tutorials/Introduction_OmegaMaxEnt_TRIQS.ipynb
 
-.. _comparison: https://github.com/TRIQS/omegamaxent_interface/blob/master/tutorials/DMFT_Continuous%20Time%20QMC%20%2B%20Analytic%20Continuation%20vs%20Numerical%20Renormalization.ipynb
+.. _comparison: https://github.com/TRIQS/omegamaxent_interface/blob/unstable/tutorials/DMFT_CTQMC_Analytic_Continuation_vs_NRG.ipynb
 
-.. _`analytic continuation of a self-energy`: https://github.com/TRIQS/omegamaxent_interface/blob/master/tutorials/DMFT%2BDFT%2BAnalytic%20Continuation%20for%20Sr2RuO4.ipynb
+.. _`analytic continuation of a self-energy`: https://github.com/TRIQS/omegamaxent_interface/blob/unstable/tutorials/DFT_DMFT_Analytic_Continuation_of_Sr2RuO4_self_energy.ipynb
 
 .. _CTHYB: https://triqs.github.io/cthyb/latest/
 
