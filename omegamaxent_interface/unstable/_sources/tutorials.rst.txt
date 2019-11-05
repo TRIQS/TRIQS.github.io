@@ -3,7 +3,7 @@
 Tutorials
 =========
 
-We provide three `tutorials <OmegaMaxEnt_TRIQS_tutorials_>`_, with solved exercises:
+We provide three `tutorials <omegamaxent_interface_tutorials_>`_, with solved exercises:
 
 An introductory_ one using a fictitious Green's functions for which the spectrum is known.
 The aim of this first tutorial is to introduce the main features of :math:`\Omega MaxEnt`,
@@ -15,7 +15,7 @@ First, a comparison_ between the result of analytic continuation of a Matsubara 
 
 And second, the `analytic continuation of a self-energy`_ on the example of the `DMFT and density functional theory`_ solution for the material :math:`Sr_2RuO_4`.
 
-.. _OmegaMaxEnt_TRIQS_tutorials: https://github.com/TRIQS/omegamaxent_interface/tree/master/tutorials
+.. _omegamaxent_interface_tutorials: https://github.com/TRIQS/omegamaxent_interface/tree/master/tutorials
 
 .. _introductory: https://github.com/TRIQS/omegamaxent_interface/blob/master/tutorials/Introduction%20to%20OmegaMaxEnt_TRIQS.ipynb
 
@@ -23,6 +23,6 @@ And second, the `analytic continuation of a self-energy`_ on the example of the 
 
 .. _`analytic continuation of a self-energy`: https://github.com/TRIQS/omegamaxent_interface/blob/master/tutorials/DMFT%2BDFT%2BAnalytic%20Continuation%20for%20Sr2RuO4.ipynb
 
-.. _CTHYB: https://triqs.github.io/cthyb/master/
+.. _CTHYB: https://triqs.github.io/cthyb/latest/
 
-.. _`DMFT and density functional theory`: https://triqs.github.io/dft_tools/master/
+.. _`DMFT and density functional theory`: https://triqs.github.io/dft_tools/latest/

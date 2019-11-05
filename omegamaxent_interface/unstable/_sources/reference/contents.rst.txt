@@ -3,7 +3,7 @@
 User Guide
 ==========
 
-This is the user guide for the OmegaMaxEnt_TRIQS interface.
+This is the user guide for the omegamaxent_interface.
 The information presented here is sufficient for many cases, however, for a more advanced use, see the :math:`\Omega MaxEnt` `user guide`_.
 
 
@@ -276,11 +276,11 @@ For more advanced examples, see the :ref:`tutorials <OME_TRIQS_tutorials>`.
 .. _`user guide`: https://www.physique.usherbrooke.ca/MaxEnt/index.php/User_Guide
 .. _`maximum entropy`: https://triqs.github.io/maxent/jenkins/basicnotions/mathematics.html
 .. _`different ways`: https://triqs.github.io/maxent/jenkins/basicnotions/maxentflavors.html#maxent-flavors
-.. _BlockGf: https://triqs.github.io/triqs/master/reference/gfs/py/full.html
-.. _GfReFreq: https://triqs.github.io/triqs/master/reference/gfs/py/block/GfReFreq.html
-.. _GfImTime: https://triqs.github.io/triqs/master/reference/gfs/py/block/GfImTime.html
-.. _GfImFreq: https://triqs.github.io/triqs/master/reference/gfs/py/block/GfImFreq.html
-.. _Gf: https://triqs.github.io/triqs/master/reference/gfs/py/block.html
+.. _BlockGf: https://triqs.github.io/triqs/latest/reference/gfs/py/full.html
+.. _GfReFreq: https://triqs.github.io/triqs/latest/reference/gfs/py/block/GfReFreq.html
+.. _GfImTime: https://triqs.github.io/triqs/latest/reference/gfs/py/block/GfImTime.html
+.. _GfImFreq: https://triqs.github.io/triqs/latest/reference/gfs/py/block/GfImFreq.html
+.. _Gf: https://triqs.github.io/triqs/latest/reference/gfs/py/block.html
 
 .. [#OME] `D.Bergeron and A.-M.S. Tremblay. Phys. Rev. E, 94:023303, 2016 <https://journals.aps.org/pre/abstract/10.1103/PhysRevE.94.023303>`_
 
