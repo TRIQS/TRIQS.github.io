@@ -64,9 +64,6 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="../../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
     <li><a href="../../index.html">Home</a> &raquo;</li>
 
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
@@ -100,10 +97,13 @@
 <span class="kn">from</span> <span class="nn">pytriqs.operators</span> <span class="k">import</span> <span class="n">Operator</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">c_dag</span><span class="p">,</span> <span class="n">n</span>
 
 <div class="viewcode-block" id="Solver"><a class="viewcode-back" href="../../documentation.html#triqs_hubbardi.Solver">[docs]</a><span class="k">class</span> <span class="nc">Solver</span><span class="p">():</span>
-    
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">gf_struct</span><span class="p">,</span> <span class="n">n_iw</span><span class="o">=</span><span class="mi">1025</span><span class="p">,</span> <span class="n">n_tau</span><span class="o">=</span><span class="mi">10001</span><span class="p">,</span> <span class="n">n_l</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">n_w</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span><span class="n">w_min</span><span class="o">=-</span><span class="mi">15</span><span class="p">,</span><span class="n">w_max</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span><span class="n">idelta</span><span class="o">=</span><span class="mf">0.01</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class providing initialization and solve function. Contains all relevant Greensfunctions and self energy.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Solver.__init__"><a class="viewcode-back" href="../../documentation.html#triqs_hubbardi.Solver.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">gf_struct</span><span class="p">,</span> <span class="n">n_iw</span><span class="o">=</span><span class="mi">1025</span><span class="p">,</span> <span class="n">n_tau</span><span class="o">=</span><span class="mi">10001</span><span class="p">,</span> <span class="n">n_l</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">n_w</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span><span class="n">w_min</span><span class="o">=-</span><span class="mi">15</span><span class="p">,</span><span class="n">w_max</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span><span class="n">idelta</span><span class="o">=</span><span class="mf">0.01</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
+
 <span class="sd">        Initialise the solver.</span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        beta : scalar</span>
@@ -117,8 +117,21 @@
 <span class="sd">        n_iw : integer, optional</span>
 <span class="sd">               Number of Matsubara frequencies used for the Green&#39;s functions.</span>
 <span class="sd">        n_tau : integer, optional</span>
-<span class="sd">               Number of imaginary time points used for the Green&#39;s functions.</span>
+<span class="sd">                Number of imaginary time points used for the Green&#39;s functions.</span>
+<span class="sd">        n_l : integer, optional</span>
+<span class="sd">                Number of legendre polynomials used for the Green&#39;s functions.</span>
+<span class="sd">        n_w : integer, optional</span>
+<span class="sd">                Number of real frequency points used for the Green&#39;s functions.</span>
+<span class="sd">        w_min : integer, optional</span>
+<span class="sd">                Lower limit of the range of real frequencies</span>
+<span class="sd">        w_max : integer, optional</span>
+<span class="sd">                Upper limit of the range of real frequencies</span>
+<span class="sd">        idelta : float, optional</span>
+<span class="sd">                Broadening of Green&#39;s function on real frequencies</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
+
+
         
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">,</span><span class="nb">dict</span><span class="p">):</span>
             <span class="nb">print</span> <span class="s2">&quot;WARNING: gf_struct should be a list of pairs [ (str,[int,...]), ...], not a dict&quot;</span>
@@ -172,24 +185,23 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">eal</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">ind</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">eal</span><span class="p">[</span><span class="n">block</span><span class="p">]</span><span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">ind</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">ind</span><span class="p">)))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">eal</span><span class="p">[</span><span class="n">block</span><span class="p">]</span><span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">ind</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">ind</span><span class="p">)))</span></div>
         
 <div class="viewcode-block" id="Solver.solve"><a class="viewcode-back" href="../../documentation.html#triqs_hubbardi.Solver.solve">[docs]</a>    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">params_kw</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Solve the impurity problem: calculate G(iw) and Sigma(iw)</span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        params_kw : dict {&#39;param&#39;:value} that is passed to the core solver.</span>
-<span class="sd">                     Two required :ref:`parameters &lt;solve_parameters&gt;` are</span>
+<span class="sd">                    Only required :ref:`parameter &lt;solve_parameters&gt;` is</span>
 <span class="sd">                        * `h_int` (:ref:`Operator object &lt;triqslibs:operators&gt;`): the local Hamiltonian of the impurity problem to be solved,</span>
-<span class="sd">                        * `n_cycles` (int): number of measurements to be made.</span>
 <span class="sd">                    Other parameters are </span>
 <span class="sd">                        * `calc_gtau` (bool): calculate G(tau)</span>
 <span class="sd">                        * `calc_gw` (bool): calculate G(w) and Sigma(w)</span>
 <span class="sd">                        * `calc_gl` (bool): calculate G(legendre)</span>
 <span class="sd">                        * `calc_dm` (bool): calculate density matrix</span>
 
-<span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         
@@ -276,9 +288,6 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../genindex.html" title="General Index"
              >index</a></li>
-        <li class="right" >
-          <a href="../../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
     <li><a href="../../index.html">Home</a> &raquo;</li>
 
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
