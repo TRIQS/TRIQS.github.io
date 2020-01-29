@@ -115,48 +115,37 @@
             
   <div class="section" id="an-example-the-anderson-impurity-model">
 <span id="aim"></span><h1>An example: the Anderson impurity model<a class="headerlink" href="#an-example-the-anderson-impurity-model" title="Permalink to this headline">¶</a></h1>
-<p>To illustrate how the NRG solver works in practice, we show the example of a
+<p>To illustrate how the NRG solver works in practice, we show the example of
 one-orbital Anderson impurity embedded in a flat (Wilson) conduction bath. The
 interacting part of the local Hamiltonian of this problem is simply:</p>
 <div class="math">
 \[ \begin{align}\begin{aligned}\mathcal{H}_\mathrm{int} = U n_\uparrow n_\downarrow,\\and the non-interacting Green's function is:\\.. math::\\  G^{-1}_{0,\sigma} (\omega) = \omega - \epsilon_f - V^2 \Delta_\sigma(\omega).\end{aligned}\end{align} \]</div>
-<p>In this example, there is a Coulomb interaction :math:U on the impurity level,
-which is at an energy :math:epsilon_f. The bath Green’s function is :math:Delta(
-omega), and it has a flat density of states over the interval
-:math:[-1,1].  Finally, :math:V is the hybridization amplitude between the
+<p>In this example, there is a Coulomb interaction <span class="math">\(U\)</span> on the impurity level,
+which is at an energy <span class="math">\(\epsilon_f\)</span>. The bath Green’s function is
+<span class="math">\(\Delta(\omega)\)</span>, and it has a flat density of states over the interval
+<span class="math">\([-1,1]\)</span>.  Finally, <span class="math">\(V\)</span> is the hybridization amplitude between the
 impurity and the bath. Let us solve this problem with the NRG solver. Here is
-the python :download:script &lt;aim.py&gt;:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pytriqs.gf</span> <span class="k">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">pytriqs.operators</span> <span class="k">import</span> <span class="o">*</span>
+the python <a class="reference download internal" href="../_downloads/aim.py" download=""><code class="xref download docutils literal"><span class="pre">script</span></code></a>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">nrgljubljana_interface</span> <span class="k">import</span> <span class="n">Solver</span><span class="p">,</span> <span class="n">Flat</span>
 <span class="kn">from</span> <span class="nn">pytriqs.archive</span> <span class="k">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">nrgljubljana_interface</span> <span class="k">import</span> <span class="n">Solver</span><span class="p">,</span> <span class="n">Flat</span>
 
 <span class="c1"># Parameters</span>
 <span class="n">D</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">U</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">1.0</span>
-<span class="n">e_f</span><span class="p">,</span> <span class="n">beta</span> <span class="o">=</span> <span class="o">-</span><span class="n">U</span><span class="o">/</span><span class="mf">2.0</span><span class="p">,</span> <span class="mi">10000</span>
-<span class="n">T</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">beta</span>
+<span class="n">e_f</span> <span class="o">=</span> <span class="o">-</span><span class="n">U</span><span class="o">/</span><span class="mf">2.0</span> <span class="c1"># particle-hole symmetric case</span>
+<span class="n">T</span> <span class="o">=</span> <span class="mf">1e-5</span>
 
 <span class="c1"># Set up the Solver</span>
 <span class="n">S</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="n">model</span> <span class="o">=</span> <span class="s2">&quot;SIAM&quot;</span><span class="p">,</span> <span class="n">symtype</span> <span class="o">=</span> <span class="s2">&quot;QS&quot;</span><span class="p">,</span> <span class="n">mesh_max</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span> <span class="n">mesh_min</span> <span class="o">=</span> <span class="mf">1e-5</span><span class="p">,</span> <span class="n">mesh_ratio</span> <span class="o">=</span> <span class="mf">1.01</span><span class="p">)</span>
 
 <span class="c1"># Solve Parameters</span>
-<span class="n">sp</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="n">sp</span><span class="p">[</span><span class="s2">&quot;T&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">T</span>
-<span class="n">sp</span><span class="p">[</span><span class="s2">&quot;Lambda&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2.0</span>
-<span class="n">sp</span><span class="p">[</span><span class="s2">&quot;Nz&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span>
-<span class="n">sp</span><span class="p">[</span><span class="s2">&quot;Tmin&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e-6</span>
-<span class="n">sp</span><span class="p">[</span><span class="s2">&quot;keep&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2000</span>
-<span class="n">sp</span><span class="p">[</span><span class="s2">&quot;keepenergy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">10.0</span>
+<span class="n">sp</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="s2">&quot;Lambda&quot;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span> <span class="s2">&quot;Nz&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;Tmin&quot;</span><span class="p">:</span> <span class="mf">1e-6</span><span class="p">,</span> <span class="s2">&quot;keep&quot;</span><span class="p">:</span> <span class="mi">2000</span><span class="p">,</span> <span class="s2">&quot;keepenergy&quot;</span><span class="p">:</span> <span class="mf">10.0</span> <span class="p">}</span>
 
 <span class="c1"># Model Parameters</span>
-<span class="n">mp</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="n">mp</span><span class="p">[</span><span class="s2">&quot;U1&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">U</span>
-<span class="n">mp</span><span class="p">[</span><span class="s2">&quot;eps1&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">e_f</span>
+<span class="n">mp</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;U1&quot;</span><span class="p">:</span> <span class="n">U</span><span class="p">,</span> <span class="s2">&quot;eps1&quot;</span><span class="p">:</span> <span class="n">e_f</span> <span class="p">}</span>
 <span class="n">sp</span><span class="p">[</span><span class="s2">&quot;model_parameters&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mp</span>
 
 <span class="c1"># Low-level NRG Parameters</span>
-<span class="n">np</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="n">np</span><span class="p">[</span><span class="s2">&quot;bandrescale&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="n">np</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;bandrescale&quot;</span><span class="p">:</span> <span class="mf">1.0</span> <span class="p">}</span>
 <span class="n">S</span><span class="o">.</span><span class="n">set_nrg_params</span><span class="p">(</span><span class="o">**</span><span class="n">np</span><span class="p">)</span>
 
 <span class="c1"># Initialize hybridization function</span>
@@ -174,6 +163,127 @@ the python :download:script &lt;aim.py&gt;:</p>
     <span class="n">arch</span><span class="p">[</span><span class="s2">&quot;expv&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">expv</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&lt;n&gt;=&quot;</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">expv</span><span class="p">[</span><span class="s2">&quot;n_d&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Running this script takes a few minutes and generates an
+HDF5 archie file called <code class="file docutils literal"><span class="pre">aim_solution.h5</span></code>. This file contains
+the impurity spectral function, Green’s function, auxiliary Green’s function,
+self-energy, and expectation values of local variables (
+<span class="math">\(\langle n \rangle\)</span> and :math:<a href="#id1"><span class="problematic" id="id2">`</span></a>langle n^2 rangle). Let us plot
+the spectral function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span>
+<span class="c1">#mpl.use(&#39;PDF&#39;)</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+
+<span class="kn">from</span> <span class="nn">pytriqs.gf</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">pytriqs.archive</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">nrgljubljana_interface</span> <span class="kn">import</span> <span class="n">MeshReFreqPts</span>
+
+<span class="k">def</span> <span class="nf">A_to_nparrays</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
+  <span class="n">lx</span> <span class="o">=</span> <span class="p">[]</span>
+  <span class="n">ly</span> <span class="o">=</span> <span class="p">[]</span>
+  <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">A</span><span class="o">.</span><span class="n">mesh</span><span class="p">:</span>
+    <span class="n">lx</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">w</span><span class="p">))</span>
+    <span class="n">ly</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">w</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+  <span class="n">lx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lx</span><span class="p">)</span>
+  <span class="n">ly</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ly</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">lx</span><span class="p">,</span> <span class="n">ly</span>
+
+<span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="s1">&#39;aim_solution.h5&#39;</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+    <span class="c1"># Expectation values</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;&lt;n&gt;=&quot;</span><span class="p">,</span><span class="n">ar</span><span class="p">[</span><span class="s1">&#39;expv&#39;</span><span class="p">][</span><span class="s1">&#39;n_d&#39;</span><span class="p">])</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;&lt;n^2&gt;=&quot;</span><span class="p">,</span><span class="n">ar</span><span class="p">[</span><span class="s1">&#39;expv&#39;</span><span class="p">][</span><span class="s1">&#39;n_d^2&#39;</span><span class="p">])</span>
+
+    <span class="c1"># Spectral function</span>
+    <span class="n">A_w</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;A_w&#39;</span><span class="p">][</span><span class="s1">&#39;imp&#39;</span><span class="p">]</span>
+    <span class="n">lx</span><span class="p">,</span> <span class="n">ly</span> <span class="o">=</span> <span class="n">A_to_nparrays</span><span class="p">(</span><span class="n">A_w</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">lx</span><span class="p">,</span> <span class="n">ly</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>(<a class="reference external" href="../guide/aim_plot.py">Source code</a>, <a class="reference external" href="../guide/aim_plot_00_00.png">png</a>, <a class="reference external" href="../guide/aim_plot_00_00.hires.png">hires.png</a>, <a class="reference external" href="../guide/aim_plot_00_00.pdf">pdf</a>)</p>
+<div class="figure">
+<a class="reference internal image-reference" href="../_images/aim_plot_00_00.png"><img alt="../_images/aim_plot_00_00.png" src="../_images/aim_plot_00_00.png" style="width: 358.4px; height: 268.8px;" /></a>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1">#    plt.savefig(&quot;A_w.pdf&quot;)</span>
+</pre></div>
+</div>
+<p>()</p>
+<p>As expected, the result shows a particle-hole symmetric impurity
+spectral function.</p>
+<p>Let us now go through the script in some more detail:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">nrgljubljana_interface</span> <span class="k">import</span> <span class="n">Solver</span><span class="p">,</span> <span class="n">Flat</span>
+<span class="kn">from</span> <span class="nn">pytriqs.archive</span> <span class="k">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+<p>These lines import the classes to run the NRG solver and to store the results
+in a HDF5 archive file.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">D</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">U</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">1.0</span>
+<span class="n">e_f</span> <span class="o">=</span> <span class="o">-</span><span class="n">U</span><span class="o">/</span><span class="mf">2.0</span> <span class="c1"># particle-hole symmetric case</span>
+<span class="n">T</span> <span class="o">=</span> <span class="mf">1e-5</span>
+</pre></div>
+</div>
+<p>These lines define the impurity parameters, the (half)bandwidth <span class="math">\(D=1\)</span>,
+and the physical temperature <span class="math">\(T\)</span>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">S</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="n">model</span> <span class="o">=</span> <span class="s2">&quot;SIAM&quot;</span><span class="p">,</span> <span class="n">symtype</span> <span class="o">=</span> <span class="s2">&quot;QS&quot;</span><span class="p">,</span> <span class="n">mesh_max</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span> <span class="n">mesh_min</span> <span class="o">=</span> <span class="mf">1e-5</span><span class="p">,</span> <span class="n">mesh_ratio</span> <span class="o">=</span> <span class="mf">1.01</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here we construct the Solver object. The most important parameters here
+are the model name and its symmetry type, as well as the mesh parameters which
+define the logarithmic discretization mesh on which all quantities (input and
+output) are defined. The models are described in template files. The program
+will automatically determine the correct block structure of hybridisation
+and Green’s functions from the templates. This ensures that all quantities
+with Solver are correctly initialized, and in particular that the block structure
+of all Green’s function objects in consistent.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sp</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="s2">&quot;Lambda&quot;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span> <span class="s2">&quot;Nz&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;Tmin&quot;</span><span class="p">:</span> <span class="mf">1e-6</span><span class="p">,</span> <span class="s2">&quot;keep&quot;</span><span class="p">:</span> <span class="mi">2000</span><span class="p">,</span> <span class="s2">&quot;keepenergy&quot;</span><span class="p">:</span> <span class="mf">10.0</span> <span class="p">}</span>
+</pre></div>
+</div>
+<p>This line defines, in addition to the physical temperature,
+the key solve parameters which affect the quality of the results: the
+discretization parameter <span class="math">\(\Lambda\)</span>, the number of the interleaved
+discretization meshes <span class="math">\(N_z\)</span>, the scale <code class="docutils literal"><span class="pre">Tmin</span></code> which defines the length
+of the Wilson chain (and which should be lower than the lowest physical temperature
+scale in the problem, in this case lower than the Kondo temperature), and
+the trucation settings which are determined by two parameters, the maximum number
+of states kept and the truncation energy cutoff. There are many other parameters,
+but the default values are suitable for our purposes.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mp</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;U1&quot;</span><span class="p">:</span> <span class="n">U</span><span class="p">,</span> <span class="s2">&quot;eps1&quot;</span><span class="p">:</span> <span class="n">e_f</span> <span class="p">}</span>
+<span class="n">sp</span><span class="p">[</span><span class="s2">&quot;model_parameters&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mp</span>
+</pre></div>
+</div>
+<p>Finally, we fix the model parameters. These are contained in a separate Python
+dictionary.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">np</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;bandrescale&quot;</span><span class="p">:</span> <span class="mf">1.0</span> <span class="p">}</span>
+<span class="n">S</span><span class="o">.</span><span class="n">set_nrg_params</span><span class="p">(</span><span class="o">**</span><span class="n">np</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The low-level NRG parameters are contained in yet another Python dictionary.
+Here we set the NRG energy window to the interval <span class="math">\([-1:1]\)</span>, since
+the default is that the energy window is the same as the extent of the
+logarithmic mesh, which in this example is <span class="math">\([-2:2]\)</span>, i.e., larger
+than the support of the hybridisation function which we set in this line:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">S</span><span class="o">.</span><span class="n">Delta_w</span><span class="p">[</span><span class="s1">&#39;imp&#39;</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">V</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Flat</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We can now call the solver:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">S</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="o">**</span><span class="n">sp</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We store the results in a HDF5 archive:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="s2">&quot;aim_solution.h5&quot;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">arch</span><span class="p">:</span>
+    <span class="n">arch</span><span class="p">[</span><span class="s2">&quot;A_w&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">A_w</span>
+    <span class="n">arch</span><span class="p">[</span><span class="s2">&quot;G_w&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G_w</span>
+    <span class="n">arch</span><span class="p">[</span><span class="s2">&quot;F_w&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">F_w</span>
+    <span class="n">arch</span><span class="p">[</span><span class="s2">&quot;Sigma_w&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Sigma_w</span>
+    <span class="n">arch</span><span class="p">[</span><span class="s2">&quot;expv&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">expv</span>
+</pre></div>
+</div>
+<p>The expectation values can be accessed through the Python dictionary
+<code class="docutils literal"><span class="pre">S.expv</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&lt;n&gt;=&quot;</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">expv</span><span class="p">[</span><span class="s2">&quot;n_d&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
