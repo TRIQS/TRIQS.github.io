@@ -122,8 +122,8 @@ The interacting part of the local Hamiltonian of this problem is:</p>
 <p>and the non-interacting Green’s function is:</p>
 <div class="math">
 \[G^{-1}_{0,\sigma} (\omega) = \omega - \epsilon_f - V^2 g(\omega).\]</div>
-<p>The new elements compared to the Anderson impurity model is the presence of
-a phonon mode with frequency <span class="math">\(omega\)</span>, which couples through e-ph
+<p>The new element (compared to the Anderson impurity model) is the presence of
+a phonon mode with frequency <span class="math">\(\omega\)</span>, which couples through e-ph
 coupling strength <span class="math">\(g\)</span>. Finally, <span class="math">\(n_1\)</span> is a shift, typically either
 0, 1 or <span class="math">\(\langle n \rangle\)</span>.</p>
 <p>Here is the python <a class="reference download internal" href="../_downloads/holstein.py" download=""><code class="xref download docutils literal"><span class="pre">script</span></code></a>:</p>
@@ -208,24 +208,29 @@ Let us plot the spectral function:</p>
 resonance and side peaks at multiples of the phonon frequency <span class="math">\(\omega\)</span>;</p>
 <p>Let us now go through the script in some more detail, focusing on the differences with respect to the
 standard Anderson impurity model.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">D</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">U</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">1.0</span>
-<span class="n">e_f</span> <span class="o">=</span> <span class="o">-</span><span class="n">U</span><span class="o">/</span><span class="mf">2.0</span> <span class="c1"># particle-hole symmetric case</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">D</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">U</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mi">0</span>    <span class="c1"># Zero e-e interaction</span>
+<span class="n">e_f</span> <span class="o">=</span> <span class="o">-</span><span class="n">U</span><span class="o">/</span><span class="mf">2.0</span>             <span class="c1"># particle-hole symmetric case</span>
 <span class="n">T</span> <span class="o">=</span> <span class="mf">1e-5</span>
-
-<span class="c1"># Set up the Solver</span>
-<span class="n">S</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="n">model</span> <span class="o">=</span> <span class="s2">&quot;SIAM&quot;</span><span class="p">,</span> <span class="n">symtype</span> <span class="o">=</span> <span class="s2">&quot;QS&quot;</span><span class="p">,</span> <span class="n">mesh_max</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span> <span class="n">mesh_min</span> <span class="o">=</span> <span class="mf">1e-5</span><span class="p">,</span> <span class="n">mesh_ratio</span> <span class="o">=</span> <span class="mf">1.01</span><span class="p">)</span>
+<span class="n">omega</span> <span class="o">=</span> <span class="mf">0.2</span>              <span class="c1"># phonon frequency</span>
+<span class="n">g1</span> <span class="o">=</span> <span class="mf">0.2</span>                 <span class="c1"># electron-phonon coupling strength</span>
+<span class="n">n1</span> <span class="o">=</span> <span class="mi">1</span>                   <span class="c1"># n1 in g1*(a+a^dag)*(n-n1)</span>
 </pre></div>
 </div>
 <p>Here we set the parameters. Note that we have set the Hubbard parameter to zero, thus this is
 a pure Holstein impurity problem, with the correlation effects stemming solely from the electron-phonon
 coupling. We set <span class="math">\(n_1\)</span> to 1, to ensure particle-hole symmetry.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Solve Parameters</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Set up the Solver</span>
 </pre></div>
 </div>
 <p>Here we construct the Solver object. Note the model name which contains the phonon number cutoff (10).
 In NRGLjubljana_interface, the model names are actually paths to template files (either those
 bundled with the interface in the directory <code class="docutils literal"><span class="pre">templates/</span></code>, or custom templates created by the user). In the case of the Anderson-Holstein
 model, the template files need to be generated for a specific value of the phonon cutoff.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&lt;n&gt;=&quot;</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">expv</span><span class="p">[</span><span class="s2">&quot;n_d&quot;</span><span class="p">])</span>           <span class="c1"># occupancy</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&lt;nph&gt;=&quot;</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">expv</span><span class="p">[</span><span class="s2">&quot;nph&quot;</span><span class="p">])</span>         <span class="c1"># average phonon number</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&lt;displ^2&gt;=&quot;</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">expv</span><span class="p">[</span><span class="s2">&quot;displ^2&quot;</span><span class="p">])</span> <span class="c1"># oscillator displacement squared</span>
+</pre></div>
+</div>
 <p>The Anderson-Holstein model defines several additional expectation values pertaining to the
 phonon degree of freedom.</p>
 </div>
