@@ -143,7 +143,7 @@
 <span class="sd">             Number of legendre polynomials to use in accumulations of the Green&#39;s functions.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">,</span><span class="nb">dict</span><span class="p">):</span>
-            <span class="nb">print</span> <span class="s2">&quot;WARNING: gf_struct should be a list of pairs [ (str,[int,...]), ...], not a dict&quot;</span>
+            <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span> <span class="nb">print</span> <span class="s2">&quot;WARNING: gf_struct should be a list of pairs [ (str,[int,...]), ...], not a dict&quot;</span>
             <span class="n">gf_struct</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">gf_struct</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span> <span class="p">]</span>
 
         <span class="c1"># Initialise the core solver</span>
@@ -159,10 +159,20 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">n_tau</span> <span class="o">=</span> <span class="n">n_tau</span></div>
 
 <div class="viewcode-block" id="Solver.solve"><a class="viewcode-back" href="../../reference/solver.html#triqs_cthyb.Solver.solve">[docs]</a>    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">params_kw</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Solve the impurity problem.</span>
-<span class="sd">        If ``measure_G_tau`` (default = ``True``), ``G_iw`` and ``Sigma_iw`` will be calculated and their tails fitted.</span>
-<span class="sd">        In addition to the solver parameters, parameters to control the tail fitting can be provided.</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Solve the impurity problem for a given G0_iw. If ``measure_G_tau``</span>
+<span class="sd">        (default = ``True``), ``G_iw`` and ``Sigma_iw`` will be calculated and</span>
+<span class="sd">        their tails fitted. In addition to the solver parameters, parameters to</span>
+<span class="sd">        control the tail fitting can be provided.</span>
+
+<span class="sd">        Moreover, the fundamental property :math:`G_{ij}(i \omega_n) =</span>
+<span class="sd">        G_{ji}^*(- i \omega_n)` of the input G0_iw is enforced within C++, and</span>
+<span class="sd">        a warning is printed if the property was not satisfied. Additionally, if</span>
+<span class="sd">        ``measure_G_tau`` is set to ``True``, the property :math:`G_{ij}(\tau)=</span>
+<span class="sd">        G_{ji}^*(\tau)` will be also ensured for the measured :math:`G(\tau)`.</span>
+<span class="sd">	The difference between the original :math:`G(\tau)` and the hermitized</span>
+<span class="sd">	:math:`G(\tau)` is stored in the object ``asymmetry_G_tau`` of the solver instance.</span>
+
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -224,15 +234,15 @@
         <span class="c1"># Post-processing:</span>
         <span class="c1"># (only supported for G_tau, to permit compatibility with dft_tools)</span>
         <span class="k">if</span> <span class="n">perform_post_proc</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">last_solve_parameters</span><span class="p">[</span><span class="s2">&quot;measure_G_tau&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">True</span><span class="p">):</span>
+
             <span class="c1"># Fourier transform G_tau to obtain G_iw</span>
-            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">G_tau</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">bl</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">G_tau</span><span class="p">:</span>
                 <span class="n">bl_size</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">target_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="n">known_moments</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="n">bl_size</span><span class="p">,</span> <span class="n">bl_size</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">bl_size</span><span class="p">):</span>
-                    <span class="n">known_moments</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">known_moments</span> <span class="o">=</span> <span class="n">make_zero_tail</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+                <span class="n">known_moments</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">bl_size</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">G_iw</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span><span class="o">.</span><span class="n">set_from_fourier</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">known_moments</span><span class="p">)</span>
 
-                <span class="bp">self</span><span class="o">.</span><span class="n">G_iw</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">set_from_fourier</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">known_moments</span><span class="p">)</span>
-
+            <span class="k">assert</span> <span class="n">is_gf_hermitian</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G_iw</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">G_iw_raw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">G_iw</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
             <span class="c1"># Solve Dyson&#39;s eq to obtain Sigma_iw and G_iw and fit the tail</span>
