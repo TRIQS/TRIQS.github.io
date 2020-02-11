@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Example: DMFT for Hubbard and Hubbard-like models &#8212; nrgljubljana_interface  documentation</title>
+    <title>DMFT for Hubbard and Hubbard-like models &#8212; nrgljubljana_interface  documentation</title>
     <link rel="stylesheet" href="../_static/triqs.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -26,7 +26,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="SIAM (QS)" href="../templates/SIAM_QS.html" />
-    <link rel="prev" title="Example: the Anderson-Holstein impurity model" href="holstein.html" />
+    <link rel="prev" title="Anderson-Holstein impurity model" href="holstein.html" />
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
     <script src="../_static/cufon-yui.js" type="text/javascript"></script>
     <script src="../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
@@ -73,7 +73,7 @@
           <a href="../templates/SIAM_QS.html" title="SIAM (QS)"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="holstein.html" title="Example: the Anderson-Holstein impurity model"
+          <a href="holstein.html" title="Anderson-Holstein impurity model"
              accesskey="P">previous</a> |</li>
     <li><a href="../index.html">Home</a> &raquo;</li>
 
@@ -84,7 +84,7 @@
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="holstein.html"
-                        title="previous chapter">Example: the Anderson-Holstein impurity model</a></p>
+                        title="previous chapter">Anderson-Holstein impurity model</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="../templates/SIAM_QS.html"
                         title="next chapter">SIAM (QS)</a></p>
@@ -113,10 +113,10 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="example-dmft-for-hubbard-and-hubbard-like-models">
-<span id="hubbard"></span><h1>Example: DMFT for Hubbard and Hubbard-like models<a class="headerlink" href="#example-dmft-for-hubbard-and-hubbard-like-models" title="Permalink to this headline">¶</a></h1>
-<p>We now present a Python script for performing DMFT calculation with the NRG
-as the impurity solver. The script is fairly complete and suitable for production runs.
+  <div class="section" id="dmft-for-hubbard-and-hubbard-like-models">
+<span id="hubbard"></span><h1>DMFT for Hubbard and Hubbard-like models<a class="headerlink" href="#dmft-for-hubbard-and-hubbard-like-models" title="Permalink to this headline">¶</a></h1>
+<p>We now present a Python script for performing DMFT calculations with the NRG
+as the impurity solver. The script is fairly complete and robust, and as such it is suitable for production runs.
 It supports a variety of models with different symmetry types (including cases
 with block structure and with matrix-valued Green’s functions), controls
 the chemical potential to achieve the selected band occupancy, performs linear or Broyden mixing
@@ -411,7 +411,7 @@ Here is the <a class="reference download internal" href="../_downloads/hubbard.p
         <span class="n">r</span> <span class="o">=</span> <span class="n">Delta</span><span class="p">[</span><span class="n">bl</span><span class="p">][</span><span class="n">w</span><span class="p">][</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">real</span>
         <span class="n">i</span> <span class="o">=</span> <span class="n">Delta</span><span class="p">[</span><span class="n">bl</span><span class="p">][</span><span class="n">w</span><span class="p">][</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">imag</span>
         <span class="n">Delta_fixed</span><span class="p">[</span><span class="n">bl</span><span class="p">][</span><span class="n">w</span><span class="p">][</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="p">(</span><span class="n">i</span> <span class="k">if</span> <span class="n">i</span><span class="o">&lt;-</span><span class="n">Delta_min</span> <span class="k">else</span> <span class="o">-</span><span class="n">Delta_min</span><span class="p">)</span>
-  <span class="c1"># Possible improvement: re-adjust the real part using Kramers-Kronig so that causality is maintained</span>
+  <span class="c1"># Possible improvement: re-adjust the real part so that the Kramers-Kronig relation is maintained</span>
   <span class="k">return</span> <span class="n">Delta_fixed</span>
 
 <span class="c1"># Perform a DMFT step. Input is the hybridization function for solving the effective impurity model,</span>
@@ -572,19 +572,24 @@ and impurity Green’s functions, difference between two consecutive local latti
 the difference between target and current band occupancy). This is followed by the occupancy calculed from
 the spectral function and by the expectation values of a range of local operators (the set depends on the
 model considered and on the symmetry type).</p>
-<p>If convergence is reached, the final results are stored in an HDF5 archive file called <code class="file docutils literal"><span class="pre">solution.h5</span></code>.
+<p>Note: NRG impurity solver produces big temporary files during the calculation. By default, these are
+stored in the working directory that is created in the current directory. To override this behavior,
+set the environment variable NRG_WORKDIR. A suitable choice is a local scratch hard drive or SSD,
+or a global scratch mount on a high-performance filesystem.</p>
+<p>When convergence is reached, the final results are stored in an HDF5 archive file called <code class="file docutils literal"><span class="pre">solution.h5</span></code>.
 This file contains all quantities of interest. Let us plot the spectral function:</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">math</span>
 
 <span class="kn">from</span> <span class="nn">pytriqs.gf</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">pytriqs.archive</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">nrgljubljana_interface</span> <span class="kn">import</span> <span class="n">MeshReFreqPts</span>
 
-<span class="k">def</span> <span class="nf">A_to_nparrays</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">GF_to_nparrays</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
     <span class="n">lx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
-    <span class="n">ly</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+    <span class="n">ly</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">A</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">lx</span><span class="p">,</span> <span class="n">ly</span>
 
 <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="s1">&#39;solution.h5&#39;</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
@@ -592,9 +597,9 @@ This file contains all quantities of interest. Let us plot the spectral function
     <span class="k">print</span><span class="p">(</span><span class="s2">&quot;&lt;n&gt;=&quot;</span><span class="p">,</span><span class="n">ar</span><span class="p">[</span><span class="s1">&#39;expv&#39;</span><span class="p">][</span><span class="s1">&#39;n_d&#39;</span><span class="p">])</span>
     <span class="k">print</span><span class="p">(</span><span class="s2">&quot;&lt;n^2&gt;=&quot;</span><span class="p">,</span><span class="n">ar</span><span class="p">[</span><span class="s1">&#39;expv&#39;</span><span class="p">][</span><span class="s1">&#39;n_d^2&#39;</span><span class="p">])</span>
 
-    <span class="c1"># Spectral function (local lattice GF)</span>
+    <span class="c1"># Spectral function (of local lattice GF)</span>
     <span class="n">A_w</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;Gloc&#39;</span><span class="p">][</span><span class="s1">&#39;imp&#39;</span><span class="p">]</span>
-    <span class="n">lx</span><span class="p">,</span> <span class="n">ly</span> <span class="o">=</span> <span class="n">A_to_nparrays</span><span class="p">(</span><span class="n">A_w</span><span class="p">)</span>
+    <span class="n">lx</span><span class="p">,</span> <span class="n">ly</span> <span class="o">=</span> <span class="n">GF_to_nparrays</span><span class="p">(</span><span class="n">A_w</span><span class="p">)</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">lx</span><span class="p">,</span> <span class="n">ly</span><span class="p">)</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
@@ -618,7 +623,7 @@ This file contains all quantities of interest. Let us plot the spectral function
 <p>We make use of scipy interpolation and integration routines to obtain highly accurate results based on
 the real-frequency spectra, and we make use of the Broyden solver from <code class="docutils literal"><span class="pre">scipy.optimize</span></code>.</p>
 <p>The model name is a full path to the model definition in the template library, except the symmetry part
-(e.g. “SIAM”, “Holstein/Nph=10”).</p>
+(e.g. “SIAM”, “Holstein/Nph=10”, etc.).</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="s2">&quot;SIAM&quot;</span>            <span class="c1"># impurity model (from the template library)</span>
 </pre></div>
 </div>
@@ -661,8 +666,8 @@ DMFT iteration corresponds to linear mixing with <span class="math">\(\alpha=1\)
 <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.5</span>               <span class="c1"># mixing parameter from both linear and Broyden mixing</span>
 </pre></div>
 </div>
-<p>For adjusting the chemical potential, it is useful to go through several DMFT self-consistency cycles to obtain
-an improved estimate. In practice order 10 cycles are quite sufficient in all cases.</p>
+<p>For adjusting the chemical potential, it is useful to go through several DMFT self-consistency cycles (using the
+same self-energy obtained in the last NRG run) to obtain an improved estimate. In practice order 10 cycles are quite sufficient in all cases.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">max_mu_adjust</span> <span class="o">=</span> <span class="mi">10</span>        <span class="c1"># number of cycles for adjusting the value of the chemical potential</span>
 </pre></div>
 </div>
@@ -719,12 +724,15 @@ the calculation can still be monitored.)</p>
 <span class="n">sp</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="s2">&quot;Lambda&quot;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span> <span class="s2">&quot;Nz&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;Tmin&quot;</span><span class="p">:</span> <span class="mf">1e-5</span><span class="p">,</span> <span class="s2">&quot;keep&quot;</span><span class="p">:</span> <span class="mi">10000</span><span class="p">,</span> <span class="s2">&quot;keepenergy&quot;</span><span class="p">:</span> <span class="mf">10.0</span> <span class="p">}</span>
 </pre></div>
 </div>
-<p>The default value of <span class="math">\(\Lambda=2\)</span> is an excellent choice for most cases, as long as the calculation remain
-feasible. We average over <code class="docutils literal"><span class="pre">Nz=4</span></code> interleaves discretization grids. This is suitable if the goal is
-reasonably good spectral resolution, but it needs to be increased for high-resolution calculations.
+<p>The default value of the discretization parameter <span class="math">\(\Lambda=2\)</span> is an excellent choice for most cases, as long as the calculation remains
+feasible in reasonable time with the given computing resources; if not, one should increase <span class="math">\(\Lambda\)</span>.
+We average over <code class="docutils literal"><span class="pre">Nz=4</span></code> interleaves discretization grids; this is a good number for <span class="math">\(\Lambda=2\)</span>, but should be
+increased for coarses discretization to reduce the artifacts. Furthermore, it needs to be increased for high-resolution calculations
+where the broadening parameters are lower.
 The parameter <code class="docutils literal"><span class="pre">Tmin</span></code> controls the length of the Wilson chain and it has to be smaller than the physical temperature
 <span class="math">\(T\)</span>. The truncation at rescaled energy 10 is sufficient to achieve good convergence of the spectral functions,
-while beyond 12 there are hardly any improvements.</p>
+while beyond 12 there are hardly any improvements. <code class="docutils literal"><span class="pre">keep</span></code> (the maximum number of multiplets kept) should
+be some large number and it is basically constrained by the available memory.</p>
 <p>Model parameters are contained as a separate Python dictionary. We set it here:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mp</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;U1&quot;</span><span class="p">:</span> <span class="n">U</span><span class="p">,</span> <span class="s2">&quot;B1&quot;</span><span class="p">:</span> <span class="n">B</span><span class="p">,</span> <span class="s2">&quot;omega&quot;</span><span class="p">:</span> <span class="n">omega</span><span class="p">,</span> <span class="s2">&quot;g1&quot;</span><span class="p">:</span> <span class="n">g1</span><span class="p">,</span> <span class="s2">&quot;n1&quot;</span><span class="p">:</span> <span class="n">n1</span> <span class="p">}</span>
 <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">mp</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -732,10 +740,11 @@ while beyond 12 there are hardly any improvements.</p>
 <span class="n">sp</span><span class="p">[</span><span class="s2">&quot;model_parameters&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mp</span>
 </pre></div>
 </div>
-<p>We remove parameter which are not relevant (those set to <code class="docutils literal"><span class="pre">None</span></code>). Furthermore, the interface checks if
-all required parameters for a given template are in fact defined.</p>
-<p>We provide a function for updating the chemical potential. This sets the global variable <code class="docutils literal"><span class="pre">mu</span></code>, as well
-as sets the impurity level to <span class="math">\(\epsilon_d=-\mu\)</span>.</p>
+<p>We remove parameters that are not relevant (those set to <code class="docutils literal"><span class="pre">None</span></code>). Furthermore, the interface checks if
+all required parameters for a given template are in fact defined, to prevent user errors that are
+difficult to detect (e.g. typos).</p>
+<p>We provide a function for updating the chemical potential. It sets the global variable <code class="docutils literal"><span class="pre">mu</span></code>, as well
+as updates the impurity level to <span class="math">\(\epsilon_d=-\mu\)</span>.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">set_mu</span><span class="p">(</span><span class="n">new_mu</span><span class="p">):</span>
     <span class="k">global</span> <span class="n">mu</span>
     <span class="n">mu</span> <span class="o">=</span> <span class="n">new_mu</span>
@@ -743,7 +752,7 @@ as sets the impurity level to <span class="math">\(\epsilon_d=-\mu\)</span>.</p>
     <span class="n">sp</span><span class="p">[</span><span class="s2">&quot;model_parameters&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mp</span>
 </pre></div>
 </div>
-<p>If some details of the NRG calculation need to be tweak, this can be achieve by setting the appropriate
+<p>If some details of the NRG calculation need to be tweaked, this can be achieve by setting the appropriate
 parameters in <code class="docutils literal"><span class="pre">nrg_params</span></code>.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">nrgp</span> <span class="o">=</span> <span class="p">{}</span>
 <span class="c1">#nrgp[&quot;bandrescale&quot;] = 5.0</span>
@@ -768,14 +777,15 @@ generic case is handled by reading the DOS from a file and doing the Hilbert tra
 </pre></div>
 </div>
 <p>We wrap this in another function <code class="docutils literal"><span class="pre">ht</span></code> which ensures that in cases of causality violation (imaginary
-part of the self-energy being positive) things do no go terribly wrong. Causality violations in NRG
+part of the self-energy being positive) things do no go terribly wrong. Tiny causality violations in NRG
 commonly occur at very low temperatures close to the Fermi level, where <span class="math">\(\mathrm{Im}\Sigma\)</span>
-overshoots zero.</p>
+overshoots zero. This problem is well understood and, while annoying, it is usually not an issue, unless
+one is explicitly interested in the low-temperature asymptotics.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">EPS</span> <span class="o">=</span> <span class="mf">1e-20</span> <span class="c1"># Cut-off parameter for fixing causality violation</span>
 <span class="n">ht</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">ht0</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">real</span><span class="o">+</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">imag</span> <span class="k">if</span> <span class="n">z</span><span class="o">.</span><span class="n">imag</span><span class="o">&gt;</span><span class="mf">0.0</span> <span class="k">else</span> <span class="n">EPS</span><span class="p">))</span> <span class="c1"># Fix problems due to causality violation</span>
 </pre></div>
 </div>
-<p>In addition, another issue in NRG calculation is that of artifacts arising from regions of very low DOS.
+<p>In addition, another potential problem in NRG calculation is the artifacts arising from regions of very low DOS.
 We alleviate this problem by providing a minimal cutoff value <code class="docutils literal"><span class="pre">Delta_min</span></code> for the hybridisation function:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">fix_hyb_function</span><span class="p">(</span><span class="n">Delta</span><span class="p">,</span> <span class="n">Delta_min</span><span class="p">):</span>
   <span class="n">Delta_fixed</span> <span class="o">=</span> <span class="n">Delta</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -785,7 +795,7 @@ We alleviate this problem by providing a minimal cutoff value <code class="docut
         <span class="n">r</span> <span class="o">=</span> <span class="n">Delta</span><span class="p">[</span><span class="n">bl</span><span class="p">][</span><span class="n">w</span><span class="p">][</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">real</span>
         <span class="n">i</span> <span class="o">=</span> <span class="n">Delta</span><span class="p">[</span><span class="n">bl</span><span class="p">][</span><span class="n">w</span><span class="p">][</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">imag</span>
         <span class="n">Delta_fixed</span><span class="p">[</span><span class="n">bl</span><span class="p">][</span><span class="n">w</span><span class="p">][</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="p">(</span><span class="n">i</span> <span class="k">if</span> <span class="n">i</span><span class="o">&lt;-</span><span class="n">Delta_min</span> <span class="k">else</span> <span class="o">-</span><span class="n">Delta_min</span><span class="p">)</span>
-  <span class="c1"># Possible improvement: re-adjust the real part using Kramers-Kronig so that causality is maintained</span>
+  <span class="c1"># Possible improvement: re-adjust the real part so that the Kramers-Kronig relation is maintained</span>
   <span class="k">return</span> <span class="n">Delta_fixed</span>
 </pre></div>
 </div>
@@ -811,7 +821,7 @@ frequencies outside the mesh range, the spectral function is assummed to be stri
   <span class="k">return</span> <span class="n">interpolate</span><span class="o">.</span><span class="n">interp1d</span><span class="p">(</span><span class="n">lx</span><span class="p">,</span> <span class="n">ly</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;cubic&#39;</span><span class="p">,</span> <span class="n">bounds_error</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>This interpolation object is used to accurately compute the occupancy given hybridisation, self-energy and
+<p>This interpolation object is then used e.g. to compute the occupancy given hybridisation, self-energy and
 chemical potential:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">calc_occupancy</span><span class="p">(</span><span class="n">Delta</span><span class="p">,</span> <span class="n">Sigma</span><span class="p">,</span> <span class="n">mu</span><span class="p">):</span>
   <span class="n">Gtrial</span> <span class="o">=</span> <span class="n">calc_G</span><span class="p">(</span><span class="n">Delta</span><span class="p">,</span> <span class="n">Sigma</span><span class="p">,</span> <span class="n">mu</span><span class="p">)</span>
@@ -824,7 +834,7 @@ chemical potential:</p>
 </div>
 <p>And this, in turn, is used for occupancy control. The following function determines the optimal value of the
 chemical potential for given hybridisation and self-energy. It makes use of <code class="docutils literal"><span class="pre">root_scalar</span></code>, which implements
-the secand method with initial values shifted by 0.1. This seems to be robust and works quite well in practice.</p>
+the secant method with initial values shifted by 0.1. This seems to be robust and works quite well in practice.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">update_mu</span><span class="p">(</span><span class="n">Delta</span><span class="p">,</span> <span class="n">Sigma</span><span class="p">):</span>
   <span class="n">sol</span> <span class="o">=</span> <span class="n">optimize</span><span class="o">.</span><span class="n">root_scalar</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span> <span class="p">:</span> <span class="n">calc_occupancy</span><span class="p">(</span><span class="n">Delta</span><span class="p">,</span> <span class="n">Sigma</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span><span class="o">-</span><span class="n">occupancy_goal</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">x1</span><span class="o">=</span><span class="n">mu</span><span class="o">-</span><span class="mf">0.1</span><span class="p">)</span>
   <span class="n">set_mu</span><span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">root</span><span class="p">)</span>
@@ -882,7 +892,7 @@ mesh window) of the difference squared. We ignore possible warnings about loss o
 </pre></div>
 </div>
 <p>We now define some functions for saving Green’s function object to tabulated ASCII files. The filename is just
-the suffix. To this we append the block name and the suffix <code class="docutils literal"><span class="pre">dat</span></code>.</p>
+the prefix. To this we append the block name and the suffix <code class="docutils literal"><span class="pre">dat</span></code>.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Save a Green&#39;s function to a tabulated ASCII file</span>
 <span class="k">def</span> <span class="nf">save_Gf</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">gf</span><span class="p">):</span>
   <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span>
@@ -908,8 +918,8 @@ the suffix. To this we append the block name and the suffix <code class="docutil
     <span class="n">save_A</span><span class="p">(</span><span class="n">fn</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">bl</span> <span class="o">+</span> <span class="s2">&quot;.dat&quot;</span><span class="p">,</span> <span class="n">bgf</span><span class="p">[</span><span class="n">bl</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>In addition, the full set of results is stores as a HDF5 file. We store the relevant objects from the solver
-object, as well as some additional quantities (self-energy improved Green’s function, local lattice Green’s function,
+<p>In addition, the full set of results is stores as an HDF5 file. We store the relevant items from the solver
+object, as well as some additional quantities (self-energy-improved impurity Green’s function, local lattice Green’s function,
 chemical potential).</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">store_result</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">S</span><span class="p">):</span>
   <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">arch</span><span class="p">:</span>
@@ -1046,10 +1056,10 @@ apply the self-consistency equation:</p>
 </pre></div>
 </div>
 <p>The second one is based on Broyden mixing. The idea is that the DMFT iteration can be thought of as a
-procedure for finding the fixed point of the mutli-dimensional function <span class="math">\(F(\Delta) = \Delta_\mathrm{out}  - \Delta_\mathrm{in}\)</span>,
+procedure for finding the fixed point of the mutli-dimensional function <span class="math">\(F(\Delta_\mathrm{in}) = \Delta_\mathrm{out}[\Delta_\mathrm{in}]  - \Delta_\mathrm{in}\)</span>,
 where <span class="math">\(\Delta_\mathrm{in}\)</span> is the input while <span class="math">\(\Delta_\mathrm{out}\)</span> the output of one DMFT step.
-For ths prupose we make use of optimize.broyden1 from scipy, but in order to do so, we
-need to wrap/unwrap the Green’s function objects to/from numpy arrays, which adds a degree of complexity.</p>
+For ths purpose we make use of <code class="docutils literal"><span class="pre">optimize.broyden1</span></code> from scipy, but in order to do so, we
+need to wrap/unwrap the Green’s function objects to/from numpy arrays, which adds a degree of complexity:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Convert GF object to a linear nparray</span>
 <span class="k">def</span> <span class="nf">gf_to_nparray</span><span class="p">(</span><span class="n">gf</span><span class="p">):</span>
   <span class="k">return</span> <span class="n">gf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
@@ -1095,6 +1105,7 @@ need to wrap/unwrap the Green’s function objects to/from numpy arrays, which a
 <span class="n">Gloc_prev</span> <span class="o">=</span> <span class="n">Gloc</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>                <span class="c1"># Store copy for checking convergence</span>
 </pre></div>
 </div>
+<p>And the solver is started here:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
   <span class="n">solve</span><span class="p">(</span><span class="n">Delta</span><span class="p">)</span>
 
@@ -1109,6 +1120,8 @@ need to wrap/unwrap the Green’s function objects to/from numpy arrays, which a
   <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Failed to converge: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">c</span><span class="o">.</span><span class="n">message</span><span class="p">)</span> <span class="c1"># ... but restart is possible from the checkpoint file</span>
 </pre></div>
 </div>
+<p>This completes the exposition. Have fun running DMFT(NRG) calculations!</p>
+<p>Note: this script has not yet been tested for the case of matrix-valued Green’s functions.</p>
 </div>
 
 
@@ -1130,7 +1143,7 @@ need to wrap/unwrap the Green’s function objects to/from numpy arrays, which a
           <a href="../templates/SIAM_QS.html" title="SIAM (QS)"
              >next</a> |</li>
         <li class="right" >
-          <a href="holstein.html" title="Example: the Anderson-Holstein impurity model"
+          <a href="holstein.html" title="Anderson-Holstein impurity model"
              >previous</a> |</li>
     <li><a href="../index.html">Home</a> &raquo;</li>
 
