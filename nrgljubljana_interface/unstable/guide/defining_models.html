@@ -115,8 +115,8 @@
             
   <div class="section" id="generating-new-templates-for-custom-models">
 <span id="defining-models"></span><h1>Generating new templates for custom models<a class="headerlink" href="#generating-new-templates-for-custom-models" title="Permalink to this headline">¶</a></h1>
-<p>Here we discuss how new models can be added to the template library.
-As an example, we here consider the case of two-orbital impurity model
+<p>Here we discuss how to add new models to the template library.
+As an example, we consider the case of two-orbital impurity model
 (model <code class="docutils literal"><span class="pre">2orb-UJ</span></code>) that comes predefined in the library of default templates.
 The files are located in the directory <code class="docutils literal"><span class="pre">templates/2orb-UJ/QS</span></code>.</p>
 <p>The model is defined in <code class="docutils literal"><span class="pre">2orb-UJ.m</span></code>:</p>
@@ -145,7 +145,7 @@ The files are located in the directory <code class="docutils literal"><span clas
 <p>The first line declares that this is a two-channel problem with two impurity orbitals.
 The second line defines how we label the impurity orbitals. Here we choose consecutively
 numbered <code class="docutils literal"><span class="pre">d[1]</span></code> and <code class="docutils literal"><span class="pre">d[2]</span></code>. The main part of the file then defines various parts
-of the Hamiltonian, making use of <cite>sneg http://nrgljubljana.ijs.si/sneg</cite> function
+of the Hamiltonian, making use of <cite>sneg &lt;http://nrgljubljana.ijs.si/sneg&gt;</cite> function
 calls such as <code class="docutils literal"><span class="pre">number</span></code>, <code class="docutils literal"><span class="pre">Hubbard</span></code>, <code class="docutils literal"><span class="pre">spinspin</span></code>, etc. Finally, in the last two lines
 we define the auxiliary operators which are used in the “self-energy trick” to obtain
 a high-quality estimate for the self-energy. They are obtained by taking the commutator
@@ -175,13 +175,33 @@ Hamiltonian.</p>
 The last line is mandatory for generating NRGLjubljana_interface template; it instructs
 the code to generate Hamiltonians which are not scaled in terms of the initial energy
 scale of the problem, as is customarily done in NRG calculations.</p>
-<p>The operators of interest are defined in <code class="docutils literal"><span class="pre">customoperators.m</span></code>:</p>
+<p>The operators of interest are defined in <code class="docutils literal"><span class="pre">modeloperators.m</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">tt</span><span class="o">=</span><span class="p">{};</span>
+
+<span class="n">tt</span> <span class="o">=</span> <span class="n">Join</span><span class="p">[</span><span class="n">tt</span><span class="p">,</span> <span class="n">mtSingletOp</span><span class="p">[</span><span class="s2">&quot;n_d1&quot;</span><span class="p">,</span>     <span class="n">number</span><span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="p">]];</span>
+<span class="n">tt</span> <span class="o">=</span> <span class="n">Join</span><span class="p">[</span><span class="n">tt</span><span class="p">,</span> <span class="n">mtSingletOp</span><span class="p">[</span><span class="s2">&quot;n_d2&quot;</span><span class="p">,</span>     <span class="n">number</span><span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span> <span class="p">]];</span>
+<span class="n">tt</span> <span class="o">=</span> <span class="n">Join</span><span class="p">[</span><span class="n">tt</span><span class="p">,</span> <span class="n">mtSingletOp</span><span class="p">[</span><span class="s2">&quot;n_d1^2&quot;</span><span class="p">,</span>   <span class="nb">pow</span><span class="p">[</span><span class="n">number</span><span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span><span class="mi">2</span><span class="p">]</span> <span class="p">]];</span>
+<span class="n">tt</span> <span class="o">=</span> <span class="n">Join</span><span class="p">[</span><span class="n">tt</span><span class="p">,</span> <span class="n">mtSingletOp</span><span class="p">[</span><span class="s2">&quot;n_d2^2&quot;</span><span class="p">,</span>   <span class="nb">pow</span><span class="p">[</span><span class="n">number</span><span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span><span class="mi">2</span><span class="p">]</span> <span class="p">]];</span>
+<span class="n">tt</span> <span class="o">=</span> <span class="n">Join</span><span class="p">[</span><span class="n">tt</span><span class="p">,</span> <span class="n">mtSingletOp</span><span class="p">[</span><span class="s2">&quot;S_d1S_d2&quot;</span><span class="p">,</span> <span class="n">spinspin</span><span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">d</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span> <span class="p">]];</span>
+<span class="n">tt</span> <span class="o">=</span> <span class="n">Join</span><span class="p">[</span><span class="n">tt</span><span class="p">,</span> <span class="n">mtSingletOp</span><span class="p">[</span><span class="s2">&quot;n_d1n_d2&quot;</span><span class="p">,</span> <span class="n">nc</span><span class="p">[</span><span class="n">number</span><span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">number</span><span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="mi">2</span><span class="p">]]]</span> <span class="p">]];</span>
+
+<span class="n">tt</span> <span class="o">=</span> <span class="n">Join</span><span class="p">[</span><span class="n">tt</span><span class="p">,</span> <span class="n">mtDoubletOp</span><span class="p">[</span><span class="s2">&quot;A_d1&quot;</span><span class="p">,</span> <span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="p">]];</span>
+<span class="n">tt</span> <span class="o">=</span> <span class="n">Join</span><span class="p">[</span><span class="n">tt</span><span class="p">,</span> <span class="n">mtDoubletOp</span><span class="p">[</span><span class="s2">&quot;A_d2&quot;</span><span class="p">,</span> <span class="n">d</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="p">]];</span>
+<span class="n">tt</span> <span class="o">=</span> <span class="n">Join</span><span class="p">[</span><span class="n">tt</span><span class="p">,</span> <span class="n">mtDoubletOp</span><span class="p">[</span><span class="s2">&quot;self_d1&quot;</span><span class="p">,</span> <span class="n">selfopd1</span> <span class="p">]];</span>
+<span class="n">tt</span> <span class="o">=</span> <span class="n">Join</span><span class="p">[</span><span class="n">tt</span><span class="p">,</span> <span class="n">mtDoubletOp</span><span class="p">[</span><span class="s2">&quot;self_d2&quot;</span><span class="p">,</span> <span class="n">selfopd2</span> <span class="p">]];</span>
+
+<span class="n">tt</span> <span class="o">=</span> <span class="n">Join</span><span class="p">[</span><span class="n">tt</span><span class="p">,</span> <span class="n">mtTripletOp</span><span class="p">[</span><span class="s2">&quot;sigma_d1&quot;</span><span class="p">,</span> <span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="p">]];</span>
+<span class="n">tt</span> <span class="o">=</span> <span class="n">Join</span><span class="p">[</span><span class="n">tt</span><span class="p">,</span> <span class="n">mtTripletOp</span><span class="p">[</span><span class="s2">&quot;sigma_d2&quot;</span><span class="p">,</span> <span class="n">d</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="p">]];</span>
+
+<span class="n">tt</span>
+</pre></div>
+</div>
 <p>Here we again make use of sneg functions, as well as of high-level functions defined
 in <code class="docutils literal"><span class="pre">initial.m</span></code> which is part of the <code class="docutils literal"><span class="pre">nrginit</span></code> Mathematica code.</p>
 <p>The template files are then obtained by running <code class="docutils literal"><span class="pre">nrginit</span></code>. This will generate
 <code class="docutils literal"><span class="pre">data.in</span></code>, <code class="docutils literal"><span class="pre">ham_*</span></code> and <code class="docutils literal"><span class="pre">op.*</span></code> template files. The log file with some details about
 the generation process is saved as <code class="docutils literal"><span class="pre">mmalog</span></code>.</p>
-<p>The main template <code class="docutils literal"><span class="pre">data.in</span></code> is lengthy and not listed here (<a class="reference download internal" href="../_downloads/data.in" download=""><code class="xref download docutils literal"><span class="pre">see</span> <span class="pre">it</span> <span class="pre">here</span></code></a>).
+<p>The main template <code class="docutils literal"><span class="pre">data.in</span></code> is lengthy and not listed here (<code class="xref download docutils literal"><span class="pre">see</span> <span class="pre">it</span> <span class="pre">here</span></code>).
 The <code class="docutils literal"><span class="pre">ham_*</span></code> contain the symbolic expressions for the Hamiltonian matrices in various invariant subspaces.
 For instance, in the half-filled <span class="math">\(Q=0\)</span> spin triplet <span class="math">\((2S+1)=3\)</span> subspace,
 we have <code class="docutils literal"><span class="pre">ham_0.3</span></code>:</p>
@@ -233,11 +253,9 @@ one part of the auxiliary operator <code class="docutils literal"><span class="p
 Green’s functions and for dynamical susceptibility functions, in <code class="docutils literal"><span class="pre">gf_stuct</span></code>
 and <code class="docutils literal"><span class="pre">chi_struct</span></code>, respectively. Here they are the same:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">imp</span> <span class="mi">2</span>
-
 </pre></div>
 </div>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">imp</span> <span class="mi">2</span>
-
 </pre></div>
 </div>
 <p>The quantities that need to be computed are listed in file <code class="docutils literal"><span class="pre">info</span></code>:</p>
@@ -277,7 +295,7 @@ cp $DIR/data.in $DIR/ham* $DIR/op.* $DIR/discretize $DIR/instantiate $DIR/wilson
 <span class="n">mv</span> <span class="n">FSOLNEG</span><span class="o">.</span><span class="n">dat</span> <span class="n">FSOLNEG_imp_11</span><span class="o">.</span><span class="n">dat</span>
 </pre></div>
 </div>
-<p>Then comes the most complex one which instantiate the input file for NRG calculation, numerical-valued <code class="docutils literal"><span class="pre">data</span></code>,
+<p>Then comes the most complex one which instantiates the input file for NRG calculation, numerical-valued <code class="docutils literal"><span class="pre">data</span></code>,
 from the symbolic-expression template <code class="docutils literal"><span class="pre">data.in</span></code>:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span>#!/usr/bin/env perl
 # Process a &#39;data.in&#39; template file: fill in the numerical values,
