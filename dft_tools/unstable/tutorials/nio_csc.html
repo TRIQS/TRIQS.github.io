@@ -1,0 +1,277 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>DFT and projections &#8212; TRIQS DFTTools  documentation</title>
+    <link rel="stylesheet" href="../_static/triqs.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=default"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head>
+  <body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../install.html">Install</a></li>
+    
+    <li><a href="../documentation.html">Documentation</a></li>
+    
+    <li><a href="../tutorials.html">Tutorials</a></li>
+    
+    <li><a href="../issues.html">Issues</a></li>
+    
+    <li><a href="../about.html">About DFTTools</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../index.html">dft tools</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">connecting <a class="triqs" style="font-size: 12px" href="http://triqs.github.io/triqs">TRIQS</a> to DFT packages</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../index.html">Home</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../contents.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">DFT and projections</a><ul>
+<li><a class="reference internal" href="#vasp-setup">VASP setup</a></li>
+<li><a class="reference internal" href="#plovasp">PLOVASP</a></li>
+<li><a class="reference internal" href="#converting-to-hdf5-file">Converting to hdf5 file</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#dmft">DMFT</a><ul>
+<li><a class="reference internal" href="#dmft-script">dmft script</a></li>
+<li><a class="reference internal" href="#local-lattice-green-s-function-for-all-projected-orbitals">Local lattice Green’s function for all projected orbitals</a></li>
+<li><a class="reference internal" href="#spectral-function-on-real-axis-maxent">Spectral function on real axis: MaxEnt</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#charge-self-consistent-dmft">Charge self-consistent DMFT</a></li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/tutorials/nio_csc.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="dft-and-projections">
+<span id="nio-csc"></span><h1>DFT and projections<a class="headerlink" href="#dft-and-projections" title="Permalink to this headline">¶</a></h1>
+<p>We will perform DFT+DMFT calcluations for the charge-transfer insulator NiO. We start from scratch and provide all necessary input files to do the calculations: First for doing a single-shot calculation.
+.. (and then for charge-selfconsistency).</p>
+<div class="section" id="vasp-setup">
+<h2>VASP setup<a class="headerlink" href="#vasp-setup" title="Permalink to this headline">¶</a></h2>
+<p>We start by running a simple VASP calculation to converge the charge density initially.
+Use the <a class="reference internal" href="images_scripts/INCAR.html#incar"><span class="std std-ref">INCAR</span></a>, <a class="reference internal" href="images_scripts/POSCAR.html#poscar"><span class="std std-ref">POSCAR</span></a>, and <a class="reference internal" href="images_scripts/KPOINTS.html#kpoints"><span class="std std-ref">KPOINTS</span></a> provided and use your
+own <code class="file docutils literal"><span class="pre">POTCAR</span></code> file.</p>
+<p>Let us take a look in the <code class="file docutils literal"><span class="pre">INCAR</span></code>, where we have to specify local orbitals as basis
+for our many-body calculation.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">System</span>  <span class="o">=</span> <span class="n">NiO</span>
+
+<span class="n">ISMEAR</span> <span class="o">=</span> <span class="o">-</span><span class="mi">5</span>
+
+<span class="c1"># the energy window to optimize projector channels</span>
+<span class="n">EMIN</span> <span class="o">=</span> <span class="o">-</span><span class="mi">3</span>
+<span class="n">EMAX</span> <span class="o">=</span> <span class="mi">7</span>
+
+<span class="n">NBANDS</span> <span class="o">=</span> <span class="mi">16</span>
+<span class="n">LMAXMIX</span> <span class="o">=</span> <span class="mi">6</span>
+
+<span class="c1"># switch off all symmetries</span>
+<span class="n">ISYM</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+<span class="c1"># project to Ni d and O p states</span>
+<span class="n">LORBIT</span> <span class="o">=</span> <span class="mi">14</span>
+<span class="n">LOCPROJ</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">d</span> <span class="p">:</span> <span class="n">Pr</span> <span class="mi">1</span>
+<span class="n">LOCPROJ</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">:</span> <span class="n">p</span> <span class="p">:</span> <span class="n">Pr</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<p><cite>LORBIT = 14</cite> takes care of optimizing the projectors in the energy window defined
+by <cite>EMIN</cite> and <cite>EMAX</cite>. We switch off all symmetries with <cite>ISYM=-1</cite> since symmetries
+are not implemented in the later DMFT scripts. Finally, we select the relevant orbitals
+for atom 1 (Ni, d-orbitals) and 2 (O, p-orbitals) by the two <cite>LOCPROJ</cite> lines.
+For details refer to the VASP wiki on the <a class="reference external" href="https://cms.mpi.univie.ac.at/wiki/index.php/LOCPROJ">LOCPROJ</a> flag. The projectors are stored in the file <cite>LOCPROJ</cite>.</p>
+</div>
+<div class="section" id="plovasp">
+<h2>PLOVASP<a class="headerlink" href="#plovasp" title="Permalink to this headline">¶</a></h2>
+<p>Next, we postprocess the projectors, which VASP stored in the file <cite>LOCPROJ</cite>.
+We do this by invoking <strong class="program">plovasp plo.cfg</strong> which is configured by an input file, e.g., named <a class="reference internal" href="images_scripts/plo.cfg.html#plo-cfg"><span class="std std-ref">plo.cfg</span></a>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">General</span><span class="p">]</span>
+<span class="n">BASENAME</span> <span class="o">=</span> <span class="n">nio</span>
+<span class="n">DOSMESH</span> <span class="o">=</span> <span class="o">-</span><span class="mi">21</span> <span class="mi">55</span> <span class="mi">400</span>
+
+<span class="p">[</span><span class="n">Group</span> <span class="mi">1</span><span class="p">]</span>
+<span class="n">SHELLS</span> <span class="o">=</span> <span class="mi">1</span> <span class="mi">2</span>
+<span class="n">EWINDOW</span> <span class="o">=</span> <span class="o">-</span><span class="mi">9</span> <span class="mi">2</span>
+<span class="n">NORMION</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">NORMALIZE</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">BANDS</span> <span class="o">=</span> <span class="mi">2</span> <span class="mi">10</span>
+
+<span class="p">[</span><span class="n">Shell</span> <span class="mi">1</span><span class="p">]</span> <span class="c1"># Ni d shell</span>
+<span class="n">LSHELL</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">IONS</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">CORR</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">TRANSFORM</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="mf">0.0</span>  <span class="mf">0.0</span>  <span class="mf">0.0</span>  <span class="mf">0.0</span>
+            <span class="mf">0.0</span>  <span class="mf">1.0</span>  <span class="mf">0.0</span>  <span class="mf">0.0</span>  <span class="mf">0.0</span>
+            <span class="mf">0.0</span>  <span class="mf">0.0</span>  <span class="mf">1.0</span>  <span class="mf">0.0</span>  <span class="mf">0.0</span>
+            <span class="mf">0.0</span>  <span class="mf">0.0</span>  <span class="mf">0.0</span>  <span class="mf">1.0</span>  <span class="mf">0.0</span>
+            <span class="mf">0.0</span>  <span class="mf">0.0</span>  <span class="mf">0.0</span>  <span class="mf">0.0</span>  <span class="mf">1.0</span>
+
+<span class="p">[</span><span class="n">Shell</span> <span class="mi">2</span><span class="p">]</span> <span class="c1"># O p shell</span>
+<span class="n">LSHELL</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">IONS</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">CORR</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">TRANSFORM</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="mf">0.0</span>  <span class="mf">0.0</span>
+            <span class="mf">0.0</span>  <span class="mf">1.0</span>  <span class="mf">0.0</span>
+            <span class="mf">0.0</span>  <span class="mf">0.0</span>  <span class="mf">1.0</span>
+</pre></div>
+</div>
+<p>Here, in <cite>[General]</cite> we set the basename and the grid for calculating the density of
+states. In <cite>[Group 1]</cite> we define a group of two shells which are orthonormalized with
+respect to states in an energy window from <cite>-9</cite> to <cite>2</cite> for all ions simultanously
+(<cite>NORMION = False</cite>). We define the two shells, which correspond to the Ni d states
+and the O p states. Only the Ni shell is treated as correlated (<cite>CORR = True</cite>), i.e.,
+is supplemented with a Coulomb interaction later in the DMFT calculation.</p>
+</div>
+<div class="section" id="converting-to-hdf5-file">
+<h2>Converting to hdf5 file<a class="headerlink" href="#converting-to-hdf5-file" title="Permalink to this headline">¶</a></h2>
+<p>We gather the output generated by <strong class="program">plovasp</strong> into a hdf5 archive which <strong class="program">dft_tools</strong> is able to read. We do this by running <strong class="program">python converter.py</strong> on the script <a class="reference internal" href="images_scripts/converter.py.html#converter-py"><span class="std std-ref">converter.py</span></a>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs_dft_tools.converters.vasp_converter</span> <span class="k">import</span> <span class="o">*</span>
+<span class="n">Converter</span> <span class="o">=</span> <span class="n">VaspConverter</span><span class="p">(</span><span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;nio&#39;</span><span class="p">)</span>
+<span class="n">Converter</span><span class="o">.</span><span class="n">convert_dft_input</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Now we are all set to perform a dmft calculation.</p>
+</div>
+</div>
+<div class="section" id="dmft">
+<h1>DMFT<a class="headerlink" href="#dmft" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="dmft-script">
+<h2>dmft script<a class="headerlink" href="#dmft-script" title="Permalink to this headline">¶</a></h2>
+<p>Since the python script for performing the dmft loop pretty much resembles that presented in the tutorial on <a class="reference internal" href="srvo3.html#srvo3"><span class="std std-ref">SrVO3</span></a>, we will not go into detail here but simply provide the script <a class="reference internal" href="images_scripts/nio.py.html#nio-py"><span class="std std-ref">nio.py</span></a>. Following Kunes et al. in <a class="reference external" href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.75.165115">PRB 75 165115 (2007)</a> we use <span class="math">\(U=8\)</span> and <span class="math">\(J=1\)</span>. We select <span class="math">\(\beta=5\)</span> instead of <span class="math">\(\beta=10\)</span> to ease the problem slightly. For simplicity we fix the double-counting potential to <span class="math">\(\mu_{DC}=59\)</span> eV by:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">DC_value</span> <span class="o">=</span> <span class="mf">59.0</span>
+<span class="n">SK</span><span class="o">.</span><span class="n">calc_dc</span><span class="p">(</span><span class="n">dm</span><span class="p">,</span> <span class="n">U_interact</span><span class="o">=</span><span class="n">U</span><span class="p">,</span> <span class="n">J_hund</span><span class="o">=</span><span class="n">J</span><span class="p">,</span> <span class="n">orb</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">use_dc_value</span><span class="o">=</span><span class="n">DC_value</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For sensible results run this script in parallel on at least 20 cores. As a quick check of the results, we can compare the orbital occupation from the paper cited above (<span class="math">\(n_{eg} = 0.54\)</span> and <span class="math">\(n_{t2g}=1.0\)</span>) and those from the cthyb output (check lines <cite>Orbital up_0 density:</cite> for a t2g  and <cite>Orbital up_2 density:</cite> for an eg orbital). They should coincide well.</p>
+</div>
+<div class="section" id="local-lattice-green-s-function-for-all-projected-orbitals">
+<h2>Local lattice Green’s function for all projected orbitals<a class="headerlink" href="#local-lattice-green-s-function-for-all-projected-orbitals" title="Permalink to this headline">¶</a></h2>
+<p>We calculate the local lattice Green’s function - now also for the uncorrelated orbitals, i.e., the O p states, for what we use the script <a class="reference internal" href="images_scripts/NiO_local_lattice_GF.py.html#nio-local-lattice-gf-py"><span class="std std-ref">NiO_local_lattice_GF.py</span></a>. The result is saved in the h5 file as <cite>G_latt_orb_it&lt;n_it&gt;</cite>, where <cite>&lt;n_it&gt;</cite> is the number of the last DMFT iteration.</p>
+</div>
+<div class="section" id="spectral-function-on-real-axis-maxent">
+<h2>Spectral function on real axis: MaxEnt<a class="headerlink" href="#spectral-function-on-real-axis-maxent" title="Permalink to this headline">¶</a></h2>
+<p>To compare to results from literature we make use of the <a class="reference external" href="https://triqs.github.io/maxent/master/">maxent triqs application</a> and calculate the spectral function on real axis. Use this script to perform a crude but quick calculation: <a class="reference internal" href="images_scripts/maxent.py.html#maxent-py"><span class="std std-ref">maxent.py</span></a> using a linear real axis and a line-fit analyzer to determine the optimal <span class="math">\(\alpha\)</span>. The output is saved in the h5 file in <cite>DMFT_results/Iterations/G_latt_orb_w_o&lt;n_o&gt;_it&lt;n_it&gt;</cite>, where <cite>&lt;n_o&gt;</cite> is the number of the orbital and <cite>n_it</cite> is again the number of the last iteration. The real axis information is stored in <cite>DMFT_results/Iterations/w_it&lt;n_it&gt;</cite>.</p>
+<a class="reference internal image-reference" href="../_images/nio_Aw.png"><img alt="../_images/nio_Aw.png" class="align-center" src="../_images/nio_Aw.png" style="width: 400px;" /></a>
+</div>
+</div>
+<div class="section" id="charge-self-consistent-dmft">
+<h1>Charge self-consistent DMFT<a class="headerlink" href="#charge-self-consistent-dmft" title="Permalink to this headline">¶</a></h1>
+<p>In this part we will perform charge self-consistent DMFT calculations. To do so we have to adapt the VASP <cite>INCAR</cite> such that <strong class="program">VASP</strong> reads the updated charge density after each step. We add the lines:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ICHARG</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">NELM</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="n">NELMIN</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="n">IMIX</span><span class="o">=</span><span class="mi">0</span>
+</pre></div>
+</div>
+<p>which makes VASP wait after each step of its iterative diagonalization until the file vasp.lock is created. It then reads the update of the charge density in the file <cite>GAMMA</cite>. It is terminated by an external script after a desired amount of steps, such that we deactivate all automatic stoping criterion by setting the number of steps to a very high number.</p>
+<p>We take the respective converged DFT and DMFT calculations from before as a starting point. I.e., we copy the <cite>CHGCAR</cite> and <cite>nio.h5</cite> together with the other <strong class="program">VASP</strong> input files and <code class="file docutils literal"><span class="pre">plo.cfg</span></code> in a new directory. We use a script called <strong class="program">vasp_dmft</strong> to invoke <strong class="program">VASP</strong> in the background and start the DMFT calculation together with <strong class="program">plovasp</strong> and the converter. This script assumes that the dmft sript contains a function <cite>dmft_cycle()</cite> and also the conversion from text files to the h5 file. Additionally we have to add a few lines to calculate the density correction and calculate the correlation energy. We adapt the script straightforardly (for a working example see <a class="reference internal" href="images_scripts/nio_csc.py.html#nio-csc-py"><span class="std std-ref">nio_csc.py</span></a>). The most important new lines are:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">SK</span><span class="o">.</span><span class="n">chemical_potential</span> <span class="o">=</span> <span class="n">SK</span><span class="o">.</span><span class="n">calc_mu</span><span class="p">(</span> <span class="n">precision</span> <span class="o">=</span> <span class="mf">0.000001</span> <span class="p">)</span>
+<span class="n">SK</span><span class="o">.</span><span class="n">calc_density_correction</span><span class="p">(</span><span class="n">dm_type</span><span class="o">=</span><span class="s1">&#39;vasp&#39;</span><span class="p">)</span>
+<span class="n">correnerg</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">G_iw</span> <span class="o">*</span> <span class="n">S</span><span class="o">.</span><span class="n">Sigma_iw</span><span class="p">)</span><span class="o">.</span><span class="n">total_density</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>where the chemical potential is determined to a greater precision than before, the correction to the dft density matrix is calculated and output to the file <code class="file docutils literal"><span class="pre">GAMMA</span></code>. The correlation energy is calculated via Migdal-Galitzki formula. We also slightly increase the tolerance for the detection of blocks since the DFT calculation now includes some QMC noise.</p>
+<p>To help convergence, we keep the density (i.e., the GAMMA file) fixed for a few DFT iterations. We do so since VASP uses an iterative diagonalization.</p>
+<p>We can start the whole machinery by excecuting:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">vasp_dmft</span> <span class="o">-</span><span class="n">n</span> <span class="o">&lt;</span><span class="n">n_procs</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">i</span> <span class="o">&lt;</span><span class="n">n_iters</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">j</span> <span class="o">&lt;</span><span class="n">n_iters_dft</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">p</span> <span class="o">&lt;</span><span class="n">vasp_exec</span><span class="o">&gt;</span>  <span class="n">nio_csc</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../index.html">Home</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2019.
+    </div>
+  </body>
+</html>
