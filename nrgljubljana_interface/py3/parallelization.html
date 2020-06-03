@@ -1,0 +1,155 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Parallelization &#8212; nrgljubljana_interface  documentation</title>
+    <link rel="stylesheet" href="_static/triqs.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://raw.githubusercontent.com/mathjax/MathJax/2.7.8/MathJax.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Temporary files" href="temporary.html" />
+    <link rel="prev" title="Generating new templates for custom models" href="guide/defining_models.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head><body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="install.html">Install</a></li>
+    
+    <li><a href="documentation.html">Documentation</a></li>
+    
+    <li><a href="issues.html">Issues</a></li>
+    
+    <li><a href="about.html">About nrgljubljana_interface</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="index.html">nrgljubljana_interface</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;"><a href="https://rokzitko.github.io/nrgljubljana">NRG Ljubljana</a> --  <a class="triqs" style="font-size: 12px" href="https://triqs.github.io">TRIQS</a> interface</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="temporary.html" title="Temporary files"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="guide/defining_models.html" title="Generating new templates for custom models"
+             accesskey="P">previous</a> |</li>
+    <li><a href="index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="documentation.html" accesskey="U">Documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="guide/defining_models.html"
+                        title="previous chapter">Generating new templates for custom models</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="temporary.html"
+                        title="next chapter">Temporary files</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/parallelization.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="parallelization">
+<span id="id1"></span><h1>Parallelization<a class="headerlink" href="#parallelization" title="Permalink to this headline">¶</a></h1>
+<p>The code spends most of the time in LAPACK diagonalization routines (dsyev, dsyevr, zheev, etc.)
+and in level-3 BLAS matrix-matrix multiplication routines (dgemm, zgemm). The execution time can
+be significantly reduced by using a high-quality multithreaded BLAS/LAPACK libraries, such as
+Intel MKL. Make sure that the relevant environment variables (e.g. OMP_NUM_THREADS, MKL_NUM_THREADS, MKL_DYNAMIC)
+are set appropriately. Good choices are e.g. 4 or 8 threads.</p>
+<p>The calculations over the different values of the twist parameter <span class="math notranslate nohighlight">\(z\)</span> (different interleaved discretization grids)
+are done in parallel using MPI parallelization. Good choice for the number of MPI processes is the value of <code class="docutils literal notranslate"><span class="pre">Nz</span></code>, i.e.,
+the number of different grids.</p>
+<p>Finally, the diagonalisation of matrices can be OpenMP parallelized. This is, however, only beneficial for
+large-scale multi-orbital calculations and is quite seldom used. This is configured using the parameter <code class="docutils literal notranslate"><span class="pre">diagth</span></code>
+in nrg_params_t (“low-level NRG parameters”), the default value being 1 (diagonalisations performed in series).</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="temporary.html" title="Temporary files"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="guide/defining_models.html" title="Generating new templates for custom models"
+             >previous</a> |</li>
+    <li><a href="index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="documentation.html" >Documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019 R. Žitko, N. Wentzell.
+    </div>
+  </body>
+</html>
