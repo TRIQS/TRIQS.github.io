@@ -21,27 +21,31 @@
 ################################################################################
 
 from common import *
-from pytriqs.plot.mpl_interface import oplot, oplotr, plt
+from triqs.plot.mpl_interface import oplot, oplotr, plt
 
-with HDFArchive('data_g2.h5', 'r') as a: p = a['p']
+ps = [] 
+filenames = np.sort(glob.glob('data_B_*.h5'))
+for filename in filenames:
+    with HDFArchive(filename, 'r') as a:
+        p = a['ps'].objects[-1]
+    ps.append(p)
+ps = ParameterCollections(ps)
 
-plt.figure(figsize=(3.25*2.2, 2))
-subp = [1, 3, 1]
-opt = dict(cmap=plt.get_cmap('terrain_r'), vmin=0.0, vmax=0.01)
-plt.subplot(*subp); subp[-1] += 1
-plt.title(r'$\chi^{(0)}_m$')
-plt.imshow(np.squeeze(p.chi0_m.data).real, **opt)
-plt.colorbar()
-plt.subplot(*subp); subp[-1] += 1
-plt.title(r'$\chi_m$')
-plt.imshow(np.squeeze(p.chi_m.data).real, **opt)
-plt.colorbar()
-plt.subplot(*subp); subp[-1] += 1
-plt.title(r'$\Gamma_m - U$')
-plt.imshow((np.squeeze(p.gamma_m.data) - p.U).real,
-           cmap=plt.get_cmap('RdBu_r'), vmin=-5, vmax=5)
-plt.colorbar()
+B, M = ps.B, ps.M
+B = np.concatenate((-B[1:][::-1], B))
+M = np.concatenate((-M[1:][::-1], M))
+p = np.polyfit(M, B, 5)
+m = np.linspace(-0.5, 0.5, num=1000)
+b = np.polyval(p, m)
+chi = 1./np.polyval(np.polyder(p, 1), 0.).real
 
+plt.figure(figsize=(3.25*1.5, 2.5*1.5))
+plt.title(r'$\chi = \frac{dM}{dB}|_{B=0} \approx $'+'$ {:3.4f}$'.format(chi))
+plt.plot(B, M, 'o', alpha=0.75, label='DMFT field')
+plt.plot(b, m, '-', alpha=0.75, label='Poly fit')
+plt.legend(loc='upper left'); plt.grid(True)
+plt.xlabel(r'$B$'); plt.ylabel(r'$M$')
+plt.xlim([B.min(), B.max()]); plt.ylim([-0.5, 0.5])
 plt.tight_layout()
-plt.savefig('figure_g2.svg')
+plt.savefig('figure_field.svg')
 plt.show()

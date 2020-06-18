@@ -21,31 +21,37 @@
 ################################################################################
 
 from common import *
-from pytriqs.plot.mpl_interface import oplot, oplotr, plt
+from triqs.plot.mpl_interface import oplot, oplotr, oploti, plt
 
-ps = [] 
-filenames = np.sort(glob.glob('data_B_*.h5'))
-for filename in filenames:
-    with HDFArchive(filename, 'r') as a:
-        p = a['ps'].objects[-1]
-    ps.append(p)
-ps = ParameterCollections(ps)
+with HDFArchive('data_sc.h5', 'r') as a: ps = a['ps']
+p = ps.objects[-1]
+    
+plt.figure(figsize=(3.25*2, 5))
+subp = [2, 2, 1]
 
-B, M = ps.B, ps.M
-B = np.concatenate((-B[1:][::-1], B))
-M = np.concatenate((-M[1:][::-1], M))
-p = np.polyfit(M, B, 5)
-m = np.linspace(-0.5, 0.5, num=1000)
-b = np.polyval(p, m)
-chi = 1./np.polyval(np.polyder(p, 1), 0.).real
+plt.subplot(*subp); subp[-1] += 1
+plt.plot(ps.iter, ps.dG_l, 's-')
+plt.ylabel('$\max | \Delta G_l |$')
+plt.xlabel('Iteration')
+plt.semilogy([], [])
 
-plt.figure(figsize=(3.25*1.5, 2.5*1.5))
-plt.title(r'$\chi = \frac{dM}{dB}|_{B=0} \approx $'+'$ {:3.4f}$'.format(chi))
-plt.plot(B, M, 'o', alpha=0.75, label='DMFT field')
-plt.plot(b, m, '-', alpha=0.75, label='Poly fit')
-plt.legend(loc='upper left'); plt.grid(True)
-plt.xlabel(r'$B$'); plt.ylabel(r'$M$')
-plt.xlim([B.min(), B.max()]); plt.ylim([-0.5, 0.5])
+plt.subplot(*subp); subp[-1] += 1
+for b, g in p.G_l: p.G_l[b].data[:] = np.abs(g.data)
+oplotr(p.G_l['up'], 'o-', label=None)
+plt.ylabel('$| G_l |$')
+plt.semilogy([], [])
+
+plt.subplot(*subp); subp[-1] += 1
+oplotr(p.G_tau_raw['up'], alpha=0.75, label='Binned')
+oplotr(p.G_tau['up'], label='Legendre')
+plt.legend(loc='best', fontsize=8)
+plt.ylabel(r'$G(\tau)$')
+
+plt.subplot(*subp); subp[-1] += 1
+oploti(p.sigma_w[0,0], '.-', label=None)
+plt.ylabel(r'$\Sigma(i\omega_n)$')
+plt.xlim([-100, 100])
+
 plt.tight_layout()
-plt.savefig('figure_field.svg')
+plt.savefig('figure_sc.svg')
 plt.show()

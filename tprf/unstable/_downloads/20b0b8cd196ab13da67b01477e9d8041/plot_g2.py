@@ -21,37 +21,27 @@
 ################################################################################
 
 from common import *
-from pytriqs.plot.mpl_interface import oplot, oplotr, oploti, plt
+from triqs.plot.mpl_interface import oplot, oplotr, plt
 
-with HDFArchive('data_sc.h5', 'r') as a: ps = a['ps']
-p = ps.objects[-1]
-    
-plt.figure(figsize=(3.25*2, 5))
-subp = [2, 2, 1]
+with HDFArchive('data_g2.h5', 'r') as a: p = a['p']
 
+plt.figure(figsize=(3.25*2.2, 2))
+subp = [1, 3, 1]
+opt = dict(cmap=plt.get_cmap('terrain_r'), vmin=0.0, vmax=0.01)
 plt.subplot(*subp); subp[-1] += 1
-plt.plot(ps.iter, ps.dG_l, 's-')
-plt.ylabel('$\max | \Delta G_l |$')
-plt.xlabel('Iteration')
-plt.semilogy([], [])
-
+plt.title(r'$\chi^{(0)}_m$')
+plt.imshow(np.squeeze(p.chi0_m.data).real, **opt)
+plt.colorbar()
 plt.subplot(*subp); subp[-1] += 1
-for b, g in p.G_l: p.G_l[b].data[:] = np.abs(g.data)
-oplotr(p.G_l['up'], 'o-', label=None)
-plt.ylabel('$| G_l |$')
-plt.semilogy([], [])
-
+plt.title(r'$\chi_m$')
+plt.imshow(np.squeeze(p.chi_m.data).real, **opt)
+plt.colorbar()
 plt.subplot(*subp); subp[-1] += 1
-oplotr(p.G_tau_raw['up'], alpha=0.75, label='Binned')
-oplotr(p.G_tau['up'], label='Legendre')
-plt.legend(loc='best', fontsize=8)
-plt.ylabel(r'$G(\tau)$')
-
-plt.subplot(*subp); subp[-1] += 1
-oploti(p.sigma_w[0,0], '.-', label=None)
-plt.ylabel(r'$\Sigma(i\omega_n)$')
-plt.xlim([-100, 100])
+plt.title(r'$\Gamma_m - U$')
+plt.imshow((np.squeeze(p.gamma_m.data) - p.U).real,
+           cmap=plt.get_cmap('RdBu_r'), vmin=-5, vmax=5)
+plt.colorbar()
 
 plt.tight_layout()
-plt.savefig('figure_sc.svg')
+plt.savefig('figure_g2.svg')
 plt.show()
