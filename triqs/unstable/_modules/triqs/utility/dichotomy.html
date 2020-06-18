@@ -1,0 +1,240 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>triqs.utility.dichotomy &#8212; TRIQS 3.0.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/triqs.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=default"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head><body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../../install.html">Install</a></li>
+    
+    <li><a href="../../../documentation.html">Documentation</a></li>
+    
+    <li><a href="../../../userguide.html">User guide</a></li>
+    
+    <li><a href="../../../applications.html">Applications</a></li>
+    
+    <li><a href="../../../contributing.html">Contributing</a></li>
+    
+    <li><a href="../../../about.html">About TRIQS</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../../index.html">triqs</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">a Toolbox for Research on Interacting Quantum Systems</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for triqs.utility.dichotomy</h1><div class="highlight"><pre>
+<span></span>
+<span class="c1">################################################################################</span>
+<span class="c1">#</span>
+<span class="c1"># TRIQS: a Toolbox for Research in Interacting Quantum Systems</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (C) 2011 by M. Ferrero, O. Parcollet</span>
+<span class="c1">#</span>
+<span class="c1"># TRIQS is free software: you can redistribute it and/or modify it under the</span>
+<span class="c1"># terms of the GNU General Public License as published by the Free Software</span>
+<span class="c1"># Foundation, either version 3 of the License, or (at your option) any later</span>
+<span class="c1"># version.</span>
+<span class="c1">#</span>
+<span class="c1"># TRIQS is distributed in the hope that it will be useful, but WITHOUT ANY</span>
+<span class="c1"># WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS</span>
+<span class="c1"># FOR A PARTICULAR PURPOSE. See the GNU General Public License for more</span>
+<span class="c1"># details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License along with</span>
+<span class="c1"># TRIQS. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1">################################################################################</span>
+
+<span class="kn">import</span> <span class="nn">triqs.utility.mpi</span> <span class="k">as</span> <span class="nn">mpi</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<div class="viewcode-block" id="dichotomy"><a class="viewcode-back" href="../../../documentation/python_api/triqs/utility/dichotomy.html#triqs.utility.dichotomy.dichotomy">[docs]</a><span class="k">def</span> <span class="nf">dichotomy</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">x_init</span><span class="p">,</span> <span class="n">y_value</span><span class="p">,</span> <span class="n">precision_on_y</span><span class="p">,</span> <span class="n">delta_x</span><span class="p">,</span>
+              <span class="n">max_loops</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">x_name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">y_name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Finds :math:`x` that solves :math:`y = f(x)`.</span>
+<span class="sd">    </span>
+<span class="sd">    Starting at ``x_init``, which is used as the lower upper/bound, </span>
+<span class="sd">    dichotomy finds first the upper/lower bound by adding/subtracting ``delta_x``. </span>
+<span class="sd">    Then bisection is used to refine :math:`x` until</span>
+<span class="sd">    ``abs(f(x) - y_value) &lt; precision_on_y`` or ``max_loops`` is reached.</span>
+<span class="sd">   </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    function : function, real valued </span>
+<span class="sd">        Function :math:`f(x)`. It must take only one real parameter.</span>
+<span class="sd">    x_init : double</span>
+<span class="sd">        Initial guess for x. On success, returns the new value of x.</span>
+<span class="sd">    y_value : double</span>
+<span class="sd">        Target value for y.</span>
+<span class="sd">    precision_on_y : double</span>
+<span class="sd">        Stops if ``abs(f(x) - y_value) &lt; precision_on_y``.</span>
+<span class="sd">    delta_x : double</span>
+<span class="sd">        :math:`\Delta x` added/subtracted from ``x_init`` until the second bound is found.</span>
+<span class="sd">    max_loops : integer, optional</span>
+<span class="sd">        Maximum number of loops (default is 1000).</span>
+<span class="sd">    x_name : string, optional</span>
+<span class="sd">        Name of variable x used for printing.</span>
+<span class="sd">    y_name : string, optional</span>
+<span class="sd">        Name of variable y used for printing.</span>
+<span class="sd">    verbosity : integer, optional</span>
+<span class="sd">        Verbosity level. </span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    (x,y) : (double, double)</span>
+<span class="sd">        :math:`x` and :math:`y=f(x)`. Returns (None, None) if dichotomy failed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Dichotomy adjustment of </span><span class="si">%(x_name)s</span><span class="s2"> to obtain </span><span class="si">%(y_name)s</span><span class="s2"> = </span><span class="si">%(y_value)f</span><span class="s2"> +/- </span><span class="si">%(precision_on_y)f</span><span class="s2">&quot;</span><span class="o">%</span><span class="nb">locals</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">PR</span> <span class="o">=</span> <span class="s2">&quot;    &quot;</span>
+    <span class="k">if</span> <span class="n">x_name</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span> <span class="ow">or</span> <span class="n">y_name</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span>  <span class="p">:</span> <span class="n">verbosity</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">verbosity</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">x</span><span class="o">=</span><span class="n">x_init</span><span class="p">;</span><span class="n">delta_x</span><span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">delta_x</span><span class="p">)</span>
+
+    <span class="c1"># First find the bounds</span>
+    <span class="n">y1</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">eps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">y1</span><span class="o">-</span><span class="n">y_value</span><span class="p">)</span>
+    <span class="n">x1</span><span class="o">=</span><span class="n">x</span><span class="p">;</span><span class="n">y2</span><span class="o">=</span><span class="n">y1</span><span class="p">;</span><span class="n">x2</span><span class="o">=</span><span class="n">x1</span>
+    <span class="n">nbre_loop</span><span class="o">=</span><span class="mi">0</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">nbre_loop</span><span class="o">&lt;=</span> <span class="n">max_loops</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">y2</span><span class="o">-</span><span class="n">y_value</span><span class="p">)</span><span class="o">*</span><span class="n">eps</span><span class="o">&gt;</span><span class="mi">0</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y2</span><span class="o">-</span><span class="n">y_value</span><span class="p">)</span><span class="o">&gt;</span><span class="n">precision_on_y</span> <span class="p">:</span>
+        <span class="n">nbre_loop</span> <span class="o">+=</span><span class="mi">1</span>
+        <span class="n">x2</span> <span class="o">-=</span>  <span class="n">eps</span><span class="o">*</span><span class="n">delta_x</span>
+        <span class="n">y2</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">x2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">x_name</span><span class="o">!=</span><span class="s2">&quot;&quot;</span> <span class="ow">and</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">2</span><span class="p">:</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%(PR)s%(x_name)s</span><span class="s2"> = </span><span class="si">%(x2)f</span><span class="s2">  </span><span class="se">\n</span><span class="si">%(PR)s%(y_name)s</span><span class="s2"> = </span><span class="si">%(y2)f</span><span class="s2">&quot;</span><span class="o">%</span><span class="nb">locals</span><span class="p">())</span>
+    
+    <span class="c1"># Make sure that x2 &gt; x1</span>
+    <span class="k">if</span> <span class="n">x1</span> <span class="o">&gt;</span> <span class="n">x2</span><span class="p">:</span>
+        <span class="n">x1</span><span class="p">,</span><span class="n">x2</span> <span class="o">=</span> <span class="n">x2</span><span class="p">,</span><span class="n">x1</span>
+        <span class="n">y1</span><span class="p">,</span><span class="n">y2</span> <span class="o">=</span> <span class="n">y2</span><span class="p">,</span><span class="n">y1</span>
+    
+    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%(PR)s%(x1)f</span><span class="s2"> &lt; </span><span class="si">%(x_name)s</span><span class="s2"> &lt; </span><span class="si">%(x2)f</span><span class="s2">&quot;</span><span class="o">%</span><span class="nb">locals</span><span class="p">())</span>
+    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%(PR)s%(y1)f</span><span class="s2"> &lt; </span><span class="si">%(y_name)s</span><span class="s2"> &lt; </span><span class="si">%(y2)f</span><span class="s2">&quot;</span><span class="o">%</span><span class="nb">locals</span><span class="p">())</span>
+
+    <span class="c1"># We found bounds.</span>
+    <span class="c1"># If one of the two bounds is already close to the solution</span>
+    <span class="c1"># the bisection will not run. For this case we set x and yfound.</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y1</span><span class="o">-</span><span class="n">y_value</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y2</span><span class="o">-</span><span class="n">y_value</span><span class="p">)</span> <span class="p">:</span>
+        <span class="n">yfound</span> <span class="o">=</span> <span class="n">y1</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">yfound</span> <span class="o">=</span> <span class="n">y2</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x2</span>
+        
+    <span class="c1">#Now let&#39;s refine between the bounds</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">nbre_loop</span><span class="o">&lt;=</span> <span class="n">max_loops</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">yfound</span><span class="o">-</span><span class="n">y_value</span><span class="p">)</span><span class="o">&gt;</span><span class="n">precision_on_y</span><span class="p">)</span> <span class="p">:</span>
+        <span class="n">nbre_loop</span> <span class="o">+=</span><span class="mi">1</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x1</span>  <span class="o">+</span> <span class="p">(</span><span class="n">x2</span> <span class="o">-</span> <span class="n">x1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">y_value</span> <span class="o">-</span> <span class="n">y1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">y2</span><span class="o">-</span><span class="n">y1</span><span class="p">)</span>
+        <span class="n">yfound</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">y1</span><span class="o">-</span><span class="n">y_value</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">yfound</span> <span class="o">-</span> <span class="n">y_value</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span> <span class="p">:</span> 
+            <span class="n">x1</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span> <span class="n">y1</span><span class="o">=</span><span class="n">yfound</span>
+        <span class="k">else</span> <span class="p">:</span>
+            <span class="n">x2</span><span class="o">=</span> <span class="n">x</span><span class="p">;</span><span class="n">y2</span><span class="o">=</span><span class="n">yfound</span><span class="p">;</span>
+        <span class="k">if</span> <span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%(PR)s%(x1)f</span><span class="s2"> &lt; </span><span class="si">%(x_name)s</span><span class="s2"> &lt; </span><span class="si">%(x2)f</span><span class="s2">&quot;</span><span class="o">%</span><span class="nb">locals</span><span class="p">())</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%(PR)s%(y1)f</span><span class="s2"> &lt; </span><span class="si">%(y_name)s</span><span class="s2"> &lt; </span><span class="si">%(y2)f</span><span class="s2">&quot;</span><span class="o">%</span><span class="nb">locals</span><span class="p">())</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">yfound</span> <span class="o">-</span> <span class="n">y_value</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">precision_on_y</span> <span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbosity</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%(PR)s%(x_name)s</span><span class="s2"> found in </span><span class="si">%(nbre_loop)d</span><span class="s2"> iterations : &quot;</span><span class="o">%</span><span class="nb">locals</span><span class="p">())</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%(PR)s%(y_name)s</span><span class="s2"> = </span><span class="si">%(yfound)f</span><span class="s2">;</span><span class="si">%(x_name)s</span><span class="s2"> = </span><span class="si">%(x)f</span><span class="s2">&quot;</span><span class="o">%</span><span class="nb">locals</span><span class="p">())</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">yfound</span><span class="p">)</span>
+    <span class="k">else</span> <span class="p">:</span> 
+        <span class="k">if</span> <span class="n">verbosity</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%(PR)s</span><span class="s2">FAILURE to adjust </span><span class="si">%(x_name)s</span><span class="s2"> to the value </span><span class="si">%(y_value)f</span><span class="s2"> after </span><span class="si">%(nbre_loop)d</span><span class="s2"> iterations.&quot;</span><span class="o">%</span><span class="nb">locals</span><span class="p">())</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%(PR)s</span><span class="s2">FAILURE returning (None, None) due to failure.&quot;</span><span class="o">%</span><span class="nb">locals</span><span class="p">())</span>
+        <span class="k">return</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2017, The TRIQS collaboration.
+    </div>
+  </body>
+</html>
