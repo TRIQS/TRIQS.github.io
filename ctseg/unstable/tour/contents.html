@@ -4,24 +4,17 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Guided tour &#8212; CTSEG - TRIQS Hybridization Expansion Segment Solver  documentation</title>
     <link rel="stylesheet" href="../_static/triqs.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=default"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://raw.githubusercontent.com/mathjax/MathJax/2.7.8/MathJax.js"></script>
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -40,8 +33,7 @@
       
     </style>
 
-  </head>
-  <body>
+  </head><body>
 <div class="pageheader">
   <ul>
     
@@ -51,7 +43,7 @@
     
     <li><a href="../issues.html">Issues</a></li>
     
-    <li><a href="../about.html">About CTSEG</a></li>
+    <li><a href="../about.html">About triqs_ctseg</a></li>
     
   </ul>
   <div>
@@ -96,12 +88,14 @@
    </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -116,177 +110,115 @@
 <span id="documentation"></span><h1>Guided tour<a class="headerlink" href="#guided-tour" title="Permalink to this headline">¶</a></h1>
 <p>The ‘cthyb-segment’ solver is a continuous-time Quantum Monte Carlo solver aimed at solving an <a class="reference internal" href="definitions.html"><span class="doc">Anderson impurity model</span></a> with static and dynamical density-density interactions.</p>
 <p>Below is a very short example demonstrating the basic usage of the solver.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span>from pytriqs.gf import *
-from pytriqs.archive import *
-from pytriqs.operators import *
-import pytriqs.utility.mpi as mpi
-from triqs_ctseg import Solver
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">h5</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">triqs.operators</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">triqs.utility.mpi</span> <span class="kn">as</span> <span class="nn">mpi</span>
+<span class="kn">from</span> <span class="nn">triqs_ctseg</span> <span class="kn">import</span> <span class="n">Solver</span>
 
-#Green&#39;s function: two 1x1 blocks
-gf_struct = [(&quot;up&quot;,[0]), (&quot;down&quot;,[0])]
-#initialize the solver
-S = Solver(
-     beta = 10.0, #inverse temperature
-     gf_struct = gf_struct )
+<span class="c1">#Green&#39;s function: two 1x1 blocks</span>
+<span class="n">gf_struct</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;up&quot;</span><span class="p">,[</span><span class="mi">0</span><span class="p">]),</span> <span class="p">(</span><span class="s2">&quot;down&quot;</span><span class="p">,[</span><span class="mi">0</span><span class="p">])]</span>
+<span class="c1">#initialize the solver</span>
+<span class="n">S</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span>
+     <span class="n">beta</span> <span class="o">=</span> <span class="mf">10.0</span><span class="p">,</span> <span class="c1">#inverse temperature</span>
+     <span class="n">gf_struct</span> <span class="o">=</span> <span class="n">gf_struct</span> <span class="p">)</span>
 
-#set up the static interaction
-U = 2.0 #static interaction
+<span class="c1">#set up the static interaction</span>
+<span class="n">U</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="c1">#static interaction</span>
 
-#impurity non-interacting Green&#39;s function
-mu = 1.0 #chemical potential
-eps0 = 0.0 #fermionic bath level
-V = 0.5 #coupling to fermionic level
-S.G0_iw &lt;&lt; \
-   inverse(iOmega_n + mu \
-           -V**2 * inverse(iOmega_n - eps0)\
-           -V**2 * inverse(iOmega_n + eps0))
+<span class="c1">#impurity non-interacting Green&#39;s function</span>
+<span class="n">mu</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="c1">#chemical potential</span>
+<span class="n">eps0</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="c1">#fermionic bath level</span>
+<span class="n">V</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="c1">#coupling to fermionic level</span>
+<span class="n">S</span><span class="o">.</span><span class="n">G0_iw</span> <span class="o">&lt;&lt;</span> \
+   <span class="n">inverse</span><span class="p">(</span><span class="n">iOmega_n</span> <span class="o">+</span> <span class="n">mu</span> \
+           <span class="o">-</span><span class="n">V</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">inverse</span><span class="p">(</span><span class="n">iOmega_n</span> <span class="o">-</span> <span class="n">eps0</span><span class="p">)</span>\
+           <span class="o">-</span><span class="n">V</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">inverse</span><span class="p">(</span><span class="n">iOmega_n</span> <span class="o">+</span> <span class="n">eps0</span><span class="p">))</span>
 
-#dynamical charge interactions
-w0 = 1.0 #bosonic bath level
-lambd = 0.4 #coupling to bosonic level
-from itertools import product
-for b1,b2 in product(dict(gf_struct).keys(), repeat=2):
- S.D0_iw[b1+&quot;|&quot;+b2] &lt;&lt; \
-   lambd**2*(inverse(iOmega_n - w0) \
-                 - inverse(iOmega_n + w0))
+<span class="c1">#dynamical charge interactions</span>
+<span class="n">w0</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="c1">#bosonic bath level</span>
+<span class="n">lambd</span> <span class="o">=</span> <span class="mf">0.4</span> <span class="c1">#coupling to bosonic level</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
+<span class="k">for</span> <span class="n">b1</span><span class="p">,</span><span class="n">b2</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+ <span class="n">S</span><span class="o">.</span><span class="n">D0_iw</span><span class="p">[</span><span class="n">b1</span><span class="o">+</span><span class="s2">&quot;|&quot;</span><span class="o">+</span><span class="n">b2</span><span class="p">]</span> <span class="o">&lt;&lt;</span> \
+   <span class="n">lambd</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">inverse</span><span class="p">(</span><span class="n">iOmega_n</span> <span class="o">-</span> <span class="n">w0</span><span class="p">)</span> \
+                 <span class="o">-</span> <span class="n">inverse</span><span class="p">(</span><span class="n">iOmega_n</span> <span class="o">+</span> <span class="n">w0</span><span class="p">))</span>
 
-#run the Monte-Carlo simulation
-S.solve(
- h_int = U * n(&#39;up&#39;,0)*n(&#39;down&#39;,0), #local Hamiltonian
- n_cycles  = 10000, #Monte-Carlo cycles
- length_cycle = 100, #length of a cycle
- n_warmup_cycles = 1000,#thermalization cycles
- n_w_b_vertex = 2, #bosonic freqs. in vertex
- n_w_f_vertex = 20,#fermionic freqs. in vertex
- measure_nn = True, #density-density corr.
- measure_nnw = True, #density-density corr. fct
- measure_gw = True, #one-particle Green fct
- measure_fw = True, #one-particle improved est.
- measure_g2w = True,#3-leg corr.function
- measure_g3w = True,#4-leg corr. function
-)
+<span class="c1">#run the Monte-Carlo simulation</span>
+<span class="n">S</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span>
+ <span class="n">h_int</span> <span class="o">=</span> <span class="n">U</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="n">n</span><span class="p">(</span><span class="s1">&#39;down&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="c1">#local Hamiltonian</span>
+ <span class="n">n_cycles</span>  <span class="o">=</span> <span class="mi">10000</span><span class="p">,</span> <span class="c1">#Monte-Carlo cycles</span>
+ <span class="n">length_cycle</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="c1">#length of a cycle</span>
+ <span class="n">n_warmup_cycles</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span><span class="c1">#thermalization cycles</span>
+ <span class="n">n_w_b_vertex</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="c1">#bosonic freqs. in vertex</span>
+ <span class="n">n_w_f_vertex</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span><span class="c1">#fermionic freqs. in vertex</span>
+ <span class="n">measure_nn</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="c1">#density-density corr.</span>
+ <span class="n">measure_nnw</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="c1">#density-density corr. fct</span>
+ <span class="n">measure_gw</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="c1">#one-particle Green fct</span>
+ <span class="n">measure_fw</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="c1">#one-particle improved est.</span>
+ <span class="n">measure_g2w</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span><span class="c1">#3-leg corr.function</span>
+ <span class="n">measure_g3w</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span><span class="c1">#4-leg corr. function</span>
+<span class="p">)</span>
 
-#store results in a HDF5 archive
-if mpi.is_master_node():
- with HDFArchive(&quot;ct_seg.h5&quot;,&#39;a&#39;) as A:
-  A[&#39;G_tau&#39;] = S.G_tau
-  A[&#39;nn&#39;] = S.nn
-  A[&#39;nn_iw&#39;] = S.nn_iw
-  A[&#39;Sigma_iw&#39;]  = S.Sigma_iw
-  A[&quot;G_2w&quot;] = S.G_2w
-  A[&quot;G_3w&quot;] = S.G_3w
-
- ---Output:---
---------------------------------------------------------------------------
-[[9053,1],0]: A high-performance Open MPI point-to-point messaging module
-was unable to find any relevant network interfaces:
-
-Module: OpenFabrics (openib)
-  Host: dfb21c637b11
-
-Another transport will be used instead, although this may result in
-lower performance.
-
-NOTE: You can disable this warning by setting the MCA parameter
-btl_base_warn_component_unused to 0.
---------------------------------------------------------------------------
-
-╔╦╗╦═╗╦╔═╗ ╔═╗  ┌─┐┌┬┐┌─┐┌─┐┌─┐
- ║ ╠╦╝║║═╬╗╚═╗  │   │ └─┐├┤ │ ┬
- ╩ ╩╚═╩╚═╝╚╚═╝  └─┘ ┴ └─┘└─┘└─┘
-mu = [1.16,1.16]
-U = 
-[[0,1.68]
- [1.68,0]]
-dynamical_U
-
-
-Warming up ...
-16:33:45  68% ETA 00:00:00 cycle 680 of 1000
-
-
-
-Accumulating ...
-16:33:45   0% ETA 00:00:18 cycle 54 of 10000
-16:33:47  11% ETA 00:00:16 cycle 1158 of 10000
-16:33:50  24% ETA 00:00:13 cycle 2498 of 10000
-16:33:53  41% ETA 00:00:10 cycle 4194 of 10000
-16:33:57  62% ETA 00:00:07 cycle 6238 of 10000
-16:34:02  88% ETA 00:00:02 cycle 8840 of 10000
-
-
-[Rank 0] Collect results: Waiting for all mpi-threads to finish accumulating...
-rank 	 n,m 	 average +/- error 	 autocorrelation_time
-0	 0,0 	 0.595634 +/- 0.0106237	0.0562727
-0	 10,0 	 0.0962339 +/- 0.0215287	0.0210831
-0	 -10,0 	 0.103848 +/- 0.0214855	0.0894778
-[Rank 0] Timings for all measures:
-Measure                     | seconds   
-G(omega) measurement        | 4.89633   
-G(tau) measurement          | 0.0204749 
-density measurement         | 0.00127587
-measurement of the MC sign  | 0.000910389
-nn(omega) measurement       | 0.0236909 
-three-frequency measurement | 3.53629   
-two-frequency measurement   | 0.0289805 
-Total measure time          | 8.50796   
-[Rank 0] Acceptance rate for all moves:
-Move  segment insertion: 0.524754
-Move  segment removal: 0.524461
-[Rank 0] Warmup lasted: 0.146874 seconds [00:00:00]
-[Rank 0] Simulation lasted: 18.9017 seconds [00:00:18]
-[Rank 0] Number of measures: 10000
-Total number of measures: 10000
-Starting run with 1 MPI rank(s) at : 2020-05-26 16:33:45.234809
-Warning: The Delta(tau) block number 0 is not real in tau space
-Warning: The Delta(tau) block number 1 is not real in tau space
+<span class="c1">#store results in a HDF5 archive</span>
+<span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+ <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="s2">&quot;ct_seg.h5&quot;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">A</span><span class="p">:</span>
+  <span class="n">A</span><span class="p">[</span><span class="s1">&#39;G_tau&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G_tau</span>
+  <span class="n">A</span><span class="p">[</span><span class="s1">&#39;nn&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">nn</span>
+  <span class="n">A</span><span class="p">[</span><span class="s1">&#39;nn_iw&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">nn_iw</span>
+  <span class="n">A</span><span class="p">[</span><span class="s1">&#39;Sigma_iw&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Sigma_iw</span>
+  <span class="n">A</span><span class="p">[</span><span class="s2">&quot;G_2w&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G_2w</span>
+  <span class="n">A</span><span class="p">[</span><span class="s2">&quot;G_3w&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G_3w</span>
+<span class="ne">Warning</span><span class="p">:</span> <span class="n">The</span> <span class="n">Delta</span><span class="p">(</span><span class="n">tau</span><span class="p">)</span> <span class="n">block</span> <span class="n">number</span> <span class="mi">0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">real</span> <span class="ow">in</span> <span class="n">tau</span> <span class="n">space</span>
+<span class="ne">Warning</span><span class="p">:</span> <span class="n">The</span> <span class="n">Delta</span><span class="p">(</span><span class="n">tau</span><span class="p">)</span> <span class="n">block</span> <span class="n">number</span> <span class="mi">1</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">real</span> <span class="ow">in</span> <span class="n">tau</span> <span class="n">space</span>
+<span class="n">Starting</span> <span class="n">run</span> <span class="k">with</span> <span class="mi">1</span> <span class="n">MPI</span> <span class="n">rank</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="n">at</span> <span class="p">:</span> <span class="mi">2020</span><span class="o">-</span><span class="mo">06</span><span class="o">-</span><span class="mi">18</span> <span class="mi">16</span><span class="p">:</span><span class="mi">47</span><span class="p">:</span><span class="mf">24.082048</span>
 </pre></div>
 </div>
 <p>To use the solver, one has to go through the following steps:</p>
-<p><em>Import the</em> <code class="docutils literal"><span class="pre">Solver</span></code> <em>class</em>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs_ctseg</span> <span class="k">import</span> <span class="n">Solver</span>
+<p><em>Import the</em> <code class="docutils literal notranslate"><span class="pre">Solver</span></code> <em>class</em>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs_ctseg</span> <span class="k">import</span> <span class="n">Solver</span>
 </pre></div>
 </div>
-<p><em>Declare and construct a</em> <code class="docutils literal"><span class="pre">Solver</span></code> <em>instance</em>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">gf_struct</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;up&quot;</span><span class="p">,[</span><span class="mi">0</span><span class="p">]),</span> <span class="p">(</span><span class="s2">&quot;down&quot;</span><span class="p">,[</span><span class="mi">0</span><span class="p">])]</span>
+<p><em>Declare and construct a</em> <code class="docutils literal notranslate"><span class="pre">Solver</span></code> <em>instance</em>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gf_struct</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;up&quot;</span><span class="p">,[</span><span class="mi">0</span><span class="p">]),</span> <span class="p">(</span><span class="s2">&quot;down&quot;</span><span class="p">,[</span><span class="mi">0</span><span class="p">])]</span>
 <span class="n">S</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span>
      <span class="n">beta</span> <span class="o">=</span> <span class="mf">10.0</span><span class="p">,</span> <span class="c1">#inverse temperature</span>
      <span class="n">gf_struct</span> <span class="o">=</span> <span class="n">gf_struct</span> <span class="p">)</span>
 </pre></div>
 </div>
-<p>Here, <code class="docutils literal"><span class="pre">gf_struct</span></code> is a Python dictionary that specifies the block structure of the Green’s function, here one <span class="math">\(1\times 1\)</span> (<code class="docutils literal"><span class="pre">[0]</span></code> is of length 1) for each spin (<code class="docutils literal"><span class="pre">up</span></code>, <code class="docutils literal"><span class="pre">down</span></code>).</p>
+<p>Here, <code class="docutils literal notranslate"><span class="pre">gf_struct</span></code> is a Python dictionary that specifies the block structure of the Green’s function, here one <span class="math notranslate nohighlight">\(1\times 1\)</span> (<code class="docutils literal notranslate"><span class="pre">[0]</span></code> is of length 1) for each spin (<code class="docutils literal notranslate"><span class="pre">up</span></code>, <code class="docutils literal notranslate"><span class="pre">down</span></code>).</p>
 <p>Some construction parameters are mandatory, others are optional. See <a class="reference internal" href="solver_core.html"><span class="doc">here</span></a> for a complete list.</p>
 <p><em>Initialize the inputs of the solver</em>. In this script, we want to define the noninteracting Green’s function as:</p>
-<div class="math">
+<div class="math notranslate nohighlight">
 \[\begin{equation}
 \left[\mathcal{G}_{0}\right]^{\sigma}(i\omega_{n})=\left[i\omega_{n}-\varepsilon_{a\sigma}-\Delta_{ab}^{\sigma}(i\omega_{n})\right]^{-1},\label{eq:G0_def}
 \end{equation}\]</div>
 <p>with</p>
-<div class="math">
+<div class="math notranslate nohighlight">
 \[\begin{split}\begin{align*}
 \Delta^\sigma(i\omega_{n}) &amp; =\frac{V^{2}}{i\omega_{n}-\varepsilon_{0}} +\frac{V^{2}}{i\omega_{n}+\varepsilon_{0}},\\
 \end{align*}\end{split}\]</div>
-<p>In the script, this is done via an <em>accessor</em> called <code class="docutils literal"><span class="pre">G0_iw</span></code>. It is set by the user in the following way:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">S</span><span class="o">.</span><span class="n">G0_iw</span> <span class="o">&lt;&lt;</span> \
+<p>In the script, this is done via an <em>accessor</em> called <code class="docutils literal notranslate"><span class="pre">G0_iw</span></code>. It is set by the user in the following way:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">S</span><span class="o">.</span><span class="n">G0_iw</span> <span class="o">&lt;&lt;</span> \
    <span class="n">inverse</span><span class="p">(</span><span class="n">iOmega_n</span> <span class="o">+</span> <span class="n">mu</span> \
            <span class="o">-</span><span class="n">V</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">inverse</span><span class="p">(</span><span class="n">iOmega_n</span> <span class="o">-</span> <span class="n">eps0</span><span class="p">)</span>\
            <span class="o">-</span><span class="n">V</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">inverse</span><span class="p">(</span><span class="n">iOmega_n</span> <span class="o">+</span> <span class="n">eps0</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>Similarly, we want to define dynamical interactions:</p>
-<div class="math">
+<div class="math notranslate nohighlight">
 \[\begin{align*}
 \mathcal{D}_{0}^{\sigma,\sigma'}(i\Omega_{m}) &amp; =\frac{2\lambda^{2}\omega_0}{(i\Omega_{m})^{2}-\omega_{0}^2}.
 \end{align*}\]</div>
-<p>This is done through the <code class="docutils literal"><span class="pre">D0_iw</span></code> accessor:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">b1</span><span class="p">,</span><span class="n">b2</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+<p>This is done through the <code class="docutils literal notranslate"><span class="pre">D0_iw</span></code> accessor:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">b1</span><span class="p">,</span><span class="n">b2</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
  <span class="n">S</span><span class="o">.</span><span class="n">D0_iw</span><span class="p">[</span><span class="n">b1</span><span class="o">+</span><span class="s2">&quot;|&quot;</span><span class="o">+</span><span class="n">b2</span><span class="p">]</span> <span class="o">&lt;&lt;</span> \
    <span class="n">lambd</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">inverse</span><span class="p">(</span><span class="n">iOmega_n</span> <span class="o">-</span> <span class="n">w0</span><span class="p">)</span> \
                  <span class="o">-</span> <span class="n">inverse</span><span class="p">(</span><span class="n">iOmega_n</span> <span class="o">+</span> <span class="n">w0</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>Other accessors are used to read out the observables after running the solver, like at the end of script:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">A</span><span class="p">[</span><span class="s2">&quot;G_tau&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G_tau</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">A</span><span class="p">[</span><span class="s2">&quot;G_tau&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G_tau</span>
 <span class="n">A</span><span class="p">[</span><span class="s1">&#39;nn&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">nn</span>
 <span class="n">A</span><span class="p">[</span><span class="s1">&#39;nn_iw&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">nn_iw</span>
 <span class="n">A</span><span class="p">[</span><span class="s1">&#39;Sigma_iw&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Sigma_iw</span>
@@ -294,10 +226,10 @@ Warning: The Delta(tau) block number 1 is not real in tau space
 <span class="n">A</span><span class="p">[</span><span class="s2">&quot;G_3w&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G_3w</span>
 </pre></div>
 </div>
-<p>Here, <code class="docutils literal"><span class="pre">G_tau</span></code> is the one-particle Green’s function <span class="math">\(G^\sigma(\tau)\)</span>, <code class="docutils literal"><span class="pre">nn</span></code> the density-density correlator <span class="math">\(\chi^{\sigma\sigma'}_{ab}\)</span>, <code class="docutils literal"><span class="pre">nn_iw</span></code> the density-density correlation function <span class="math">\(\chi^{\sigma\sigma'}_{ab}(i\Omega)\)</span>, <code class="docutils literal"><span class="pre">Sigma_iw</span></code> the self-energy <span class="math">\(\Sigma^\sigma(i\omega)\)</span>, <code class="docutils literal"><span class="pre">G_2w</span></code> the three-point correlation function <span class="math">\(\chi^{\sigma\sigma'}_{abc}(i\omega,i\Omega)\)</span> and <code class="docutils literal"><span class="pre">G_3w</span></code> the four-point correlation function <span class="math">\(G^{2,\sigma\sigma'}_{abcd}(i\omega,i\omega',i\Omega)\)</span>. All these observables are defined <a class="reference internal" href="definitions.html"><span class="doc">here</span></a> or <a class="reference internal" href="measures.html"><span class="doc">there</span></a>.</p>
+<p>Here, <code class="docutils literal notranslate"><span class="pre">G_tau</span></code> is the one-particle Green’s function <span class="math notranslate nohighlight">\(G^\sigma(\tau)\)</span>, <code class="docutils literal notranslate"><span class="pre">nn</span></code> the density-density correlator <span class="math notranslate nohighlight">\(\chi^{\sigma\sigma'}_{ab}\)</span>, <code class="docutils literal notranslate"><span class="pre">nn_iw</span></code> the density-density correlation function <span class="math notranslate nohighlight">\(\chi^{\sigma\sigma'}_{ab}(i\Omega)\)</span>, <code class="docutils literal notranslate"><span class="pre">Sigma_iw</span></code> the self-energy <span class="math notranslate nohighlight">\(\Sigma^\sigma(i\omega)\)</span>, <code class="docutils literal notranslate"><span class="pre">G_2w</span></code> the three-point correlation function <span class="math notranslate nohighlight">\(\chi^{\sigma\sigma'}_{abc}(i\omega,i\Omega)\)</span> and <code class="docutils literal notranslate"><span class="pre">G_3w</span></code> the four-point correlation function <span class="math notranslate nohighlight">\(G^{2,\sigma\sigma'}_{abcd}(i\omega,i\omega',i\Omega)\)</span>. All these observables are defined <a class="reference internal" href="definitions.html"><span class="doc">here</span></a> or <a class="reference internal" href="measures.html"><span class="doc">there</span></a>.</p>
 <p>For a complete list of the accessors (both input and output), see <a class="reference internal" href="solver_core.html"><span class="doc">here</span></a>.</p>
-<p><em>Call the</em> <code class="docutils literal"><span class="pre">solve()</span></code> <em>method</em>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">S</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span>
+<p><em>Call the</em> <code class="docutils literal notranslate"><span class="pre">solve()</span></code> <em>method</em>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">S</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span>
  <span class="n">h_int</span> <span class="o">=</span> <span class="n">U</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="n">n</span><span class="p">(</span><span class="s1">&#39;down&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="c1">#local Hamiltonian</span>
  <span class="n">n_cycles</span>  <span class="o">=</span> <span class="mi">100000</span><span class="p">,</span> <span class="c1">#Monte-Carlo cycles</span>
  <span class="n">length_cycle</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="c1">#length of a cycle</span>
@@ -313,7 +245,7 @@ Warning: The Delta(tau) block number 1 is not real in tau space
 <span class="p">)</span>
 </pre></div>
 </div>
-<p><code class="docutils literal"><span class="pre">h_int</span></code> is the local many-body Hamiltonian, it is an operator expression. <code class="docutils literal"><span class="pre">n_cycles</span></code>, <code class="docutils literal"><span class="pre">length_cycle</span></code> and <code class="docutils literal"><span class="pre">n_warmup_cycles</span></code> respectively set the number of configuration measurements, the number of Monte-Carlo updates between two measurements and the number of thermalization cycles. <code class="docutils literal"><span class="pre">n_w_b_vertex</span></code> and <code class="docutils literal"><span class="pre">n_w_f_vertex</span></code> set the number of bosonic and fermionic Matsubara frequencies in the multi-variable correlation functions, and the last six options switch on the measurement of the corresponding observables.</p>
+<p><code class="docutils literal notranslate"><span class="pre">h_int</span></code> is the local many-body Hamiltonian, it is an operator expression. <code class="docutils literal notranslate"><span class="pre">n_cycles</span></code>, <code class="docutils literal notranslate"><span class="pre">length_cycle</span></code> and <code class="docutils literal notranslate"><span class="pre">n_warmup_cycles</span></code> respectively set the number of configuration measurements, the number of Monte-Carlo updates between two measurements and the number of thermalization cycles. <code class="docutils literal notranslate"><span class="pre">n_w_b_vertex</span></code> and <code class="docutils literal notranslate"><span class="pre">n_w_f_vertex</span></code> set the number of bosonic and fermionic Matsubara frequencies in the multi-variable correlation functions, and the last six options switch on the measurement of the corresponding observables.</p>
 <p>This method comes with mandatory and optional parameters, whose complete list can be found <a class="reference internal" href="solver_core.html"><span class="doc">here</span></a>.</p>
 <p>To know more about the solver, visit one of the following pages:</p>
 <div class="toctree-wrapper compound">

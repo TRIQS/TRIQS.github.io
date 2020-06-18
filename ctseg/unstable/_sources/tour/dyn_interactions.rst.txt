@@ -8,8 +8,8 @@ Below is a short example demonstrating how to set up a computation in the presen
 
 .. runblock:: python
 
-  from pytriqs.gf import *
-  import pytriqs.utility.mpi as mpi
+  from triqs.gf import *
+  import triqs.utility.mpi as mpi
   from triqs_ctseg import Solver
 
   gf_struct = [("up",[0]), ("down",[0])]
@@ -23,19 +23,19 @@ Below is a short example demonstrating how to set up a computation in the presen
   g_ch, g_sp = 0.4, 0.7 #coupling strengths
   sigz = lambda s1, s2 : 1 if s1==s2 else -1
   import itertools
-  from pytriqs.gf.descriptors import Function
+  from triqs.gf.descriptors import Function
   for b1, b2 in itertools.product(dict(gf_struct).keys(), repeat=2):
    S.D0_iw[b1+"|"+b2] << Function(lambda w : g_ch**2*2*w_ch/(w**2-w_ch**2)\
                                            + g_sp**2*2*w_sp/(w**2-w_sp**2)*sigz(b1,b2) )
   #set transverse spin interaction
   S.Jperp_iw << Function(lambda w : 4 * g_sp**2 * 2*w_sp/(w**2-w_sp**2))
 
-  from pytriqs.operators import *
+  from triqs.operators import *
   U = 2.0
   S.solve(h_int = U * n('up',0)*n('down',0),
           n_cycles = 10000, length_cycle = 100, n_warmup_cycles = 100)
 
-  from pytriqs.archive import *
+  from h5 import *
   if mpi.is_master_node():
    with HDFArchive("dyn_interactions.h5",'w') as A: 
     A['G_tau'] = S.G_tau
