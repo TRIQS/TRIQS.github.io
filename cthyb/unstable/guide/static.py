@@ -1,6 +1,6 @@
-from pytriqs.gf import *
-from pytriqs.operators import *
-from pytriqs.applications.impurity_solvers.cthyb import Solver
+from triqs.gf import *
+from triqs.operators import *
+from triqs.applications.impurity_solvers.cthyb import Solver
 
 # Parameters
 D = 1.0         # Half-bandwidth of the bath
@@ -34,11 +34,11 @@ rho = S.density_matrix
 # Object containing eigensystem of the local Hamiltonian
 h_loc_diag = S.h_loc_diagonalization
 
-from pytriqs.atom_diag import trace_rho_op
+from triqs.atom_diag import trace_rho_op
 
 # Evaluate occupations
-print "<N_up> =", trace_rho_op(rho, n('up',0), h_loc_diag)
-print "<N_down> = ", trace_rho_op(rho, n('down',0), h_loc_diag)
+print("<N_up> =", trace_rho_op(rho, n('up',0), h_loc_diag))
+print("<N_down> = ", trace_rho_op(rho, n('down',0), h_loc_diag))
 
 # Evaluate double occupancy
-print "<N_up*N_down> =", trace_rho_op(rho, n('up',0)*n('down',0), h_loc_diag)
+print("<N_up*N_down> =", trace_rho_op(rho, n('up',0)*n('down',0), h_loc_diag))
