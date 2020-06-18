@@ -4,24 +4,17 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>triqs_ctint.solver &#8212; CTINT - A TRIQS Interaction Expansion Solver  documentation</title>
     <link rel="stylesheet" href="../../_static/triqs.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../../',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=default"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://raw.githubusercontent.com/mathjax/MathJax/2.7.8/MathJax.js"></script>
     <link rel="author" title="About these documents" href="../../about.html" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -38,8 +31,7 @@
       
     </style>
 
-  </head>
-  <body>
+  </head><body>
 <div class="pageheader">
   <ul>
     
@@ -49,7 +41,7 @@
     
     <li><a href="../../issues.html">Issues</a></li>
     
-    <li><a href="../../about.html">About ctint</a></li>
+    <li><a href="../../about.html">About triqs_ctint</a></li>
     
   </ul>
   <div>
@@ -76,12 +68,14 @@
         <div class="sphinxsidebarwrapper">
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="../../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -93,9 +87,9 @@
           <div class="body" role="main">
             
   <h1>Source code for triqs_ctint.solver</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">solver_core</span>  <span class="k">import</span> <span class="n">SolverCore</span>
-<span class="kn">from</span> <span class="nn">pytriqs.gf</span> <span class="k">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">pytriqs.utility</span> <span class="k">import</span> <span class="n">mpi</span>
+<span></span><span class="kn">from</span> <span class="nn">.solver_core</span> <span class="k">import</span> <span class="n">SolverCore</span>
+<span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">triqs.utility</span> <span class="k">import</span> <span class="n">mpi</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="k">import</span> <span class="n">root</span>
@@ -107,7 +101,7 @@
 <span class="c1"># print on master node</span>
 <span class="k">def</span> <span class="nf">mpi_print</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
-        <span class="nb">print</span> <span class="n">arg</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
 
 <span class="c1"># Flatten a block vector of matrices</span>
 <span class="k">def</span> <span class="nf">flatten</span><span class="p">(</span><span class="n">Sig_HF</span><span class="p">):</span>
@@ -119,13 +113,13 @@
     <span class="n">Sig_HF</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">bl</span><span class="p">,</span> <span class="n">indices</span> <span class="ow">in</span> <span class="n">gf_struct</span><span class="p">:</span>
         <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
-        <span class="n">Sig_HF</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">bl</span><span class="p">,</span> <span class="n">Sig_HF_flat</span><span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">N</span><span class="o">**</span><span class="mi">2</span><span class="p">)]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">N</span><span class="p">,</span><span class="n">N</span><span class="p">))])</span>
+        <span class="n">Sig_HF</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">bl</span><span class="p">,</span> <span class="n">Sig_HF_flat</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">N</span><span class="o">**</span><span class="mi">2</span><span class="p">))]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">N</span><span class="p">,</span><span class="n">N</span><span class="p">))])</span>
         <span class="n">offset</span> <span class="o">=</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">N</span><span class="o">**</span><span class="mi">2</span>
     <span class="k">return</span> <span class="n">Sig_HF</span>
 
 <span class="c1"># === The SolverCore Wrapper</span>
 
-<span class="k">class</span> <span class="nc">Solver</span><span class="p">(</span><span class="n">SolverCore</span><span class="p">):</span>
+<div class="viewcode-block" id="Solver"><a class="viewcode-back" href="../../documentation.html#triqs_ctint.Solver">[docs]</a><span class="k">class</span> <span class="nc">Solver</span><span class="p">(</span><span class="n">SolverCore</span><span class="p">):</span>
 
 <div class="viewcode-block" id="Solver.__init__"><a class="viewcode-back" href="../../reference/constr_parameters.html#triqs_ctint.Solver.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">gf_struct</span><span class="p">,</span> <span class="n">n_iw</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">n_tau</span><span class="o">=</span><span class="mi">5001</span><span class="p">,</span> <span class="n">use_D</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_Jperp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">n_tau_dynamical_interactions</span><span class="o">=</span><span class="mi">5001</span><span class="p">,</span> <span class="n">n_iw_dynamical_interactions</span><span class="o">=</span><span class="mi">500</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -155,8 +149,8 @@
 <span class="sd">               Number of matsubara freqs for D0_iw and jperp_iw (Default 200)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">,</span><span class="nb">dict</span><span class="p">):</span>
-            <span class="nb">print</span> <span class="s2">&quot;WARNING: gf_struct should be a list of pairs [ [str,[int,...]], ...], not a dict&quot;</span>
-            <span class="n">gf_struct</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">gf_struct</span><span class="o">.</span><span class="n">iteritems</span><span class="p">())</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;WARNING: gf_struct should be a list of pairs [ [str,[int,...]], ...], not a dict&quot;</span><span class="p">)</span>
+            <span class="n">gf_struct</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">gf_struct</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
 
         <span class="c1"># Initialise the core solver</span>
         <span class="n">SolverCore</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span> <span class="n">gf_struct</span><span class="o">=</span><span class="n">gf_struct</span><span class="p">,</span> 
@@ -232,7 +226,7 @@
                         <span class="c1"># Sig_HF[bl1][idx_u4, idx_u1] -= coef * G_dens[bl3][u2, u3]</span>
                         <span class="c1"># Sig_HF[bl3][idx_u2, idx_u3] -= coef * G_dens[bl1][u4, u1]</span>
             
-                <span class="k">return</span> <span class="n">Sig_HF_flat</span> <span class="o">-</span> <span class="n">flatten</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">Sig_HF</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()))</span>
+                <span class="k">return</span> <span class="n">Sig_HF_flat</span> <span class="o">-</span> <span class="n">flatten</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">Sig_HF</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
             
             <span class="c1"># Invoke the root finder</span>
             <span class="n">Sig_HF_init</span> <span class="o">=</span> <span class="p">[[</span><span class="n">bl</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">idx_lst</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">idx_lst</span><span class="p">)))]</span> <span class="k">for</span> <span class="n">bl</span><span class="p">,</span> <span class="n">idx_lst</span> <span class="ow">in</span> <span class="n">gf_struct</span><span class="p">]</span>
@@ -276,13 +270,13 @@
                 <span class="n">mpi_print</span><span class="p">(</span><span class="s2">&quot;        </span><span class="si">%s</span><span class="s2"> : </span><span class="se">\t</span><span class="si">%s</span><span class="s2">    Total: </span><span class="si">%.4f</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">bl</span><span class="p">,</span> <span class="n">dens</span><span class="p">,</span> <span class="n">dens_tot</span><span class="p">))</span>
 
             <span class="n">mpi_print</span><span class="p">(</span><span class="s2">&quot;  -- Alpha Tensor : &quot;</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">bl</span><span class="p">,</span> <span class="n">alpha_bl</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">alpha</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">bl</span><span class="p">,</span> <span class="n">alpha_bl</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="n">alpha</span><span class="p">):</span>
                 <span class="n">mpi_print</span><span class="p">(</span><span class="s2">&quot;        </span><span class="si">%s</span><span class="s2"> : </span><span class="se">\t</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">bl</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">alpha_bl</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">           </span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">))</span>
 
         <span class="c1"># Call the core solver&#39;s solve routine</span>
         <span class="n">solve_status</span> <span class="o">=</span> <span class="n">SolverCore</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">params_kw</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">solve_status</span></div>
+        <span class="k">return</span> <span class="n">solve_status</span></div></div>
 </pre></div>
 
           </div>
