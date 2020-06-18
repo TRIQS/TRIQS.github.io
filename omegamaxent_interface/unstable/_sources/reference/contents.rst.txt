@@ -253,7 +253,7 @@ Simple example of usage
 Suppose you have saved a Matsubara Green's function as a TRIQS object 'G' in a hdf5 file "G.h5". The quickest way to obtain the corresponding
 real frequency Green's function is::
 
-    from pytriqs.archive import HDFArchive as HA
+    from h5 import HDFArchive as HA
     import OmegaMaxEnt_TRIQS as OT
 
     #load the Matsubara Green's function
