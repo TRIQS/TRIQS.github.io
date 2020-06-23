@@ -96,6 +96,7 @@
 <span class="c1">#</span>
 <span class="c1"># TRIQS: a Toolbox for Research in Interacting Quantum Systems</span>
 <span class="c1">#</span>
+<span class="c1"># Copyright (C) 2018 by G. J. Kraberger</span>
 <span class="c1"># Copyright (C) 2011 by M. Aichhorn, L. Pourovskii, V. Vildosola</span>
 <span class="c1">#</span>
 <span class="c1"># TRIQS is free software: you can redistribute it and/or modify it under the</span>
@@ -143,11 +144,11 @@
 <span class="sd">        hdf_file : string</span>
 <span class="sd">                   Name of hdf5 containing the data.</span>
 <span class="sd">        h_field : scalar, optional</span>
-<span class="sd">                  The value of magnetic field to add to the DFT Hamiltonian. </span>
+<span class="sd">                  The value of magnetic field to add to the DFT Hamiltonian.</span>
 <span class="sd">                  The contribution -h_field*sigma is added to diagonal elements of the Hamiltonian.</span>
 <span class="sd">                  It cannot be used with the spin-orbit coupling on; namely h_field is set to 0 if self.SO=True.</span>
 <span class="sd">        use_dft_blocks : boolean, optional</span>
-<span class="sd">                         If True, the local Green&#39;s function matrix for each spin is divided into smaller blocks </span>
+<span class="sd">                         If True, the local Green&#39;s function matrix for each spin is divided into smaller blocks</span>
 <span class="sd">                          with the block structure determined from the DFT density matrix of the corresponding correlated shell.</span>
 
 <span class="sd">                         Alternatively and additionally, the block structure can be analysed using :meth:`analyse_block_structure &lt;dft.sumk_dft.SumkDFT.analyse_block_structure&gt;`</span>
@@ -155,7 +156,7 @@
 <span class="sd">        dft_data : string, optional</span>
 <span class="sd">                   Name of hdf5 subgroup in which DFT data for projector and lattice Green&#39;s function construction are stored.</span>
 <span class="sd">        symmcorr_data : string, optional</span>
-<span class="sd">                        Name of hdf5 subgroup in which DFT data on symmetries of correlated shells </span>
+<span class="sd">                        Name of hdf5 subgroup in which DFT data on symmetries of correlated shells</span>
 <span class="sd">                        (symmetry operations, permutaion matrices etc.) are stored.</span>
 <span class="sd">        parproj_data : string, optional</span>
 <span class="sd">                       Name of hdf5 subgroup in which DFT data on non-normalized projectors for non-correlated</span>
@@ -186,6 +187,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">misc_data</span> <span class="o">=</span> <span class="n">misc_data</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">h_field</span> <span class="o">=</span> <span class="n">h_field</span>
 
+            <span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span> <span class="o">=</span> <span class="n">BlockStructure</span><span class="p">()</span>
+
             <span class="c1"># Read input from HDF:</span>
             <span class="n">things_to_read</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;energy_unit&#39;</span><span class="p">,</span> <span class="s1">&#39;n_k&#39;</span><span class="p">,</span> <span class="s1">&#39;k_dep_projection&#39;</span><span class="p">,</span> <span class="s1">&#39;SP&#39;</span><span class="p">,</span> <span class="s1">&#39;SO&#39;</span><span class="p">,</span> <span class="s1">&#39;charge_below&#39;</span><span class="p">,</span> <span class="s1">&#39;density_required&#39;</span><span class="p">,</span>
                               <span class="s1">&#39;symm_op&#39;</span><span class="p">,</span> <span class="s1">&#39;n_shells&#39;</span><span class="p">,</span> <span class="s1">&#39;shells&#39;</span><span class="p">,</span> <span class="s1">&#39;n_corr_shells&#39;</span><span class="p">,</span> <span class="s1">&#39;corr_shells&#39;</span><span class="p">,</span> <span class="s1">&#39;use_rotations&#39;</span><span class="p">,</span> <span class="s1">&#39;rot_mat&#39;</span><span class="p">,</span>
@@ -213,8 +216,6 @@
                 <span class="k">for</span> <span class="n">isp</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_spin_blocks</span><span class="p">[</span><span class="n">iso</span><span class="p">]):</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">spin_names_to_ind</span><span class="p">[</span><span class="n">iso</span><span class="p">][</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">spin_block_names</span><span class="p">[</span><span class="n">iso</span><span class="p">][</span><span class="n">isp</span><span class="p">]]</span> <span class="o">=</span> <span class="n">isp</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">SP</span>
-
-            <span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span> <span class="o">=</span> <span class="n">BlockStructure</span><span class="p">()</span>
 
             <span class="c1"># GF structure used for the local things in the k sums</span>
             <span class="c1"># Most general form allowing for all hybridisation, i.e. largest</span>
@@ -244,14 +245,14 @@
 
             <span class="bp">self</span><span class="o">.</span><span class="n">chemical_potential</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># initialise mu</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">init_dc</span><span class="p">()</span>  <span class="c1"># initialise the double counting</span>
-            
+
             <span class="c1"># charge mixing parameters</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">charge_mixing</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="c1"># defaults from PRB 90 235103 (&quot;... slow but stable convergence ...&quot;)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">charge_mixing_alpha</span> <span class="o">=</span> <span class="mf">0.1</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">charge_mixing_gamma</span> <span class="o">=</span> <span class="mf">1.0</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">deltaNOld</span> <span class="o">=</span> <span class="kc">None</span>
-            
+
             <span class="c1"># Analyse the block structure and determine the smallest gf_struct</span>
             <span class="c1"># blocks and maps, if desired</span>
             <span class="k">if</span> <span class="n">use_dft_blocks</span><span class="p">:</span>
@@ -285,7 +286,7 @@
         <span class="c1"># initialise variables on all nodes to ensure mpi broadcast works at</span>
         <span class="c1"># the end</span>
         <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">things_to_read</span><span class="p">:</span>
-            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">it</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">it</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">subgroup_present</span> <span class="o">=</span> <span class="mi">0</span>
 
         <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
@@ -388,10 +389,10 @@
 
 <span class="sd">        bname : string</span>
 <span class="sd">                Block name of the target block of the lattice Green&#39;s function.</span>
-<span class="sd">        gf_to_downfold : Gf </span>
+<span class="sd">        gf_to_downfold : Gf</span>
 <span class="sd">                       Block of the Green&#39;s function that is to be downfolded.</span>
-<span class="sd">        gf_inp : Gf </span>
-<span class="sd">                 FIXME </span>
+<span class="sd">        gf_inp : Gf</span>
+<span class="sd">                 FIXME</span>
 <span class="sd">        shells : string, optional</span>
 
 <span class="sd">                 - if shells=&#39;corr&#39;: orthonormalized projectors for correlated shells are used for the downfolding.</span>
@@ -443,10 +444,10 @@
 
 <span class="sd">        bname : string</span>
 <span class="sd">                Block name of the target block of the lattice Green&#39;s function.</span>
-<span class="sd">        gf_to_upfold : Gf </span>
+<span class="sd">        gf_to_upfold : Gf</span>
 <span class="sd">                       Block of the Green&#39;s function that is to be upfolded.</span>
-<span class="sd">        gf_inp : Gf </span>
-<span class="sd">                 FIXME </span>
+<span class="sd">        gf_inp : Gf</span>
+<span class="sd">                 FIXME</span>
 <span class="sd">        shells : string, optional</span>
 
 <span class="sd">                 - if shells=&#39;corr&#39;: orthonormalized projectors for correlated shells are used for the upfolding.</span>
@@ -494,10 +495,10 @@
 <span class="sd">              - if shells=&#39;corr&#39;: ish labels all correlated shells (equivalent or not)</span>
 <span class="sd">              - if shells=&#39;all&#39;: ish labels only representative (inequivalent) non-correlated shells</span>
 
-<span class="sd">        gf_to_rotate : Gf </span>
+<span class="sd">        gf_to_rotate : Gf</span>
 <span class="sd">                       Block of the Green&#39;s function that is to be rotated.</span>
 <span class="sd">        direction : string</span>
-<span class="sd">                    The direction of rotation can be either </span>
+<span class="sd">                    The direction of rotation can be either</span>
 
 <span class="sd">                    - &#39;toLocal&#39; : global -&gt; local transformation,</span>
 <span class="sd">                    - &#39;toGlobal&#39; : local -&gt; global transformation.</span>
@@ -547,7 +548,7 @@
 
 <div class="viewcode-block" id="SumkDFT.lattice_gf"><a class="viewcode-back" href="../../reference/sumk_dft.html#triqs_dft_tools.sumk_dft.SumkDFT.lattice_gf">[docs]</a>    <span class="k">def</span> <span class="nf">lattice_gf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ik</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iw_or_w</span><span class="o">=</span><span class="s2">&quot;iw&quot;</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">broadening</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">with_Sigma</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">with_dc</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Calculates the lattice Green function for a given k-point from the DFT Hamiltonian and the self energy. </span>
+<span class="sd">        Calculates the lattice Green function for a given k-point from the DFT Hamiltonian and the self energy.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -570,7 +571,7 @@
 <span class="sd">               Data defining mesh on which the real-axis GF will be calculated, given in the form</span>
 <span class="sd">               (om_min,om_max,n_points), where om_min is the minimum omega, om_max is the maximum omega and n_points is the number of points.</span>
 <span class="sd">        with_Sigma : boolean, optional</span>
-<span class="sd">                     If True the GF will be calculated with the self-energy stored in self.Sigmaimp_(w/iw), for real/Matsubara GF, respectively. </span>
+<span class="sd">                     If True the GF will be calculated with the self-energy stored in self.Sigmaimp_(w/iw), for real/Matsubara GF, respectively.</span>
 <span class="sd">                     In this case the mesh is taken from the self.Sigma_imp object.</span>
 <span class="sd">                     If with_Sigma=True but self.Sigmaimp_(w/iw) is not present, with_Sigma is reset to False.</span>
 <span class="sd">        with_dc : boolean, optional</span>
@@ -661,9 +662,9 @@
         <span class="n">idmat</span> <span class="o">=</span> <span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">n_orbitals</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span> <span class="n">ntoi</span><span class="p">[</span><span class="n">sp</span><span class="p">]],</span> <span class="n">numpy</span><span class="o">.</span><span class="n">complex_</span><span class="p">)</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">spn</span><span class="p">]</span>
         <span class="n">M</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">idmat</span><span class="p">)</span>
-        
+
         <span class="k">for</span> <span class="n">ibl</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_spin_blocks</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">SO</span><span class="p">]):</span>
-            
+
             <span class="n">ind</span> <span class="o">=</span> <span class="n">ntoi</span><span class="p">[</span><span class="n">spn</span><span class="p">[</span><span class="n">ibl</span><span class="p">]]</span>
             <span class="n">n_orb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_orbitals</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span> <span class="n">ind</span><span class="p">]</span>
             <span class="n">M</span><span class="p">[</span><span class="n">ibl</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hopping</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span> <span class="n">ind</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">n_orb</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">n_orb</span><span class="p">]</span> <span class="o">-</span> \
@@ -681,86 +682,128 @@
 
         <span class="k">return</span> <span class="n">G_latt</span></div>
 
-    <span class="k">def</span> <span class="nf">set_Sigma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Sigma_imp</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">put_Sigma</span><span class="p">(</span><span class="n">Sigma_imp</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">set_Sigma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Sigma_imp</span><span class="p">,</span> <span class="n">transform_to_sumk_blocks</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">put_Sigma</span><span class="p">(</span><span class="n">Sigma_imp</span><span class="p">,</span> <span class="n">transform_to_sumk_blocks</span><span class="p">)</span>
 
-<div class="viewcode-block" id="SumkDFT.put_Sigma"><a class="viewcode-back" href="../../reference/sumk_dft.html#triqs_dft_tools.sumk_dft.SumkDFT.put_Sigma">[docs]</a>    <span class="k">def</span> <span class="nf">put_Sigma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Sigma_imp</span><span class="p">):</span>
+<div class="viewcode-block" id="SumkDFT.put_Sigma"><a class="viewcode-back" href="../../reference/sumk_dft.html#triqs_dft_tools.sumk_dft.SumkDFT.put_Sigma">[docs]</a>    <span class="k">def</span> <span class="nf">put_Sigma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Sigma_imp</span><span class="p">,</span> <span class="n">transform_to_sumk_blocks</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Inserts the impurity self-energies into the sumk_dft class.</span>
+<span class="sd">        Insert the impurity self-energies into the sumk_dft class.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        Sigma_imp : list of BlockGf (Green&#39;s function) objects</span>
-<span class="sd">                    List containing impurity self-energy for all inequivalent correlated shells.</span>
-<span class="sd">                    Self-energies for equivalent shells are then automatically set by this function.</span>
-<span class="sd">                    The self-energies can be of the real or imaginary-frequency type.</span>
+<span class="sd">            List containing impurity self-energy for all (inequivalent) correlated shells.</span>
+<span class="sd">            Self-energies for equivalent shells are then automatically set by this function.</span>
+<span class="sd">            The self-energies can be of the real or imaginary-frequency type.</span>
+<span class="sd">        transform_to_sumk_blocks : bool, optional</span>
+<span class="sd">            If True (default), the input Sigma_imp will be transformed to the block structure ``gf_struct_sumk``,</span>
+<span class="sd">            else it has to be given in ``gf_struct_sumk``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
-            <span class="n">Sigma_imp</span><span class="p">,</span> <span class="nb">list</span><span class="p">),</span> <span class="s2">&quot;put_Sigma: Sigma_imp has to be a list of Sigmas for the correlated shells, even if it is of length 1!&quot;</span>
-        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span>
-            <span class="n">Sigma_imp</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_inequiv_shells</span><span class="p">,</span> <span class="s2">&quot;put_Sigma: give exactly one Sigma for each inequivalent corr. shell!&quot;</span>
+        <span class="k">if</span> <span class="n">transform_to_sumk_blocks</span><span class="p">:</span>
+            <span class="n">Sigma_imp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform_to_sumk_blocks</span><span class="p">(</span><span class="n">Sigma_imp</span><span class="p">)</span>
 
-        <span class="c1"># init self.Sigma_imp_(i)w:</span>
-        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">gf</span><span class="p">,</span> <span class="n">Gf</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span> <span class="p">(</span><span class="n">gf</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">MeshImFreq</span><span class="p">))</span> <span class="k">for</span> <span class="n">bname</span><span class="p">,</span> <span class="n">gf</span> <span class="ow">in</span> <span class="n">Sigma_imp</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">Sigma_imp</span><span class="p">,</span> <span class="nb">list</span><span class="p">),</span>\
+            <span class="s2">&quot;put_Sigma: Sigma_imp has to be a list of Sigmas for the correlated shells, even if it is of length 1!&quot;</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">Sigma_imp</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_corr_shells</span><span class="p">,</span>\
+            <span class="s2">&quot;put_Sigma: give exactly one Sigma for each corr. shell!&quot;</span>
+
+        <span class="k">if</span> <span class="nb">all</span><span class="p">((</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">gf</span><span class="p">,</span> <span class="n">Gf</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gf</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">MeshImFreq</span><span class="p">))</span> <span class="k">for</span> <span class="n">bname</span><span class="p">,</span> <span class="n">gf</span> <span class="ow">in</span> <span class="n">Sigma_imp</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
             <span class="c1"># Imaginary frequency Sigma:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_imp_iw</span> <span class="o">=</span> <span class="p">[</span><span class="n">BlockGf</span><span class="p">(</span><span class="n">name_block_generator</span><span class="o">=</span><span class="p">[(</span><span class="n">block</span><span class="p">,</span> <span class="n">GfImFreq</span><span class="p">(</span><span class="n">indices</span><span class="o">=</span><span class="n">inner</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="n">Sigma_imp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mesh</span><span class="p">))</span>
-                                                               <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">inner</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_sumk</span><span class="p">[</span><span class="n">icrsh</span><span class="p">]],</span> <span class="n">make_copies</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_imp_iw</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span><span class="o">.</span><span class="n">create_gf</span><span class="p">(</span><span class="n">ish</span><span class="o">=</span><span class="n">icrsh</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="n">Sigma_imp</span><span class="p">[</span><span class="n">icrsh</span><span class="p">]</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">space</span><span class="o">=</span><span class="s1">&#39;sumk&#39;</span><span class="p">)</span>
                                  <span class="k">for</span> <span class="n">icrsh</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_corr_shells</span><span class="p">)]</span>
             <span class="n">SK_Sigma_imp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_imp_iw</span>
-        <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gf</span><span class="p">,</span> <span class="n">Gf</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span> <span class="p">(</span><span class="n">gf</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">MeshReFreq</span><span class="p">)</span> <span class="k">for</span> <span class="n">bname</span><span class="p">,</span> <span class="n">gf</span> <span class="ow">in</span> <span class="n">Sigma_imp</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">gf</span><span class="p">,</span> <span class="n">Gf</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gf</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">MeshReFreq</span><span class="p">)</span> <span class="k">for</span> <span class="n">bname</span><span class="p">,</span> <span class="n">gf</span> <span class="ow">in</span> <span class="n">Sigma_imp</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
             <span class="c1"># Real frequency Sigma:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_imp_w</span> <span class="o">=</span> <span class="p">[</span><span class="n">BlockGf</span><span class="p">(</span><span class="n">name_block_generator</span><span class="o">=</span><span class="p">[(</span><span class="n">block</span><span class="p">,</span> <span class="n">GfReFreq</span><span class="p">(</span><span class="n">indices</span><span class="o">=</span><span class="n">inner</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="n">Sigma_imp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mesh</span><span class="p">))</span>
-                                                              <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">inner</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_sumk</span><span class="p">[</span><span class="n">icrsh</span><span class="p">]],</span> <span class="n">make_copies</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_imp_w</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span><span class="o">.</span><span class="n">create_gf</span><span class="p">(</span><span class="n">ish</span><span class="o">=</span><span class="n">icrsh</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="n">Sigma_imp</span><span class="p">[</span><span class="n">icrsh</span><span class="p">]</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">gf_function</span><span class="o">=</span><span class="n">GfReFreq</span><span class="p">,</span> <span class="n">space</span><span class="o">=</span><span class="s1">&#39;sumk&#39;</span><span class="p">)</span>
                                 <span class="k">for</span> <span class="n">icrsh</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_corr_shells</span><span class="p">)]</span>
             <span class="n">SK_Sigma_imp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_imp_w</span>
-            
+
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;put_Sigma: This type of Sigma is not handled.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;put_Sigma: This type of Sigma is not handled, give either BlockGf of GfReFreq or GfImFreq.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># rotation from local to global coordinate system:</span>
+        <span class="k">for</span> <span class="n">icrsh</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_corr_shells</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">bname</span><span class="p">,</span> <span class="n">gf</span> <span class="ow">in</span> <span class="n">SK_Sigma_imp</span><span class="p">[</span><span class="n">icrsh</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_rotations</span><span class="p">:</span>
+                    <span class="n">gf</span> <span class="o">&lt;&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotloc</span><span class="p">(</span><span class="n">icrsh</span><span class="p">,</span>
+                                      <span class="n">Sigma_imp</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="n">bname</span><span class="p">],</span>
+                                      <span class="n">direction</span><span class="o">=</span><span class="s1">&#39;toGlobal&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">gf</span> <span class="o">&lt;&lt;</span> <span class="n">Sigma_imp</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="n">bname</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="SumkDFT.transform_to_sumk_blocks"><a class="viewcode-back" href="../../reference/sumk_dft.html#triqs_dft_tools.sumk_dft.SumkDFT.transform_to_sumk_blocks">[docs]</a>    <span class="k">def</span> <span class="nf">transform_to_sumk_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Sigma_imp</span><span class="p">,</span> <span class="n">Sigma_out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot; transform Sigma from solver to sumk space</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Sigma_imp : list of BlockGf (Green&#39;s function) objects</span>
+<span class="sd">            List containing impurity self-energy for all inequivalent correlated shells.</span>
+<span class="sd">            The self-energies can be of the real or imaginary-frequency type.</span>
+<span class="sd">        Sigma_out : list of BlockGf</span>
+<span class="sd">            list of one BlockGf per correlated shell with the block structure</span>
+<span class="sd">            according to ``gf_struct_sumk``; if None, it will be created</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">Sigma_imp</span><span class="p">,</span> <span class="nb">list</span><span class="p">),</span>\
+            <span class="s2">&quot;transform_to_sumk_blocks: Sigma_imp has to be a list of Sigmas for the inequivalent correlated shells, even if it is of length 1!&quot;</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">Sigma_imp</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_inequiv_shells</span><span class="p">,</span>\
+            <span class="s2">&quot;transform_to_sumk_blocks: give exactly one Sigma for each inequivalent corr. shell!&quot;</span>
+
+        <span class="k">if</span> <span class="n">Sigma_out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">Sigma_out</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span><span class="o">.</span><span class="n">create_gf</span><span class="p">(</span><span class="n">ish</span><span class="o">=</span><span class="n">icrsh</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="n">Sigma_imp</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">corr_to_inequiv</span><span class="p">[</span><span class="n">icrsh</span><span class="p">]]</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">space</span><span class="o">=</span><span class="s1">&#39;sumk&#39;</span><span class="p">)</span>
+                         <span class="k">for</span> <span class="n">icrsh</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_corr_shells</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">icrsh</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_corr_shells</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span><span class="o">.</span><span class="n">check_gf</span><span class="p">(</span><span class="n">Sigma_out</span><span class="p">,</span>
+                                              <span class="n">ish</span><span class="o">=</span><span class="n">icrsh</span><span class="p">,</span>
+                                              <span class="n">space</span><span class="o">=</span><span class="s1">&#39;sumk&#39;</span><span class="p">)</span>
 
         <span class="c1"># transform the CTQMC blocks to the full matrix:</span>
         <span class="k">for</span> <span class="n">icrsh</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_corr_shells</span><span class="p">):</span>
             <span class="c1"># ish is the index of the inequivalent shell corresponding to icrsh</span>
             <span class="n">ish</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corr_to_inequiv</span><span class="p">[</span><span class="n">icrsh</span><span class="p">]</span>
-            <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">inner</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_solver</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="k">for</span> <span class="n">ind1</span> <span class="ow">in</span> <span class="n">inner</span><span class="p">:</span>
-                    <span class="k">for</span> <span class="n">ind2</span> <span class="ow">in</span> <span class="n">inner</span><span class="p">:</span>
-                        <span class="n">block_sumk</span><span class="p">,</span> <span class="n">ind1_sumk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver_to_sumk</span><span class="p">[</span>
-                            <span class="n">ish</span><span class="p">][(</span><span class="n">block</span><span class="p">,</span> <span class="n">ind1</span><span class="p">)]</span>
-                        <span class="n">block_sumk</span><span class="p">,</span> <span class="n">ind2_sumk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver_to_sumk</span><span class="p">[</span>
-                            <span class="n">ish</span><span class="p">][(</span><span class="n">block</span><span class="p">,</span> <span class="n">ind2</span><span class="p">)]</span>
-                        <span class="n">SK_Sigma_imp</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="n">block_sumk</span><span class="p">][</span>
-                            <span class="n">ind1_sumk</span><span class="p">,</span> <span class="n">ind2_sumk</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">Sigma_imp</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">block</span><span class="p">][</span><span class="n">ind1</span><span class="p">,</span> <span class="n">ind2</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span><span class="o">.</span><span class="n">convert_gf</span><span class="p">(</span>
+                <span class="n">G</span><span class="o">=</span><span class="n">Sigma_imp</span><span class="p">[</span><span class="n">ish</span><span class="p">],</span>
+                <span class="n">G_struct</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">space_from</span><span class="o">=</span><span class="s1">&#39;solver&#39;</span><span class="p">,</span>
+                <span class="n">space_to</span><span class="o">=</span><span class="s1">&#39;sumk&#39;</span><span class="p">,</span>
+                <span class="n">ish_from</span><span class="o">=</span><span class="n">ish</span><span class="p">,</span>
+                <span class="n">ish_to</span><span class="o">=</span><span class="n">icrsh</span><span class="p">,</span>
+                <span class="n">G_out</span><span class="o">=</span><span class="n">Sigma_out</span><span class="p">[</span><span class="n">icrsh</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">Sigma_out</span></div>
 
-        <span class="c1"># rotation from local to global coordinate system:</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_rotations</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">icrsh</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_corr_shells</span><span class="p">):</span>
-                <span class="k">for</span> <span class="n">bname</span><span class="p">,</span> <span class="n">gf</span> <span class="ow">in</span> <span class="n">SK_Sigma_imp</span><span class="p">[</span><span class="n">icrsh</span><span class="p">]:</span>
-                    <span class="n">gf</span> <span class="o">&lt;&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotloc</span><span class="p">(</span><span class="n">icrsh</span><span class="p">,</span> <span class="n">gf</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="s1">&#39;toGlobal&#39;</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="SumkDFT.extract_G_loc"><a class="viewcode-back" href="../../reference/sumk_dft.html#triqs_dft_tools.sumk_dft.SumkDFT.extract_G_loc">[docs]</a>    <span class="k">def</span> <span class="nf">extract_G_loc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iw_or_w</span><span class="o">=</span><span class="s1">&#39;iw&#39;</span><span class="p">,</span> <span class="n">with_Sigma</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">with_dc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">broadening</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="SumkDFT.extract_G_loc"><a class="viewcode-back" href="../../reference/sumk_dft.html#triqs_dft_tools.sumk_dft.SumkDFT.extract_G_loc">[docs]</a>    <span class="k">def</span> <span class="nf">extract_G_loc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iw_or_w</span><span class="o">=</span><span class="s1">&#39;iw&#39;</span><span class="p">,</span> <span class="n">with_Sigma</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">with_dc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">broadening</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">transform_to_solver_blocks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">show_warnings</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Extracts the local downfolded Green function by the Brillouin-zone integration of the lattice Green&#39;s function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        mu : real, optional</span>
-<span class="sd">             Input chemical potential. If not provided the value of self.chemical_potential is used as mu.</span>
+<span class="sd">            Input chemical potential. If not provided the value of self.chemical_potential is used as mu.</span>
 <span class="sd">        with_Sigma : boolean, optional</span>
-<span class="sd">                     If True then the local GF is calculated with the self-energy self.Sigma_imp.</span>
+<span class="sd">            If True then the local GF is calculated with the self-energy self.Sigma_imp.</span>
 <span class="sd">        with_dc : boolean, optional</span>
-<span class="sd">                  If True then the double-counting correction is subtracted from the self-energy in calculating the GF.</span>
+<span class="sd">            If True then the double-counting correction is subtracted from the self-energy in calculating the GF.</span>
 <span class="sd">        broadening : float, optional</span>
-<span class="sd">                     Imaginary shift for the axis along which the real-axis GF is calculated.</span>
-<span class="sd">                     If not provided, broadening will be set to double of the distance between mesh points in &#39;mesh&#39;.</span>
-<span class="sd">                     Only relevant for real-frequency GF.</span>
+<span class="sd">            Imaginary shift for the axis along which the real-axis GF is calculated.</span>
+<span class="sd">            If not provided, broadening will be set to double of the distance between mesh points in &#39;mesh&#39;.</span>
+<span class="sd">            Only relevant for real-frequency GF.</span>
+<span class="sd">        transform_to_solver_blocks : bool, optional</span>
+<span class="sd">            If True (default), the returned G_loc will be transformed to the block structure ``gf_struct_solver``,</span>
+<span class="sd">            else it will be in ``gf_struct_sumk``.</span>
+<span class="sd">        show_warnings : bool, optional</span>
+<span class="sd">            Displays warning messages during transformation</span>
+<span class="sd">            (Only effective if transform_to_solver_blocks = True</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        G_loc_inequiv : list of BlockGf (Green&#39;s function) objects</span>
-<span class="sd">                        List of the local Green&#39;s functions for all inequivalent correlated shells, </span>
-<span class="sd">                        rotated into the corresponding local frames.</span>
-
+<span class="sd">        G_loc : list of BlockGf (Green&#39;s function) objects</span>
+<span class="sd">            List of the local Green&#39;s functions for all (inequivalent) correlated shells,</span>
+<span class="sd">            rotated into the corresponding local frames.</span>
+<span class="sd">            If ``transform_to_solver_blocks`` is True, it will be one per correlated shell, else one per</span>
+<span class="sd">            inequivalent correlated shell.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">mu</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -819,25 +862,58 @@
                     <span class="n">G_loc</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="n">bname</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotloc</span><span class="p">(</span>
                         <span class="n">icrsh</span><span class="p">,</span> <span class="n">gf</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="s1">&#39;toLocal&#39;</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="n">transform_to_solver_blocks</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform_to_solver_blocks</span><span class="p">(</span><span class="n">G_loc</span><span class="p">,</span> <span class="n">show_warnings</span><span class="o">=</span><span class="n">show_warnings</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">G_loc</span></div>
+
+<div class="viewcode-block" id="SumkDFT.transform_to_solver_blocks"><a class="viewcode-back" href="../../reference/sumk_dft.html#triqs_dft_tools.sumk_dft.SumkDFT.transform_to_solver_blocks">[docs]</a>    <span class="k">def</span> <span class="nf">transform_to_solver_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G_loc</span><span class="p">,</span> <span class="n">G_out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">show_warnings</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; transform G_loc from sumk to solver space</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        G_loc : list of BlockGf</span>
+<span class="sd">            a list of one BlockGf per correlated shell with a structure</span>
+<span class="sd">            according to ``gf_struct_sumk``, e.g. as returned by</span>
+<span class="sd">            :py:meth:`.extract_G_loc` with ``transform_to_solver_blocks=False``.</span>
+<span class="sd">        G_out : list of BlockGf</span>
+<span class="sd">            a list of one BlockGf per *inequivalent* correlated shell</span>
+<span class="sd">            with a structure according to ``gf_struct_solver``.</span>
+<span class="sd">            The output Green&#39;s function (if not given, a new one is</span>
+<span class="sd">            created)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        G_out</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">G_loc</span><span class="p">,</span> <span class="nb">list</span><span class="p">),</span> <span class="s2">&quot;G_loc must be a list (with elements for each correlated shell)&quot;</span>
+
+        <span class="k">if</span> <span class="n">G_out</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">G_out</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span><span class="o">.</span><span class="n">create_gf</span><span class="p">(</span><span class="n">ish</span><span class="o">=</span><span class="n">ish</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="n">G_loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">inequiv_to_corr</span><span class="p">[</span><span class="n">ish</span><span class="p">]]</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+                     <span class="k">for</span> <span class="n">ish</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_inequiv_shells</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">ish</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_inequiv_shells</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span><span class="o">.</span><span class="n">check_gf</span><span class="p">(</span><span class="n">G_out</span><span class="p">,</span> <span class="n">ish</span><span class="o">=</span><span class="n">ish</span><span class="p">)</span>
+
         <span class="c1"># transform to CTQMC blocks:</span>
         <span class="k">for</span> <span class="n">ish</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_inequiv_shells</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">inner</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_solver</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="k">for</span> <span class="n">ind1</span> <span class="ow">in</span> <span class="n">inner</span><span class="p">:</span>
-                    <span class="k">for</span> <span class="n">ind2</span> <span class="ow">in</span> <span class="n">inner</span><span class="p">:</span>
-                        <span class="n">block_sumk</span><span class="p">,</span> <span class="n">ind1_sumk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver_to_sumk</span><span class="p">[</span>
-                            <span class="n">ish</span><span class="p">][(</span><span class="n">block</span><span class="p">,</span> <span class="n">ind1</span><span class="p">)]</span>
-                        <span class="n">block_sumk</span><span class="p">,</span> <span class="n">ind2_sumk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver_to_sumk</span><span class="p">[</span>
-                            <span class="n">ish</span><span class="p">][(</span><span class="n">block</span><span class="p">,</span> <span class="n">ind2</span><span class="p">)]</span>
-                        <span class="n">G_loc_inequiv</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">block</span><span class="p">][</span><span class="n">ind1</span><span class="p">,</span> <span class="n">ind2</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">G_loc</span><span class="p">[</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">inequiv_to_corr</span><span class="p">[</span><span class="n">ish</span><span class="p">]][</span><span class="n">block_sumk</span><span class="p">][</span><span class="n">ind1_sumk</span><span class="p">,</span> <span class="n">ind2_sumk</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span><span class="o">.</span><span class="n">convert_gf</span><span class="p">(</span>
+                <span class="n">G</span><span class="o">=</span><span class="n">G_loc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">inequiv_to_corr</span><span class="p">[</span><span class="n">ish</span><span class="p">]],</span>
+                <span class="n">G_struct</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">ish_from</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inequiv_to_corr</span><span class="p">[</span><span class="n">ish</span><span class="p">],</span>
+                <span class="n">ish_to</span><span class="o">=</span><span class="n">ish</span><span class="p">,</span>
+                <span class="n">space_from</span><span class="o">=</span><span class="s1">&#39;sumk&#39;</span><span class="p">,</span>
+                <span class="n">G_out</span><span class="o">=</span><span class="n">G_out</span><span class="p">[</span><span class="n">ish</span><span class="p">],</span>
+                <span class="n">show_warnings</span> <span class="o">=</span> <span class="n">show_warnings</span><span class="p">)</span>
 
         <span class="c1"># return only the inequivalent shells:</span>
-        <span class="k">return</span> <span class="n">G_loc_inequiv</span></div>
+        <span class="k">return</span> <span class="n">G_out</span></div>
 
 <div class="viewcode-block" id="SumkDFT.analyse_block_structure"><a class="viewcode-back" href="../../reference/sumk_dft.html#triqs_dft_tools.sumk_dft.SumkDFT.analyse_block_structure">[docs]</a>    <span class="k">def</span> <span class="nf">analyse_block_structure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.00001</span><span class="p">,</span> <span class="n">include_shells</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hloc</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Determines the block structure of local Green&#39;s functions by analysing the structure of </span>
-<span class="sd">        the corresponding density matrices and the local Hamiltonian. The resulting block structures </span>
+<span class="sd">        Determines the block structure of local Green&#39;s functions by analysing the structure of</span>
+<span class="sd">        the corresponding density matrices and the local Hamiltonian. The resulting block structures</span>
 <span class="sd">        for correlated shells are stored in the :class:`SumkDFT.block_structure &lt;dft.block_structure.BlockStructure&gt;` attribute.</span>
 
 <span class="sd">        Parameters</span>
@@ -975,7 +1051,7 @@
 <span class="sd">            the output G(tau) or A(w)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># make a GfImTime from the supplied GfImFreq</span>
-        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">g_sh</span><span class="o">.</span><span class="n">_first</span><span class="p">(),</span> <span class="n">GfImFreq</span><span class="p">)</span> <span class="k">for</span> <span class="n">g_sh</span> <span class="ow">in</span> <span class="n">G</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">g_sh</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">MeshImFreq</span><span class="p">)</span> <span class="k">for</span> <span class="n">g_sh</span> <span class="ow">in</span> <span class="n">G</span><span class="p">):</span>
             <span class="n">gf</span> <span class="o">=</span> <span class="p">[</span><span class="n">BlockGf</span><span class="p">(</span><span class="n">name_block_generator</span> <span class="o">=</span> <span class="p">[(</span><span class="n">name</span><span class="p">,</span> <span class="n">GfImTime</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="n">block</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span>
                 <span class="n">indices</span><span class="o">=</span><span class="n">block</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span><span class="n">n_points</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">g_sh</span><span class="p">],</span>
                 <span class="n">make_copies</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">g_sh</span> <span class="ow">in</span> <span class="n">G</span><span class="p">]</span>
@@ -983,15 +1059,15 @@
                 <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gf</span><span class="p">[</span><span class="n">ish</span><span class="p">]:</span>
                     <span class="n">g</span><span class="o">.</span><span class="n">set_from_fourier</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">name</span><span class="p">])</span>
         <span class="c1"># keep a GfImTime from the supplied GfImTime</span>
-        <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">g_sh</span><span class="o">.</span><span class="n">_first</span><span class="p">(),</span> <span class="n">GfImTime</span><span class="p">)</span> <span class="k">for</span> <span class="n">g_sh</span> <span class="ow">in</span> <span class="n">G</span><span class="p">):</span>
+        <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">g_sh</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">MeshImTime</span><span class="p">)</span> <span class="k">for</span> <span class="n">g_sh</span> <span class="ow">in</span> <span class="n">G</span><span class="p">):</span>
             <span class="n">gf</span> <span class="o">=</span> <span class="n">G</span>
         <span class="c1"># make a spectral function from the supplied GfReFreq</span>
-        <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">g_sh</span><span class="o">.</span><span class="n">_first</span><span class="p">(),</span> <span class="n">GfReFreq</span><span class="p">)</span> <span class="k">for</span> <span class="n">g_sh</span> <span class="ow">in</span> <span class="n">G</span><span class="p">):</span>
+        <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">g_sh</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">MeshReFreq</span><span class="p">)</span> <span class="k">for</span> <span class="n">g_sh</span> <span class="ow">in</span> <span class="n">G</span><span class="p">):</span>
             <span class="n">gf</span> <span class="o">=</span> <span class="p">[</span><span class="n">g_sh</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">g_sh</span> <span class="ow">in</span> <span class="n">G</span><span class="p">]</span>
             <span class="k">for</span> <span class="n">ish</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">gf</span><span class="p">)):</span>
                 <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gf</span><span class="p">[</span><span class="n">ish</span><span class="p">]:</span>
                     <span class="n">g</span> <span class="o">&lt;&lt;</span> <span class="mf">1.0</span><span class="n">j</span><span class="o">*</span><span class="p">(</span><span class="n">g</span><span class="o">-</span><span class="n">g</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span><span class="o">/</span><span class="mf">2.0</span><span class="o">/</span><span class="n">numpy</span><span class="o">.</span><span class="n">pi</span>
-        <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">g_sh</span><span class="o">.</span><span class="n">_first</span><span class="p">(),</span> <span class="n">GfReTime</span><span class="p">)</span> <span class="k">for</span> <span class="n">g_sh</span> <span class="ow">in</span> <span class="n">G</span><span class="p">):</span>
+        <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">g_sh</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">MeshReTime</span><span class="p">)</span> <span class="k">for</span> <span class="n">g_sh</span> <span class="ow">in</span> <span class="n">G</span><span class="p">):</span>
             <span class="k">def</span> <span class="nf">get_delta_from_mesh</span><span class="p">(</span><span class="n">mesh</span><span class="p">):</span>
                 <span class="n">w0</span> <span class="o">=</span> <span class="kc">None</span>
                 <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">mesh</span><span class="p">:</span>
@@ -1000,7 +1076,7 @@
                     <span class="k">else</span><span class="p">:</span>
                         <span class="k">return</span> <span class="n">w</span><span class="o">-</span><span class="n">w0</span>
             <span class="n">gf</span> <span class="o">=</span> <span class="p">[</span><span class="n">BlockGf</span><span class="p">(</span><span class="n">name_block_generator</span> <span class="o">=</span> <span class="p">[(</span><span class="n">name</span><span class="p">,</span> <span class="n">GfReFreq</span><span class="p">(</span>
-                <span class="n">window</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">numpy</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span><span class="o">*</span><span class="n">get_delta_from_mesh</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">mesh</span><span class="p">)),</span> 
+                <span class="n">window</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">numpy</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span><span class="o">*</span><span class="n">get_delta_from_mesh</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">mesh</span><span class="p">)),</span>
                 <span class="n">numpy</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span><span class="o">*</span><span class="n">get_delta_from_mesh</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">mesh</span><span class="p">))),</span>
                 <span class="n">n_points</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">mesh</span><span class="p">),</span> <span class="n">indices</span><span class="o">=</span><span class="n">block</span><span class="o">.</span><span class="n">indices</span><span class="p">))</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">g_sh</span><span class="p">],</span> <span class="n">make_copies</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">g_sh</span> <span class="ow">in</span> <span class="n">G</span><span class="p">]</span>
@@ -1046,6 +1122,8 @@
 <span class="sd">        G : list of BlockGf of GfImFreq or GfImTime</span>
 <span class="sd">            the Green&#39;s function transformed into the new block structure</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="nb">list</span><span class="p">),</span> <span class="s2">&quot;G must be a list (with elements for each correlated shell)&quot;</span>
 
         <span class="n">gf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_hermitian_quantity_from_gf</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
 
@@ -1115,11 +1193,11 @@
         <span class="n">full_structure</span> <span class="o">=</span> <span class="n">BlockStructure</span><span class="o">.</span><span class="n">full_structure</span><span class="p">(</span>
             <span class="p">[{</span><span class="n">sp</span><span class="p">:</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">corr_shells</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">inequiv_to_corr</span><span class="p">[</span><span class="n">ish</span><span class="p">]][</span><span class="s1">&#39;dim&#39;</span><span class="p">]))</span>
                 <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spin_block_names</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">corr_shells</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">inequiv_to_corr</span><span class="p">[</span><span class="n">ish</span><span class="p">]][</span><span class="s1">&#39;SO&#39;</span><span class="p">]]}</span>
-                <span class="k">for</span> <span class="n">ish</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_inequiv_shells</span><span class="p">)],</span><span class="kc">None</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">ish</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_inequiv_shells</span><span class="p">)],</span><span class="bp">self</span><span class="o">.</span><span class="n">corr_to_inequiv</span><span class="p">)</span>
         <span class="n">G_transformed</span> <span class="o">=</span> <span class="p">[</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span><span class="o">.</span><span class="n">convert_gf</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">ish</span><span class="p">],</span>
                 <span class="n">full_structure</span><span class="p">,</span> <span class="n">ish</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="n">G</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">show_warnings</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
-                <span class="n">gf_function</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span><span class="o">.</span><span class="n">_first</span><span class="p">()))</span>
+                <span class="n">gf_function</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span><span class="o">.</span><span class="n">_first</span><span class="p">()),</span> <span class="n">space_from</span><span class="o">=</span><span class="s1">&#39;sumk&#39;</span><span class="p">,</span> <span class="n">space_to</span><span class="o">=</span><span class="s1">&#39;solver&#39;</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">ish</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_inequiv_shells</span><span class="p">)]</span>
 
         <span class="k">if</span> <span class="n">analyse_deg_shells</span><span class="p">:</span>
@@ -1363,6 +1441,82 @@
                         <span class="c1"># a block was found, break out of the loop</span>
                         <span class="k">break</span></div>
 
+<div class="viewcode-block" id="SumkDFT.calculate_diagonalization_matrix"><a class="viewcode-back" href="../../reference/sumk_dft.html#triqs_dft_tools.sumk_dft.SumkDFT.calculate_diagonalization_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_diagonalization_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop_to_be_diagonal</span><span class="o">=</span><span class="s1">&#39;eal&#39;</span><span class="p">,</span> <span class="n">calc_in_solver_blocks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">write_to_blockstructure</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">shells</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the diagonalisation matrix, and (optionally) stores it in the BlockStructure.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        prop_to_be_diagonal : string, optional</span>
+<span class="sd">                              Defines the property to be diagonalized.</span>
+
+<span class="sd">                              - &#39;eal&#39; : local hamiltonian (i.e. crystal field)</span>
+<span class="sd">                              - &#39;dm&#39; : local density matrix</span>
+
+<span class="sd">        calc_in_solver_blocks : bool, optional</span>
+<span class="sd">                                Whether the property shall be diagonalized in the</span>
+<span class="sd">                                full sumk structure, or just in the solver structure.</span>
+
+<span class="sd">        write_to_blockstructure : bool, optional</span>
+<span class="sd">                                Whether the diagonalization matrix shall be written to</span>
+<span class="sd">                                the BlockStructure directly.</span>
+<span class="sd">        shells : list of int, optional</span>
+<span class="sd">              Indices of correlated shells to be diagonalized.</span>
+<span class="sd">              None: all shells</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        trafo : dict</span>
+<span class="sd">               The transformation matrix for each spin-block in the correlated shell</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span><span class="o">.</span><span class="n">transformation</span><span class="p">:</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span>
+                    <span class="s2">&quot;calculate_diagonalization_matrix: requires block_structure.transformation = None.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+        <span class="c1"># Use all shells</span>
+        <span class="k">if</span> <span class="n">shells</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">shells</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_corr_shells</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">max</span><span class="p">(</span><span class="n">shells</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_corr_shells</span><span class="p">:</span> <span class="c1"># Check if the shell indices are present</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;calculate_diagonalization_matrix: shells not correct.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="n">prop_to_be_diagonal</span> <span class="o">==</span> <span class="s1">&#39;eal&#39;</span><span class="p">:</span>
+            <span class="n">prop</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">eff_atomic_levels</span><span class="p">()[</span><span class="bp">self</span><span class="o">.</span><span class="n">corr_to_inequiv</span><span class="p">[</span><span class="n">ish</span><span class="p">]]</span>
+                    <span class="k">for</span> <span class="n">ish</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_corr_shells</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">prop_to_be_diagonal</span> <span class="o">==</span> <span class="s1">&#39;dm&#39;</span><span class="p">:</span>
+            <span class="n">prop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">density_matrix</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;using_point_integration&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span>
+                <span class="s2">&quot;calculate_diagonalization_matrix: Choices for prop_to_be_diagonal are &#39;eal&#39; or &#39;dm&#39;.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+        <span class="n">trans</span> <span class="o">=</span> <span class="p">[{</span><span class="n">block</span><span class="p">:</span> <span class="n">numpy</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">))</span> <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">indices</span> <span class="ow">in</span> <span class="n">gfs</span><span class="p">}</span> <span class="k">for</span> <span class="n">gfs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_sumk</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">ish</span> <span class="ow">in</span> <span class="n">shells</span><span class="p">:</span>
+            <span class="n">trafo</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="c1"># Transform to solver basis if desired, blocks of prop change in this step!</span>
+            <span class="k">if</span> <span class="n">calc_in_solver_blocks</span><span class="p">:</span>
+                <span class="n">prop</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span><span class="o">.</span><span class="n">convert_matrix</span><span class="p">(</span><span class="n">prop</span><span class="p">[</span><span class="n">ish</span><span class="p">],</span> <span class="n">space_from</span><span class="o">=</span><span class="s1">&#39;sumk&#39;</span><span class="p">,</span> <span class="n">space_to</span><span class="o">=</span><span class="s1">&#39;solver&#39;</span><span class="p">)</span>
+            <span class="c1"># Get diagonalisation matrix, if not already diagonal</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">prop</span><span class="p">[</span><span class="n">ish</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">prop</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">name</span><span class="p">]</span><span class="o">-</span><span class="n">numpy</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">prop</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">name</span><span class="p">]))))</span> <span class="o">&gt;</span> <span class="mf">1e-13</span><span class="p">:</span>
+                    <span class="n">trafo</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">prop</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">name</span><span class="p">])[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">trafo</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">prop</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">name</span><span class="p">])[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="c1"># Transform back to sumk if necessay, blocks change in this step!</span>
+            <span class="k">if</span> <span class="n">calc_in_solver_blocks</span><span class="p">:</span>
+                <span class="n">trafo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span><span class="o">.</span><span class="n">convert_matrix</span><span class="p">(</span><span class="n">trafo</span><span class="p">,</span> <span class="n">space_from</span><span class="o">=</span><span class="s1">&#39;solver&#39;</span><span class="p">,</span> <span class="n">space_to</span><span class="o">=</span><span class="s1">&#39;sumk&#39;</span><span class="p">)</span>
+            <span class="n">trans</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span> <span class="o">=</span> <span class="n">trafo</span>
+
+        <span class="c1"># Write to block_structure object</span>
+
+        <span class="k">if</span> <span class="n">write_to_blockstructure</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span><span class="o">.</span><span class="n">transformation</span> <span class="o">=</span> <span class="n">trans</span>
+
+        <span class="k">return</span> <span class="n">trans</span></div>
+
 
 <div class="viewcode-block" id="SumkDFT.density_matrix"><a class="viewcode-back" href="../../reference/sumk_dft.html#triqs_dft_tools.sumk_dft.SumkDFT.density_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">density_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;using_gf&#39;</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">40.0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Calculate density matrices in one of two ways.</span>
@@ -1377,7 +1531,7 @@
 <span class="sd">                 - if &#39;using_point_integration&#39;: Only works for diagonal hopping matrix (true in wien2k).</span>
 
 <span class="sd">        beta : float, optional</span>
-<span class="sd">               Inverse temperature.      </span>
+<span class="sd">               Inverse temperature.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1561,21 +1715,22 @@
 <span class="sd">        dc_imp : gf_struct_sumk like</span>
 <span class="sd">                 Double-counting self-energy term.</span>
 <span class="sd">        dc_energ : list of floats</span>
-<span class="sd">                   Double-counting energy corrections for each correlated shell. </span>
+<span class="sd">                   Double-counting energy corrections for each correlated shell.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">dc_imp</span> <span class="o">=</span> <span class="n">dc_imp</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dc_energ</span> <span class="o">=</span> <span class="n">dc_energ</span></div>
 
-<div class="viewcode-block" id="SumkDFT.calc_dc"><a class="viewcode-back" href="../../reference/sumk_dft.html#triqs_dft_tools.sumk_dft.SumkDFT.calc_dc">[docs]</a>    <span class="k">def</span> <span class="nf">calc_dc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dens_mat</span><span class="p">,</span> <span class="n">orb</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">U_interact</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">J_hund</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_dc_formula</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">use_dc_value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="SumkDFT.calc_dc"><a class="viewcode-back" href="../../reference/sumk_dft.html#triqs_dft_tools.sumk_dft.SumkDFT.calc_dc">[docs]</a>    <span class="k">def</span> <span class="nf">calc_dc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dens_mat</span><span class="p">,</span> <span class="n">orb</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">U_interact</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">J_hund</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">use_dc_formula</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">use_dc_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Calculates and sets the double counting corrections.</span>
+<span class="sd">        Calculate and set the double counting corrections.</span>
 
 <span class="sd">        If &#39;use_dc_value&#39; is provided the double-counting term is uniformly initialized</span>
 <span class="sd">        with this constant and &#39;U_interact&#39; and &#39;J_hund&#39; are ignored.</span>
 
-<span class="sd">        If &#39;use_dc_value&#39; is None the correction is evaluated according to </span>
+<span class="sd">        If &#39;use_dc_value&#39; is None the correction is evaluated according to</span>
 <span class="sd">        one of the following formulae:</span>
 
 <span class="sd">        * use_dc_formula = 0: fully-localised limit (FLL)</span>
@@ -1593,19 +1748,21 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        dens_mat : gf_struct_solver like</span>
-<span class="sd">                   Density matrix for the specified correlated shell.</span>
+<span class="sd">            Density matrix for the specified correlated shell.</span>
 <span class="sd">        orb : int, optional</span>
-<span class="sd">              Index of an inequivalent shell.</span>
+<span class="sd">            Index of an inequivalent shell.</span>
 <span class="sd">        U_interact : float, optional</span>
-<span class="sd">                     Value of interaction parameter `U`.</span>
+<span class="sd">            Value of interaction parameter `U`.</span>
 <span class="sd">        J_hund : float, optional</span>
-<span class="sd">                 Value of interaction parameter `J`.</span>
+<span class="sd">            Value of interaction parameter `J`.</span>
 <span class="sd">        use_dc_formula : int, optional</span>
-<span class="sd">                         Type of double-counting correction (see description).</span>
+<span class="sd">            Type of double-counting correction (see description).</span>
 <span class="sd">        use_dc_value : float, optional</span>
-<span class="sd">                       Value of the double-counting correction. If specified</span>
-<span class="sd">                       `U_interact`, `J_hund` and `use_dc_formula` are ignored.</span>
-
+<span class="sd">            Value of the double-counting correction. If specified</span>
+<span class="sd">            `U_interact`, `J_hund` and `use_dc_formula` are ignored.</span>
+<span class="sd">        transform : bool</span>
+<span class="sd">            whether or not to use the transformation in block_structure</span>
+<span class="sd">            to transform the dc</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">for</span> <span class="n">icrsh</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_corr_shells</span><span class="p">):</span>
@@ -1685,7 +1842,12 @@
 
                 <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span>
                     <span class="s2">&quot;DC for shell </span><span class="si">%(icrsh)i</span><span class="s2"> = </span><span class="si">%(use_dc_value)f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">locals</span><span class="p">())</span>
-                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;DC energy = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">dc_energ</span><span class="p">[</span><span class="n">icrsh</span><span class="p">])</span></div>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;DC energy = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">dc_energ</span><span class="p">[</span><span class="n">icrsh</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">transform</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">spn</span><span class="p">:</span>
+                    <span class="n">T</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span><span class="o">.</span><span class="n">effective_transformation_sumk</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="n">sp</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dc_imp</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="n">sp</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span>
+                            <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dc_imp</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="n">sp</span><span class="p">],</span> <span class="n">T</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="SumkDFT.add_dc"><a class="viewcode-back" href="../../reference/sumk_dft.html#triqs_dft_tools.sumk_dft.SumkDFT.add_dc">[docs]</a>    <span class="k">def</span> <span class="nf">add_dc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iw_or_w</span><span class="o">=</span><span class="s2">&quot;iw&quot;</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
@@ -1717,7 +1879,7 @@
 
         <span class="k">return</span> <span class="n">sigma_minus_dc</span></div>
 
-<div class="viewcode-block" id="SumkDFT.symm_deg_gf"><a class="viewcode-back" href="../../reference/sumk_dft.html#triqs_dft_tools.sumk_dft.SumkDFT.symm_deg_gf">[docs]</a>    <span class="k">def</span> <span class="nf">symm_deg_gf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gf_to_symm</span><span class="p">,</span> <span class="n">orb</span><span class="p">):</span>
+<div class="viewcode-block" id="SumkDFT.symm_deg_gf"><a class="viewcode-back" href="../../reference/sumk_dft.html#triqs_dft_tools.sumk_dft.SumkDFT.symm_deg_gf">[docs]</a>    <span class="k">def</span> <span class="nf">symm_deg_gf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gf_to_symm</span><span class="p">,</span> <span class="n">ish</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Averages a GF over degenerate shells.</span>
 
@@ -1729,8 +1891,8 @@
 <span class="sd">        ----------</span>
 <span class="sd">        gf_to_symm : gf_struct_solver like</span>
 <span class="sd">                     Input and output GF (i.e., it gets overwritten)</span>
-<span class="sd">        orb : int</span>
-<span class="sd">              Index of an inequivalent shell.</span>
+<span class="sd">        ish : int</span>
+<span class="sd">              Index of an inequivalent shell. (default value 0)</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -1738,7 +1900,7 @@
         <span class="c1"># an h5 file, self.deg_shells might be None</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">deg_shells</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="k">return</span>
 
-        <span class="k">for</span> <span class="n">degsh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">deg_shells</span><span class="p">[</span><span class="n">orb</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">degsh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">deg_shells</span><span class="p">[</span><span class="n">ish</span><span class="p">]:</span>
             <span class="c1"># ss will hold the averaged orbitals in the basis where the</span>
             <span class="c1"># blocks are all equal</span>
             <span class="c1"># i.e. maybe_conjugate(v^dagger gf v)</span>
@@ -1777,7 +1939,7 @@
 
 <div class="viewcode-block" id="SumkDFT.total_density"><a class="viewcode-back" href="../../reference/sumk_dft.html#triqs_dft_tools.sumk_dft.SumkDFT.total_density">[docs]</a>    <span class="k">def</span> <span class="nf">total_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iw_or_w</span><span class="o">=</span><span class="s2">&quot;iw&quot;</span><span class="p">,</span> <span class="n">with_Sigma</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">with_dc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">broadening</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Calculates the total charge within the energy window for a given chemical potential. </span>
+<span class="sd">        Calculates the total charge within the energy window for a given chemical potential.</span>
 <span class="sd">        The chemical potential is either given by parameter `mu` or, if it is not specified,</span>
 <span class="sd">        taken from `self.chemical_potential`.</span>
 
@@ -1794,7 +1956,7 @@
 
 <span class="sd">        with</span>
 
-<span class="sd">        .. math:: n(k) = Tr G_{\nu\nu&#39;}(k, i\omega_{n}). </span>
+<span class="sd">        .. math:: n(k) = Tr G_{\nu\nu&#39;}(k, i\omega_{n}).</span>
 
 <span class="sd">        The calculation is done in the global coordinate system, if distinction is made between local/global.</span>
 
@@ -1961,7 +2123,7 @@
                             <span class="n">ik</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">bname</span><span class="p">,</span> <span class="n">G_latt_iw</span><span class="p">[</span><span class="n">bname</span><span class="p">],</span> <span class="n">gf</span><span class="p">,</span><span class="n">shells</span><span class="o">=</span><span class="s1">&#39;csc&#39;</span><span class="p">)</span>
 
                     <span class="n">G_latt_iw</span><span class="p">[</span><span class="n">bname</span><span class="p">]</span> <span class="o">=</span> <span class="n">G_latt_rot_iw</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-                    
+
             <span class="k">for</span> <span class="n">bname</span><span class="p">,</span> <span class="n">gf</span> <span class="ow">in</span> <span class="n">G_latt_iw</span><span class="p">:</span>
                 <span class="n">deltaN</span><span class="p">[</span><span class="n">bname</span><span class="p">][</span><span class="n">ik</span><span class="p">]</span> <span class="o">=</span> <span class="n">G_latt_iw</span><span class="p">[</span><span class="n">bname</span><span class="p">]</span><span class="o">.</span><span class="n">density</span><span class="p">()</span>
 
@@ -1971,7 +2133,7 @@
                     <span class="n">nb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_orbitals</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span> <span class="n">ntoi</span><span class="p">[</span><span class="n">bname</span><span class="p">]]</span>
                     <span class="n">diag_inds</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">diag_indices</span><span class="p">(</span><span class="n">nb</span><span class="p">)</span>
                     <span class="n">deltaN</span><span class="p">[</span><span class="n">bname</span><span class="p">][</span><span class="n">ik</span><span class="p">][</span><span class="n">diag_inds</span><span class="p">]</span> <span class="o">-=</span> <span class="n">dens_mat_dft</span><span class="p">[</span><span class="n">bname</span><span class="p">][</span><span class="n">ik</span><span class="p">][:</span><span class="n">nb</span><span class="p">]</span>
-                    
+
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">charge_mixing</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">deltaNOld</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="n">G2</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kpts_cart</span><span class="p">[</span><span class="n">ik</span><span class="p">,:]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
                         <span class="c1"># Kerker mixing</span>
@@ -1993,9 +2155,9 @@
                 <span class="n">mpi</span><span class="o">.</span><span class="n">world</span><span class="p">,</span> <span class="n">dens</span><span class="p">[</span><span class="n">bname</span><span class="p">],</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">deltaNOld</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deltaN</span><span class="p">)</span>
         <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
-        
-        
-        
+
+
+
         <span class="n">band_en_correction</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">all_reduce</span><span class="p">(</span><span class="n">mpi</span><span class="o">.</span><span class="n">world</span><span class="p">,</span> <span class="n">band_en_correction</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="p">:</span> <span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="p">)</span>
 
         <span class="c1"># now save to file:</span>
@@ -2105,7 +2267,7 @@
         <span class="k">return</span> <span class="n">dc</span></div>
 
 <div class="viewcode-block" id="SumkDFT.check_projectors"><a class="viewcode-back" href="../../reference/sumk_dft.html#triqs_dft_tools.sumk_dft.SumkDFT.check_projectors">[docs]</a>    <span class="k">def</span> <span class="nf">check_projectors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Calculated the density matrix from projectors (DM = P Pdagger) to check that it is correct and </span>
+        <span class="sd">&quot;&quot;&quot;Calculated the density matrix from projectors (DM = P Pdagger) to check that it is correct and</span>
 <span class="sd">           specifically that it matches DFT.&quot;&quot;&quot;</span>
         <span class="n">dens_mat</span> <span class="o">=</span> <span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">corr_shells</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="s1">&#39;dim&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">corr_shells</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="s1">&#39;dim&#39;</span><span class="p">]],</span> <span class="n">numpy</span><span class="o">.</span><span class="n">complex_</span><span class="p">)</span>
                     <span class="k">for</span> <span class="n">icrsh</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_corr_shells</span><span class="p">)]</span>
@@ -2183,7 +2345,35 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span><span class="o">.</span><span class="n">deg_shells</span>
     <span class="k">def</span> <span class="nf">__set_deg_shells</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">value</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span><span class="o">.</span><span class="n">deg_shells</span> <span class="o">=</span> <span class="n">value</span>
-    <span class="n">deg_shells</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">__get_deg_shells</span><span class="p">,</span><span class="n">__set_deg_shells</span><span class="p">)</span></div>
+    <span class="n">deg_shells</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">__get_deg_shells</span><span class="p">,</span><span class="n">__set_deg_shells</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gf_struct_solver_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span><span class="o">.</span><span class="n">gf_struct_solver_list</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gf_struct_sumk_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span><span class="o">.</span><span class="n">gf_struct_sumk_list</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gf_struct_solver_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span><span class="o">.</span><span class="n">gf_struct_solver_dict</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">gf_struct_sumk_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span><span class="o">.</span><span class="n">gf_struct_sumk_dict</span>
+
+    <span class="k">def</span> <span class="nf">__get_corr_to_inequiv</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span><span class="o">.</span><span class="n">corr_to_inequiv</span>
+    <span class="k">def</span> <span class="nf">__set_corr_to_inequiv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span><span class="o">.</span><span class="n">corr_to_inequiv</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="n">corr_to_inequiv</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">__get_corr_to_inequiv</span><span class="p">,</span> <span class="n">__set_corr_to_inequiv</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__get_inequiv_to_corr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span><span class="o">.</span><span class="n">inequiv_to_corr</span>
+    <span class="k">def</span> <span class="nf">__set_inequiv_to_corr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block_structure</span><span class="o">.</span><span class="n">inequiv_to_corr</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="n">inequiv_to_corr</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">__get_inequiv_to_corr</span><span class="p">,</span> <span class="n">__set_inequiv_to_corr</span><span class="p">)</span></div>
 </pre></div>
 
           </div>

@@ -127,7 +127,7 @@ individually is not implemented.</p>
 </div>
 <dl class="class">
 <dt id="triqs_dft_tools.block_structure.BlockStructure">
-<em class="property">class </em><code class="descclassname">triqs_dft_tools.block_structure.</code><code class="descname">BlockStructure</code><span class="sig-paren">(</span><em>gf_struct_sumk=None</em>, <em>gf_struct_solver=None</em>, <em>solver_to_sumk=None</em>, <em>sumk_to_solver=None</em>, <em>solver_to_sumk_block=None</em>, <em>deg_shells=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/triqs_dft_tools/block_structure.html#BlockStructure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#triqs_dft_tools.block_structure.BlockStructure" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">triqs_dft_tools.block_structure.</code><code class="descname">BlockStructure</code><span class="sig-paren">(</span><em>gf_struct_sumk=None</em>, <em>gf_struct_solver=None</em>, <em>solver_to_sumk=None</em>, <em>sumk_to_solver=None</em>, <em>solver_to_sumk_block=None</em>, <em>deg_shells=None</em>, <em>corr_to_inequiv=None</em>, <em>transformation=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/triqs_dft_tools/block_structure.html#BlockStructure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#triqs_dft_tools.block_structure.BlockStructure" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.8/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Contains information about the Green function structure.</p>
 <p>This class contains information about the structure of the solver
@@ -159,15 +159,60 @@ for <em>inequivalent</em> correlated shell ish</p>
 for <em>inequivalent</em> correlated shell ish</p>
 </div></blockquote>
 <p><strong>solver_to_sumk_block</strong> : list of dict</p>
-<blockquote class="last">
+<blockquote>
 <div><p>solver_to_sumk_block[ish][from_block] = to_block</p>
 <p>maps from the solver block to the sumk block
 for <em>inequivalent</em> correlated shell ish</p>
+</div></blockquote>
+<p><strong>deg_shells</strong> : list of lists of lists OR list of lists of dicts</p>
+<blockquote>
+<div><p>In the simple format, <code class="docutils literal notranslate"><span class="pre">deg_shells[ish][grp]</span></code> is a list of
+block names; <code class="docutils literal notranslate"><span class="pre">ish</span></code> is the index of the inequivalent correlated shell,
+<code class="docutils literal notranslate"><span class="pre">grp</span></code> is the index of the group of symmetry-related blocks.
+When the name of two blocks is in the same group, that means that
+these two blocks are the same by symmetry.</p>
+<p>In the more general format, <code class="docutils literal notranslate"><span class="pre">deg_shells[ish][grp]</span></code> is a
+dictionary whose keys are the block names that are part of the
+group. The values of the dict for each key are tuples <code class="docutils literal notranslate"><span class="pre">(v,</span> <span class="pre">conj)</span></code>,
+where <code class="docutils literal notranslate"><span class="pre">v</span></code> is a transformation matrix with the same matrix dimensions
+as the block and <code class="docutils literal notranslate"><span class="pre">conj</span></code> is a bool (whether or not to conjugate).
+Two blocks with <code class="docutils literal notranslate"><span class="pre">v_1,</span> <span class="pre">conj_1</span></code> and <code class="docutils literal notranslate"><span class="pre">v_2,</span> <span class="pre">conj_2</span></code> being in the same
+symmetry group means that</p>
+<div class="math notranslate nohighlight">
+\[C_1(v_1^\dagger G_1 v_1) = C_2(v_2^\dagger G_2 v_2),\]</div>
+<p>where the <span class="math notranslate nohighlight">\(G_i\)</span> are the Green’s functions of the block,
+and the functions <span class="math notranslate nohighlight">\(C_i\)</span> conjugate their argument if the bool
+<code class="docutils literal notranslate"><span class="pre">conj_i</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+</div></blockquote>
+<p><strong>corr_to_inequiv</strong> : list</p>
+<blockquote>
+<div><p>a list where, for each correlated shell, the index of the corresponding
+inequivalent correlated shell is given</p>
+</div></blockquote>
+<p><strong>transformation</strong> : list of numpy.array or list of dict</p>
+<blockquote class="last">
+<div><p>a list with entries for each <code class="docutils literal notranslate"><span class="pre">ish</span></code> giving transformation matrices
+that are used on the Green’s function in <code class="docutils literal notranslate"><span class="pre">sumk</span></code> space before
+converting to the <code class="docutils literal notranslate"><span class="pre">solver</span></code> space
+Up to the change in block structure,</p>
+<div class="math notranslate nohighlight">
+\[G_{solver} = T G_{sumk} T^\dagger\]</div>
+<p>if <span class="math notranslate nohighlight">\(T\)</span> is the <code class="docutils literal notranslate"><span class="pre">transformation</span></code> of that particular shell.</p>
+<p>Note that for each shell this can either be a numpy array which
+applies to all blocks or a dict with a transformation matrix for
+each block.</p>
 </div></blockquote>
 </td>
 </tr>
 </tbody>
 </table>
+<dl class="method">
+<dt id="triqs_dft_tools.block_structure.BlockStructure.adapt_deg_shells">
+<code class="descname">adapt_deg_shells</code><span class="sig-paren">(</span><em>gf_struct</em>, <em>ish=0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/triqs_dft_tools/block_structure.html#BlockStructure.adapt_deg_shells"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#triqs_dft_tools.block_structure.BlockStructure.adapt_deg_shells" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adapts the deg_shells to a new gf_struct
+Internally called when using pick_gf_struct and map_gf_struct</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="triqs_dft_tools.block_structure.BlockStructure.approximate_as_diagonal">
 <code class="descname">approximate_as_diagonal</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/triqs_dft_tools/block_structure.html#BlockStructure.approximate_as_diagonal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#triqs_dft_tools.block_structure.BlockStructure.approximate_as_diagonal" title="Permalink to this definition">¶</a></dt>
@@ -181,8 +226,76 @@ is justified.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="triqs_dft_tools.block_structure.BlockStructure.check_gf">
+<code class="descname">check_gf</code><span class="sig-paren">(</span><em>G</em>, <em>ish=None</em>, <em>space='solver'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/triqs_dft_tools/block_structure.html#BlockStructure.check_gf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#triqs_dft_tools.block_structure.BlockStructure.check_gf" title="Permalink to this definition">¶</a></dt>
+<dd><p>check whether the Green’s function G has the right structure</p>
+<p>This throws an error if the structure of G is not the same
+as <code class="docutils literal notranslate"><span class="pre">gf_struct_solver</span></code> (for <code class="docutils literal notranslate"><span class="pre">space=solver</span></code>) or
+<code class="docutils literal notranslate"><span class="pre">gf_struct_sumk</span></code> (for <code class="docutils literal notranslate"><span class="pre">space=sumk</span></code>)..</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>G</strong> : BlockGf or list of BlockGf</p>
+<blockquote>
+<div><p>Green’s function to check
+if it is a list, there should be as many entries as there
+are shells, and the check is performed for all shells (unless
+ish is given).</p>
+</div></blockquote>
+<p><strong>ish</strong> : int</p>
+<blockquote>
+<div><p>shell index
+default: 0 if G is just one Green’s function is given,
+check all if list of Green’s functions is given</p>
+</div></blockquote>
+<p><strong>space</strong> : ‘solver’ or ‘sumk’</p>
+<blockquote class="last">
+<div><p>which space the structure should correspond to</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="triqs_dft_tools.block_structure.BlockStructure.check_matrix">
+<code class="descname">check_matrix</code><span class="sig-paren">(</span><em>G</em>, <em>ish=None</em>, <em>space='solver'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/triqs_dft_tools/block_structure.html#BlockStructure.check_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#triqs_dft_tools.block_structure.BlockStructure.check_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>check whether the matrix G has the right structure</p>
+<p>This throws an error if the structure of G is not the same
+as <code class="docutils literal notranslate"><span class="pre">gf_struct_solver</span></code> (for <code class="docutils literal notranslate"><span class="pre">space=solver</span></code>) or
+<code class="docutils literal notranslate"><span class="pre">gf_struct_sumk</span></code> (for <code class="docutils literal notranslate"><span class="pre">space=sumk</span></code>)..</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>G</strong> : dict of matrices or list of dict of matrices</p>
+<blockquote>
+<div><p>matrix to check
+if it is a list, there should be as many entries as there
+are shells, and the check is performed for all shells (unless
+ish is given).</p>
+</div></blockquote>
+<p><strong>ish</strong> : int</p>
+<blockquote>
+<div><p>shell index
+default: 0 if G is just one matrix is given,
+check all if list of dicts is given</p>
+</div></blockquote>
+<p><strong>space</strong> : ‘solver’ or ‘sumk’</p>
+<blockquote class="last">
+<div><p>which space the structure should correspond to</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="triqs_dft_tools.block_structure.BlockStructure.convert_gf">
-<code class="descname">convert_gf</code><span class="sig-paren">(</span><em>G</em>, <em>G_struct</em>, <em>ish=0</em>, <em>show_warnings=True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/triqs_dft_tools/block_structure.html#BlockStructure.convert_gf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#triqs_dft_tools.block_structure.BlockStructure.convert_gf" title="Permalink to this definition">¶</a></dt>
+<code class="descname">convert_gf</code><span class="sig-paren">(</span><em>G</em>, <em>G_struct=None</em>, <em>ish_from=0</em>, <em>ish_to=None</em>, <em>show_warnings=True</em>, <em>G_out=None</em>, <em>space_from='solver'</em>, <em>space_to='solver'</em>, <em>ish=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/triqs_dft_tools/block_structure.html#BlockStructure.convert_gf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#triqs_dft_tools.block_structure.BlockStructure.convert_gf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert BlockGf from its structure to this structure.</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
@@ -198,13 +311,19 @@ approximated to zero.</p>
 <blockquote>
 <div><p>the Gf that should be converted</p>
 </div></blockquote>
-<p><strong>G_struct</strong> : GfStructure</p>
+<p><strong>G_struct</strong> : BlockStructure or str</p>
 <blockquote>
-<div><p>the structure of that G</p>
+<div><p>the structure of that G or None (then, this structure
+is used)</p>
 </div></blockquote>
-<p><strong>ish</strong> : int</p>
+<p><strong>ish_from</strong> : int</p>
 <blockquote>
-<div><p>shell index</p>
+<div><p>shell index of the input structure</p>
+</div></blockquote>
+<p><strong>ish_to</strong> : int</p>
+<blockquote>
+<div><p>shell index of the output structure; if None (the default),
+it is the same as ish_from</p>
 </div></blockquote>
 <p><strong>show_warnings</strong> : bool or float</p>
 <blockquote>
@@ -213,6 +332,21 @@ function get thrown away
 if float, set the threshold for the magnitude of an element
 about to be thrown away to trigger a warning
 (default: 1.e-10)</p>
+</div></blockquote>
+<p><strong>G_out</strong> : BlockGf</p>
+<blockquote>
+<div><p>the output Green’s function (if not given, a new one is
+created)</p>
+</div></blockquote>
+<p><strong>space_from</strong> : ‘solver’ or ‘sumk’</p>
+<blockquote>
+<div><p>whether the Green’s function <code class="docutils literal notranslate"><span class="pre">G</span></code> corresponds to the
+solver or sumk structure of <code class="docutils literal notranslate"><span class="pre">G_struct</span></code></p>
+</div></blockquote>
+<p><strong>space_to</strong> : ‘solver’ or ‘sumk’</p>
+<blockquote>
+<div><p>whether the output Green’s function should be according to
+the solver of sumk structure of this structure</p>
 </div></blockquote>
 <p><strong>**kwargs :</strong> :</p>
 <blockquote class="last">
@@ -225,9 +359,101 @@ about to be thrown away to trigger a warning
 </dd></dl>
 
 <dl class="method">
+<dt id="triqs_dft_tools.block_structure.BlockStructure.convert_matrix">
+<code class="descname">convert_matrix</code><span class="sig-paren">(</span><em>G</em>, <em>G_struct=None</em>, <em>ish_from=0</em>, <em>ish_to=None</em>, <em>show_warnings=True</em>, <em>G_out=None</em>, <em>space_from='solver'</em>, <em>space_to='solver'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/triqs_dft_tools/block_structure.html#BlockStructure.convert_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#triqs_dft_tools.block_structure.BlockStructure.convert_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert matrix from its structure to this structure.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Elements that are zero in the new structure due to
+the new block structure will be just ignored, thus
+approximated to zero.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>G</strong> : dict of numpy array</p>
+<blockquote>
+<div><p>the matrix that should be converted</p>
+</div></blockquote>
+<p><strong>G_struct</strong> : BlockStructure or str</p>
+<blockquote>
+<div><p>the structure of that G or None (then, this structure
+is used)</p>
+</div></blockquote>
+<p><strong>ish_from</strong> : int</p>
+<blockquote>
+<div><p>shell index of the input structure</p>
+</div></blockquote>
+<p><strong>ish_to</strong> : int</p>
+<blockquote>
+<div><p>shell index of the output structure; if None (the default),
+it is the same as ish_from</p>
+</div></blockquote>
+<p><strong>show_warnings</strong> : bool or float</p>
+<blockquote>
+<div><p>whether to show warnings when elements of the Green’s
+function get thrown away
+if float, set the threshold for the magnitude of an element
+about to be thrown away to trigger a warning
+(default: 1.e-10)</p>
+</div></blockquote>
+<p><strong>G_out</strong> : dict of numpy array</p>
+<blockquote>
+<div><p>the output numpy array (if not given, a new one is
+created)</p>
+</div></blockquote>
+<p><strong>space_from</strong> : ‘solver’ or ‘sumk’</p>
+<blockquote>
+<div><p>whether the matrix <code class="docutils literal notranslate"><span class="pre">G</span></code> corresponds to the
+solver or sumk structure of <code class="docutils literal notranslate"><span class="pre">G_struct</span></code></p>
+</div></blockquote>
+<p><strong>space_to</strong> : ‘solver’ or ‘sumk’</p>
+<blockquote>
+<div><p>whether the output matrix should be according to
+the solver of sumk structure of this structure</p>
+</div></blockquote>
+<p><strong>**kwargs :</strong> :</p>
+<blockquote class="last">
+<div><p>options passed to the constructor for the new Gf</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="triqs_dft_tools.block_structure.BlockStructure.convert_operator">
+<code class="descname">convert_operator</code><span class="sig-paren">(</span><em>O</em>, <em>ish=0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/triqs_dft_tools/block_structure.html#BlockStructure.convert_operator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#triqs_dft_tools.block_structure.BlockStructure.convert_operator" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Converts a second-quantization operator from sumk structure</dt>
+<dd>to solver structure.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>O</strong> : triqs.operators.Operator</p>
+<blockquote>
+<div><p>Operator in sumk structure</p>
+</div></blockquote>
+<p><strong>ish</strong> : int</p>
+<blockquote class="last">
+<div><p>shell index on which the operator acts</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="triqs_dft_tools.block_structure.BlockStructure.create_gf">
-<code class="descname">create_gf</code><span class="sig-paren">(</span><em>ish=0</em>, <em>gf_function=&lt;class 'triqs.gf.backwd_compat.gf_imfreq.GfImFreq'&gt;</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/triqs_dft_tools/block_structure.html#BlockStructure.create_gf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#triqs_dft_tools.block_structure.BlockStructure.create_gf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a zero BlockGf having the gf_struct_solver structure.</p>
+<code class="descname">create_gf</code><span class="sig-paren">(</span><em>ish=0</em>, <em>gf_function=&lt;class 'triqs.gf.backwd_compat.gf_imfreq.GfImFreq'&gt;</em>, <em>space='solver'</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/triqs_dft_tools/block_structure.html#BlockStructure.create_gf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#triqs_dft_tools.block_structure.BlockStructure.create_gf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a zero BlockGf having the correct structure.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">space='solver'</span></code>, the structure is according to
+<code class="docutils literal notranslate"><span class="pre">gf_struct_solver</span></code>, else according to <code class="docutils literal notranslate"><span class="pre">gf_struct_sumk</span></code>.</p>
 <p>When using GfImFreq as gf_function, typically you have to
 supply beta as keyword argument.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -236,12 +462,18 @@ supply beta as keyword argument.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>ish</strong> : int</p>
 <blockquote>
-<div><p>shell index</p>
+<div><p>shell index
+If <code class="docutils literal notranslate"><span class="pre">space='solver'</span></code>, the index of the of the inequivalent correlated shell,
+if <code class="docutils literal notranslate"><span class="pre">space='sumk'</span></code>, the index of the correlated shell</p>
 </div></blockquote>
 <p><strong>gf_function</strong> : constructor</p>
 <blockquote>
 <div><p>function used to construct the Gf objects constituting the
 individual blocks; default: GfImFreq</p>
+</div></blockquote>
+<p><strong>space</strong> : ‘solver’ or ‘sumk’</p>
+<blockquote>
+<div><p>which space the structure should correspond to</p>
 </div></blockquote>
 <p><strong>**kwargs :</strong> :</p>
 <blockquote class="last">
@@ -252,6 +484,66 @@ blocks</p>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="method">
+<dt id="triqs_dft_tools.block_structure.BlockStructure.create_matrix">
+<code class="descname">create_matrix</code><span class="sig-paren">(</span><em>ish=0</em>, <em>space='solver'</em>, <em>dtype=&lt;class 'numpy.complex128'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/triqs_dft_tools/block_structure.html#BlockStructure.create_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#triqs_dft_tools.block_structure.BlockStructure.create_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a zero matrix having the correct structure.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">space='solver'</span></code>, the structure is according to
+<code class="docutils literal notranslate"><span class="pre">gf_struct_solver</span></code>, else according to <code class="docutils literal notranslate"><span class="pre">gf_struct_sumk</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>ish</strong> : int</p>
+<blockquote>
+<div><p>shell index
+If <code class="docutils literal notranslate"><span class="pre">space='solver'</span></code>, the index of the of the inequivalent correlated shell,
+if <code class="docutils literal notranslate"><span class="pre">space='sumk'</span></code>, the index of the correlated shell</p>
+</div></blockquote>
+<p><strong>space</strong> : ‘solver’ or ‘sumk’</p>
+<blockquote class="last">
+<div><p>which space the structure should correspond to</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="triqs_dft_tools.block_structure.BlockStructure.effective_transformation_solver">
+<code class="descname">effective_transformation_solver</code><a class="headerlink" href="#triqs_dft_tools.block_structure.BlockStructure.effective_transformation_solver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the effective transformation matrix</p>
+<p>A list of dicts, one for every inequivalent correlated shell.
+In the dict, there is a transformation matrix (as numpy array)
+for each block in solver space, that is used to transform from
+the sumk block (see <code class="xref py py-meth docutils literal notranslate"><span class="pre">solver_to_sumk_block()</span></code>) to the
+solver block.</p>
+<p>For a solver block <code class="docutils literal notranslate"><span class="pre">b</span></code> for inequivalent correlated shell <code class="docutils literal notranslate"><span class="pre">ish</span></code>,
+the corresponding block of the solver Green’s function is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># the effective transformation matrix for the block</span>
+<span class="n">T</span> <span class="o">=</span> <span class="n">block_structure</span><span class="o">.</span><span class="n">effective_transformation_solver</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">b</span><span class="p">]</span>
+<span class="c1"># the index of the correlated shell</span>
+<span class="n">icrsh</span> <span class="o">=</span> <span class="n">block_structure</span><span class="o">.</span><span class="n">inequiv_to_corr</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span>
+<span class="c1"># the name of the corresponding sumk block</span>
+<span class="n">block_sumk</span> <span class="o">=</span> <span class="n">block_structure</span><span class="o">.</span><span class="n">solver_to_sumk_block</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="n">b</span><span class="p">]</span>
+<span class="c1"># transform the Green&#39;s function</span>
+<span class="n">G_solver</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">b</span><span class="p">]</span><span class="o">.</span><span class="n">from_L_G_R</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">G_sumk</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="n">block_sumk</span><span class="p">],</span> <span class="n">T</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>The functionality of that code block is implemented in
+<a class="reference internal" href="#triqs_dft_tools.block_structure.BlockStructure.convert_gf" title="triqs_dft_tools.block_structure.BlockStructure.convert_gf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">convert_gf()</span></code></a> (i.e., you don’t need to use this directly).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="triqs_dft_tools.block_structure.BlockStructure.effective_transformation_sumk">
+<code class="descname">effective_transformation_sumk</code><a class="headerlink" href="#triqs_dft_tools.block_structure.BlockStructure.effective_transformation_sumk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the effective transformation matrix</p>
+<p>A list of dicts, one for every correlated shell. In the dict,
+there is a transformation matrix (as numpy array) for each
+block in sumk space, that is used to transform the block.</p>
 </dd></dl>
 
 <dl class="classmethod">
@@ -284,6 +576,67 @@ index; there is not default, None has to be set explicitly!</p>
 </table>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="triqs_dft_tools.block_structure.BlockStructure.gf_struct_solver_dict">
+<code class="descname">gf_struct_solver_dict</code><a class="headerlink" href="#triqs_dft_tools.block_structure.BlockStructure.gf_struct_solver_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>The structure of the solver Green’s function</p>
+<p>This is returned as a
+list (for each shell)
+of dictionaries.</p>
+<p>That is,
+<code class="docutils literal notranslate"><span class="pre">gf_struct_solver_dict[ish][bname]</span></code>
+is a list of the indices of block <code class="docutils literal notranslate"><span class="pre">bname</span></code> of shell <code class="docutils literal notranslate"><span class="pre">ish</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="triqs_dft_tools.block_structure.BlockStructure.gf_struct_solver_list">
+<code class="descname">gf_struct_solver_list</code><a class="headerlink" href="#triqs_dft_tools.block_structure.BlockStructure.gf_struct_solver_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>The structure of the solver Green’s function</p>
+<p>This is returned as a
+list (for each shell)
+of lists (for each block)
+of tuples (block_name, block_indices).</p>
+<p>That is,
+<code class="docutils literal notranslate"><span class="pre">gf_struct_solver_list[ish][b][0]</span></code>
+is the name of the block number <code class="docutils literal notranslate"><span class="pre">b</span></code> of shell <code class="docutils literal notranslate"><span class="pre">ish</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">gf_struct_solver_list[ish][b][1]</span></code>
+is a list of its indices.</p>
+<p>The list for each shell is sorted alphabetically by block name.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="triqs_dft_tools.block_structure.BlockStructure.gf_struct_sumk_dict">
+<code class="descname">gf_struct_sumk_dict</code><a class="headerlink" href="#triqs_dft_tools.block_structure.BlockStructure.gf_struct_sumk_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>The structure of the sumk Green’s function</p>
+<p>This is returned as a
+list (for each shell)
+of dictionaries.</p>
+<p>That is,
+<code class="docutils literal notranslate"><span class="pre">gf_struct_sumk_dict[ish][bname]</span></code>
+is a list of the indices of block <code class="docutils literal notranslate"><span class="pre">bname</span></code> of shell <code class="docutils literal notranslate"><span class="pre">ish</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="triqs_dft_tools.block_structure.BlockStructure.gf_struct_sumk_list">
+<code class="descname">gf_struct_sumk_list</code><a class="headerlink" href="#triqs_dft_tools.block_structure.BlockStructure.gf_struct_sumk_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>The structure of the sumk Green’s function</p>
+<p>This is returned as a
+list (for each shell)
+of lists (for each block)
+of tuples (block_name, block_indices)</p>
+<p>That is,
+<code class="docutils literal notranslate"><span class="pre">gf_struct_sumk_list[ish][b][0]</span></code>
+is the name of the block number <code class="docutils literal notranslate"><span class="pre">b</span></code> of shell <code class="docutils literal notranslate"><span class="pre">ish</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">gf_struct_sumk_list[ish][b][1]</span></code>
+is a list of its indices.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="triqs_dft_tools.block_structure.BlockStructure.inequiv_to_corr">
+<code class="descname">inequiv_to_corr</code><a class="headerlink" href="#triqs_dft_tools.block_structure.BlockStructure.inequiv_to_corr" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list mapping an inequivalent correlated shell to a correlated shell</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="triqs_dft_tools.block_structure.BlockStructure.map_gf_struct_solver">
 <code class="descname">map_gf_struct_solver</code><span class="sig-paren">(</span><em>mapping</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/triqs_dft_tools/block_structure.html#BlockStructure.map_gf_struct_solver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#triqs_dft_tools.block_structure.BlockStructure.map_gf_struct_solver" title="Permalink to this definition">¶</a></dt>
@@ -296,12 +649,24 @@ index; there is not default, None has to be set explicitly!</p>
 <blockquote class="last">
 <div><p>the dict consists of elements
 (from_block,from_index) : (to_block,to_index)
-that maps from one structure to the other</p>
+that maps from one structure to the other
+(one for each shell; use a mapping <code class="docutils literal notranslate"><span class="pre">None</span></code> for a shell
+you want to leave unchanged)</p>
 </div></blockquote>
 </td>
 </tr>
 </tbody>
 </table>
+<p class="rubric">Examples</p>
+<p>Consider a <cite>gf_struct_solver</cite> consisting of two <span class="math notranslate nohighlight">\(1 \times 1\)</span>
+blocks, <cite>block_1</cite> and <cite>block_2</cite>. Say you want to have a new block
+structure where you merge them into one block because you want to
+introduce an off-diagonal element. You could perform the mapping
+via:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">map_gf_struct_solver</span><span class="p">([{(</span><span class="s1">&#39;block_1&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="p">:</span> <span class="p">(</span><span class="s1">&#39;block&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                       <span class="p">(</span><span class="s1">&#39;block_2&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="p">:</span> <span class="p">(</span><span class="s1">&#39;block&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)}])</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="method">
