@@ -256,8 +256,11 @@
             <span class="c1"># Analyse the block structure and determine the smallest gf_struct</span>
             <span class="c1"># blocks and maps, if desired</span>
             <span class="k">if</span> <span class="n">use_dft_blocks</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">analyse_block_structure</span><span class="p">()</span></div>
+                <span class="bp">self</span><span class="o">.</span><span class="n">analyse_block_structure</span><span class="p">()</span>
 
+            <span class="bp">self</span><span class="o">.</span><span class="n">min_band_energy</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_band_energy</span> <span class="o">=</span> <span class="kc">None</span></div>
+            
 <span class="c1">################</span>
 <span class="c1"># hdf5 FUNCTIONS</span>
 <span class="c1">################</span>
@@ -730,8 +733,17 @@
                                       <span class="n">Sigma_imp</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="n">bname</span><span class="p">],</span>
                                       <span class="n">direction</span><span class="o">=</span><span class="s1">&#39;toGlobal&#39;</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">gf</span> <span class="o">&lt;&lt;</span> <span class="n">Sigma_imp</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="n">bname</span><span class="p">]</span></div>
+                    <span class="n">gf</span> <span class="o">&lt;&lt;</span> <span class="n">Sigma_imp</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="n">bname</span><span class="p">]</span>
 
+        <span class="c1">#warning if real frequency self energy is within the bounds of the band energies</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">Sigma_imp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">MeshReFreq</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_band_energy</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_band_energy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">calculate_min_max_band_energies</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">gf</span> <span class="ow">in</span> <span class="n">Sigma_imp</span><span class="p">:</span>
+                <span class="n">Sigma_mesh</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">gf</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+                <span class="k">if</span> <span class="n">Sigma_mesh</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_band_energy</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">chemical_potential</span><span class="p">)</span> <span class="ow">or</span> <span class="n">Sigma_mesh</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_band_energy</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">chemical_potential</span><span class="p">):</span>
+                    <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;The given Sigma is on a mesh which does not cover the band energy range. The Sigma MeshReFreq runs from </span><span class="si">%f</span><span class="s1"> to </span><span class="si">%f</span><span class="s1">, while the band energy (minus the chemical potential) runs from </span><span class="si">%f</span><span class="s1"> to </span><span class="si">%f</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">Sigma_mesh</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Sigma_mesh</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_band_energy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_band_energy</span><span class="p">))</span></div>
+                
 <div class="viewcode-block" id="SumkDFT.transform_to_sumk_blocks"><a class="viewcode-back" href="../../reference/sumk_dft.html#triqs_dft_tools.sumk_dft.SumkDFT.transform_to_sumk_blocks">[docs]</a>    <span class="k">def</span> <span class="nf">transform_to_sumk_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Sigma_imp</span><span class="p">,</span> <span class="n">Sigma_out</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot; transform Sigma from solver to sumk space</span>
 
@@ -2237,6 +2249,18 @@
 
         <span class="k">return</span> <span class="n">res</span></div>
 
+    <span class="k">def</span> <span class="nf">calculate_min_max_band_energies</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">hop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hopping</span>
+        <span class="n">diag_hop</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">hop</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">hop_slice</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">slice_array</span><span class="p">(</span><span class="n">hop</span><span class="p">)</span>
+        <span class="n">diag_hop_slice</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">slice_array</span><span class="p">(</span><span class="n">diag_hop</span><span class="p">)</span>
+        <span class="n">diag_hop_slice</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvalsh</span><span class="p">(</span><span class="n">hop_slice</span><span class="p">)</span>
+        <span class="n">diag_hop</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">all_reduce</span><span class="p">(</span><span class="n">mpi</span><span class="o">.</span><span class="n">world</span><span class="p">,</span> <span class="n">diag_hop</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span>
+        <span class="n">min_band_energy</span> <span class="o">=</span> <span class="n">diag_hop</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">real</span>
+        <span class="n">max_band_energy</span> <span class="o">=</span> <span class="n">diag_hop</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">real</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_band_energy</span> <span class="o">=</span> <span class="n">min_band_energy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_band_energy</span> <span class="o">=</span> <span class="n">max_band_energy</span>
+        <span class="k">return</span> <span class="n">min_band_energy</span><span class="p">,</span> <span class="n">max_band_energy</span>
 
 <span class="c1">################</span>
 <span class="c1"># FIXME LEAVE UNDOCUMENTED</span>
