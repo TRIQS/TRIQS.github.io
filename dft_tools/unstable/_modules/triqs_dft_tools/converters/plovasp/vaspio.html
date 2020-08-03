@@ -430,12 +430,12 @@
 <span class="sd">        - ntypes ([int]) : number of ion types</span>
 <span class="sd">        - nions (int) : a list of number of ions of each type</span>
 <span class="sd">        - a_brav (numpy.array((3, 3), dtype=float)) : lattice vectors</span>
+<span class="sd">        - kpt_basis (numpy.array((3, 3), dtype=float)) : reciprocal lattice vectors</span>
 <span class="sd">        - q_types ([numpy.array((nions, 3), dtype=float)]) : a list of</span>
 <span class="sd">          arrays each containing fractional coordinates of ions of a given type</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">q_cart</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">b_rec</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="Poscar.from_file"><a class="viewcode-back" href="../../../../reference/converters.html#triqs_dft_tools.converters.plovasp.vaspio.Poscar.from_file">[docs]</a>    <span class="k">def</span> <span class="nf">from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vasp_dir</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span> <span class="n">poscar_filename</span><span class="o">=</span><span class="s1">&#39;POSCAR&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -502,8 +502,8 @@
 
 <span class="c1"># Check whether coordinates are cartesian or fractional</span>
         <span class="n">cartesian</span> <span class="o">=</span> <span class="p">(</span><span class="n">sline</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="s1">&#39;ck&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">cartesian</span><span class="p">:</span>
-            <span class="n">brec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a_brav</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="c1"># determine reciprocal basis in units of 2*pi</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kpt_basis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a_brav</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
 
 <span class="c1"># Read atomic positions</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">q_types</span> <span class="o">=</span> <span class="p">[]</span>
@@ -517,7 +517,7 @@
                 <span class="n">sline</span> <span class="o">=</span> <span class="n">readline_remove_comments</span><span class="p">()</span>
                 <span class="n">qcoord</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">sline</span><span class="o">.</span><span class="n">split</span><span class="p">()[:</span><span class="mi">3</span><span class="p">]))</span>
                 <span class="k">if</span> <span class="n">cartesian</span><span class="p">:</span>
-                    <span class="n">qcoord</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">brec</span><span class="p">,</span> <span class="n">qcoord</span><span class="p">)</span>
+                    <span class="n">qcoord</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kpt_basis</span><span class="p">,</span> <span class="n">qcoord</span><span class="p">)</span>
                 <span class="n">q_at_it</span><span class="p">[</span><span class="n">iq</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">qcoord</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">q_types</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">q_at_it</span><span class="p">)</span>
