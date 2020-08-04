@@ -21,8 +21,8 @@ User guide
    guide/settingparameters
    guide/additional_remarks
 
-Reference manual
-----------------
+Python Reference manual
+-----------------------
 
 .. toctree::
    :maxdepth: 1

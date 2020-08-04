@@ -1,7 +1,7 @@
-from pytriqs.gf import *
-from pytriqs.operators import *
-from pytriqs.archive import HDFArchive
-import pytriqs.utility.mpi as mpi
+from triqs.gf import *
+from triqs.operators import *
+from h5 import HDFArchive
+import triqs.utility.mpi as mpi
 
 from w2dyn_cthyb import Solver
 
