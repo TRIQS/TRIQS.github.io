@@ -188,8 +188,7 @@
 <span class="sd">             If true, and target_shape is set, the data will be real.</span>
 <span class="sd">             Mutually exclusive with argument ``data``.</span>
 
-<span class="sd">    indices: WARNING: The Use of string indices is deprecated!</span>
-<span class="sd">             GfIndices or list of str or list of list of str, optional</span>
+<span class="sd">    indices: GfIndices or list of str or list of list of str, optional</span>
 <span class="sd">             Optional string indices for the target space, to allow e.g. ``[&#39;eg&#39;, &#39;eg&#39;]``.</span>
 <span class="sd">             list of list of str: the list of indices for each dimension.</span>
 <span class="sd">             list of str: all indices are assumed to be the same for all dimensions.</span>
@@ -235,8 +234,6 @@
             <span class="c1"># if indices is not a list of list, but a list, then the target_rank is assumed to be 2 !</span>
             <span class="c1"># backward compatibility only, it is not very logical (what about vector_valued gf ???)</span>
             <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span> <span class="nb">list</span><span class="p">,</span> <span class="n">GfIndices</span><span class="p">)),</span> <span class="s2">&quot;Type of indices incorrect : should be None, Gfindices, list of str, or list of list of str&quot;</span>
-            <span class="k">if</span> <span class="n">indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Constructing a Green function with string indices&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">indices</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span> <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">indices</span><span class="p">,</span> <span class="n">indices</span><span class="p">]</span>
                 <span class="c1"># indices : transform indices into string</span>
@@ -354,8 +351,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">indices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;GfIndices : The index object of the target space.&quot;&quot;&quot;</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;The use of g.indices is deprecated&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
+        <span class="sd">&quot;&quot;&quot;GfIndices : The index object of the taret space.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_indices</span>
 
     <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span> 
@@ -434,7 +430,6 @@
 
             <span class="c1"># String access: transform the key into a list integers</span>
             <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">key</span><span class="p">):</span>
-                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;The use of string indices is deprecated&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
                 <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_indices</span><span class="p">,</span> <span class="s2">&quot;Got string indices, but I have no indices to convert them !&quot;</span>
                 <span class="n">key_tpl</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_indices</span><span class="o">.</span><span class="n">convert_index</span><span class="p">(</span><span class="n">s</span><span class="p">,</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">key</span><span class="p">))</span> <span class="c1"># convert returns a slice of len 1</span>
 
@@ -522,6 +517,10 @@
  
     <span class="k">def</span> <span class="nf">__le__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> 
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot; Operator &lt;= not defined &quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__ilshift__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;The operator &lt;&lt;= is deprecated : update your code to use &lt;&lt; instead&quot;</span><span class="p">,</span> <span class="ne">UserWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">&lt;&lt;</span> <span class="n">A</span>
 
     <span class="c1"># ---------- Addition   </span>
 
@@ -850,6 +849,46 @@
         <span class="k">if</span> <span class="n">flatten_y</span> <span class="ow">and</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">data</span>
+
+    <span class="c1">#-------------- Deprecated. ---------------------------</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">beta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span> 
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;g.beta is deprecated and not generic. Use g.mesh.beta instead&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">beta</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">statistic</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span> 
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;g.statistic is deprecated and not generic. Use g.mesh.statistic instead&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">statistic</span>
+
+    <span class="c1">#-------------- Deprecated. NB works only in 1 var, matrix_valued anyway  ---------------------------</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">N1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_rank</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;N1 only makes sense for rank 2 targets&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;g.N1 is deprecated and not generic. Use g.target_shape[0] instead&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">N2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_rank</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;N2 only makes sense for rank 2 targets&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;g.N2 is deprecated and not generic. Use g.target_shape[1] instead&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">indicesL</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;g.indicesL is deprecated. Use g.indices[0] instead&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">indicesR</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;g.indicesR is deprecated. Use g.indices[1] instead&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1">#-------------- Fourier Backward Compatibility. ---------------------------</span>
+
+    <span class="k">def</span> <span class="nf">set_from_inverse_fourier</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;set_from_inverse_fourier is deprecated and should be replaced with set_from_fourier&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_from_fourier</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
 
 <span class="c1">#---------------------------------------------------------</span>
 
