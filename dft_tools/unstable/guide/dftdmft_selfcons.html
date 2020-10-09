@@ -83,6 +83,7 @@
 <li><a class="reference internal" href="#">Full charge self-consistency</a><ul>
 <li><a class="reference internal" href="#wien2k-dmftproj">Wien2k + dmftproj</a></li>
 <li><a class="reference internal" href="#vasp-plovasp">VASP + PLOVasp</a></li>
+<li><a class="reference internal" href="#elk">Elk</a></li>
 <li><a class="reference internal" href="#other-dft-codes">Other DFT codes</a></li>
 </ul>
 </li>
@@ -287,6 +288,32 @@ that the KS states are well converged before the first projectors are created!
 To understand the difference please make sure to read <a class="reference external" href="https://www.vasp.at/wiki/index.php/ISTART">ISTART flag VASP wiki</a>. Furthermore, the flags <cite>NELM</cite> and
 <cite>NELMIN</cite> ensure that VASP does not terminate after the default number of
 iterations of 60.</p>
+</div>
+<div class="section" id="elk">
+<h2>Elk<a class="headerlink" href="#elk" title="Permalink to this headline">¶</a></h2>
+<p>The Elk CSC implementation is fairly similar to the Wien2k implementation. At the end of the <a class="reference internal" href="../tutorials/svo_elk/srvo3.html#srvo3-elk"><span class="std std-ref">DMFT python script</span></a>, the density matrix in Bloch space needs to be calculated along with the correlation energy. This is written to DMATDMFT.OUT. An example of this (using the Migdal correlation energy formula) is given below:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#output the density matrix for Elk interface</span>
+<span class="n">dN</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">SK</span><span class="o">.</span><span class="n">calc_density_correction</span><span class="p">(</span><span class="n">dm_type</span><span class="o">=</span><span class="s1">&#39;elk&#39;</span><span class="p">)</span>
+<span class="c1">#correlation energy via the Migdal formula</span>
+<span class="n">correnerg</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">G_iw</span> <span class="o">*</span> <span class="n">S</span><span class="o">.</span><span class="n">Sigma_iw</span><span class="p">)</span><span class="o">.</span><span class="n">total_density</span><span class="p">()</span>
+<span class="c1">#subtract the double counting energy</span>
+<span class="n">correnerg</span> <span class="o">-=</span> <span class="n">SK</span><span class="o">.</span><span class="n">dc_energ</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="c1">#convert to Hartree</span>
+<span class="n">correnerg</span> <span class="o">=</span> <span class="n">correnerg</span><span class="o">/</span><span class="n">SK</span><span class="o">.</span><span class="n">energy_unit</span>
+<span class="c1">#save the correction to energy</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">()):</span>
+  <span class="n">f</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;DMATDMFT.OUT&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">)</span>
+  <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%.16f</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">correnerg</span><span class="p">)</span>
+  <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>To read this into Elk and update the electron density, run task 808. So elk.in is amended with the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">task</span>
+ <span class="mi">808</span>
+</pre></div>
+</div>
+<p>This solves the Kohn-Sham equations once with the updated electron density and outputs the new set of energy eigenvalues and wavefunctions. To start the next fully charge self-consistent DFT+DMFT cycle (FCSC), a new set of projectors need to be generated (using task 805) and the whole procedure continues until convergence. The Elk potential rms value for each FCSC DFT+DMFT cycle is given in DMFT_INFO.OUT. An extensive example for SrVO:math:<cite>_3</cite> can be found here: <a class="reference internal" href="../tutorials/svo_elk/srvo3.html#srvo3-elk"><span class="std std-ref">Elk SVO tutorial</span></a>.</p>
+<p>This FCSC method should be universal irrespective to what type of ground state calculation performed. However, not all types of ground state calculations have been tested.</p>
 </div>
 <div class="section" id="other-dft-codes">
 <h2>Other DFT codes<a class="headerlink" href="#other-dft-codes" title="Permalink to this headline">¶</a></h2>

@@ -279,8 +279,8 @@
                             <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="n">DOS</span><span class="p">,</span> <span class="n">DOSproj</span><span class="p">,</span> <span class="n">DOSproj_orb</span></div>
-    
-    
+
+
 <div class="viewcode-block" id="SumkDFTTools.dos_wannier_basis_all"><a class="viewcode-back" href="../../reference/sumk_dft_tools.html#triqs_dft_tools.sumk_dft_tools.SumkDFTTools.dos_wannier_basis_all">[docs]</a>    <span class="k">def</span> <span class="nf">dos_wannier_basis_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">broadening</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">with_Sigma</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">with_dc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_to_file</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculates the density of states in the basis of the Wannier functions.</span>
@@ -328,7 +328,7 @@
         <span class="c1">#print(spn)</span>
         <span class="n">n_local_orbs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_mat_csc</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
         <span class="n">gf_struct_parproj_all</span> <span class="o">=</span> <span class="p">[[(</span><span class="n">sp</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_local_orbs</span><span class="p">)))</span> <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">spn</span><span class="p">]]</span>
-    
+
         <span class="n">glist_all</span> <span class="o">=</span> <span class="p">[</span><span class="n">GfReFreq</span><span class="p">(</span><span class="n">indices</span><span class="o">=</span><span class="n">inner</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="p">(</span><span class="n">om_min</span><span class="p">,</span> <span class="n">om_max</span><span class="p">),</span> <span class="n">n_points</span><span class="o">=</span><span class="n">n_om</span><span class="p">)</span>
                      <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">inner</span> <span class="ow">in</span> <span class="n">gf_struct_parproj_all</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
         <span class="n">G_loc_all</span> <span class="o">=</span> <span class="n">BlockGf</span><span class="p">(</span><span class="n">name_list</span><span class="o">=</span><span class="n">spn</span><span class="p">,</span> <span class="n">block_list</span><span class="o">=</span><span class="n">glist_all</span><span class="p">,</span> <span class="n">make_copies</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -556,6 +556,361 @@
 
         <span class="k">return</span> <span class="n">DOS</span><span class="p">,</span> <span class="n">DOSproj</span><span class="p">,</span> <span class="n">DOSproj_orb</span></div>
 
+    <span class="c1"># Elk total and partial dos calculations</span>
+    <span class="c1"># Uses .data of only GfReFreq objects.</span>
+<div class="viewcode-block" id="SumkDFTTools.elk_dos"><a class="viewcode-back" href="../../reference/sumk_dft_tools.html#triqs_dft_tools.sumk_dft_tools.SumkDFTTools.elk_dos">[docs]</a>    <span class="k">def</span> <span class="nf">elk_dos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">broadening</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">with_Sigma</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">with_dc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_to_file</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">pdos</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">nk</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This calculates the total DOS and the partial DOS (orbital-DOS) from the band characters calculated in Elk.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mu : double, optional</span>
+<span class="sd">             Chemical potential, overrides the one stored in the hdf5 archive.</span>
+<span class="sd">        broadening : double, optional</span>
+<span class="sd">                     Lorentzian broadening of the spectra. If not given, standard value of lattice_gf is used.</span>
+<span class="sd">        mesh : real frequency MeshType, optional</span>
+<span class="sd">               Omega mesh for the real-frequency Green&#39;s function. Given as parameter to lattice_gf.</span>
+<span class="sd">        with_Sigma : boolean, optional</span>
+<span class="sd">                     If True, the self energy is used for the calculation. If false, the DOS is calculated without self energy.</span>
+<span class="sd">        with_dc : boolean, optional</span>
+<span class="sd">                  If True the double counting correction is used.</span>
+<span class="sd">        save_to_file : boolean, optional</span>
+<span class="sd">                       If True, text files with the calculated data will be created.</span>
+<span class="sd">        pdos : allows the partial density of states to be calculated</span>
+<span class="sd">        nk : diagonal of the occupation function (from the Matsubara Green&#39;s function)</span>
+<span class="sd">             in the band basis (has form nk[spn][n_k][n_orbital])</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        DOS : Dict of numpy arrays</span>
+<span class="sd">              Contains the full density of states.</span>
+<span class="sd">        pDOS :  Dict of numpy arrays</span>
+<span class="sd">                partial (orbital resolved) DOS for each atom.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">pdos</span><span class="p">):</span>
+          <span class="n">things_to_read</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;maxlm&#39;</span><span class="p">,</span> <span class="s1">&#39;bc&#39;</span><span class="p">]</span>
+          <span class="n">value_read</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_input_from_hdf</span><span class="p">(</span>
+            <span class="n">subgrp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bc_data</span><span class="p">,</span> <span class="n">things_to_read</span><span class="o">=</span><span class="n">things_to_read</span><span class="p">)</span>
+          <span class="k">if</span> <span class="ow">not</span> <span class="n">value_read</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">value_read</span>
+          <span class="n">things_to_read</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;n_atoms&#39;</span><span class="p">]</span>
+          <span class="n">value_read</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_input_from_hdf</span><span class="p">(</span>
+            <span class="n">subgrp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">symmcorr_data</span><span class="p">,</span> <span class="n">things_to_read</span><span class="o">=</span><span class="n">things_to_read</span><span class="p">)</span>
+          <span class="k">if</span> <span class="ow">not</span> <span class="n">value_read</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">value_read</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">mesh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">with_Sigma</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;lattice_gf: Give the mesh=(om_min,om_max,n_points) for the lattice GfReFreq.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mesh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">om_mesh</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">real</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_imp_w</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mesh</span><span class="p">]</span>
+            <span class="n">om_min</span> <span class="o">=</span> <span class="n">om_mesh</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">om_max</span> <span class="o">=</span> <span class="n">om_mesh</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">n_om</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">om_mesh</span><span class="p">)</span>
+            <span class="n">mesh</span> <span class="o">=</span> <span class="p">(</span><span class="n">om_min</span><span class="p">,</span> <span class="n">om_max</span><span class="p">,</span> <span class="n">n_om</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">om_min</span><span class="p">,</span> <span class="n">om_max</span><span class="p">,</span> <span class="n">n_om</span> <span class="o">=</span> <span class="n">mesh</span>
+            <span class="n">om_mesh</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">om_min</span><span class="p">,</span> <span class="n">om_max</span><span class="p">,</span> <span class="n">n_om</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mu</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chemical_potential</span>
+
+        <span class="n">spn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spin_block_names</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">SO</span><span class="p">]</span>
+
+        <span class="n">DOS</span> <span class="o">=</span> <span class="p">{</span><span class="n">sp</span><span class="p">:</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">n_om</span><span class="p">],</span> <span class="n">numpy</span><span class="o">.</span><span class="n">float_</span><span class="p">)</span>
+               <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spin_block_names</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">SO</span><span class="p">]}</span>
+        <span class="c1">#set up temporary arrays for pdos calculations</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">pdos</span><span class="p">):</span>
+          <span class="n">pDOS</span> <span class="o">=</span> <span class="p">{</span><span class="n">sp</span><span class="p">:</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">n_atoms</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">maxlm</span><span class="p">,</span><span class="n">n_om</span><span class="p">],</span> <span class="n">numpy</span><span class="o">.</span><span class="n">float_</span><span class="p">)</span>
+                      <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spin_block_names</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">SO</span><span class="p">]}</span>
+          <span class="n">ntoi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spin_names_to_ind</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">SO</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="n">pDOS</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">ikarray</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_k</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">ik</span> <span class="ow">in</span> <span class="n">mpi</span><span class="o">.</span><span class="n">slice_array</span><span class="p">(</span><span class="n">ikarray</span><span class="p">):</span>
+
+            <span class="n">G_latt_w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice_gf</span><span class="p">(</span>
+                <span class="n">ik</span><span class="o">=</span><span class="n">ik</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">iw_or_w</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">broadening</span><span class="o">=</span><span class="n">broadening</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span> <span class="n">with_Sigma</span><span class="o">=</span><span class="n">with_Sigma</span><span class="p">,</span> <span class="n">with_dc</span><span class="o">=</span><span class="n">with_dc</span><span class="p">)</span>
+            <span class="n">G_latt_w</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bz_weights</span><span class="p">[</span><span class="n">ik</span><span class="p">]</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">nk</span><span class="o">!=</span><span class="kc">None</span><span class="p">):</span>
+              <span class="k">for</span> <span class="n">iom</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_om</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">bname</span><span class="p">,</span> <span class="n">gf</span> <span class="ow">in</span> <span class="n">G_latt_w</span><span class="p">:</span>
+                  <span class="n">numpy</span><span class="o">.</span><span class="n">fill_diagonal</span><span class="p">(</span><span class="n">G_latt_w</span><span class="p">[</span><span class="n">bname</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">iom</span><span class="p">,:,:]</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="n">nk</span><span class="p">[</span><span class="n">bname</span><span class="p">][</span><span class="n">ik</span><span class="p">][:]</span><span class="o">*</span><span class="n">G_latt_w</span><span class="p">[</span><span class="n">bname</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">iom</span><span class="p">,:,:]</span><span class="o">.</span><span class="n">imag</span><span class="o">.</span><span class="n">diagonal</span><span class="p">())</span>
+
+            <span class="c1"># Non-projected DOS</span>
+            <span class="k">for</span> <span class="n">iom</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_om</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">bname</span><span class="p">,</span> <span class="n">gf</span> <span class="ow">in</span> <span class="n">G_latt_w</span><span class="p">:</span>
+                    <span class="n">DOS</span><span class="p">[</span><span class="n">bname</span><span class="p">][</span><span class="n">iom</span><span class="p">]</span> <span class="o">-=</span> <span class="n">gf</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">iom</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span><span class="o">.</span><span class="n">imag</span><span class="o">.</span><span class="n">trace</span><span class="p">()</span> <span class="o">/</span> \
+                        <span class="n">numpy</span><span class="o">.</span><span class="n">pi</span>
+
+
+            <span class="c1"># Partial DOS</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">pdos</span><span class="p">):</span>
+              <span class="k">for</span> <span class="n">bname</span><span class="p">,</span> <span class="n">gf</span> <span class="ow">in</span> <span class="n">G_latt_w</span><span class="p">:</span>
+                  <span class="n">isp</span><span class="o">=</span><span class="n">ntoi</span><span class="p">[</span><span class="n">bname</span><span class="p">]</span>
+                  <span class="n">nst</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_orbitals</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span><span class="n">isp</span><span class="p">]</span>
+                  <span class="n">tmp</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">nst</span><span class="p">])</span>
+                  <span class="k">for</span> <span class="n">iom</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_om</span><span class="p">):</span>
+                      <span class="c1">#get diagonal spectral function</span>
+                      <span class="n">tmp</span><span class="p">[:]</span> <span class="o">=</span> <span class="o">-</span><span class="n">gf</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">iom</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span><span class="o">.</span><span class="n">imag</span><span class="o">.</span><span class="n">diagonal</span><span class="p">()</span> <span class="o">/</span> <span class="n">numpy</span><span class="o">.</span><span class="n">pi</span>
+                      <span class="c1">#calculate the pDOS of all atoms</span>
+                      <span class="k">for</span> <span class="n">iatom</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_atoms</span><span class="p">):</span>
+                        <span class="n">bcar</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bc</span><span class="p">[:,</span><span class="n">isp</span><span class="p">,</span><span class="n">iatom</span><span class="p">,</span><span class="mi">0</span><span class="p">:</span><span class="n">nst</span><span class="p">,</span><span class="n">ik</span><span class="p">]</span>
+                        <span class="n">pDOS</span><span class="p">[</span><span class="n">bname</span><span class="p">][</span><span class="n">iatom</span><span class="p">,:,</span><span class="n">iom</span><span class="p">]</span> <span class="o">+=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">bcar</span><span class="p">,</span><span class="n">tmp</span><span class="p">)</span>
+                  <span class="k">del</span> <span class="n">tmp</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
+        <span class="c1"># Collect data from mpi:</span>
+        <span class="k">for</span> <span class="n">bname</span> <span class="ow">in</span> <span class="n">DOS</span><span class="p">:</span>
+            <span class="n">DOS</span><span class="p">[</span><span class="n">bname</span><span class="p">]</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">all_reduce</span><span class="p">(</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">world</span><span class="p">,</span> <span class="n">DOS</span><span class="p">[</span><span class="n">bname</span><span class="p">],</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">pdos</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">bname</span> <span class="ow">in</span> <span class="n">pDOS</span><span class="p">:</span>
+              <span class="k">for</span> <span class="n">iatom</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_atoms</span><span class="p">):</span>
+                 <span class="k">for</span> <span class="n">lm</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maxlm</span><span class="p">):</span>
+                   <span class="n">pDOS</span><span class="p">[</span><span class="n">bname</span><span class="p">][</span><span class="n">iatom</span><span class="p">,</span><span class="n">lm</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">all_reduce</span><span class="p">(</span>
+                      <span class="n">mpi</span><span class="o">.</span><span class="n">world</span><span class="p">,</span> <span class="n">pDOS</span><span class="p">[</span><span class="n">bname</span><span class="p">][</span><span class="n">iatom</span><span class="p">,</span><span class="n">lm</span><span class="p">,:],</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span>
+
+
+        <span class="c1"># Write to files</span>
+        <span class="k">if</span> <span class="n">save_to_file</span> <span class="ow">and</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spin_block_names</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">SO</span><span class="p">]:</span>
+                <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;TDOS_</span><span class="si">%s</span><span class="s1">.dat&#39;</span> <span class="o">%</span> <span class="n">sp</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">iom</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_om</span><span class="p">):</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">    </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">om_mesh</span><span class="p">[</span><span class="n">iom</span><span class="p">],</span> <span class="n">DOS</span><span class="p">[</span><span class="n">sp</span><span class="p">][</span><span class="n">iom</span><span class="p">]))</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+                <span class="c1"># Partial</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">pdos</span><span class="p">):</span>
+                  <span class="k">for</span> <span class="n">iatom</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_atoms</span><span class="p">):</span>
+                      <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;pDOS_</span><span class="si">%s</span><span class="s1">_atom_</span><span class="si">%s</span><span class="s1">.dat&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">iatom</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+                      <span class="k">for</span> <span class="n">lm</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maxlm</span><span class="p">):</span>
+                          <span class="k">for</span> <span class="n">iom</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_om</span><span class="p">):</span>
+                            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">    </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span>
+                                  <span class="p">(</span><span class="n">om_mesh</span><span class="p">[</span><span class="n">iom</span><span class="p">],</span> <span class="n">pDOS</span><span class="p">[</span><span class="n">sp</span><span class="p">][</span><span class="n">iatom</span><span class="p">,</span><span class="n">lm</span><span class="p">,</span><span class="n">iom</span><span class="p">]))</span>
+                          <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                      <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">DOS</span><span class="p">,</span> <span class="n">pDOS</span></div>
+
+    <span class="c1"># vector manipulation used in Elk for symmetry operations - This is already in elktools, this should</span>
+    <span class="c1"># put somewhere for general use by the converter and this script.</span>
+    <span class="k">def</span> <span class="nf">v3frac</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">eps</span><span class="p">):</span>
+       <span class="c1">#This finds the fractional part of 3-vector v components. This uses the</span>
+       <span class="c1">#same method as in Elk (version 6.2.8) r3fac subroutine.</span>
+       <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">numpy</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+       <span class="k">if</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+=</span><span class="mi">1</span>
+       <span class="k">if</span><span class="p">((</span><span class="mi">1</span><span class="o">-</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">eps</span><span class="p">):</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span>
+       <span class="k">if</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">eps</span><span class="p">):</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span>
+       <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">numpy</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+       <span class="k">if</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+=</span><span class="mi">1</span>
+       <span class="k">if</span><span class="p">((</span><span class="mi">1</span><span class="o">-</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">eps</span><span class="p">):</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span>
+       <span class="k">if</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">eps</span><span class="p">):</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span>
+       <span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">-</span><span class="n">numpy</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+       <span class="k">if</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span> <span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">+=</span><span class="mi">1</span>
+       <span class="k">if</span><span class="p">((</span><span class="mi">1</span><span class="o">-</span><span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">eps</span><span class="p">):</span> <span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span>
+       <span class="k">if</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">eps</span><span class="p">):</span> <span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span>
+       <span class="k">return</span> <span class="n">v</span>
+
+    <span class="c1">#  Calculate the spectral function at an energy contour omega - i.e. Fermi surface plots</span>
+    <span class="c1"># Uses .data of only GfReFreq objects.</span>
+<div class="viewcode-block" id="SumkDFTTools.fs_plot"><a class="viewcode-back" href="../../reference/sumk_dft_tools.html#triqs_dft_tools.sumk_dft_tools.SumkDFTTools.fs_plot">[docs]</a>    <span class="k">def</span> <span class="nf">fs_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">broadening</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">FS</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sym</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">orthvec</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">with_Sigma</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">with_dc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_to_file</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the correlated spectral function at specific frequencies. The default output is the</span>
+<span class="sd">        correlated spectral function at zero frequency - this relates the the Fermi surface.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mu : double, optional</span>
+<span class="sd">             Chemical potential, overrides the one stored in the hdf5 archive.</span>
+<span class="sd">        broadening : double, optional</span>
+<span class="sd">                     Lorentzian broadening of the spectra. If not given, standard value of lattice_gf is used.</span>
+<span class="sd">        mesh : real frequency MeshType, optional</span>
+<span class="sd">               Omega mesh for the real-frequency Green&#39;s function. Given as parameter to lattice_gf.</span>
+<span class="sd">        plane : boolean, optional</span>
+<span class="sd">                True assumes that the k-mesh of eigenvalues calculated was a plane.</span>
+<span class="sd">        sym: boolean, optional</span>
+<span class="sd">             Uses the symmetry operations to fold out the correlated spectral function in the BZ</span>
+<span class="sd">        FS: boolean</span>
+<span class="sd">            Flag for calculating the spectral function at the Fermi level (omega-&gt;0)</span>
+<span class="sd">        orthvec: double (3) element numpy array, optional</span>
+<span class="sd">                 This is used to determine the vectors used in the plane calculations after folding out the IBZ.</span>
+<span class="sd">                 This needs to correspond to the same orthonormal LATTICE inputs vectors used in the DFT code</span>
+<span class="sd">                 which generated the plane of energy eigenvalues.</span>
+<span class="sd">                 The default is orthvec=[0,0,1].</span>
+<span class="sd">        with_Sigma : boolean, optional</span>
+<span class="sd">                     If True, the self energy is used for the calculation. If false, the DOS is calculated without self energy.</span>
+<span class="sd">        with_dc : boolean, optional</span>
+<span class="sd">                  If True the double counting correction is used.</span>
+<span class="sd">        save_to_file : boolean, optional</span>
+<span class="sd">                       If True, text files with the calculated data will be created.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        nk : int</span>
+<span class="sd">             The number of k-points in the plane.</span>
+<span class="sd">        vkc : Dict of numpy arrays [shape - (nk, 3)]</span>
+<span class="sd">              Contains the cartesian vectors which the spectral function has been evaluated on.</span>
+<span class="sd">        Akw : Dict of numpy arrays [shape - (spn)(self.n_k, n_om)]</span>
+<span class="sd">              Correlated spectral function - the data as it is written to the files.</span>
+<span class="sd">        iknr : int array</span>
+<span class="sd">               An array of k-point indices which mape the Akw over the unfolded BZ.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#default vector tolerance used in Elk. This should not be alter.</span>
+        <span class="n">epslat</span><span class="o">=</span><span class="mf">1E-6</span>
+        <span class="c1">#read in the energy contour energies and projectors</span>
+        <span class="n">things_to_read</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;n_k&#39;</span><span class="p">,</span><span class="s1">&#39;bmat&#39;</span><span class="p">,</span><span class="s1">&#39;symlat&#39;</span><span class="p">,</span><span class="s1">&#39;n_symm&#39;</span><span class="p">,</span><span class="s1">&#39;vkl&#39;</span><span class="p">,</span>
+                          <span class="s1">&#39;n_orbitals&#39;</span><span class="p">,</span> <span class="s1">&#39;proj_mat&#39;</span><span class="p">,</span> <span class="s1">&#39;hopping&#39;</span><span class="p">]</span>
+        <span class="n">value_read</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_input_from_hdf</span><span class="p">(</span>
+          <span class="n">subgrp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fs_data</span><span class="p">,</span> <span class="n">things_to_read</span><span class="o">=</span><span class="n">things_to_read</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">value_read</span><span class="p">:</span>
+          <span class="k">return</span> <span class="n">value_read</span>
+
+        <span class="k">if</span> <span class="n">with_Sigma</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">om_mesh</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">real</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_imp_w</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mesh</span><span class="p">]</span>
+            <span class="c1">#for Fermi Surface calculations</span>
+            <span class="k">if</span> <span class="n">FS</span><span class="p">:</span>
+              <span class="n">jw</span><span class="o">=</span><span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">om_mesh</span><span class="p">))</span> <span class="k">if</span> <span class="n">om_mesh</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">]</span>
+              <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">jw</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Sigma_imp_w mesh does not include zero frequency value&#39;</span><span class="p">)</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Using the next absolute lowest frequency value.&#39;</span><span class="p">)</span>
+                <span class="n">abs_om_mesh</span> <span class="o">=</span> <span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">om_mesh</span><span class="p">]</span>
+                <span class="n">jw</span><span class="o">=</span><span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">abs_om_mesh</span><span class="p">))</span> <span class="k">if</span> <span class="n">abs_om_mesh</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">numpy</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">abs_om_mesh</span><span class="p">[:])]</span>
+              <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">jw</span><span class="p">)</span>
+            <span class="c1">#for many energy contour calculations</span>
+            <span class="k">else</span><span class="p">:</span>
+              <span class="k">if</span> <span class="n">mesh</span><span class="p">:</span>
+                <span class="n">om_mn</span><span class="o">=</span><span class="n">mesh</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">om_mx</span><span class="o">=</span><span class="n">mesh</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">jw</span><span class="o">=</span><span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">om_mesh</span><span class="p">))</span> <span class="k">if</span><span class="p">((</span><span class="n">om_mesh</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&lt;=</span><span class="n">om_mx</span><span class="p">)</span><span class="ow">and</span><span class="p">(</span><span class="n">om_mesh</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&gt;=</span><span class="n">om_mn</span><span class="p">))]</span>
+            <span class="n">om_min</span> <span class="o">=</span> <span class="n">om_mesh</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">om_max</span> <span class="o">=</span> <span class="n">om_mesh</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">n_om</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">om_mesh</span><span class="p">)</span>
+            <span class="n">mesh</span> <span class="o">=</span> <span class="p">(</span><span class="n">om_min</span><span class="p">,</span> <span class="n">om_max</span><span class="p">,</span> <span class="n">n_om</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">mesh</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">broadening</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+               <span class="n">broadening</span><span class="o">=</span><span class="mf">0.0</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">broadening</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">mesh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1">#default is to set &quot;mesh&quot; to be just for the Fermi surface - omega=0.0</span>
+            <span class="n">om_min</span> <span class="o">=</span> <span class="mf">0.000</span>
+            <span class="n">om_max</span> <span class="o">=</span> <span class="mf">0.001</span>
+            <span class="n">n_om</span> <span class="o">=</span> <span class="mi">3</span>
+            <span class="n">mesh</span> <span class="o">=</span> <span class="p">(</span><span class="n">om_min</span><span class="p">,</span> <span class="n">om_max</span><span class="p">,</span> <span class="n">n_om</span><span class="p">)</span>
+            <span class="n">om_mesh</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">om_min</span><span class="p">,</span> <span class="n">om_max</span><span class="p">,</span> <span class="n">n_om</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">broadening</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+               <span class="n">broadening</span><span class="o">=</span><span class="mf">0.01</span>
+            <span class="n">FS</span><span class="o">=</span><span class="kc">True</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">with_Sigma</span><span class="p">,</span><span class="n">with_dc</span><span class="p">)</span>
+            <span class="n">jw</span><span class="o">=</span><span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">om_mesh</span><span class="p">))</span> <span class="k">if</span><span class="p">((</span><span class="n">om_mesh</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&lt;=</span><span class="n">om_max</span><span class="p">)</span><span class="ow">and</span><span class="p">(</span><span class="n">om_mesh</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&gt;=</span><span class="n">om_min</span><span class="p">))]</span>
+        <span class="k">else</span><span class="p">:</span>
+        <span class="c1">#a range of frequencies can be used if desired</span>
+            <span class="n">om_min</span><span class="p">,</span> <span class="n">om_max</span><span class="p">,</span> <span class="n">n_om</span> <span class="o">=</span> <span class="n">mesh</span>
+            <span class="n">om_mesh</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">om_min</span><span class="p">,</span> <span class="n">om_max</span><span class="p">,</span> <span class="n">n_om</span><span class="p">)</span>
+            <span class="n">FS</span><span class="o">=</span><span class="kc">False</span>
+            <span class="n">jw</span><span class="o">=</span><span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">om_mesh</span><span class="p">))</span> <span class="k">if</span><span class="p">((</span><span class="n">om_mesh</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&lt;=</span><span class="n">om_max</span><span class="p">)</span><span class="ow">and</span><span class="p">(</span><span class="n">om_mesh</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">&gt;=</span><span class="n">om_min</span><span class="p">))]</span>
+        <span class="k">if</span> <span class="n">mu</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chemical_potential</span>
+
+        <span class="c1">#orthogonal vector used for plane calculations</span>
+        <span class="k">if</span> <span class="n">orthvec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+          <span class="c1">#set to [0,0,1] by default</span>
+          <span class="n">orthvec</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">float_</span><span class="p">)</span>
+          <span class="n">orthvec</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="k">elif</span> <span class="n">orthvec</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+          <span class="k">assert</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;The input numpy orthvec is not the required size of 3!&quot;</span>
+
+        <span class="n">spn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spin_block_names</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">SO</span><span class="p">]</span>
+
+        <span class="n">Akw</span> <span class="o">=</span> <span class="p">{</span><span class="n">sp</span><span class="p">:</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">n_k</span><span class="p">,</span> <span class="n">n_om</span><span class="p">],</span> <span class="n">numpy</span><span class="o">.</span><span class="n">float_</span><span class="p">)</span>
+                   <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">spn</span><span class="p">}</span>
+
+        <span class="c1">#Cartesian lattice coordinates array</span>
+        <span class="n">vkc</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">n_k</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="n">numpy</span><span class="o">.</span><span class="n">float_</span><span class="p">)</span>
+
+        <span class="n">ikarray</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_k</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">ik</span> <span class="ow">in</span> <span class="n">mpi</span><span class="o">.</span><span class="n">slice_array</span><span class="p">(</span><span class="n">ikarray</span><span class="p">):</span>
+            <span class="c1">#calculate the catesian coordinates of IBZ</span>
+            <span class="n">vkc</span><span class="p">[</span><span class="n">ik</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bmat</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">vkl</span><span class="p">[</span><span class="n">ik</span><span class="p">,:])</span>
+
+            <span class="n">G_latt_w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lattice_gf</span><span class="p">(</span>
+                <span class="n">ik</span><span class="o">=</span><span class="n">ik</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">iw_or_w</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">broadening</span><span class="o">=</span><span class="n">broadening</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span> <span class="n">with_Sigma</span><span class="o">=</span><span class="n">with_Sigma</span><span class="p">,</span> <span class="n">with_dc</span><span class="o">=</span><span class="n">with_dc</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">iom</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_om</span><span class="p">):</span>
+              <span class="k">for</span> <span class="n">bname</span><span class="p">,</span> <span class="n">gf</span> <span class="ow">in</span> <span class="n">G_latt_w</span><span class="p">:</span>
+                <span class="n">Akw</span><span class="p">[</span><span class="n">bname</span><span class="p">][</span><span class="n">ik</span><span class="p">,</span> <span class="n">iom</span><span class="p">]</span> <span class="o">+=</span> <span class="n">gf</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">iom</span><span class="p">,:,:]</span><span class="o">.</span><span class="n">imag</span><span class="o">.</span><span class="n">trace</span><span class="p">()</span> <span class="o">/</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.0</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
+
+        <span class="c1"># Collect data from mpi:</span>
+        <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="n">spn</span><span class="p">:</span>
+          <span class="n">Akw</span><span class="p">[</span><span class="n">sp</span><span class="p">]</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">all_reduce</span><span class="p">(</span><span class="n">mpi</span><span class="o">.</span><span class="n">world</span><span class="p">,</span> <span class="n">Akw</span><span class="p">[</span><span class="n">sp</span><span class="p">],</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
+
+        <span class="c1">#fold out the IBZ k-points using the lattice vectors and symmetries</span>
+        <span class="c1">#reducible number of k-points (which will alter after out folding)</span>
+        <span class="n">nk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_k</span>
+        <span class="n">iknr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_k</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sym</span><span class="p">:</span>
+          <span class="n">vkltmp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vkl</span>
+          <span class="n">v</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">float_</span><span class="p">)</span>
+          <span class="n">v_orth</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">float_</span><span class="p">)</span>
+          <span class="k">for</span> <span class="n">isym</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_symm</span><span class="p">):</span>
+            <span class="c1">#calculate the orthonormal vector after symmetry operation. This is used to</span>
+            <span class="c1">#check if the orthonormal vector after the symmetry operation is parallel</span>
+            <span class="c1">#or anit-parallel to the original vector.</span>
+            <span class="k">if</span> <span class="n">plane</span><span class="p">:</span>
+              <span class="n">vo</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symlat</span><span class="p">[</span><span class="n">isym</span><span class="p">][:,:],</span><span class="n">orthvec</span><span class="p">[:]</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span>
+              <span class="c1">#check if the vectors are parallel or anti-parallel respectively</span>
+              <span class="n">t1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">vo</span><span class="p">,</span> <span class="n">orthvec</span><span class="p">)</span>
+              <span class="k">if</span><span class="p">(</span><span class="ow">not</span> <span class="n">t1</span><span class="p">):</span>
+                <span class="c1">#exit this symmetry operation</span>
+                <span class="k">continue</span>
+
+            <span class="k">for</span> <span class="n">ik</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_k</span><span class="p">):</span>
+              <span class="c1">#find point in BZ by symmetry operation</span>
+              <span class="n">v</span><span class="p">[:]</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symlat</span><span class="p">[</span><span class="n">isym</span><span class="p">][:,:],</span><span class="bp">self</span><span class="o">.</span><span class="n">vkl</span><span class="p">[</span><span class="n">ik</span><span class="p">,:])</span>
+              <span class="c1">#shift back in to range [0,1) - Elk specific</span>
+              <span class="n">v</span><span class="p">[:]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">v3frac</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="n">epslat</span><span class="p">)</span>
+              <span class="c1">#add vector to list if not present and add the equivalent Akw value</span>
+                <span class="c1">#convert to cartesian</span>
+              <span class="n">v</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bmat</span><span class="p">,</span><span class="n">v</span><span class="p">[:])</span>
+                <span class="c1">#alter temporary arrays</span>
+              <span class="n">nk</span> <span class="o">+=</span> <span class="mi">1</span>
+              <span class="n">vkc</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">vkc</span><span class="p">,</span><span class="n">v</span><span class="p">))</span>
+              <span class="n">iknr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">iknr</span><span class="p">,</span><span class="n">ik</span><span class="p">)</span>
+              <span class="n">vkltmp</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">vkltmp</span><span class="p">,</span><span class="n">v</span><span class="p">))</span>
+          <span class="c1">#remove duplicates</span>
+          <span class="p">[</span><span class="n">vkc</span><span class="p">,</span><span class="n">ind</span><span class="p">]</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">vkc</span><span class="p">,</span><span class="n">return_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+          <span class="n">iknr</span><span class="o">=</span><span class="n">iknr</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
+          <span class="n">nk</span><span class="o">=</span><span class="n">vkc</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+          <span class="c1">#sort the indices for output in decending order</span>
+          <span class="n">iksrt</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">lexsort</span><span class="p">(([</span><span class="n">vkc</span><span class="p">[:,</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">vkc</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">)]))</span>
+          <span class="c1">#rearrange the vkc and iknr arrays</span>
+          <span class="n">vkc</span><span class="o">=</span><span class="n">vkc</span><span class="p">[</span><span class="n">iksrt</span><span class="p">]</span>
+          <span class="n">iknr</span><span class="o">=</span><span class="n">iknr</span><span class="p">[</span><span class="n">iksrt</span><span class="p">]</span>
+
+        <span class="c1"># Write to files</span>
+        <span class="k">if</span> <span class="n">save_to_file</span> <span class="ow">and</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+          <span class="k">for</span> <span class="n">sp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spin_block_names</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">SO</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">FS</span><span class="p">:</span>
+            <span class="c1">#Output default FS spectral function</span>
+              <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;Akw_FS_</span><span class="si">%s</span><span class="s1">.dat&#39;</span> <span class="o">%</span> <span class="n">sp</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+              <span class="k">for</span> <span class="n">ik</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nk</span><span class="p">):</span>
+                <span class="n">jk</span><span class="o">=</span><span class="n">iknr</span><span class="p">[</span><span class="n">ik</span><span class="p">]</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">    </span><span class="si">%s</span><span class="s2">    </span><span class="si">%s</span><span class="s2">    </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">vkc</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">vkc</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">vkc</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="n">Akw</span><span class="p">[</span><span class="n">bname</span><span class="p">][</span><span class="n">jk</span><span class="p">,</span> <span class="n">jw</span><span class="p">[</span><span class="mi">0</span><span class="p">]]))</span>
+              <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+            <span class="c1">#Output spectral function from multiple frequencies</span>
+              <span class="k">for</span> <span class="n">iom</span> <span class="ow">in</span> <span class="n">jw</span><span class="p">:</span>
+                <span class="c1">#output the energy contours in multiple files with mesh index.</span>
+                <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;Akw_</span><span class="si">%s</span><span class="s1">_omega_</span><span class="si">%s</span><span class="s1">.dat&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sp</span><span class="p">,</span> <span class="n">iom</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">ik</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nk</span><span class="p">):</span>
+                  <span class="n">jk</span><span class="o">=</span><span class="n">iknr</span><span class="p">[</span><span class="n">ik</span><span class="p">]</span>
+                  <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">    </span><span class="si">%s</span><span class="s2">    </span><span class="si">%s</span><span class="s2">    </span><span class="si">%s</span><span class="s2">    </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">vkc</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">vkc</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">vkc</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="n">om_mesh</span><span class="p">[</span><span class="n">iom</span><span class="p">],</span> <span class="n">Akw</span><span class="p">[</span><span class="n">bname</span><span class="p">][</span><span class="n">jk</span><span class="p">,</span> <span class="n">iom</span><span class="p">]))</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">nk</span><span class="p">,</span> <span class="n">vkc</span><span class="p">,</span> <span class="n">Akw</span><span class="p">,</span> <span class="n">iknr</span></div>
+
+
+
     <span class="c1"># Uses .data of only GfReFreq objects.</span>
 <div class="viewcode-block" id="SumkDFTTools.spaghettis"><a class="viewcode-back" href="../../reference/sumk_dft_tools.html#triqs_dft_tools.sumk_dft_tools.SumkDFTTools.spaghettis">[docs]</a>    <span class="k">def</span> <span class="nf">spaghettis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">broadening</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">plot_shift</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">plot_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ishell</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">save_to_file</span><span class="o">=</span><span class="s1">&#39;Akw_&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -590,7 +945,7 @@
             <span class="n">subgrp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bands_data</span><span class="p">,</span> <span class="n">things_to_read</span><span class="o">=</span><span class="n">things_to_read</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">value_read</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">value_read</span>
-        <span class="k">if</span> <span class="n">ishell</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">ishell</span><span class="p">:</span>
             <span class="n">things_to_read</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;rot_mat_all&#39;</span><span class="p">,</span> <span class="s1">&#39;rot_mat_all_time_inv&#39;</span><span class="p">]</span>
             <span class="n">value_read</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_input_from_hdf</span><span class="p">(</span>
                 <span class="n">subgrp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parproj_data</span><span class="p">,</span> <span class="n">things_to_read</span><span class="o">=</span><span class="n">things_to_read</span><span class="p">)</span>
@@ -885,12 +1240,12 @@
     <span class="c1"># Uses .data of only GfReFreq objects.</span>
 <div class="viewcode-block" id="SumkDFTTools.transport_distribution"><a class="viewcode-back" href="../../reference/sumk_dft_tools.html#triqs_dft_tools.sumk_dft_tools.SumkDFTTools.transport_distribution">[docs]</a>    <span class="k">def</span> <span class="nf">transport_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">directions</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;xx&#39;</span><span class="p">],</span> <span class="n">energy_window</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Om_mesh</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">],</span> <span class="n">with_Sigma</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">n_om</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">broadening</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Calculates the transport distribution </span>
+<span class="sd">        Calculates the transport distribution</span>
 
 <span class="sd">        .. math::</span>
 <span class="sd">           \Gamma_{\alpha\beta}\left(\omega+\Omega/2, \omega-\Omega/2\right) = \frac{1}{V} \sum_k Tr\left(v_{k,\alpha}A_{k}(\omega+\Omega/2)v_{k,\beta}A_{k}\left(\omega-\Omega/2\right)\right)</span>
 
-<span class="sd">        in the direction :math:`\alpha\beta`. The velocities :math:`v_{k}` are read from the transport subgroup of the hdf5 archive. </span>
+<span class="sd">        in the direction :math:`\alpha\beta`. The velocities :math:`v_{k}` are read from the transport subgroup of the hdf5 archive.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -900,14 +1255,14 @@
 <span class="sd">        directions : list of double, optional</span>
 <span class="sd">            :math:`\alpha\beta` e.g.: [&#39;xx&#39;,&#39;yy&#39;,&#39;zz&#39;,&#39;xy&#39;,&#39;xz&#39;,&#39;yz&#39;].</span>
 <span class="sd">        energy_window : list of double, optional</span>
-<span class="sd">            Specifies the upper and lower limit of the frequency integration for :math:`\Omega=0.0`. The window is automatically enlarged by the largest :math:`\Omega` value, </span>
+<span class="sd">            Specifies the upper and lower limit of the frequency integration for :math:`\Omega=0.0`. The window is automatically enlarged by the largest :math:`\Omega` value,</span>
 <span class="sd">            hence the integration is performed in the interval [energy_window[0]-max(Om_mesh), energy_window[1]+max(Om_mesh)].</span>
 <span class="sd">        Om_mesh : list of double, optional</span>
 <span class="sd">            :math:`\Omega` frequency mesh of the optical conductivity. For the conductivity and the Seebeck coefficient :math:`\Omega=0.0` has to be</span>
 <span class="sd">            part of the mesh. In the current version Om_mesh is repined to the mesh provided by the self-energy! The actual mesh is printed on the screen and stored as</span>
 <span class="sd">            member Om_mesh.</span>
 <span class="sd">        with_Sigma : boolean, optional</span>
-<span class="sd">            Determines whether the calculation is performed with or without self energy. If this parameter is set to False the self energy is set to zero (i.e. the DFT band </span>
+<span class="sd">            Determines whether the calculation is performed with or without self energy. If this parameter is set to False the self energy is set to zero (i.e. the DFT band</span>
 <span class="sd">            structure :math:`A(k,\omega)` is used). Note: For with_Sigma=False it is necessary to specify the parameters energy_window, n_om and broadening.</span>
 <span class="sd">        n_om : integer, optional</span>
 <span class="sd">            Number of equidistant frequency points in the interval [energy_window[0]-max(Om_mesh), energy_window[1]+max(Om_mesh)]. This parameters is only used if</span>
@@ -966,7 +1321,7 @@
             <span class="n">n_om</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">omega</span><span class="p">)</span>
             <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Using omega mesh provided by Sigma!&quot;</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">energy_window</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">energy_window</span><span class="p">:</span>
                 <span class="c1"># Find according window in Sigma mesh</span>
                 <span class="n">ioffset</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">omega</span> <span class="o">&lt;</span> <span class="n">energy_window</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="nb">max</span><span class="p">(</span><span class="n">Om_mesh</span><span class="p">))</span>
@@ -1072,7 +1427,7 @@
 <div class="viewcode-block" id="SumkDFTTools.transport_coefficient"><a class="viewcode-back" href="../../reference/sumk_dft_tools.html#triqs_dft_tools.sumk_dft_tools.SumkDFTTools.transport_coefficient">[docs]</a>    <span class="k">def</span> <span class="nf">transport_coefficient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">direction</span><span class="p">,</span> <span class="n">iq</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculates the transport coefficient A_n in a given direction for a given :math:`\Omega`. The required members (Gamma_w, directions, Om_mesh) have to be obtained first</span>
-<span class="sd">        by calling the function :meth:`transport_distribution &lt;dft.sumk_dft_tools.SumkDFTTools.transport_distribution&gt;`. For n&gt;0 A is set to NaN if :math:`\Omega` is not 0.0. </span>
+<span class="sd">        by calling the function :meth:`transport_distribution &lt;dft.sumk_dft_tools.SumkDFTTools.transport_distribution&gt;`. For n&gt;0 A is set to NaN if :math:`\Omega` is not 0.0.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1135,10 +1490,10 @@
 
 <div class="viewcode-block" id="SumkDFTTools.conductivity_and_seebeck"><a class="viewcode-back" href="../../reference/sumk_dft_tools.html#triqs_dft_tools.sumk_dft_tools.SumkDFTTools.conductivity_and_seebeck">[docs]</a>    <span class="k">def</span> <span class="nf">conductivity_and_seebeck</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Calculates the Seebeck coefficient and the optical conductivity by calling </span>
-<span class="sd">        :meth:`transport_coefficient &lt;dft.sumk_dft_tools.SumkDFTTools.transport_coefficient&gt;`. </span>
-<span class="sd">        The required members (Gamma_w, directions, Om_mesh) have to be obtained first by calling the function </span>
-<span class="sd">        :meth:`transport_distribution &lt;dft.sumk_dft_tools.SumkDFTTools.transport_distribution&gt;`. </span>
+<span class="sd">        Calculates the Seebeck coefficient and the optical conductivity by calling</span>
+<span class="sd">        :meth:`transport_coefficient &lt;dft.sumk_dft_tools.SumkDFTTools.transport_coefficient&gt;`.</span>
+<span class="sd">        The required members (Gamma_w, directions, Om_mesh) have to be obtained first by calling the function</span>
+<span class="sd">        :meth:`transport_distribution &lt;dft.sumk_dft_tools.SumkDFTTools.transport_distribution&gt;`.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1153,7 +1508,7 @@
 <span class="sd">        seebeck : dictionary of double</span>
 <span class="sd">            Seebeck coefficient in each direction. If zero is not present in Om_mesh the Seebeck coefficient is set to NaN.</span>
 
-<span class="sd">        kappa : dictionary of double. </span>
+<span class="sd">        kappa : dictionary of double.</span>
 <span class="sd">            thermal conductivity in each direction. If zero is not present in Om_mesh the thermal conductivity is set to NaN</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 

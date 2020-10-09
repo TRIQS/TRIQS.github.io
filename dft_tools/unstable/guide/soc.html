@@ -81,10 +81,13 @@
   <h3><a href="../contents.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Spin-orbit coupled calculations (single-shot)</a><ul>
-<li><a class="reference internal" href="#treatment-of-soc-in-dft">Treatment of SOC in DFT</a><ul>
-<li><a class="reference internal" href="#performing-the-projection">Performing the projection</a></li>
+<li><a class="reference internal" href="#treatment-of-soc-in-dft">Treatment of SOC in DFT</a></li>
+<li><a class="reference internal" href="#treatment-of-soc-in-wien2k">Treatment of SOC in Wien2k</a><ul>
+<li><a class="reference internal" href="#performing-the-projection-in-wien2k">Performing the projection in Wien2k</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#treatment-of-soc-in-elk">Treatment of SOC in Elk</a></li>
+<li><a class="reference internal" href="#after-generating-the-projectors">After generating the projectors</a></li>
 </ul>
 </li>
 </ul>
@@ -133,25 +136,35 @@ DFT+DMFT calculations:</p>
 <p>The second variant is a bit more involved and needs quite some expertise, so this guide will cover only the first variant with SOC included in the DFT calculations.</p>
 <div class="section" id="treatment-of-soc-in-dft">
 <h2>Treatment of SOC in DFT<a class="headerlink" href="#treatment-of-soc-in-dft" title="Permalink to this headline">¶</a></h2>
-<p>For now, TRIQS/DFTTools does only work with Wien2k when performing calculations with SO.
+<p>For now, TRIQS/DFTTools does only work with Wien2k and Elk when performing calculations with SO.
 The treatment of SOC in the VASP package is fundamentally different to the way Wien2k treats it, and the interface does not handle that at the moment.
-Therefore, this guide describes how to do an SOC calculation using the Wien2k DFT package.</p>
+Therefore, this guide describes how to do an SOC calculation using the Wien2k and Elk DFT packages.</p>
+</div>
+<div class="section" id="treatment-of-soc-in-wien2k">
+<h2>Treatment of SOC in Wien2k<a class="headerlink" href="#treatment-of-soc-in-wien2k" title="Permalink to this headline">¶</a></h2>
 <p>First, a Wien2k calculation including SOC has to be performed.
 For details, we refer the reader to the <a class="reference external" href="http://susi.theochem.tuwien.ac.at/reg_user/textbooks/">documentation of Wien2k</a> . As a matter of fact, we need the output for the DFT band structure for both spin directions explicitly. That means that one needs to do a spin-polarised DFT calculation with SOC, but, however, with magnetic moment set to zero. In the Wien2k initialisation procedure, one can choose for the option -nom when <code class="docutils literal notranslate"><span class="pre">lstart</span></code> is called. This means that the charge densities are initialised without magnetic splitting. The SOC calculation is then performed in a standard way as described in the Wien2k manual.</p>
-<div class="section" id="performing-the-projection">
-<h3>Performing the projection<a class="headerlink" href="#performing-the-projection" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="performing-the-projection-in-wien2k">
+<h3>Performing the projection in Wien2k<a class="headerlink" href="#performing-the-projection-in-wien2k" title="Permalink to this headline">¶</a></h3>
 <p>Note that the final <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">lapw2</span> <span class="pre">-almd</span> <span class="pre">-so</span> <span class="pre">-up</span></code> and <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">lapw2</span> <span class="pre">-almd</span> <span class="pre">-so</span> <span class="pre">-dn</span></code> have to be run <em>on a single core</em>, which implies that, before, <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">lapw2</span> <span class="pre">-up</span></code>, <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">lapw2</span> <span class="pre">-dn</span></code>, and <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">lapwso</span> <span class="pre">-up</span></code> have to be run in single-core mode (at least once).</p>
 <p>In the <code class="docutils literal notranslate"><span class="pre">case.indmftpr</span></code> file, the spin-orbit flag has to be set to <code class="docutils literal notranslate"><span class="pre">1</span></code> for the correlated atoms.
 For example, for the compound Sr<sub>2</sub>MgOsO<sub>6</sub>, with the struct file <a class="reference download internal" download="" href="../_downloads/d16196b1ffe5489d1788214ba30cb4fe/Sr2MgOsO6.struct"><code class="xref download docutils literal notranslate"><span class="pre">Sr2MgOsO6.struct</span></code></a>, we would, e.g., use the <code class="docutils literal notranslate"><span class="pre">indmftpr</span></code> file <a class="reference download internal" download="" href="../_downloads/8b35488485e800428ea5e3deb5ac0119/Sr2MgOsO6_SOC.indmftpr"><code class="xref download docutils literal notranslate"><span class="pre">found</span> <span class="pre">here</span></code></a>.
 Then, <code class="docutils literal notranslate"><span class="pre">dmftproj</span> <span class="pre">-sp</span> <span class="pre">-so</span></code> has to be called.
 As usual, it is important to check for warnings (e.g., about eigenvalues of the overlap matrix) in the output of <code class="docutils literal notranslate"><span class="pre">dmftproj</span></code> and adapt the window until these warnings disappear.</p>
 <p>Note that in presence of SOC, it is not possible to project only onto the <span class="math notranslate nohighlight">\(t_{2g}\)</span> subshell because it is not an irreducible representation.</p>
+</div>
+</div>
+<div class="section" id="treatment-of-soc-in-elk">
+<h2>Treatment of SOC in Elk<a class="headerlink" href="#treatment-of-soc-in-elk" title="Permalink to this headline">¶</a></h2>
+<p>First, a Elk calculation including SOC has to be performed. For details, we refer the reader to the SOC Elk examples in Elk’s example directory and <a class="reference external" href="https//elk.sourceforge.net/elk.pdf">Elk manual</a> for further information about the input flags. Then the projectors can be generated using the <code class="docutils literal notranslate"><span class="pre">wanproj</span></code> input flag in the same format as in <span class="xref std std-ref">conv_elk</span>. Like in Wien2k, you cannot project only onto the <span class="math notranslate nohighlight">\(t_{2g}\)</span> subshell because it is not an irreducible representation in SOC calculations.</p>
+</div>
+<div class="section" id="after-generating-the-projectors">
+<h2>After generating the projectors<a class="headerlink" href="#after-generating-the-projectors" title="Permalink to this headline">¶</a></h2>
 <p>We strongly suggest using the <a class="reference internal" href="../reference/sumk_dft_tools.html#triqs_dft_tools.sumk_dft_tools.SumkDFTTools.dos_wannier_basis" title="triqs_dft_tools.sumk_dft_tools.SumkDFTTools.dos_wannier_basis"><code class="xref py py-meth docutils literal notranslate"><span class="pre">dos_wannier_basis()</span></code></a> functionality of the <a class="reference internal" href="../reference/sumk_dft_tools.html#triqs_dft_tools.sumk_dft_tools.SumkDFTTools" title="triqs_dft_tools.sumk_dft_tools.SumkDFTTools"><code class="xref py py-class docutils literal notranslate"><span class="pre">SumkDFTTools</span></code></a> class (see <a class="reference download internal" download="" href="../_downloads/38f136c94116fbd2351dae8b84c70a11/calculate_dos_wannier_basis.py"><code class="xref download docutils literal notranslate"><span class="pre">calculate_dos_wannier_basis.py</span></code></a>) and compare the Wannier-projected orbitals to the original DFT DOS (they should be more or less equal).
 Note that, with SOC, there are usually off-diagonal elements of the spectral function, which can also be imaginary.
 The imaginary part can be found in the third column of the files <code class="docutils literal notranslate"><span class="pre">DOS_wann_...</span></code>.</p>
 <p>After the projection, one can proceed with the DMFT calculation. However, two things need to be noted here. First, since the spin is not a good quantum number any more, there are off-diagonal elements in the hybridisation function and the local Hamiltonian coupling the two spin directions. This will eventually lead to a fermonic sign problem when QMC is used as a impurity solver. Second, although the <span class="math notranslate nohighlight">\(e_{g}\)</span> subshell needs to be included in the projection, it can in many cases be neglected in the solution of the Anderson impurity model, after a transformation to a rotated local basis is done. This basis, diagonalising the local Hamiltonian in the presence of SOC, is often called the numerical j-basis. How rotations are performed is described in <a class="reference internal" href="BasisRotation.html#basisrotation"><span class="std std-ref">Automatic basis rotations in DFT+DMFT</span></a>, and the cutting of the orbitals in <a class="reference internal" href="blockstructure.html#blockstructure"><span class="std std-ref">Manipulating the Green’s functions block structure</span></a>.</p>
-<p>A DMFT calculation including SOC for Sr2MgOsO6 is included in the <a class="reference internal" href="../tutorials.html#tutorials"><span class="std std-ref">Tutorials</span></a>.</p>
-</div>
+<p>A DMFT calculation including SOC for Sr2MgOsO6 using Wien2k is included in the <a class="reference internal" href="../tutorials.html#tutorials"><span class="std std-ref">Tutorials</span></a>.</p>
 </div>
 </div>
 
