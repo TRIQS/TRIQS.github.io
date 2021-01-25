@@ -90,79 +90,60 @@
 
 <span class="c1">################################################################################</span>
 <span class="c1">#</span>
-<span class="c1"># TRIQS: a Toolbox for Research in Interacting Quantum Systems</span>
+<span class="c1"># TPRF: Two-Particle Response Function (TPRF) Toolbox for TRIQS</span>
 <span class="c1">#</span>
 <span class="c1"># Copyright (C) 2019, The Simons Foundation and S. Käser</span>
-<span class="c1"># Authors: H. U.R. Strand, S. Käser</span>
+<span class="c1"># Author: S. Käser, H. U.R. Strand</span>
 <span class="c1">#</span>
-<span class="c1"># TRIQS is free software: you can redistribute it and/or modify it under the</span>
+<span class="c1"># TPRF is free software: you can redistribute it and/or modify it under the</span>
 <span class="c1"># terms of the GNU General Public License as published by the Free Software</span>
 <span class="c1"># Foundation, either version 3 of the License, or (at your option) any later</span>
 <span class="c1"># version.</span>
 <span class="c1">#</span>
-<span class="c1"># TRIQS is distributed in the hope that it will be useful, but WITHOUT ANY</span>
+<span class="c1"># TPRF is distributed in the hope that it will be useful, but WITHOUT ANY</span>
 <span class="c1"># WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS</span>
 <span class="c1"># FOR A PARTICULAR PURPOSE. See the GNU General Public License for more</span>
 <span class="c1"># details.</span>
 <span class="c1">#</span>
 <span class="c1"># You should have received a copy of the GNU General Public License along with</span>
-<span class="c1"># TRIQS. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1"># TPRF. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
 <span class="c1">#</span>
 <span class="c1">################################################################################</span>
 
+<span class="kn">import</span> <span class="nn">functools</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">scipy.sparse.linalg</span> <span class="k">import</span> <span class="n">LinearOperator</span>
 <span class="kn">from</span> <span class="nn">scipy.sparse.linalg</span> <span class="k">import</span> <span class="n">eigs</span>
 
 <span class="c1"># ----------------------------------------------------------------------</span>
 
+<span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="k">import</span> <span class="n">Gf</span>
 <span class="kn">from</span> <span class="nn">.lattice</span> <span class="k">import</span> <span class="n">eliashberg_product</span>
-<span class="kn">from</span> <span class="nn">.lattice</span> <span class="k">import</span> <span class="n">eliashberg_product_fft</span>
+<span class="kn">from</span> <span class="nn">.lattice</span> <span class="k">import</span> <span class="n">eliashberg_product_fft</span><span class="p">,</span> <span class="n">eliashberg_product_fft_constant</span>
 <span class="kn">from</span> <span class="nn">.lattice</span> <span class="k">import</span> <span class="n">split_into_dynamic_wk_and_constant_k</span><span class="p">,</span> <span class="n">dynamic_and_constant_to_tr</span>
+<span class="kn">from</span> <span class="nn">.lattice</span> <span class="k">import</span> <span class="n">construct_phi_wk</span>
 
 <span class="c1"># ----------------------------------------------------------------------</span>
-<span class="k">def</span> <span class="nf">solve_eliashberg</span><span class="p">(</span><span class="n">Gamma_pp</span><span class="p">,</span> <span class="n">g_wk</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">):</span>
 
-    <span class="sd">&quot;&quot;&quot; Solve the linearized Eliashberg equation using </span>
-<span class="sd">    iterative eigenvalue algorithms from scipy &quot;&quot;&quot;</span>
-    
-    <span class="k">def</span> <span class="nf">from_x_to_wk</span><span class="p">(</span><span class="n">delta_x</span><span class="p">):</span>
-        <span class="n">delta_wk</span> <span class="o">=</span> <span class="n">g_wk</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">delta_wk</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">delta_x</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">delta_wk</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">delta_wk</span>
 
-    <span class="k">def</span> <span class="nf">from_wk_to_x</span><span class="p">(</span><span class="n">delta_wk</span><span class="p">):</span>
-        <span class="n">delta_x</span> <span class="o">=</span> <span class="n">delta_wk</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">delta_x</span>
-    
-    <span class="k">def</span> <span class="nf">matvec</span><span class="p">(</span><span class="n">delta_x</span><span class="p">):</span>
-        <span class="n">delta_wk</span> <span class="o">=</span> <span class="n">from_x_to_wk</span><span class="p">(</span><span class="n">delta_x</span><span class="p">)</span>
-        <span class="n">delta_out_wk</span> <span class="o">=</span> <span class="n">eliashberg_product</span><span class="p">(</span><span class="n">Gamma_pp</span><span class="p">,</span> <span class="n">g_wk</span><span class="p">,</span> <span class="n">delta_wk</span><span class="p">)</span>
-        <span class="n">delta_out_x</span> <span class="o">=</span> <span class="n">from_wk_to_x</span><span class="p">(</span><span class="n">delta_out_wk</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">delta_out_x</span>
-
-    <span class="n">x</span> <span class="o">=</span> <span class="n">from_wk_to_x</span><span class="p">(</span><span class="n">g_wk</span><span class="p">)</span>
-    <span class="n">N</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">linop</span> <span class="o">=</span> <span class="n">LinearOperator</span><span class="p">(</span><span class="n">matvec</span><span class="o">=</span><span class="n">matvec</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">))</span>
-
-    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1337</span><span class="p">)</span>
-    <span class="n">v0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
-    <span class="n">E</span><span class="p">,</span> <span class="n">U</span> <span class="o">=</span> <span class="n">eigs</span><span class="p">(</span><span class="n">linop</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;LR&#39;</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">v0</span><span class="o">=</span><span class="n">v0</span><span class="p">)</span>
-
-    <span class="n">eigen_modes</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
-        <span class="n">delta_wk</span> <span class="o">=</span> <span class="n">from_x_to_wk</span><span class="p">(</span><span class="n">U</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">])</span>
-        <span class="n">eigen_modes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">delta_wk</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">E</span><span class="p">,</span> <span class="n">eigen_modes</span>
-    
-<div class="viewcode-block" id="solve_eliashberg_fft"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.eliashberg.solve_eliashberg_fft">[docs]</a><span class="k">def</span> <span class="nf">solve_eliashberg_fft</span><span class="p">(</span><span class="n">Gamma_pp_wk</span><span class="p">,</span> <span class="n">g_wk</span><span class="p">,</span> <span class="n">Gamma_pp_const_k</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">):</span>
-
+<div class="viewcode-block" id="solve_eliashberg"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.eliashberg.solve_eliashberg">[docs]</a><span class="k">def</span> <span class="nf">solve_eliashberg</span><span class="p">(</span>
+    <span class="n">Gamma_pp_wk</span><span class="p">,</span>
+    <span class="n">g_wk</span><span class="p">,</span>
+    <span class="n">initial_delta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">Gamma_pp_const_k</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">tol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">,</span>
+    <span class="n">product</span><span class="o">=</span><span class="s2">&quot;FFT&quot;</span><span class="p">,</span>
+    <span class="n">solver</span><span class="o">=</span><span class="s2">&quot;IRAM&quot;</span><span class="p">,</span>
+    <span class="n">symmetrize_fct</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span>
+    <span class="n">k</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+<span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Solve the linearized Eliashberg equation</span>
 <span class="sd">    </span>
 <span class="sd">    Returns the biggest eigenvalues and corresponding eigenvectors of the linearized Eliashberg</span>
-<span class="sd">    equation. The Eliashberg equation implementation is using fourier transformations for </span>
-<span class="sd">    computational efficiency. The eigenvalues are found using an iterative algorithm from scipy.</span>
+<span class="sd">    equation, for a particle-particle vertex in the random phase approximation,</span>
+<span class="sd">    as described here :ref:`eliashberg_rpa`. The Eliashberg equation implementation is</span>
+<span class="sd">    using fourier transformations for computational efficiency. The eigenvalues are found</span>
+<span class="sd">    using an iterative algorithm from scipy.</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -172,12 +153,46 @@
 <span class="sd">    g_wk : Gf, </span>
 <span class="sd">           Green&#39;s function :math:`G(i\nu_n, \mathbf{k})`. The mesh attribute of the Gf must</span>
 <span class="sd">           be a MeshProduct with the components (MeshImFreq, MeshBrillouinZone).</span>
+<span class="sd">    initial_delta : Gf, optional</span>
+<span class="sd">                   An initial anomalous self-energy :math:`\Delta(i\nu_n, \mathbf{k})` to start</span>
+<span class="sd">                   an iterative solver, given as a Gf with MeshProduct with the components</span>
+<span class="sd">                   (MeshImFreq, MeshBrillouinZone).</span>
+<span class="sd">                   If not given :func:`semi_random_initial_delta` will be called.</span>
 <span class="sd">    Gamma_pp_const_k : float or np.ndarray or Gf, optional</span>
 <span class="sd">                       Part of the pairing vertex that is constant in Matsubara frequency space</span>
 <span class="sd">                       :math:`\Gamma(\mathbf{k})`. If given as a Gf its mesh attribute needs to</span>
-<span class="sd">                       be a MeshBrillouinZone.</span>
+<span class="sd">                       be a MeshBrillouinZone. If not given, the constant part will be fitted.</span>
 <span class="sd">    tol : float, optional</span>
 <span class="sd">          Relative accuracy for eigenvalues (stopping criterion).</span>
+<span class="sd">    product : str, [&#39;FFT&#39;, &#39;SUM&#39;], optional</span>
+<span class="sd">              Which function of the Eliashberg product shall be used:</span>
+
+<span class="sd">                  &#39;FFT&#39; : triqs_tprf.lattice.eliashberg_product_fft,</span>
+<span class="sd">                          which uses Fourier transformation for optimal computational efficiency.</span>
+
+<span class="sd">                  &#39;SUM&#39; : triqs_tprf.lattice.eliashberg_product, uses the explicit sum.</span>
+<span class="sd">                          Restrictions : wmesh of Gamma_pp_wk must be atleast twice the size of the one of g_wk.</span>
+
+<span class="sd">    solver : str, [&#39;IRAM&#39;, &#39;PM&#39;], optional</span>
+<span class="sd">             Which eigenvalue solver shall be used:</span>
+
+<span class="sd">                 &#39;IRAM&#39; : Use the Implicitly Restarted Arnoldi Method implemented in :func:`implicitly_restarted_arnoldi_method`.</span>
+
+<span class="sd">                 &#39;PM&#39; : Use the Power Method implemented in :func:`power_method_LR`.</span>
+
+<span class="sd">    symmetrize_fct : function, optional</span>
+<span class="sd">                     A function that takes one parameter: A Green&#39;s function </span>
+<span class="sd">                     :math:`G(i\nu_n, \mathbf{k})`. The mesh attribute of the</span>
+<span class="sd">                     Gf must be a MeshProduct with the components </span>
+<span class="sd">                     (MeshImFreq, MeshBrillouinZone).</span>
+<span class="sd">                     This function is applied after every iteration of the</span>
+<span class="sd">                     eigenvalue solver and can be used to enforce a specific</span>
+<span class="sd">                     symmetry. If no symmetries are enforced, caution is need, because</span>
+<span class="sd">                     unphysical symmetries can occur.</span>
+
+<span class="sd">    k : int, optional</span>
+<span class="sd">        The number of leading superconducting gaps that shall be calculated. Does</span>
+<span class="sd">        only have an effect, if &#39;IRAM&#39; is used as a solver.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -190,27 +205,9 @@
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
-<span class="sd">    :ref:`eliashberg`</span>
-
+<span class="sd">    :ref:`eliashberg` : Theory of the linearized Eliashberg equation.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="c1"># -- Determine the dynamic and constant part via a tail fit</span>
-    <span class="c1"># -- (This is done even if the constant term is given to get the specific GF types)</span>
-    <span class="n">Gamma_pp_dyn_wk_fit</span><span class="p">,</span> <span class="n">Gamma_pp_const_k_fit</span> <span class="o">=</span> <span class="n">split_into_dynamic_wk_and_constant_k</span><span class="p">(</span><span class="n">Gamma_pp_wk</span><span class="p">)</span>
-
-    <span class="c1"># -- Use a constant term if explicitly given</span>
-    <span class="k">if</span> <span class="n">Gamma_pp_const_k</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">Gamma_pp_const_k_fit</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">Gamma_pp_const_k</span>
-            <span class="n">Gamma_pp_dyn_wk_fit</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">Gamma_pp_wk</span><span class="o">.</span><span class="n">data</span> <span class="o">-</span> <span class="n">Gamma_pp_const_k</span>
-        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-            <span class="n">Gamma_pp_const_k_fit</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">Gamma_pp_const_k</span><span class="o">.</span><span class="n">data</span>
-            <span class="n">Gamma_pp_dyn_wk_fit</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">Gamma_pp_wk</span><span class="o">.</span><span class="n">data</span> <span class="o">-</span> <span class="n">Gamma_pp_const_k</span><span class="o">.</span><span class="n">data</span>
-
-    <span class="c1"># -- FFT dynamic and constant term to (tau, real) or (real)</span>
-    <span class="n">Gamma_pp_dyn_tr</span><span class="p">,</span> <span class="n">Gamma_pp_const_r</span> <span class="o">=</span> <span class="n">dynamic_and_constant_to_tr</span><span class="p">(</span><span class="n">Gamma_pp_dyn_wk_fit</span><span class="p">,</span> 
-                                                                    <span class="n">Gamma_pp_const_k_fit</span><span class="p">)</span>
-    
     <span class="k">def</span> <span class="nf">from_x_to_wk</span><span class="p">(</span><span class="n">delta_x</span><span class="p">):</span>
         <span class="n">delta_wk</span> <span class="o">=</span> <span class="n">g_wk</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">delta_wk</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">delta_x</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">delta_wk</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
@@ -219,28 +216,400 @@
     <span class="k">def</span> <span class="nf">from_wk_to_x</span><span class="p">(</span><span class="n">delta_wk</span><span class="p">):</span>
         <span class="n">delta_x</span> <span class="o">=</span> <span class="n">delta_wk</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">delta_x</span>
-    
+
+    <span class="k">if</span> <span class="n">product</span> <span class="o">==</span> <span class="s2">&quot;FFT&quot;</span><span class="p">:</span>
+
+        <span class="n">Gamma_pp_dyn_tr</span><span class="p">,</span> <span class="n">Gamma_pp_const_r</span> <span class="o">=</span> <span class="n">preprocess_gamma_for_fft</span><span class="p">(</span>
+            <span class="n">Gamma_pp_wk</span><span class="p">,</span> <span class="n">Gamma_pp_const_k</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span>
+            <span class="n">Gamma_pp_dyn_tr</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="mi">0</span>
+        <span class="p">):</span>  <span class="c1"># -- If dynamic part is zero reduced calculation</span>
+            <span class="n">eli_prod</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span>
+                <span class="n">eliashberg_product_fft_constant</span><span class="p">,</span> <span class="n">Gamma_pp_const_r</span><span class="p">,</span> <span class="n">g_wk</span>
+            <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">eli_prod</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span>
+                <span class="n">eliashberg_product_fft</span><span class="p">,</span> <span class="n">Gamma_pp_dyn_tr</span><span class="p">,</span> <span class="n">Gamma_pp_const_r</span><span class="p">,</span> <span class="n">g_wk</span>
+            <span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">product</span> <span class="o">==</span> <span class="s2">&quot;SUM&quot;</span><span class="p">:</span>
+        <span class="n">eli_prod</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">eliashberg_product</span><span class="p">,</span> <span class="n">Gamma_pp_wk</span><span class="p">,</span> <span class="n">g_wk</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">&quot;There is no implementation of the eliashberg product&quot;</span>
+            <span class="s2">&quot; called </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">product</span>
+        <span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">matvec</span><span class="p">(</span><span class="n">delta_x</span><span class="p">):</span>
         <span class="n">delta_wk</span> <span class="o">=</span> <span class="n">from_x_to_wk</span><span class="p">(</span><span class="n">delta_x</span><span class="p">)</span>
-        <span class="n">delta_out_wk</span> <span class="o">=</span> <span class="n">eliashberg_product_fft</span><span class="p">(</span><span class="n">Gamma_pp_dyn_tr</span><span class="p">,</span> <span class="n">Gamma_pp_const_r</span><span class="p">,</span> <span class="n">g_wk</span><span class="p">,</span> <span class="n">delta_wk</span><span class="p">)</span>
+        <span class="n">delta_out_wk</span> <span class="o">=</span> <span class="n">eli_prod</span><span class="p">(</span><span class="n">delta_wk</span><span class="p">)</span>
+        <span class="n">delta_out_wk</span> <span class="o">=</span> <span class="n">symmetrize_fct</span><span class="p">(</span><span class="n">delta_out_wk</span><span class="p">)</span>
         <span class="n">delta_out_x</span> <span class="o">=</span> <span class="n">from_wk_to_x</span><span class="p">(</span><span class="n">delta_out_wk</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">delta_out_x</span>
 
-    <span class="n">x</span> <span class="o">=</span> <span class="n">from_wk_to_x</span><span class="p">(</span><span class="n">g_wk</span><span class="p">)</span>
-    <span class="n">N</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">initial_delta</span><span class="p">:</span>
+        <span class="n">initial_delta</span> <span class="o">=</span> <span class="n">semi_random_initial_delta</span><span class="p">(</span><span class="n">g_wk</span><span class="p">)</span>
+    <span class="n">initial_delta</span> <span class="o">=</span> <span class="n">from_wk_to_x</span><span class="p">(</span><span class="n">initial_delta</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">solver</span> <span class="o">==</span> <span class="s2">&quot;PM&quot;</span><span class="p">:</span>
+        <span class="n">es</span><span class="p">,</span> <span class="n">evs</span> <span class="o">=</span> <span class="n">power_method_LR</span><span class="p">(</span><span class="n">matvec</span><span class="p">,</span> <span class="n">initial_delta</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
+        <span class="n">es</span><span class="p">,</span> <span class="n">evs</span> <span class="o">=</span> <span class="p">[</span><span class="n">es</span><span class="p">],</span> <span class="p">[</span><span class="n">evs</span><span class="p">]</span>
+
+    <span class="k">elif</span> <span class="n">solver</span> <span class="o">==</span> <span class="s2">&quot;IRAM&quot;</span><span class="p">:</span>
+        <span class="n">es</span><span class="p">,</span> <span class="n">evs</span> <span class="o">=</span> <span class="n">implicitly_restarted_arnoldi_method</span><span class="p">(</span>
+            <span class="n">matvec</span><span class="p">,</span> <span class="n">initial_delta</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span>
+        <span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;There is no solver called </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">solver</span><span class="p">)</span>
+
+    <span class="n">eigen_modes</span> <span class="o">=</span> <span class="p">[</span><span class="n">from_x_to_wk</span><span class="p">(</span><span class="n">ele</span><span class="p">)</span> <span class="k">for</span> <span class="n">ele</span> <span class="ow">in</span> <span class="n">evs</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">es</span><span class="p">,</span> <span class="n">eigen_modes</span></div>
+
+
+<div class="viewcode-block" id="preprocess_gamma_for_fft"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.eliashberg.preprocess_gamma_for_fft">[docs]</a><span class="k">def</span> <span class="nf">preprocess_gamma_for_fft</span><span class="p">(</span><span class="n">Gamma_pp_wk</span><span class="p">,</span> <span class="n">Gamma_pp_const_k</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Prepare Gamma to be used with the FFT implementation</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Gamma_pp_wk : Gf,</span>
+<span class="sd">               Pairing vertex :math:`\Gamma(i\omega_n, \mathbf{k})`. The mesh attribute of</span>
+<span class="sd">               the Gf must be a MeshProduct with the components (MeshImFreq, MeshBrillouinZone).</span>
+<span class="sd">    Gamma_pp_const_k : float or np.ndarray or Gf</span>
+<span class="sd">                       Part of the pairing vertex that is constant in Matsubara frequency space</span>
+<span class="sd">                       :math:`\Gamma(\mathbf{k})`. If given as a Gf its mesh attribute needs to</span>
+<span class="sd">                       be a MeshBrillouinZone. If not given, the constant part will be fitted.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Gamma_pp_dyn_tr : Gf,</span>
+<span class="sd">                      The dynamic part of Gamma, which converges to zero for</span>
+<span class="sd">                      :math:`\omega_n \rightarrow \infty`, but now in :math:`\tau`-space.</span>
+<span class="sd">                      Its mesh attribute is MeshProduct with the components</span>
+<span class="sd">                      (MeshImTime, MeshCyclicLattice).</span>
+<span class="sd">    Gamma_pp_const_r : Gf,</span>
+<span class="sd">                       The constant part of Gamma with mesh attribute MeshCyclicLattice.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># -- Determine the dynamic and constant part via a tail fit</span>
+    <span class="c1"># -- (This is done even if the constant term is given to get the specific Gf types)</span>
+    <span class="n">Gamma_pp_dyn_wk_fit</span><span class="p">,</span> <span class="n">Gamma_pp_const_k_fit</span> <span class="o">=</span> <span class="n">split_into_dynamic_wk_and_constant_k</span><span class="p">(</span>
+        <span class="n">Gamma_pp_wk</span>
+    <span class="p">)</span>
+
+    <span class="c1"># -- Use a constant term if explicitly given</span>
+    <span class="n">const_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">Gamma_pp_const_k</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">const_type</span> <span class="o">==</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">const_type</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="n">Gamma_pp_const_k_fit</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">Gamma_pp_const_k</span>
+        <span class="n">Gamma_pp_dyn_wk_fit</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">Gamma_pp_wk</span><span class="o">.</span><span class="n">data</span> <span class="o">-</span> <span class="n">Gamma_pp_const_k</span>
+    <span class="k">elif</span> <span class="n">const_type</span> <span class="o">==</span> <span class="n">Gf</span><span class="p">:</span>
+        <span class="n">Gamma_pp_const_k_fit</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">Gamma_pp_const_k</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">Gamma_pp_dyn_wk_fit</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">Gamma_pp_wk</span><span class="o">.</span><span class="n">data</span> <span class="o">-</span> <span class="n">Gamma_pp_const_k</span><span class="o">.</span><span class="n">data</span>
+    <span class="c1"># -- FFT dynamic and constant term to (tau, real) or (real)</span>
+    <span class="n">Gamma_pp_dyn_tr</span><span class="p">,</span> <span class="n">Gamma_pp_const_r</span> <span class="o">=</span> <span class="n">dynamic_and_constant_to_tr</span><span class="p">(</span>
+        <span class="n">Gamma_pp_dyn_wk_fit</span><span class="p">,</span> <span class="n">Gamma_pp_const_k_fit</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">Gamma_pp_dyn_tr</span><span class="p">,</span> <span class="n">Gamma_pp_const_r</span></div>
+
+
+<div class="viewcode-block" id="semi_random_initial_delta"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.eliashberg.semi_random_initial_delta">[docs]</a><span class="k">def</span> <span class="nf">semi_random_initial_delta</span><span class="p">(</span><span class="n">g_wk</span><span class="p">,</span> <span class="n">nr_factor</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Create a delta based on the GF with random elements</span>
+
+<span class="sd">    Returns an anomalous self-energy that can be used as an inital input for the iterative</span>
+<span class="sd">    solvers. The momentum space is random, while the Matsubara space is only partialy </span>
+<span class="sd">    randomized to ensure working tail fits for the Fourier transformations.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    g_wk : Gf, </span>
+<span class="sd">           Green&#39;s function :math:`G(i\nu_n, \mathbf{k})`. The mesh attribute of the Gf must</span>
+<span class="sd">           be a MeshProduct with the components (MeshImFreq, MeshBrillouinZone).</span>
+<span class="sd">    nr_factor : float, optional</span>
+<span class="sd">                Percentage of :math:`\omega` points which shall not be randomized. This is needed</span>
+<span class="sd">                to assure a working tail fit for the Fourier transformations. The default is 0.5,</span>
+<span class="sd">                meaning that 50% of the :math:`\omega` points will not be randomized.</span>
+<span class="sd">    seed : int, optional</span>
+<span class="sd">           Set a np.random.seed to enforce predictable results.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    delta : Gf,</span>
+<span class="sd">            An initial anomalous self-energy :math:`\Delta(i\nu_n, \mathbf{k})` to start</span>
+<span class="sd">            an iterative solver, given as a Gf with MeshProduct with the components</span>
+<span class="sd">            (MeshImFreq, MeshBrillouinZone).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+
+    <span class="n">delta</span> <span class="o">=</span> <span class="n">g_wk</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">delta</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">delta</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">delta</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span>  <span class="c1"># Pure real delta is sufficient w/o magnetic field</span>
+    <span class="n">random_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+    <span class="n">freq_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">delta</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">))[</span><span class="mi">1</span><span class="p">:]))</span>
+    <span class="n">not_randomized</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">nr_factor</span> <span class="o">*</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span>
+    <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="o">=</span> <span class="n">not_randomized</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">not_randomized</span>
+    <span class="n">freq_data</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">stop</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span>
+
+    <span class="n">delta</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">freq_data</span><span class="p">,</span> <span class="n">random_data</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">delta</span></div>
+
+
+<div class="viewcode-block" id="implicitly_restarted_arnoldi_method"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.eliashberg.implicitly_restarted_arnoldi_method">[docs]</a><span class="k">def</span> <span class="nf">implicitly_restarted_arnoldi_method</span><span class="p">(</span><span class="n">matvec</span><span class="p">,</span> <span class="n">init</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">6</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Find the eigenvalue with the largest real value via the Implicitly Restarted </span>
+<span class="sd">    Arnoldi Method</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    matvec : callable f(v),</span>
+<span class="sd">             Returns A*v.</span>
+<span class="sd">    init : np.ndarray,</span>
+<span class="sd">           The array representation of the anomalous self-energy to start the iterative</span>
+<span class="sd">           method with. Restriction: len(init.shape) == 1.</span>
+<span class="sd">    tol : float, optional</span>
+<span class="sd">          The tolerance at which the iterative scheme is considered to be converged.</span>
+<span class="sd">    k : int, optional</span>
+<span class="sd">        The number of eigenvalues and eigenvectors desired.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Es : list of float,</span>
+<span class="sd">           The eigenvalues with the largest positive real part.</span>
+<span class="sd">    U : list of np.ndarray,</span>
+<span class="sd">          The corresponding eigenvectors.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    `scipy.sparse.linalg.eigs &lt;https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.sparse.linalg.eigs.html&gt;`_</span>
+
+<span class="sd">    `scipy.sparse.linalg.LinearOperator &lt;https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.LinearOperator.html&gt;`_</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="n">init</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">linop</span> <span class="o">=</span> <span class="n">LinearOperator</span><span class="p">(</span><span class="n">matvec</span><span class="o">=</span><span class="n">matvec</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">))</span>
+    <span class="n">Es</span><span class="p">,</span> <span class="n">U</span> <span class="o">=</span> <span class="n">eigs</span><span class="p">(</span><span class="n">linop</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s2">&quot;LR&quot;</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">v0</span><span class="o">=</span><span class="n">init</span><span class="p">)</span>
+    <span class="n">Es</span> <span class="o">=</span> <span class="n">Es</span><span class="o">.</span><span class="n">real</span>
 
-    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1337</span><span class="p">)</span>
-    <span class="n">v0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
-    <span class="n">Es</span><span class="p">,</span> <span class="n">U</span> <span class="o">=</span> <span class="n">eigs</span><span class="p">(</span><span class="n">linop</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;LR&#39;</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">v0</span><span class="o">=</span><span class="n">v0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">Es</span><span class="p">),</span> <span class="nb">list</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">T</span><span class="p">)</span></div>
 
-    <span class="n">eigen_modes</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
-        <span class="n">delta_wk</span> <span class="o">=</span> <span class="n">from_x_to_wk</span><span class="p">(</span><span class="n">U</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">])</span>
-        <span class="n">eigen_modes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">delta_wk</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">Es</span><span class="p">),</span> <span class="n">eigen_modes</span></div>
-    
+<div class="viewcode-block" id="power_method_LR"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.eliashberg.power_method_LR">[docs]</a><span class="k">def</span> <span class="nf">power_method_LR</span><span class="p">(</span><span class="n">matvec</span><span class="p">,</span> <span class="n">init</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">,</span> <span class="n">max_it</span><span class="o">=</span><span class="mf">1e5</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Find the eigenvalue with the largest real value via the power method</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    matvec : callable f(v),</span>
+<span class="sd">             Returns A*v.</span>
+<span class="sd">    init : np.ndarray,</span>
+<span class="sd">           The array representation of the anomalous self-energy to start the iterative</span>
+<span class="sd">           method with. Restriction: len(init.shape) == 1.</span>
+<span class="sd">    tol : float, optional</span>
+<span class="sd">          The tolerance at which the iterative scheme is considered to be converged.</span>
+<span class="sd">    max_it : float, optional</span>
+<span class="sd">             The maximum number of iterations that shall be done before a error is raised.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    norm : float,</span>
+<span class="sd">           The eigenvalue with the largest positive real part.</span>
+<span class="sd">    v_k : np.ndarray,</span>
+<span class="sd">          The corresponding eigenvector.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">iteration</span><span class="p">(</span><span class="n">v_k</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="n">v_k1</span> <span class="o">=</span> <span class="n">matvec</span><span class="p">(</span><span class="n">v_k</span><span class="p">)</span> <span class="o">-</span> <span class="n">offset</span> <span class="o">*</span> <span class="n">v_k</span>
+        <span class="n">v_k1_norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">v_k1</span><span class="p">)</span>
+        <span class="n">v_k1</span> <span class="o">=</span> <span class="n">v_k1</span> <span class="o">/</span> <span class="n">v_k1_norm</span>
+        <span class="k">return</span> <span class="n">v_k1_norm</span> <span class="o">+</span> <span class="n">offset</span><span class="p">,</span> <span class="n">v_k1</span>
+
+    <span class="k">def</span> <span class="nf">power_method</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">max_it</span><span class="o">=</span><span class="n">max_it</span><span class="p">):</span>
+        <span class="n">norm</span><span class="p">,</span> <span class="n">v_k</span> <span class="o">=</span> <span class="n">iteration</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+        <span class="n">it</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">norm</span><span class="p">,</span> <span class="n">new_v_k</span> <span class="o">=</span> <span class="n">iteration</span><span class="p">(</span><span class="n">v_k</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+
+            <span class="c1"># -- Convergence criterion</span>
+            <span class="n">add</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">v_k</span> <span class="o">+</span> <span class="n">new_v_k</span><span class="p">))</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">v_k</span> <span class="o">-</span> <span class="n">new_v_k</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">add</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">tol</span><span class="p">))</span> <span class="ow">or</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">diff</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">tol</span><span class="p">)):</span>
+                <span class="k">break</span>
+
+            <span class="n">v_k</span> <span class="o">=</span> <span class="n">new_v_k</span>
+            <span class="n">it</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">it</span> <span class="o">&gt;</span> <span class="n">max_it</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">&quot;Did not converge.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">norm</span><span class="p">,</span> <span class="n">v_k</span>
+
+    <span class="c1"># Find eigenvalue with maximum magnitude</span>
+    <span class="n">norm</span><span class="p">,</span> <span class="n">v_k</span> <span class="o">=</span> <span class="n">power_method</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
+
+    <span class="c1"># Check sign of found eigenvalue</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">v_k_test</span> <span class="o">=</span> <span class="n">iteration</span><span class="p">(</span><span class="n">v_k</span><span class="p">)</span>
+
+    <span class="n">add</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">v_k</span> <span class="o">+</span> <span class="n">v_k_test</span><span class="p">))</span>  <span class="c1"># small if sign of E is negative</span>
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">v_k</span> <span class="o">-</span> <span class="n">v_k_test</span><span class="p">))</span>  <span class="c1"># small if sign of E is positive</span>
+
+    <span class="c1"># -- Return eigenvalue with largest real part</span>
+    <span class="k">if</span> <span class="n">diff</span> <span class="o">&gt;</span> <span class="n">add</span><span class="p">:</span>  <span class="c1"># The eigenvalue with the largest magnitude is negative</span>
+        <span class="n">norm</span><span class="p">,</span> <span class="n">v_k</span> <span class="o">=</span> <span class="n">power_method</span><span class="p">(</span><span class="n">init</span><span class="p">,</span> <span class="n">offset</span><span class="o">=-</span><span class="n">norm</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">norm</span><span class="p">,</span> <span class="n">v_k</span></div>
+
+
+<span class="k">def</span> <span class="nf">allclose_by_scalar_multiplication</span><span class="p">(</span><span class="n">delta_1</span><span class="p">,</span> <span class="n">delta_2</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test if two eigenvectors are equal if multiplied by a scalar</span>
+
+<span class="sd">    Eigenvectors are not unique and can be multiplied by any complex scalar.</span>
+<span class="sd">    Therfore two eigenvalue solver could output different eigenvectors for </span>
+<span class="sd">    the same non-degenerate eigenvalue.</span>
+<span class="sd">    This function checks if two eigenvectors are only different, because of a multiplication</span>
+<span class="sd">    by a scalar.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    delta_1 : Gf</span>
+<span class="sd">    delta_2 : Gf</span>
+<span class="sd">    tol : float, optional</span>
+<span class="sd">          The tolerance at which the eigenvector are considered to be equal up to a scalar </span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    have_common_scalar_factor : bool,</span>
+<span class="sd">                                True if the two eigenvectors are equal up to a scalar.</span>
+<span class="sd">                                False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">delta_1_arr</span> <span class="o">=</span> <span class="n">delta_1</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">delta_2_arr</span> <span class="o">=</span> <span class="n">delta_2</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+    <span class="c1"># Remove numerical zeroes</span>
+    <span class="n">delta_1_arr</span> <span class="o">=</span> <span class="n">delta_1_arr</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">delta_1_arr</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-7</span><span class="p">]</span>
+    <span class="n">delta_2_arr</span> <span class="o">=</span> <span class="n">delta_2_arr</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">delta_2_arr</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-7</span><span class="p">]</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">division_of_deltas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">delta_1_arr</span><span class="p">,</span> <span class="n">delta_2_arr</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>  <span class="c1"># Arrays do not contain the same # of zeroes and are therefore not equal</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># Check if elements share common scalar factor</span>
+    <span class="n">have_common_scalar_factor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span>
+        <span class="n">division_of_deltas</span><span class="p">,</span> <span class="n">division_of_deltas</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">atol</span><span class="o">=</span><span class="n">atol</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">have_common_scalar_factor</span>
+
+
+<div class="viewcode-block" id="construct_gamma_singlet_rpa"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.eliashberg.construct_gamma_singlet_rpa">[docs]</a><span class="k">def</span> <span class="nf">construct_gamma_singlet_rpa</span><span class="p">(</span><span class="n">U_d</span><span class="p">,</span> <span class="n">U_m</span><span class="p">,</span> <span class="n">phi_d_wk</span><span class="p">,</span> <span class="n">phi_m_wk</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Construct the irreducible singlet vertex in the RPA limit</span>
+
+<span class="sd">    The irreducible singlet vertex in the random phase approximation limit for a</span>
+<span class="sd">    symmetrized calculations of the Eliashberg equation is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \Gamma^{\text{s}}_{a\overline{b}c\overline{d}}(Q=0, K, K&#39;) \equiv</span>
+<span class="sd">        \frac{1}{2}U_{a\overline{b}c\overline{d}}^{\mathrm{d}}</span>
+<span class="sd">        +</span>
+<span class="sd">        \frac{3}{2}U_{a\overline{b}c\overline{d}}^{\mathrm{m}}</span>
+<span class="sd">        +</span>
+<span class="sd">        \Re</span>
+<span class="sd">        \left[</span>
+<span class="sd">        3 </span>
+<span class="sd">        \Phi^{\text{m}}_{c\overline{b}a\overline{d}}(K-K&#39;)</span>
+<span class="sd">        -</span>
+<span class="sd">        \Phi^{\text{d}}_{c\overline{b}a\overline{d}}(K-K&#39;)</span>
+<span class="sd">        \right]</span>
+<span class="sd">        \,.</span>
+
+<span class="sd">    For more details see :ref:`eliashberg`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    U_d : np.ndarray,</span>
+<span class="sd">          The local static interaction in the density channel.</span>
+<span class="sd">    U_m : np.ndarray,</span>
+<span class="sd">          The local static interaction in the magnetic channel.</span>
+<span class="sd">    phi_d_wk : Gf,</span>
+<span class="sd">               The reducible ladder vertex in the density channel</span>
+<span class="sd">               :math:`\Phi^{\mathrm{d}}(i\omega_n, \mathbf{q})`. The mesh attribute of the Gf</span>
+<span class="sd">               must be a MeshProduct with the components (MeshImFreq, MeshBrillouinZone).</span>
+<span class="sd">    phi_m_wk : Gf,</span>
+<span class="sd">               The reducible ladder vertex in the magnetic channel</span>
+<span class="sd">               :math:`\Phi^{\mathrm{m}}(i\omega_n, \mathbf{q})`. The mesh attribute of the Gf</span>
+<span class="sd">               must be a MeshProduct with the components (MeshImFreq, MeshBrillouinZone).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    gamma_singlet : Gf,</span>
+<span class="sd">                    The irreducible singlet vertex in the RPA limit for a symmetrized</span>
+<span class="sd">                    calculation of the Eliashberg equation</span>
+<span class="sd">                    :math:`\Gamma^{\mathrm{s}}(i\omega_n,\mathbf{q})`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gamma_singlet</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">phi_d_wk</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="n">gamma_singlet</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">phi_m_wk</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span> <span class="o">+</span> <span class="n">phi_d_wk</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span>
+    <span class="n">gamma_singlet</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">gamma_singlet</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">transpose</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+
+    <span class="n">gamma_singlet</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">+=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">U_d</span> <span class="o">+</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="n">U_m</span>
+    <span class="k">return</span> <span class="n">gamma_singlet</span></div>
+
+
+<div class="viewcode-block" id="construct_gamma_triplet_rpa"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.eliashberg.construct_gamma_triplet_rpa">[docs]</a><span class="k">def</span> <span class="nf">construct_gamma_triplet_rpa</span><span class="p">(</span><span class="n">U_d</span><span class="p">,</span> <span class="n">U_m</span><span class="p">,</span> <span class="n">phi_d_wk</span><span class="p">,</span> <span class="n">phi_m_wk</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Construct the irreducible triplet vertex in the RPA limit</span>
+
+<span class="sd">    The irreducible triplet vertex in the random phase approximation limit for a</span>
+<span class="sd">    symmetrized calculations of the Eliashberg equation is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \Gamma^{\text{t}}_{a\overline{b}c\overline{d}}(Q=0, K, K&#39;) \equiv</span>
+<span class="sd">        -</span>
+<span class="sd">        \frac{1}{2}U_{a\overline{b}c\overline{d}}^{\mathrm{d}}</span>
+<span class="sd">        +</span>
+<span class="sd">        \frac{1}{2}U_{a\overline{b}c\overline{d}}^{\mathrm{m}} </span>
+<span class="sd">        +</span>
+<span class="sd">        \Re</span>
+<span class="sd">        \left[</span>
+<span class="sd">        -</span>
+<span class="sd">        \Phi^{\text{m}}_{c\overline{b}a\overline{d}}(K-K&#39;)</span>
+<span class="sd">        -</span>
+<span class="sd">        \Phi^{\text{d}}_{c\overline{b}a\overline{d}}(K-K&#39;)</span>
+<span class="sd">        \right]</span>
+<span class="sd">        \,.</span>
+
+<span class="sd">    For more details see :ref:`eliashberg`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    U_d : np.ndarray,</span>
+<span class="sd">          The local static interaction in the density channel.</span>
+<span class="sd">    U_m : np.ndarray,</span>
+<span class="sd">          The local static interaction in the magnetic channel.</span>
+<span class="sd">    phi_d_wk : Gf,</span>
+<span class="sd">               The reducible ladder vertex in the density channel</span>
+<span class="sd">               :math:`\Phi^{\mathrm{d}}(i\omega_n, \mathbf{q})`. The mesh attribute of the Gf</span>
+<span class="sd">               must be a MeshProduct with the components (MeshImFreq, MeshBrillouinZone).</span>
+<span class="sd">    phi_m_wk : Gf,</span>
+<span class="sd">               The reducible ladder vertex in the magnetic channel</span>
+<span class="sd">               :math:`\Phi^{\mathrm{m}}(i\omega_n, \mathbf{q})`. The mesh attribute of the Gf</span>
+<span class="sd">               must be a MeshProduct with the components (MeshImFreq, MeshBrillouinZone).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    gamma_triplet : Gf,</span>
+<span class="sd">                    The irreducible triplet vertex in the RPA limit for a symmetrized</span>
+<span class="sd">                    calculation of the Eliashberg equation</span>
+<span class="sd">                    :math:`\Gamma^{\mathrm{t}}(i\omega_n,\mathbf{q})`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gamma_triplet</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="n">phi_d_wk</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="n">gamma_triplet</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="o">-</span><span class="n">phi_m_wk</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span> <span class="o">-</span> <span class="n">phi_d_wk</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span>
+    <span class="n">gamma_triplet</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">gamma_triplet</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">transpose</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+
+    <span class="n">gamma_triplet</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">+=</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">U_d</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">U_m</span>
+    <span class="k">return</span> <span class="n">gamma_triplet</span></div>
 </pre></div>
 
           </div>

@@ -92,7 +92,8 @@
 <span class="c1">#</span>
 <span class="c1"># Copyright (C) 2011 by M. Ferrero, O. Parcollet</span>
 <span class="c1"># Copyright (C) 2018 The Simons Foundation</span>
-<span class="c1"># Author: Hugo U. R. Strand</span>
+<span class="c1"># Copyright (C) 2019, S. Käser</span>
+<span class="c1"># Author: Hugo U. R. Strand, S. Käser</span>
 <span class="c1">#</span>
 <span class="c1"># TRIQS is free software: you can redistribute it and/or modify it under the</span>
 <span class="c1"># terms of the GNU General Public License as published by the Free Software</span>
@@ -108,6 +109,8 @@
 <span class="c1"># TRIQS. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
 <span class="c1">#</span>
 <span class="c1">################################################################################</span>
+
+<span class="kn">import</span> <span class="nn">itertools</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
@@ -217,6 +220,100 @@
         <span class="n">e_k</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hopping</span><span class="p">(</span><span class="n">k_vec_rel</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">e_k</span></div></div>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+<div class="viewcode-block" id="create_square_lattice"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.tight_binding.create_square_lattice">[docs]</a><span class="k">def</span> <span class="nf">create_square_lattice</span><span class="p">(</span><span class="n">norb</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">tp</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">zeeman</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">spin</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Retuns TBLattice that represents a model on a square lattice</span>
+<span class="sd">    </span>
+<span class="sd">    The model is described by the Hamiltonian</span>
+
+<span class="sd">    .. math:: </span>
+<span class="sd">        H=-t \sum_{\langle j, l\rangle \sigma}\left(c_{j \sigma}^{\dagger}</span>
+<span class="sd">        c_{l \sigma}+c_{l \sigma}^{\dagger} c_{j \sigma}\right) -</span>
+<span class="sd">        t&#39; \sum_{\langle\langle j, l\rangle\rangle \sigma}\left(c_{j \sigma}^{\dagger}</span>
+<span class="sd">        c_{l \sigma}+c_{l \sigma}^{\dagger} c_{j \sigma}\right) +</span>
+<span class="sd">        \xi \sum_j \left(n_{j \uparrow} - n_{j \downarrow} \right)\,,</span>
+
+<span class="sd">    where the angular bracket describes a sum over nearest neighbors and the double</span>
+<span class="sd">    angular bracket over next-nearest neighbors.</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    norb : int,</span>
+<span class="sd">           Number of orbitals excluding spin</span>
+<span class="sd">    t : complex,</span>
+<span class="sd">        Kinetic energy of nearest neighbor hopping.</span>
+<span class="sd">        Corresponds to :math:`t`.</span>
+<span class="sd">    tp : complex, optional</span>
+<span class="sd">         Kinetic energy of next-nearest neighbor hopping.</span>
+<span class="sd">         Corresponds to :math:`t&#39;`.</span>
+<span class="sd">    zeeman : complex, optional</span>
+<span class="sd">             Strength of Zeeman term.</span>
+<span class="sd">             Corresponds to :math:`\xi`.</span>
+<span class="sd">    spin : bool,</span>
+<span class="sd">           True if spin index should be used explicitly, False otherwise.</span>
+<span class="sd">           The Zeeman term can only be applied if spin=True.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    square_lattice : TBLattice</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">zeeman</span> <span class="o">!=</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">spin</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;There can not be a Zeeman term in a spinless model.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">spin</span><span class="p">:</span>
+        <span class="n">norb</span> <span class="o">*=</span> <span class="mi">2</span>
+
+    <span class="n">t_matrix</span> <span class="o">=</span> <span class="o">-</span><span class="n">t</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">norb</span><span class="p">)</span>
+    <span class="n">tp_matrix</span> <span class="o">=</span> <span class="o">-</span><span class="n">tp</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">norb</span><span class="p">)</span>
+    <span class="n">zeeman_matrix</span> <span class="o">=</span> <span class="n">zeeman</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">([(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="n">orb</span> <span class="k">for</span> <span class="n">orb</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">)])</span>
+
+    <span class="n">hopping</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="c1"># Zeeman term</span>
+                <span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span> <span class="n">zeeman_matrix</span><span class="p">,</span>
+
+                <span class="c1"># nearest neighbour hopping</span>
+                <span class="p">(</span> <span class="mi">0</span><span class="p">,</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span> <span class="n">t_matrix</span><span class="p">,</span>
+                <span class="p">(</span> <span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span> <span class="n">t_matrix</span><span class="p">,</span>
+                <span class="p">(</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span> <span class="n">t_matrix</span><span class="p">,</span>
+                <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span> <span class="n">t_matrix</span><span class="p">,</span>
+                
+                <span class="c1"># next-nearest neighbour hopping</span>
+                <span class="p">(</span> <span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span> <span class="n">tp_matrix</span><span class="p">,</span>
+                <span class="p">(</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span> <span class="n">tp_matrix</span><span class="p">,</span>
+                <span class="p">(</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span> <span class="n">tp_matrix</span><span class="p">,</span>
+                <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">+</span><span class="mi">1</span><span class="p">):</span> <span class="n">tp_matrix</span><span class="p">,</span>
+                <span class="p">}</span>
+
+    <span class="n">units</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+    <span class="n">orbital_positions</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span> <span class="o">*</span> <span class="n">norb</span>
+
+    <span class="n">square_lattice</span> <span class="o">=</span> <span class="n">TBLattice</span><span class="p">(</span><span class="n">units</span><span class="p">,</span> <span class="n">hopping</span><span class="p">,</span> <span class="n">orbital_positions</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">square_lattice</span></div>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+<span class="k">def</span> <span class="nf">create_model_for_tests</span><span class="p">(</span><span class="n">norb</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">t1</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">t2</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">t12</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">t21</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">full_units</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+    <span class="n">units</span> <span class="o">=</span> <span class="n">full_units</span><span class="p">[:</span><span class="n">dim</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">norb</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">t_matrix</span> <span class="o">=</span> <span class="o">-</span><span class="n">t</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">norb</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">norb</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">t_matrix</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">t1</span><span class="p">,</span> <span class="n">t12</span><span class="p">],</span> <span class="p">[</span><span class="n">t21</span><span class="p">,</span> <span class="n">t2</span><span class="p">]])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="n">all_nn_hoppings</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">repeat</span><span class="o">=</span><span class="n">dim</span><span class="p">))</span> 
+    <span class="n">non_diagonal_hoppings</span> <span class="o">=</span> <span class="p">[</span><span class="n">hopping</span> <span class="k">for</span> <span class="n">hopping</span> <span class="ow">in</span> <span class="n">all_nn_hoppings</span> <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">hopping</span><span class="p">))</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span> 
+    <span class="n">hoppings</span> <span class="o">=</span> <span class="p">{</span><span class="n">hopping</span> <span class="p">:</span> <span class="n">t_matrix</span> <span class="k">for</span> <span class="n">hopping</span> <span class="ow">in</span> <span class="n">non_diagonal_hoppings</span><span class="p">}</span>
+
+    <span class="n">orbital_positions</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span> <span class="o">*</span> <span class="n">norb</span>
+
+    <span class="n">model_for_tests</span> <span class="o">=</span> <span class="n">TBLattice</span><span class="p">(</span><span class="n">units</span><span class="p">,</span> <span class="n">hoppings</span><span class="p">,</span> <span class="n">orbital_positions</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">model_for_tests</span>
 </pre></div>
 
           </div>

@@ -86,12 +86,15 @@
           <div class="body" role="main">
             
   <h1>Source code for triqs_tprf.ParameterCollection</h1><div class="highlight"><pre>
-<span></span>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
 <span class="c1">################################################################################</span>
 <span class="c1">#</span>
 <span class="c1"># TPRF: Two-Particle Response Function (TPRF) Toolbox for TRIQS</span>
 <span class="c1">#</span>
 <span class="c1"># Copyright (C) 2017 by Hugo U.R. Strand</span>
+<span class="c1"># Copyright (C) 2019 by S.Käser </span>
+<span class="c1"># Author: H. U.R. Strand, S. Käser</span>
 <span class="c1">#</span>
 <span class="c1"># TPRF is free software: you can redistribute it and/or modify it under the</span>
 <span class="c1"># terms of the GNU General Public License as published by the Free Software</span>
@@ -109,6 +112,7 @@
 <span class="c1">################################################################################</span>
 
 <span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="c1"># ----------------------------------------------------------------------</span>
@@ -165,6 +169,23 @@
 
     <span class="k">def</span> <span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>
+
+<div class="viewcode-block" id="ParameterCollection.alter"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.ParameterCollection.ParameterCollection.alter">[docs]</a>    <span class="k">def</span> <span class="nf">alter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Change or add attributes</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        p : ``ParameterCollection``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">p</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">p</span> </div>
+
+<div class="viewcode-block" id="ParameterCollection.copy"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.ParameterCollection.ParameterCollection.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Shallow copy</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">ParameterCollection</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">p</span></div>
 
     <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
@@ -223,6 +244,8 @@
                 
                 <span class="n">out</span> <span class="o">+=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">key</span><span class="p">,</span> <span class="s1">&#39; = &#39;</span><span class="p">,</span> <span class="n">str_value</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
         <span class="k">return</span> <span class="n">out</span>
+
+    <span class="fm">__repr__</span> <span class="o">=</span> <span class="fm">__str__</span>
 
     <span class="k">def</span> <span class="nf">get_my_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">ans</span> <span class="o">=</span> <span class="p">[]</span>
@@ -283,7 +306,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">objects</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">objects</span><span class="p">)[</span><span class="n">sidx</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">getattr_from_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">getattr</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">objects</span> <span class="p">])</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">getattr</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">objects</span> <span class="p">])</span>
     
     <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getattr_from_objects</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
@@ -294,13 +317,80 @@
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">__factory_from_dict__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s1">&#39;objects&#39;</span><span class="p">])</span>
-        <span class="k">return</span> <span class="n">ret</span>    </div>
+        <span class="k">return</span> <span class="n">ret</span>    
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="fm">__iter__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="fm">__next__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">objects</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">+=</span> <span class="n">p</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
+            <span class="n">out</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="fm">__repr__</span> <span class="o">=</span> <span class="fm">__str__</span></div>
 
 <span class="c1"># ----------------------------------------------------------------------</span>
 <span class="c1"># -- Register ParameterCollection in Triqs formats</span>
 
 <span class="kn">from</span> <span class="nn">h5.formats</span> <span class="k">import</span> <span class="n">register_class</span> 
 <span class="n">register_class</span><span class="p">(</span><span class="n">ParameterCollections</span><span class="p">)</span>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="parameter_scan"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.ParameterCollection.parameter_scan">[docs]</a><span class="k">def</span> <span class="nf">parameter_scan</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return ParameterCollections with copies of ParameterCollection for different parameters</span>
+
+<span class="sd">    Uses a given ParameterCollection as a template to create copies of it with one or more</span>
+<span class="sd">    parameters changing. Stores all of these copies in a ParameterCollections for easy access.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    p : ParameterCollection,</span>
+<span class="sd">        The ParameterCollection that shall be used as a template for all the others</span>
+<span class="sd">    **kwargs : Sequence,</span>
+<span class="sd">               The keyword gives the parameter name and the Sequence the values that shall</span>
+<span class="sd">               be scanned through.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ParameterCollections</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; p = ParameterCollection(beta=10., U=1.0, t=1.0)</span>
+<span class="sd">    &gt;&gt;&gt; ps = parameter_scan(p, U=[1.0, 1.5, 2.0])</span>
+<span class="sd">    &gt;&gt;&gt; print ps[0]</span>
+<span class="sd">    U = 1.0</span>
+<span class="sd">    beta = 10.0</span>
+<span class="sd">    t = 1.0</span>
+<span class="sd">    &gt;&gt;&gt; print ps[1]</span>
+<span class="sd">    U = 1.5</span>
+<span class="sd">    beta = 10.0</span>
+<span class="sd">    t = 1.0</span>
+<span class="sd">    &gt;&gt;&gt; print ps[2]</span>
+<span class="sd">    U = 2.0</span>
+<span class="sd">    beta = 10.0</span>
+<span class="sd">    t = 1.0</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parameter_values</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">parameter_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">key</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="n">value</span><span class="p">))</span>
+    
+    <span class="n">ps</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">parameter_value</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">parameter_values</span><span class="p">):</span>
+        <span class="n">ps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">alter</span><span class="p">(</span><span class="o">**</span><span class="nb">dict</span><span class="p">(</span><span class="n">parameter_value</span><span class="p">)))</span>
+
+    <span class="k">return</span> <span class="n">ParameterCollections</span><span class="p">(</span><span class="n">ps</span><span class="p">)</span></div>
 </pre></div>
 
           </div>

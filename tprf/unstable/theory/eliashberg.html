@@ -76,11 +76,15 @@
   <h3><a href="../contents.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Linearized Eliashberg Equation</a><ul>
-<li><a class="reference internal" href="#anomalous-green-s-functions">Anomalous Green’s Functions</a></li>
-<li><a class="reference internal" href="#dyson-gorkov-equations">Dyson-Gorkov Equations</a></li>
-<li><a class="reference internal" href="#anomalous-self-energy-and-particle-particle-vertex">Anomalous self-energy and particle-particle vertex</a></li>
-<li><a class="reference internal" href="#linearization-in-delta">Linearization in <span class="math notranslate nohighlight">\(\Delta\)</span></a></li>
-<li><a class="reference internal" href="#rpa-approach">RPA Approach</a></li>
+<li><a class="reference internal" href="#deriving-the-linearized-eliashberg-equation-from-the-normal-state">Deriving the linearized Eliashberg equation from the normal state</a><ul>
+<li><a class="reference internal" href="#relation-to-the-bcs-gap-equation">Relation to the BCS gap equation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#details-for-applications">Details for applications</a><ul>
+<li><a class="reference internal" href="#spot-condition">SPOT Condition</a></li>
+<li><a class="reference internal" href="#random-phase-approximation-for-the-irreducible-particle-particle-vertex">Random phase approximation for the irreducible particle-particle vertex</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -120,196 +124,545 @@
             
   <div class="section" id="linearized-eliashberg-equation">
 <span id="eliashberg"></span><h1>Linearized Eliashberg Equation<a class="headerlink" href="#linearized-eliashberg-equation" title="Permalink to this headline">¶</a></h1>
+<p>The linearized Eliashberg equation is a generalization of the linearized
+Bardeen-Cooper-Schrieffer (BCS) gap equation to frequency dependent gaps.
+It can be used to determine the critical (inverse) temperature
+<span class="math notranslate nohighlight">\(T_\mathrm{c}/\beta_\mathrm{c}\)</span>,
+at which a transition to a superconducting state occurs,
+and the symmetry of the corresponding superconducting gap function
+<span class="math notranslate nohighlight">\(\Delta^{\mathrm{s/t}}\)</span>.
+It is given by</p>
+<div class="math notranslate nohighlight" id="equation-linearized-eliashberg-1">
+<span class="eqno">(1)<a class="headerlink" href="#equation-linearized-eliashberg-1" title="Permalink to this equation">¶</a></span>\[\Delta^{\mathrm{s/t}}_{\bar{a}\bar{b}}(K)=  -\frac{1}{2 N_{\mathbf{k}}\beta_\mathrm{c}}\sum_{K'}
+\Gamma^{\mathrm{s/t}}_{c\bar{a}d\bar{b}}(Q=0, K, K')
+G_{c\bar{f}}(K')G_{d\bar{e}}(-K')
+\Delta^{\mathrm{s/t}}_{\bar{e}\bar{f}}(K')\,.\]</div>
+<p>where <span class="math notranslate nohighlight">\(Q/K\)</span> is a combination of bosonic/fermionic Matsubara <span class="math notranslate nohighlight">\(i\omega_n/i\nu_n\)</span>
+frequency and momentum <span class="math notranslate nohighlight">\(\mathbf{k}\)</span>,
+<span class="math notranslate nohighlight">\(N_{\mathbf{k}}\)</span> is the number of momentum points,
+<span class="math notranslate nohighlight">\(\Gamma^{\mathrm{s/t}}\)</span> is the irreducible particle-particle vertex
+and <span class="math notranslate nohighlight">\(G\)</span> is the one-particle Green’s function.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>References:</p>
-<ul class="last simple">
-<li>[A.A. Abrikosov, L.P. Gor’kov, et.al., Pergamon, Oxford (1965)]</li>
-<li>[Takimoto, et. al., PRB 69, 104504 (2004)]</li>
-<li>[Yanase, et. al., Physics Reports 387, 1-149 (2003)]</li>
-</ul>
+<p class="last">The bosonic Matsubara frequency and momentum in the particle-particle vertex is set to zero.
+This is because we are interested in Cooper-pairs which have a zero
+transfered momentum-frequency in a scattering process <a class="footnote-reference" href="#nourafkan" id="id1">[6]</a>.</p>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">All indices on this page only represent orbital degrees of freedom.
-Spin is not treated explicitly and therefore only spin-independent Hamiltonians can be used for calculations.</p>
+<p class="last">The current implementation is restricted to <span class="math notranslate nohighlight">\(SU(2)\)</span> symmetric systems.
+All indices are purely orbital and superconducting gaps <span class="math notranslate nohighlight">\(\Delta\)</span> and
+particle-particle vertices <span class="math notranslate nohighlight">\(\Gamma\)</span> are restricted to the singlet/triplet
+channel, shown by the superscripts s/t respectively.
+But note, that the equations still hold for the spin-dependent case and
+one would soley need to implement the spin-dependent particle-particle vertex
+to use them.</p>
 </div>
-<p>We asssume a homogenous system with some arbitrary effective pairing interaction <span class="math notranslate nohighlight">\(\Gamma\)</span>, which leads to the formation of Cooper pairs.</p>
-<div class="section" id="anomalous-green-s-functions">
-<h2>Anomalous Green’s Functions<a class="headerlink" href="#anomalous-green-s-functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="deriving-the-linearized-eliashberg-equation-from-the-normal-state">
+<h2>Deriving the linearized Eliashberg equation from the normal state<a class="headerlink" href="#deriving-the-linearized-eliashberg-equation-from-the-normal-state" title="Permalink to this headline">¶</a></h2>
+<p>The singlet and triplet susceptibilties are given by</p>
+<div class="math notranslate nohighlight">
+\[\chi^{\mathrm{s}}
+=
+-
+\chi^{(0), \mathrm{PP}}
++
+\frac{1}{2}
+\chi^{(0), \mathrm{PP}}
+\mathbf{\Gamma}^{\mathrm{s}}
+\left[
+-
+\chi^{\mathrm{s}}
++
+\chi^{(0), \mathrm{PP}}
+\right]
+\,,\]</div>
+<p>and</p>
+<div class="math notranslate nohighlight">
+\[\chi^{\mathrm{t}}
+=
+\chi^{(0), \mathrm{PP}}
++
+\frac{1}{2}
+\chi^{(0), \mathrm{PP}}
+\mathbf{\Gamma}^{\mathrm{t}}
+\left[
+\chi^{\mathrm{t}}
++
+\chi^{(0), \mathrm{PP}}
+\right]
+\,.\]</div>
+<p>A transition from the normal state to a singlet/triplet superconducting one occurs
+when the susceptibilties diverge.
+This is the case, when the largest eigenvalue of
+<span class="math notranslate nohighlight">\(\mp \frac{1}{2}\mathbf{\Gamma^{\mathrm{s/t}}} \mathbf{\chi}^{(0),{PP}}\)</span> becomes unity.
+For a largest eigenvalues that is smaller than <span class="math notranslate nohighlight">\(1\)</span> we are still in the
+normal state,
+but we can calculate the corresponding eigenvectors <span class="math notranslate nohighlight">\(\Delta^{\mathrm{s/t}}\)</span>.
+This corresponds to the following eigenvalue equation</p>
+<p>where we incorporate the minus sign of the singlet channel in our definition of the
+singlet irreducible vertex to only keep track of one version of the Eliashberg equation.</p>
+<p>We can write this like Eq. <a class="reference internal" href="#equation-linearized-eliashberg-1">(1)</a> by using the definiton
+of <span class="math notranslate nohighlight">\(\chi^{(0),{PP}}\)</span></p>
+<div class="math notranslate nohighlight" id="equation-chi-0-pp">
+<span class="eqno">(2)<a class="headerlink" href="#equation-chi-0-pp" title="Permalink to this equation">¶</a></span>\[\chi^{(0),{PP}}_{\bar{a}b\bar{c}d}(Q=0, K, K')
+=
+-N_{\mathbf{k}} \beta
+G_{d\bar{a}}(K)G_{b\bar{c}}(-K')\delta_{K, K'}\,,\]</div>
+<p>which yields</p>
+<div class="math notranslate nohighlight" id="equation-linearized-eliashberg-3">
+<span class="eqno">(3)<a class="headerlink" href="#equation-linearized-eliashberg-3" title="Permalink to this equation">¶</a></span>\[\lambda\Delta^{\mathrm{s/t}}_{\bar{a}\bar{b}}(K)=  -\frac{1}{2 N_{\mathbf{k}}\beta}\sum_{K'}
+\Gamma^{\mathrm{s/t}}_{c\bar{a}d\bar{b}}(Q=0, K, K')
+G_{c\bar{f}}(K')G_{d\bar{e}}(-K')
+\Delta^{\mathrm{s/t}}_{\bar{e}\bar{f}}(K')\,.\]</div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Explain what happens with all spin quantum numbers in the single-particle Green’s function. Do we work with a particular combination of spins? <span class="math notranslate nohighlight">\(G_{a\bar{b}} = G_{\alpha \uparrow \bar{b} \downarrow}\)</span>?</p>
+<p class="last">Our definiton of <span class="math notranslate nohighlight">\(\chi^{(0),{PP}}\)</span> is different from <a class="footnote-reference" href="#bickers" id="id2">[4]</a>
+and <a class="footnote-reference" href="#nourafkan" id="id3">[6]</a>. This stems from the fact, that due to the indistinguishability
+of the particles in the particle-particle channel doublecounting diagrams in the
+Bethe-Salpeter equation (BSE) must be avoided.
+We do this by defining the particle-particle BSE with a factor of
+<span class="math notranslate nohighlight">\(\frac{1}{2}\)</span>, see <a class="reference internal" href="vertex.html#vertex"><span class="std std-ref">Vertex functions</span></a> Eq. <a class="reference internal" href="vertex.html#equation-bse-pp">(3)</a>.
+In <a class="footnote-reference" href="#bickers" id="id4">[4]</a> and <a class="footnote-reference" href="#nourafkan" id="id5">[6]</a> the particle-particle BSE is defined without this
+factor and they include it in their definiton of <span class="math notranslate nohighlight">\(\chi^{(0),{PP}}\)</span>.</p>
 </div>
-<p>With the arise of Cooper pairs we need in addition to the normal single-particle Green’s function</p>
+<p>This equation is valid for <span class="math notranslate nohighlight">\(\lambda \leq 1\)</span>
+and yields eigenvectors, which correspond to superconducting gap functions
+that have not manifested yet.
+At <span class="math notranslate nohighlight">\(\lambda=1\)</span> the normal state breaks down and the superconducting
+state with the corresponding gap emerges.
+The size of the eigenvalues is therefore an indicator of how likely the associated gap
+is to manifest.</p>
+<div class="section" id="relation-to-the-bcs-gap-equation">
+<h3>Relation to the BCS gap equation<a class="headerlink" href="#relation-to-the-bcs-gap-equation" title="Permalink to this headline">¶</a></h3>
+<p>In BCS theory the particle-particle vertex is considered to be
+constant in a specific frequency range, which corresponds to gaps with
+the same dependence.
+For this case the summation over fermionic Matsubara frequencies in the linearized
+Eliashberg equation Eq. <a class="reference internal" href="#equation-linearized-eliashberg-1">(1)</a> can be done analytically.
+For a one-band case and a non-interacting Green’s function with dispersion relation
+<span class="math notranslate nohighlight">\(\epsilon\)</span>, this yields</p>
+<div class="math notranslate nohighlight" id="equation-linearized-eliashberg-4">
+<span class="eqno">(4)<a class="headerlink" href="#equation-linearized-eliashberg-4" title="Permalink to this equation">¶</a></span>\[\Delta^{\mathrm{s/t}}(\mathbf{k}) =  -\frac{1}{2 N_{\mathbf{k}}}\sum_{\mathbf{k'}}
+\Gamma^{\mathrm{s/t}}(\mathbf{q}=\mathbf{0}, \mathbf{k}, \mathbf{k'})
+\frac{\tan(\epsilon(\mathbf{k'})\beta/2)}{2\epsilon(\mathbf{k'})}
+\Delta^{\mathrm{s/t}}(\mathbf{k'})\,,\]</div>
+<p>which corresponds to the linearized BCS gap equation.
+The non-linear BCS gap equation can be obtained from Eq. <a class="reference internal" href="#equation-linearized-eliashberg-4">(4)</a>
+by substituting <span class="math notranslate nohighlight">\(\epsilon\)</span> with
+<span class="math notranslate nohighlight">\(\sqrt{\epsilon(\mathbf{k})^2 + |\Delta(\mathbf{k})|^2}\)</span>.</p>
+</div>
+</div>
+<div class="section" id="details-for-applications">
+<h2>Details for applications<a class="headerlink" href="#details-for-applications" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="spot-condition">
+<h3>SPOT Condition<a class="headerlink" href="#spot-condition" title="Permalink to this headline">¶</a></h3>
+<p>In the general case the superconducting gap function <span class="math notranslate nohighlight">\(\Delta\)</span> is dependent on
+momentum <span class="math notranslate nohighlight">\(\mathbf{k}\)</span>, fermionic Matsubara frequency <span class="math notranslate nohighlight">\(i\nu_n\)</span>,
+orbital-indices <span class="math notranslate nohighlight">\(a,b\)</span> and spin-indices <span class="math notranslate nohighlight">\(\alpha,\beta\)</span></p>
 <div class="math notranslate nohighlight">
-\[G_{a\bar{b}}(\tau - \tau')
-\equiv
-- \langle \mathcal{T} c_{a}(\tau) c^\dagger_{\bar{b}}(\tau') \rangle
-=
-- \langle \mathcal{T} a(\tau) \bar{b}(\tau') \rangle\,,\]</div>
-<p>and its backwards propagating counterpart</p>
+\[\Delta \equiv \Delta_{a\alpha;b\beta}(i\nu, \mathbf{k})\,.\]</div>
+<p>Because the Pauli principle dictates <span class="math notranslate nohighlight">\(\Delta\)</span> to be odd under particle exchange,
+the symmetry combinations of those four degrees of freedom are constrained.
+This is formalized as the so called <span class="math notranslate nohighlight">\(SPOT\)</span> condition</p>
 <div class="math notranslate nohighlight">
-\[\bar{G}_{\bar{a}b}(\tau - \tau')
-\equiv
-- \langle \mathcal{T} c^\dagger_{\bar{a}}(\tau) c_{b}(\tau') \rangle
+\[\hat{S}\hat{P}\hat{O}\hat{T} \Delta_{a\alpha;b\beta}(i\nu, \mathbf{k})
 =
-- \langle \mathcal{T} \bar{a}(\tau) b(\tau') \rangle\,,\]</div>
-<p>the single-particle anomalous Green’s functions <span class="math notranslate nohighlight">\(F\)</span> and <span class="math notranslate nohighlight">\(\bar{F}\)</span> to describe a superconducting state.
-These are defined as</p>
+- \Delta_{b\beta;a\alpha}(-i\nu, -\mathbf{k})\,,\]</div>
+<p>with the operators <span class="math notranslate nohighlight">\(\hat{S}\)</span>, <span class="math notranslate nohighlight">\(\hat{P}\)</span>, <span class="math notranslate nohighlight">\(\hat{O}\)</span>, <span class="math notranslate nohighlight">\(\hat{T}\)</span>,
+that denote permutation of electrons in spin space (<span class="math notranslate nohighlight">\(\hat{S}\)</span>),
+real space (parity) (<span class="math notranslate nohighlight">\(\hat{P}\)</span>),
+orbital space (<span class="math notranslate nohighlight">\(\hat{O}\)</span>), and time (frequency) (<span class="math notranslate nohighlight">\(\hat{T}\)</span>).
+While <span class="math notranslate nohighlight">\(\Delta\)</span> has to be odd under the combined action of the symmetry operations
+<span class="math notranslate nohighlight">\(\hat{S}\hat{P}\hat{O}\hat{T}\)</span>,
+it can either be even (<span class="math notranslate nohighlight">\(+\)</span>) or odd (<span class="math notranslate nohighlight">\(-\)</span>) under each separate operation,
+i.e.</p>
 <div class="math notranslate nohighlight">
-\[F_{ab}(\tau - \tau')
- \equiv
-\langle \mathcal{T} c_{a}(\tau) c_{b}(\tau') \rangle
+\[\begin{split}\hat{S}\Delta_{a\alpha;b\beta}(i\nu, \mathbf{k})
+    &amp;=
+    \pm \Delta_{a\beta;b\alpha}(i\nu, \mathbf{k})\,,\\
+    \hat{P}\Delta_{a\alpha;b\beta}(i\nu, \mathbf{k})
+    &amp;=
+    \pm \Delta_{a\alpha;b\beta}(i\nu, -\mathbf{k})\,,\\
+    \hat{O}\Delta_{a\alpha;b\beta}(i\nu, \mathbf{k})
+    &amp;=
+    \pm \Delta_{b\alpha;a\beta}(i\nu, \mathbf{k})\,,\\
+    \hat{T}\Delta_{a\alpha;b\beta}(i\nu, \mathbf{k})
+    &amp;=
+    \pm \Delta_{a\alpha;b\beta}(-i\nu, \mathbf{k})\,.\end{split}\]</div>
+<p>A gap function can therefore be classified as even (<span class="math notranslate nohighlight">\(+\)</span>) or odd (<span class="math notranslate nohighlight">\(-\)</span>)
+under these four degrees of freedom. By calculating the superconducting gap in the
+singlet/triplet channel, we fix the spin symmetry to odd/even respectively.
+This leaves us with four symmetry combinations for both singlet and triplet gaps,
+which we list in the table below.</p>
+<table border="1" class="docutils align-center">
+<colgroup>
+<col width="13%" />
+<col width="13%" />
+<col width="13%" />
+<col width="13%" />
+<col width="13%" />
+<col width="13%" />
+<col width="13%" />
+<col width="13%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head" colspan="4">Spin-singlet</th>
+<th class="head" colspan="4">Spin-triplet</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>S</td>
+<td>P</td>
+<td>O</td>
+<td>T</td>
+<td>S</td>
+<td>P</td>
+<td>O</td>
+<td>T</td>
+</tr>
+<tr class="row-odd"><td><span class="math notranslate nohighlight">\(-\)</span></td>
+<td><span class="math notranslate nohighlight">\(+\)</span></td>
+<td><span class="math notranslate nohighlight">\(+\)</span></td>
+<td><span class="math notranslate nohighlight">\(+\)</span></td>
+<td><span class="math notranslate nohighlight">\(+\)</span></td>
+<td><span class="math notranslate nohighlight">\(-\)</span></td>
+<td><span class="math notranslate nohighlight">\(-\)</span></td>
+<td><span class="math notranslate nohighlight">\(-\)</span></td>
+</tr>
+<tr class="row-even"><td><span class="math notranslate nohighlight">\(-\)</span></td>
+<td><span class="math notranslate nohighlight">\(-\)</span></td>
+<td><span class="math notranslate nohighlight">\(-\)</span></td>
+<td><span class="math notranslate nohighlight">\(+\)</span></td>
+<td><span class="math notranslate nohighlight">\(+\)</span></td>
+<td><span class="math notranslate nohighlight">\(+\)</span></td>
+<td><span class="math notranslate nohighlight">\(+\)</span></td>
+<td><span class="math notranslate nohighlight">\(-\)</span></td>
+</tr>
+<tr class="row-odd"><td><span class="math notranslate nohighlight">\(-\)</span></td>
+<td><span class="math notranslate nohighlight">\(-\)</span></td>
+<td><span class="math notranslate nohighlight">\(+\)</span></td>
+<td><span class="math notranslate nohighlight">\(-\)</span></td>
+<td><span class="math notranslate nohighlight">\(+\)</span></td>
+<td><span class="math notranslate nohighlight">\(+\)</span></td>
+<td><span class="math notranslate nohighlight">\(-\)</span></td>
+<td><span class="math notranslate nohighlight">\(+\)</span></td>
+</tr>
+<tr class="row-even"><td><span class="math notranslate nohighlight">\(-\)</span></td>
+<td><span class="math notranslate nohighlight">\(+\)</span></td>
+<td><span class="math notranslate nohighlight">\(-\)</span></td>
+<td><span class="math notranslate nohighlight">\(-\)</span></td>
+<td><span class="math notranslate nohighlight">\(+\)</span></td>
+<td><span class="math notranslate nohighlight">\(-\)</span></td>
+<td><span class="math notranslate nohighlight">\(+\)</span></td>
+<td><span class="math notranslate nohighlight">\(+\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>Because all other combinations are unphysical it is possible to restrict the gap to the
+allowed symmetries while solving the linearized Eliashberg equation.</p>
+</div>
+<div class="section" id="random-phase-approximation-for-the-irreducible-particle-particle-vertex">
+<span id="eliashberg-rpa"></span><h3>Random phase approximation for the irreducible particle-particle vertex<a class="headerlink" href="#random-phase-approximation-for-the-irreducible-particle-particle-vertex" title="Permalink to this headline">¶</a></h3>
+<p>The irreducible particle-particle vertex is given by the parquet equation,
+which can be expressed in terms of the fully irreducible vertex <span class="math notranslate nohighlight">\(\Lambda\)</span>
+and the channel reducible vertex ladder functions <span class="math notranslate nohighlight">\(\Phi\)</span>.
+It is given in the singlet channel by</p>
+<div class="math notranslate nohighlight" id="equation-singlet-gamma-no-approx">
+<span class="eqno">(5)<a class="headerlink" href="#equation-singlet-gamma-no-approx" title="Permalink to this equation">¶</a></span>\[\begin{split}\Gamma^{\text{s}}_{a\overline{b}c\overline{d}}(Q, K, K') =&amp;
+    -
+    \Lambda^{\text{s}}_{a\overline{b}c\overline{d}}(Q, K, K')
+    +
+    \left[
+    \frac{3}{2}
+    \Phi^{\text{m}}_{a\overline{b}c\overline{d}}
+    -
+    \frac{1}{2}
+    \Phi^{\text{d}}_{a\overline{b}c\overline{d}}
+    \right](Q-K-K', K, K')
+\\
+    &amp;+
+    \left[
+    \frac{3}{2}
+    \Phi^{\text{m}}_{c\overline{b}a\overline{d}}
+    -
+    \frac{1}{2}
+    \Phi^{\text{d}}_{c\overline{b}a\overline{d}}
+    \right](K-K', Q-K, K')\end{split}\]</div>
+<p>and in the triplet channel by</p>
+<div class="math notranslate nohighlight" id="equation-triplet-gamma-no-approx">
+<span class="eqno">(6)<a class="headerlink" href="#equation-triplet-gamma-no-approx" title="Permalink to this equation">¶</a></span>\[\begin{split}\Gamma^{\text{t}}_{a\overline{b}c\overline{d}}(Q, K, K') =&amp;
+\Lambda^{\text{t}}_{a\overline{b}c\overline{d}}(Q, K, K')
++
+\left[
+\frac{1}{2}
+\Phi^{\text{m}}_{a\overline{b}c\overline{d}}
++
+\frac{1}{2}
+\Phi^{\text{d}}_{a\overline{b}c\overline{d}}
+\right](Q-K-K', K, K')
+\\
+&amp;+
+\left[
+-
+\frac{1}{2}
+\Phi^{\text{m}}_{c\overline{b}a\overline{d}}
+-
+\frac{1}{2}
+\Phi^{\text{d}}_{c\overline{b}a\overline{d}}
+\right](K-K', Q-K, K')
+\,,\end{split}\]</div>
+<p>with the spin diagonalized reducible vertex ladder functions given by</p>
+<div class="math notranslate nohighlight">
+\[\Phi^{\text{d/m}}_{a\overline{b}c\overline{d}}(Q, K, K')
 =
-\langle \mathcal{T} a(\tau) b(\tau') \rangle
+\frac{1}{(N_\mathbf{k}\beta)^2}
+\sum_{K'', K'''}
+\Gamma^{\text{d/m}}(Q, K, K'') \chi^{\text{d/m}}(Q, K'', K''') \Gamma^{\text{d/m}}(Q, K''', K')
+\,.\]</div>
+<p>Note, that the superscripts <span class="math notranslate nohighlight">\(\mathrm{d/m}\)</span> indicate the density/magnetic channel.</p>
+<p>Now, in the random phase approximation (RPA) the susceptibilities <span class="math notranslate nohighlight">\(\chi^{\text{d/m}}\)</span>
+are approximated by the RPA bubble susceptibility,
+and all vertices are substituted by the local and static bare Kanamori interaction <span class="math notranslate nohighlight">\(U^{\mathrm{d/m}}\)</span>,
+given by</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}U^{\mathrm{d/m}}_{a\bar{b}c\bar{d}} =
+\begin{cases}
+U/U, &amp; \mathrm{if}\;a=\bar{b}=c=\bar{d} \\
+-U'+2J/U', &amp; \mathrm{if}\;a=\bar{d}\neq \bar{b}=c \\
+2U'-J/J, &amp; \mathrm{if}\;a=\bar{b}\neq c=\bar{d} \\
+J/J, &amp; \mathrm{if}\;a=c\neq \bar{b}=\bar{d} \\
+0, &amp; \mathrm{else}
+\end{cases}\,,\end{split}\]</div>
+<p>with the Hubbard interaction <span class="math notranslate nohighlight">\(U\)</span> and the Hund’s <span class="math notranslate nohighlight">\(J\)</span>.
+The reducible ladder vertices then beceome only dependent on one bosonic Frequence and
+momentum pair <span class="math notranslate nohighlight">\(Q\)</span></p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\Phi^{\text{d/m}}_{a\overline{b}c\overline{d}}(Q)
+&amp;\approx
+\frac{1}{(N_\mathbf{k}\beta)^2}
+\sum_{K'', K'''}
+U^{\text{d/m}}\chi^{\text{d/m}}(Q, K'', K''') U^{\text{d/m}}
+\\
+&amp;\approx
+U^{\mathrm{d/m}}
+\chi^{\text{d/m}}(Q) U^{\mathrm{d/m}}
+\,,\end{split}\]</div>
+<p>and the fully irreducible vertices become</p>
+<div class="math notranslate nohighlight">
+\[\Lambda^{\mathrm{s}}
+\approx
+-
+\frac{1}{2}U^{\mathrm{d}}
+-
+\frac{3}{2}U^{\mathrm{m}}
 \,,\]</div>
 <div class="math notranslate nohighlight">
-\[\bar{F}_{\bar{a}\bar{b}}(\tau - \tau')
-\equiv
-\langle \mathcal{T} c^\dagger_{a}(\tau) c^\dagger_{\bar{b}}(\tau') \rangle
-=
-\langle \mathcal{T} \bar{a}(\tau) \bar{b}(\tau') \rangle\,.\]</div>
-<p>Fourier transforming to Matsubara frequency space then gives that</p>
-<div class="math notranslate nohighlight">
-\[\begin{split}\bar{G}_{\bar{a}b}(\mathbf{k}, i\nu_n) = [ G_{b\bar{a}}(-\mathbf{k}, -i\nu_n) ]^{*}
+\[\Lambda^{\mathrm{t}}
+\approx
+-
+\frac{1}{2}U^{\mathrm{d}}
++
+\frac{1}{2}U^{\mathrm{m}}
+\,.\]</div>
+<p>In this approximation the irreducible singlet/triplet vertex for <span class="math notranslate nohighlight">\(Q=0\)</span> takes the form</p>
+<div class="math notranslate nohighlight" id="equation-singlet-gamma">
+<span class="eqno">(7)<a class="headerlink" href="#equation-singlet-gamma" title="Permalink to this equation">¶</a></span>\[\begin{split}\Gamma^{\text{s}}_{a\overline{b}c\overline{d}}(Q=0, K, K') =&amp;
+    \frac{1}{2}U_{a\overline{b}c\overline{d}}^{\mathrm{d}}
+    +
+    \frac{3}{2}U_{a\overline{b}c\overline{d}}^{\mathrm{m}}
+    +
+    \left[
+    \frac{3}{2}
+    \Phi^{\text{m}}_{a\overline{b}c\overline{d}}
+    -
+    \frac{1}{2}
+    \Phi^{\text{d}}_{a\overline{b}c\overline{d}}
+    \right](-K-K')
 \\
-\bar{F}_{\bar{a}\bar{b}}(\mathbf{k}, i\nu_n) = [ F_{ba}(-\mathbf{k}, -i\nu_n) ]^{*}\end{split}\]</div>
-</div>
-<div class="section" id="dyson-gorkov-equations">
-<h2>Dyson-Gorkov Equations<a class="headerlink" href="#dyson-gorkov-equations" title="Permalink to this headline">¶</a></h2>
-<p>The former properties of a superconductor are given by the Dyson-Gorkov equations</p>
+    &amp;+
+    \left[
+    \frac{3}{2}
+    \Phi^{\text{m}}_{c\overline{b}a\overline{d}}
+    -
+    \frac{1}{2}
+    \Phi^{\text{d}}_{c\overline{b}a\overline{d}}
+    \right](K-K')
+    \,,\end{split}\]</div>
+<p>and</p>
+<div class="math notranslate nohighlight" id="equation-triplet-gamma">
+<span class="eqno">(8)<a class="headerlink" href="#equation-triplet-gamma" title="Permalink to this equation">¶</a></span>\[\begin{split}\Gamma^{\text{t}}_{a\overline{b}c\overline{d}}(Q=0, K, K') =&amp;
+    -
+    \frac{1}{2}U_{a\overline{b}c\overline{d}}^{\mathrm{d}}
+    +
+    \frac{1}{2}U_{a\overline{b}c\overline{d}}^{\mathrm{m}}
+    +
+    \left[
+    \frac{1}{2}
+    \Phi^{\text{m}}_{a\overline{b}c\overline{d}}
+    +
+    \frac{1}{2}
+    \Phi^{\text{d}}_{a\overline{b}c\overline{d}}
+    \right](-K-K')
+\\
+    &amp;+
+    \left[
+    -
+    \frac{1}{2}
+    \Phi^{\text{m}}_{c\overline{b}a\overline{d}}
+    -
+    \frac{1}{2}
+    \Phi^{\text{d}}_{c\overline{b}a\overline{d}}
+    \right](K-K')
+\,.\end{split}\]</div>
+<p>Note, that in both the singlet <a class="reference internal" href="#equation-singlet-gamma">(7)</a> and the triplet vertex
+<a class="reference internal" href="#equation-triplet-gamma">(8)</a> the density and magnetic ladder vertices
+<span class="math notranslate nohighlight">\(\Phi^{\text{d/m}}\)</span> appear twice. Once with an index flip and with a <span class="math notranslate nohighlight">\(K-K'\)</span>
+dependence, <span class="math notranslate nohighlight">\(\Phi_{c\overline{b}a\overline{d}}(K-K')\)</span>, and once without an index flip
+and a <span class="math notranslate nohighlight">\(-K-K'\)</span> dependence, <span class="math notranslate nohighlight">\(\Phi_{a\overline{b}c\overline{d}}(-K-K')\)</span>.
+In the linearized Eliashberg equation <a class="reference internal" href="#equation-linearized-eliashberg-3">(3)</a> those two terms can be
+transformed into each other by abiding the frequency, momentum and orbital
+symmetry of the gap.
+For example <span class="math notranslate nohighlight">\(\Phi_{a\overline{b}c\overline{d}}(-K-K')\)</span> transforms into
+<span class="math notranslate nohighlight">\(\pm\Phi_{c\overline{b}a\overline{d}}(K'-K)=\pm\Phi^*_{c\overline{b}a\overline{d}}(K-K')\)</span>
+for a singlet/triplet gap.
+We can therefore write Eq. <a class="reference internal" href="#equation-singlet-gamma">(7)</a> and <a class="reference internal" href="#equation-triplet-gamma">(8)</a> as</p>
+<div class="math notranslate nohighlight" id="equation-singlet-gamma-2">
+<span class="eqno">(9)<a class="headerlink" href="#equation-singlet-gamma-2" title="Permalink to this equation">¶</a></span>\[\Gamma^{\text{s}}_{a\overline{b}c\overline{d}}(Q=0, K, K') \equiv
+    \frac{1}{2}U_{a\overline{b}c\overline{d}}^{\mathrm{d}}
+    +
+    \frac{3}{2}U_{a\overline{b}c\overline{d}}^{\mathrm{m}}
+    +
+    \Re
+    \left[
+    3
+    \Phi^{\text{m}}_{c\overline{b}a\overline{d}}(K-K')
+    -
+    \Phi^{\text{d}}_{c\overline{b}a\overline{d}}(K-K')
+    \right]
+    \,,\]</div>
+<div class="math notranslate nohighlight" id="equation-triplet-gamma-2">
+<span class="eqno">(10)<a class="headerlink" href="#equation-triplet-gamma-2" title="Permalink to this equation">¶</a></span>\[\Gamma^{\text{t}}_{a\overline{b}c\overline{d}}(Q=0, K, K') \equiv
+    -
+    \frac{1}{2}U_{a\overline{b}c\overline{d}}^{\mathrm{d}}
+    +
+    \frac{1}{2}U_{a\overline{b}c\overline{d}}^{\mathrm{m}}
+    +
+    \Re
+    \left[
+-
+    \Phi^{\text{m}}_{c\overline{b}a\overline{d}}(K-K')
+    -
+    \Phi^{\text{d}}_{c\overline{b}a\overline{d}}(K-K')
+    \right]
+    \,.\]</div>
+<p>Note, that this simplification is only allowed if the solutions of <span class="math notranslate nohighlight">\(\Delta^{\mathrm{s/t}}\)</span>
+are restricted to the allowed symmetries, otherwise unphysical solutions can occur.
+Also note, that the RPA particle-particle vertices in
+Eq. <a class="reference internal" href="#equation-singlet-gamma-2">(9)</a> and <a class="reference internal" href="#equation-triplet-gamma-2">(10)</a> only depend on the difference
+between the two fermionic Matsubara frequencies, i.e. a bosonic Matsubara frequency and one momentum.
+We can therefore write the linearized Eliashberg equation
+<a class="reference internal" href="#equation-linearized-eliashberg-3">(3)</a> as</p>
+<div class="math notranslate nohighlight" id="equation-linearized-eliashberg-5">
+<span class="eqno">(11)<a class="headerlink" href="#equation-linearized-eliashberg-5" title="Permalink to this equation">¶</a></span>\[\lambda\Delta^{\mathrm{s/t}}_{\bar{a}\bar{b}}(K)=  -\frac{1}{2 N_{\mathbf{k}}\beta}\sum_{K'}
+\Gamma^{\mathrm{s/t}}_{c\bar{a}d\bar{b}}(K-K')
+G_{c\bar{f}}(K')G_{d\bar{e}}(-K')
+\Delta^{\mathrm{s/t}}_{\bar{e}\bar{f}}(K')\,,\]</div>
+<p>which is the <strong>form it is implemented as now</strong> in <a class="reference internal" href="../reference/python_reference.html#triqs_tprf.eliashberg.solve_eliashberg" title="triqs_tprf.eliashberg.solve_eliashberg"><code class="xref py py-meth docutils literal notranslate"><span class="pre">triqs_tprf.eliashberg.solve_eliashberg()</span></code></a>.</p>
+<p>This allows us to get rid of the summation by using the convolution theorem</p>
 <div class="math notranslate nohighlight">
-\[\mathbf{G}(\mathbf{k}, i\nu_n)
-=
-\mathbf{G}^{(0)}(\mathbf{k}, i\nu_n)
-+ \mathbf{G}^{(0)}(\mathbf{k}, i\nu_n)
-  \ast \mathbf{\Sigma}(\mathbf{k}, i\nu_n)
-  \ast \mathbf{G}(\mathbf{k}, i\nu_n)\]</div>
-<div class="math notranslate nohighlight">
-\[\begin{split}\mathbf{G} \equiv
-\left[ \begin{array}{cc}
-  G_{a\bar{b}} &amp; F_{ab} \\
-  \bar{F}_{\bar{a}\bar{b}} &amp; \bar{G}_{\bar{a}b} \\
-\end{array} \right]
-\quad
-\mathbf{G}^{(0)}
-\equiv
-\left[ \begin{array}{cc}
-  G^{(0)}_{a\bar{b}} &amp; 0 \\
-  0 &amp; \bar{G}^{(0)}_{\bar{a}b} \\
-\end{array} \right]
-\quad
-\mathbf{\Sigma}
-\equiv
-\left[ \begin{array}{cc}
-  \Sigma_{a\bar{b}} &amp; \Delta_{ab} \\
-  \bar{\Delta}_{\bar{a}\bar{b}} &amp; \bar{\Sigma}_{\bar{a}b} \\
-\end{array} \right]\end{split}\]</div>
-<p>In component form this becomes,</p>
-<div class="math notranslate nohighlight">
-\[G(a\bar{b}) = G^{(0)}(a\bar{b}) + G^{(0)}(a\bar{c})\Sigma(\bar{c}d)G(d\bar{b}) +
-G^{(0)}(a\bar{c})\bar{\Delta}(\bar{c}\bar{d})\bar{F}(\bar{d}\bar{b})\]</div>
-<div class="math notranslate nohighlight">
-\[\bar{G}(\bar{a}b) = \bar{G}^{(0)}(\bar{a}b) + \bar{G}^{(0)}(\bar{a}c)\bar{\Sigma}(c\bar{d})\bar{G}(\bar{d}b) +
-\bar{G}^{(0)}(\bar{a}c)\Delta(cd)F(db)\]</div>
-<div class="math notranslate nohighlight">
-\[F(ab) = G^{(0)}(a\bar{c}) \Sigma(\bar{c}d) F(db)+
-G^{(0)}(a\bar{c}) \bar{\Delta}(\bar{c}\bar{d}) \bar{G}(\bar{d}b)\]</div>
-<div class="math notranslate nohighlight">
-\[\bar{F}(\bar{a}\bar{b}) = \bar{G}^{(0)}(\bar{a}c) \bar{\Sigma}(c\bar{d}) \bar{F}(\bar{d}\bar{b})+
-\bar{G}^{(0)}(\bar{a}c) \Delta(cd) G(d\bar{b})\]</div>
-<p>Here <span class="math notranslate nohighlight">\(\Sigma\)</span> is the normal self-energy and <span class="math notranslate nohighlight">\(\Delta\)</span> and <span class="math notranslate nohighlight">\(\bar{\Delta}\)</span> the anomalous self-energies, which are equal in the absence of a magnetic field and will be treated as from now on.</p>
-</div>
-<div class="section" id="anomalous-self-energy-and-particle-particle-vertex">
-<h2>Anomalous self-energy and particle-particle vertex<a class="headerlink" href="#anomalous-self-energy-and-particle-particle-vertex" title="Permalink to this headline">¶</a></h2>
+\[\lambda
+\mathcal{F}\left[\Delta_{\bar{a}\bar{b}}^{\mathrm{s/t}}(K)\right]=  -\frac{1}{2}
+\mathcal{F}\left[\Gamma_{c\bar{a}d\bar{b}}^{\mathrm{s/t}}(K-K')\right]
+\mathcal{F}\left[
+G_{c\bar{f}}(K')G_{d\bar{e}}(-K')
+\Delta_{\bar{e}\bar{f}}^{\mathrm{s/t}}(K')
+\right]\,,\]</div>
+<p>making the calculation computationaly more efficient for large numbers of frequencies
+and momenta.
+But note, that for small numbers of frequencies and/or momenta using the sum
+instead of the convolution theorem can be more effecient.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Define <span class="math notranslate nohighlight">\(\Gamma\)</span>. It should be the particle-particle vertex <span class="math notranslate nohighlight">\(\Gamma^{(pp)}\)</span> related to the generalized susceptibility <span class="math notranslate nohighlight">\(\chi\)</span> through the Bethe-Salpeter equation in the particle-particle channel. This would give the definition of the four orbital(spin) indices and their order.</p>
+<p class="last">It is possible to expand the current implementation of the Eliashberg equation to
+also allow for irreducible vertices to be explicitly dependent on two fermionic
+frequency and momenta pairs.
+For an idea on how to tackle such a task see the following draft
+<a class="reference external" href="https://github.com/TRIQS/tprf/blob/eliashberg_with_phi/c%2B%2B/triqs_tprf/lattice/eliashberg.cpp#L289">here</a>
+and
+<a class="reference external" href="https://github.com/TRIQS/tprf/blob/eliashberg_with_phi/python/triqs_tprf/eliashberg.py#L216">here</a>.</p>
 </div>
-<p>The anomalous self-energy can be expressed with the effective pairing interaction <span class="math notranslate nohighlight">\(\Gamma\)</span> and the anomalous Green’s function <span class="math notranslate nohighlight">\(F\)</span> as</p>
-<div class="math notranslate nohighlight" id="equation-anom-self-energy">
-<span class="eqno">(1)<a class="headerlink" href="#equation-anom-self-energy" title="Permalink to this equation">¶</a></span>\[\Delta_{\bar{a}\bar{b}}(\mathbf{k},i\nu) =  -\frac{1}{N_k \beta}\sum_{\mathbf{q}} \sum_{i\nu'}
-\Gamma_{A\bar{a}\bar{b}B}(\mathbf{k}-\mathbf{q}, i\nu - i\nu') F_{AB}(\mathbf{q}, i\nu')\,.\]</div>
+<p class="rubric">References</p>
+<table class="docutils footnote" frame="void" id="abrikosov" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td><ol class="first last upperalpha simple">
+<li><ol class="first upperalpha">
+<li>Abrikosov, L. P. Gor’kov, and I. E. Dzyaloshinski, Pergamon, Oxford (1965)</li>
+</ol>
+</li>
+</ol>
+</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="yanase" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[2]</td><td><ol class="first last upperalpha simple" start="25">
+<li>Yanase, T. Jujo, T. Nomura, et. al., Physics Reports 387, 1-149 (2003)</li>
+</ol>
+</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="takimoto" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[3]</td><td><ol class="first last upperalpha simple" start="20">
+<li>Takimoto, T. Hotta, and K. Ueda, PRB 69, 104504 (2004)</li>
+</ol>
+</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="bickers" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[4]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> <ol class="last upperalpha simple" start="14">
+<li><ol class="first upperalpha" start="5">
+<li>Bickers, Self-Consistent Many-Body Theory for Condensed Matter Systems. Theoretical Methods for Strongly Correlated Electrons, 237–296. 6 (2006)</li>
+</ol>
+</li>
+</ol>
+</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="rohringer" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[5]</td><td><ol class="first last upperalpha simple" start="7">
+<li>Rohringer, New routes towards a theoretical treatment of nonlocal electronic correlations (2013)</li>
+</ol>
+</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="nourafkan" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[6]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id3">2</a>, <a class="fn-backref" href="#id5">3</a>)</em> <ol class="last upperalpha simple" start="18">
+<li>Nourafkan, G. Kotliar, and A. M. Tremblay, Physical Review Letters 117, 1, (Supplementary) (2016)</li>
+</ol>
+</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="linder" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[7]</td><td><ol class="first last upperalpha simple" start="10">
+<li>Linder and A. V. Balatsky, Reviews of Modern Physics 91, 45005 (2019)</li>
+</ol>
+</td></tr>
+</tbody>
+</table>
 </div>
-<div class="section" id="linearization-in-delta">
-<h2>Linearization in <span class="math notranslate nohighlight">\(\Delta\)</span><a class="headerlink" href="#linearization-in-delta" title="Permalink to this headline">¶</a></h2>
-<p>Around the transition point to the superconducting state the anomalous self-energy <span class="math notranslate nohighlight">\(\Delta\)</span> is approximately zero, and, because we are only interested in the transition point, we linearize <span class="math notranslate nohighlight">\(F\)</span> in the Dyson-Gorkov equations with respect to <span class="math notranslate nohighlight">\(\Delta\)</span>. This yields</p>
-<div class="math notranslate nohighlight">
-\[\begin{split}F &amp; = g \Sigma F + g \Delta \bar{G} \\
-G &amp; = g + g \Sigma G + g \Delta \bar{F}\end{split}\]</div>
-<div class="math notranslate nohighlight">
-\[\begin{split}F &amp; = (g^{-1} - \Sigma)^{-1} \Delta \bar{G} \\
-\bar{G} &amp; = (\bar{g}^{-1} - \Sigma)^{-1} + \bar{\Delta} F\end{split}\]</div>
-<div class="math notranslate nohighlight" id="equation-lin-anom-gf">
-<span class="eqno">(2)<a class="headerlink" href="#equation-lin-anom-gf" title="Permalink to this equation">¶</a></span>\[F = (g^{-1} - \Sigma)^{-1} \Delta (\bar{g}^{-1} - \bar{\Sigma})^{-1} + \mathcal{O}(\Delta^2)\]</div>
-<p>We then insert <a class="reference internal" href="#equation-lin-anom-gf">(2)</a> into <a class="reference internal" href="#equation-anom-self-energy">(1)</a> and obtain the linearized Eliashberg equation</p>
-<div class="math notranslate nohighlight">
-\[\begin{split}\Delta_{\bar{a}\bar{b}}(\mathbf{k},i\nu) =  -\frac{1}{N_k \beta}\sum_{\mathbf{q}} \sum_{i\nu'}
-\Gamma_{A\bar{a}\bar{b}B}(\mathbf{k}-\mathbf{q}, i\nu - i\nu')
-\\ \times
-\big({G^{(0)}}^{-1}(\mathbf{q}, i\nu') - \Sigma(\mathbf{q}, i\nu') \big)^{-1}_{A\bar{c}}
-\Delta_{\bar{c}\bar{d}}(\mathbf{q}, i\nu')
-\big({G^{(0)}}^{-1}_{}(-\mathbf{q}, -i\nu') - \Sigma_{}(-\mathbf{q}, -i\nu') \big)^{-1}_{B\bar{d}}\,.\end{split}\]</div>
-<p>To make use of this equations it is usually interpreted as an eigenvalue equation</p>
-<div class="math notranslate nohighlight">
-\[\lambda \Delta = \Lambda \Delta\,,\]</div>
-<p>where the eigenvalue <span class="math notranslate nohighlight">\(\lambda\)</span> is seen as a measurement for the strength of superconducting ordering and a phase transition occurs when it reaches unity.</p>
-</div>
-<div class="section" id="rpa-approach">
-<h2>RPA Approach<a class="headerlink" href="#rpa-approach" title="Permalink to this headline">¶</a></h2>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Explain what happens with momenta</p>
-</div>
-<p>The linearized Eliashberg equation can be studied in the RPA limit.
-In this case the normal self-energy is set to zero and the effective pairing interaction <span class="math notranslate nohighlight">\(\Gamma\)</span> for a singlet Cooper pairs is given by</p>
-<div class="math notranslate nohighlight">
-\[\begin{split}\Gamma^{(\mathrm{singlet})}(a\bar{b}c\bar{d}) =
- \frac{3}{2} U^{(\mathrm{s})}(a\bar{b}A\bar{B}) \chi^{(\mathrm{s})}(\bar{B}A\bar{C}D)
- U^{(\mathrm{s})}(D\bar{C}c\bar{d}) \\
- -\frac{1}{2} U^{(\mathrm{c})}(a\bar{b}A\bar{B}) \chi^{(\mathrm{c})}(\bar{B}A\bar{C}D)
- U^{(\mathrm{c})}(D\bar{C}c\bar{d}) \\
-+ \frac{1}{2}\big(U^{(\mathrm{s})}(a\bar{b}c\bar{d})+
- U^{(\mathrm{c})}(a\bar{b}c\bar{d})\big)\,,\end{split}\]</div>
-<p>and for a triplet by</p>
-<div class="math notranslate nohighlight">
-\[\begin{split}\Gamma^{(\mathrm{triplet})}(a\bar{b}c\bar{d}) =
- -\frac{1}{2} U^{(\mathrm{s})}(a\bar{b}A\bar{B}) \chi^{(\mathrm{s})}(\bar{B}A\bar{C}D)
- U^{(\mathrm{s})}(D\bar{C}c\bar{d}) \\
- -\frac{1}{2} U^{(\mathrm{c})}(a\bar{b}A\bar{B}) \chi^{(\mathrm{c})}(\bar{B}A\bar{C}D)
- U^{(\mathrm{c})}(D\bar{C}c\bar{d}) \\
-+ \frac{1}{2}\big(U^{(\mathrm{s})}(a\bar{b}c\bar{d})+
- U^{(\mathrm{c})}(a\bar{b}c\bar{d})\big)\,.\end{split}\]</div>
-<p>Here <span class="math notranslate nohighlight">\(\chi^{(\mathrm{s})}\)</span> is the spin-susceptibility tensor defined by</p>
-<div class="math notranslate nohighlight">
-\[\chi^{(\mathrm{s})}(\bar{a}b\bar{c}d) = \big(\mathbb{1} - \chi^{(0)}(\bar{a}b\bar{A}B)
-U^{(\mathrm{s})}(B\bar{A}C\bar{D})\big)^{-1}  \chi^{(0)}(\bar{D}C\bar{c}d)\,,\]</div>
-<p>and <span class="math notranslate nohighlight">\(\chi^{(\mathrm{c})}\)</span> is the charge-susceptibility tensor defined by</p>
-<div class="math notranslate nohighlight">
-\[\chi^{(\mathrm{c})}(\bar{a}b\bar{c}d) = \big(\mathbb{1} + \chi^{(0)}(\bar{a}b\bar{A}B)
-U^{(\mathrm{c})}(B\bar{A}C\bar{D})\big)^{-1}  \chi^{(0)}(\bar{D}C\bar{c}d)\,,\]</div>
-<p>here <span class="math notranslate nohighlight">\(\chi^{(0)}\)</span> is the non-interacting particle-hole bubble.</p>
-<p>The spin and charge interaction tensors are given by</p>
-<div class="math notranslate nohighlight">
-\[\begin{split}U^{(\mathrm{s})}(a\bar{a}b\bar{b}) =
-\begin{cases}
-U, &amp; \mathrm{if}\;a=\bar{a}=b=\bar{b} \\
-U', &amp; \mathrm{if}\;a=\bar{b}\neq \bar{a}=b \\
-J, &amp; \mathrm{if}\;a=\bar{a}\neq b=\bar{b} \\
-J', &amp; \mathrm{if}\;a=b\neq \bar{a}=\bar{b} \\
-0, &amp; \mathrm{else}
-\end{cases}\end{split}\]</div>
-<div class="math notranslate nohighlight">
-\[\begin{split}U^{(\mathrm{c})}(a\bar{a}b\bar{b}) =
-\begin{cases}
-U, &amp; \mathrm{if}\;a=\bar{a}=b=\bar{b} \\
--U'+2J, &amp; \mathrm{if}\;a=\bar{b}\neq \bar{a}=b \\
-2U'-J, &amp; \mathrm{if}\;a=\bar{a}\neq b=\bar{b} \\
-J', &amp; \mathrm{if}\;a=b\neq \bar{a}=\bar{b} \\
-0, &amp; \mathrm{else}
-\end{cases}\end{split}\]</div>
-<p>where <span class="math notranslate nohighlight">\(U\)</span>, <span class="math notranslate nohighlight">\(U'\)</span>, <span class="math notranslate nohighlight">\(J\)</span> and <span class="math notranslate nohighlight">\(J'\)</span> are the usual Kanamori interaction parameters.</p>
 </div>
 </div>
 
