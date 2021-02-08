@@ -517,17 +517,32 @@ For two correlated sites, one can define the file as follows:</p>
 <div class="section" id="remarks-on-the-vasp-version">
 <h2>Remarks on the VASP version<a class="headerlink" href="#remarks-on-the-vasp-version" title="Permalink to this headline">¶</a></h2>
 <p>In the current version of the interface the Fermi energy is extracted from the
-<cite>LOCPROJ</cite> file. The file should contain the Fermi energy in the header. One can
-either copy the Fermi energy manually there after a successful VASP run, or
-modify the VASP source code slightly, by replacing the following line in
+DOSCAR. However, if one pursues to do charge self-consistent calculations one
+needs to write the Fermi energy to the projectors (<cite>LOCPROJ</cite> file), as the DOSCAR
+is only updated after a full SCF/NSCF run. The file should contain the Fermi energy
+in the header. One can either copy the Fermi energy manually there after a successful
+VASP run, or modify the VASP source code slightly, by replacing the following line in
 <cite>locproj.F</cite> (around line 695):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">WRITE</span><span class="p">(</span><span class="mi">99</span><span class="p">,</span><span class="s1">&#39;(4I6,&quot;  # of spin, # of k-points, # of bands, # of proj&quot; )&#39;</span><span class="p">)</span> <span class="n">NS</span><span class="p">,</span><span class="n">NK</span><span class="p">,</span><span class="n">NB</span><span class="p">,</span><span class="n">NF</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span>   <span class="n">WRITE</span><span class="p">(</span><span class="mi">99</span><span class="p">,</span><span class="s1">&#39;(4I6,&quot;  # of spin, # of k-points, # of bands, # of proj&quot; )&#39;</span><span class="p">)</span> <span class="n">NS</span><span class="p">,</span><span class="n">NK</span><span class="p">,</span><span class="n">NB</span><span class="p">,</span><span class="n">NF</span>
+<span class="o">---</span>
+<span class="o">&gt;</span>   <span class="n">WRITE</span><span class="p">(</span><span class="mi">99</span><span class="p">,</span><span class="s1">&#39;(4I6,F12.7,&quot;  # of spin, # of k-points, # of bands, # of proj, Efermi&quot; )&#39;</span><span class="p">)</span> <span class="n">W</span><span class="o">%</span><span class="n">WDES</span><span class="o">%</span><span class="n">NCDIJ</span><span class="p">,</span><span class="n">NK</span><span class="p">,</span><span class="n">NB</span><span class="p">,</span><span class="n">NF</span><span class="p">,</span><span class="n">EFERMI</span>
 </pre></div>
 </div>
-<p>with:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">WRITE</span><span class="p">(</span><span class="mi">99</span><span class="p">,</span><span class="s1">&#39;(4I6,F12.7,&quot;  # of spin, # of k-points, # of bands, # of proj, Efermi&quot; )&#39;</span><span class="p">)</span> <span class="n">W</span><span class="o">%</span><span class="n">WDES</span><span class="o">%</span><span class="n">NCDIJ</span><span class="p">,</span><span class="n">NK</span><span class="p">,</span><span class="n">NB</span><span class="p">,</span><span class="n">NF</span><span class="p">,</span><span class="n">EFERMI</span>
+<p>Now one needs to pass additionally the variable <cite>EFERMI</cite> to the function, by changing (at arount line 560):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span>   <span class="n">SUBROUTINE</span> <span class="n">LPRJ_WRITE</span><span class="p">(</span><span class="n">IU6</span><span class="p">,</span><span class="n">IU0</span><span class="p">,</span><span class="n">W</span><span class="p">)</span>
+<span class="o">---</span>
+<span class="o">&gt;</span>   <span class="n">SUBROUTINE</span> <span class="n">LPRJ_WRITE</span><span class="p">(</span><span class="n">IU6</span><span class="p">,</span><span class="n">IU0</span><span class="p">,</span><span class="n">W</span><span class="p">,</span><span class="n">EFERMI</span><span class="p">)</span>
+    <span class="n">REAL</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="p">::</span> <span class="n">EFERMI</span>
 </pre></div>
 </div>
+<p>Next, we need to pass this option when calling from <cite>electron.F</cite> and <cite>main.F</cite>
+(just search for LPRJ_WRITE in the files) and change all occurences as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span>   <span class="n">CALL</span> <span class="n">LPRJ_WRITE</span><span class="p">(</span><span class="n">IO</span><span class="o">%</span><span class="n">IU6</span><span class="p">,</span> <span class="n">IO</span><span class="o">%</span><span class="n">IU0</span><span class="p">,</span> <span class="n">W</span><span class="p">)</span>
+<span class="o">---</span>
+<span class="o">&gt;</span>   <span class="n">CALL</span> <span class="n">LPRJ_WRITE</span><span class="p">(</span><span class="n">IO</span><span class="o">%</span><span class="n">IU6</span><span class="p">,</span> <span class="n">IO</span><span class="o">%</span><span class="n">IU0</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">EFERMI</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now Vasp should print in the header of the <cite>LOCPROJ</cite> file additionally the Fermi energy.</p>
 <p>Another critical point for CSC calculations is the function call of
 <cite>LPRJ_LDApU</cite> in VASP. This function is not needed, and was left there for debug
 purposes, but is called every iteration. Removing the call to this function in <cite>electron.F</cite> in line 644 speeds up the calculation significantly in the <cite>ICHARG=5</cite> mode. Moreover, this prevents VASP from generating the <cite>GAMMA</cite> file, which should ideally only be done by the DMFT code after a successful DMFT step, and then be read by VASP.</p>
