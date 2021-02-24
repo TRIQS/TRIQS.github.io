@@ -1,0 +1,295 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>triqs.sumk.sumk_discrete_from_lattice &#8212; TRIQS 3.0.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/triqs.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=default"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head><body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../../install.html">Install</a></li>
+    
+    <li><a href="../../../documentation.html">Documentation</a></li>
+    
+    <li><a href="../../../userguide.html">User guide</a></li>
+    
+    <li><a href="../../../applications.html">Applications</a></li>
+    
+    <li><a href="../../../contributing.html">Contributing</a></li>
+    
+    <li><a href="../../../about.html">About TRIQS</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../../index.html">triqs</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">a Toolbox for Research on Interacting Quantum Systems</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for triqs.sumk.sumk_discrete_from_lattice</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2013-2015 Commissariat à l&#39;énergie atomique et aux énergies alternatives (CEA)</span>
+<span class="c1"># Copyright (c) 2013-2015 Centre national de la recherche scientifique (CNRS)</span>
+<span class="c1"># Copyright (c) 2020 Simons Foundation</span>
+<span class="c1">#</span>
+<span class="c1"># This program is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#     https:#www.gnu.org/licenses/gpl-3.0.txt</span>
+<span class="c1">#</span>
+<span class="c1"># Authors: Michel Ferrero, Olivier Parcollet, Nils Wentzell</span>
+
+
+<span class="kn">from</span> <span class="nn">.sumk_discrete</span> <span class="k">import</span> <span class="n">SumkDiscrete</span>
+<span class="kn">from</span> <span class="nn">triqs.lattice.tight_binding</span> <span class="k">import</span> <span class="n">TBLattice</span>
+
+<div class="viewcode-block" id="SumkDiscreteFromLattice"><a class="viewcode-back" href="../../../documentation/manual/triqs/lattice_tools/sumk.html#triqs.sumk.SumkDiscreteFromLattice">[docs]</a><span class="k">class</span> <span class="nc">SumkDiscreteFromLattice</span> <span class="p">(</span><span class="n">SumkDiscrete</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">      * Computes</span>
+
+<span class="sd">       .. math::</span>
+<span class="sd">         G \leftarrow \sum_k (\omega + \mu - \epsilon_k - \Sigma(k,\omega))^{-1}</span>
+
+<span class="sd">       for GF functions with blocks of the size of the matrix eps_k with a discrete sum.</span>
+
+<span class="sd">      * The object contains the discretized hoppings and points in the arrays</span>
+<span class="sd">        hopping, bz_points,bz_weights,mu_pattern,overlap (IF non orthogonal)</span>
+<span class="sd">        It can also generate a grid (ReComputeGrid) for a regular grid or a Gauss-Legendre sum</span>
+<span class="sd">        for the whole Brillouin Zone or a patch of the BZ.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lattice</span><span class="p">,</span> <span class="n">patch</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n_points</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="s2">&quot;Riemann&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param lattice: The underlying triqs.lattice or triqs.super_lattice provinding t(k)</span>
+<span class="sd">        :param n_points:  Number of points in the BZ in EACH direction</span>
+<span class="sd">        :param method: Riemann (default) or &#39;Gauss&#39; (not checked)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lattice</span><span class="p">,</span><span class="n">TBLattice</span><span class="p">),</span> <span class="s2">&quot;lattice must be a TBLattice instance&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SL</span> <span class="o">=</span> <span class="n">lattice</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">patch</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">patch</span><span class="p">,</span><span class="n">method</span>
+        <span class="c1"># init the array</span>
+        <span class="n">SumkDiscrete</span><span class="o">.</span><span class="fm">__init__</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SL</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="n">gf_struct</span> <span class="o">=</span> <span class="n">lattice</span><span class="o">.</span><span class="n">OrbitalNames</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Recompute_Grid</span><span class="p">(</span><span class="n">n_points</span><span class="p">,</span>  <span class="n">method</span><span class="p">)</span>
+
+     <span class="c1">#-------------------------------------------------------------</span>
+
+    <span class="k">def</span> <span class="nf">__reduce__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span>  <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SL</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">patch</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bz_weights</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">)</span>
+
+     <span class="c1">#-------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="SumkDiscreteFromLattice.Recompute_Grid"><a class="viewcode-back" href="../../../documentation/manual/triqs/lattice_tools/sumk.html#triqs.sumk.SumkDiscreteFromLattice.Recompute_Grid">[docs]</a>    <span class="k">def</span> <span class="nf">Recompute_Grid</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_points</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;Riemann&quot;</span><span class="p">,</span> <span class="n">Q</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;(Re)Computes the grid on the patch given at construction:</span>
+
+<span class="sd">        * n_points:  Number of points in the BZ in EACH direction</span>
+<span class="sd">        * method: Riemann (default) or &#39;Gauss&#39; (not checked)</span>
+<span class="sd">        * Q: anything from which a 1d-array can be computed.</span>
+<span class="sd">              computes t(k+Q) instead of t(k) (useful for bare chi_0)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;Riemann&quot;</span><span class="p">,</span><span class="s2">&quot;Gauss&quot;</span><span class="p">],</span> <span class="s2">&quot;method </span><span class="si">%s</span><span class="s2"> is not recognized&quot;</span><span class="o">%</span><span class="n">method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resize_arrays</span><span class="p">(</span><span class="n">n_points</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">patch</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__Compute_Grid_One_patch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">patch</span><span class="p">,</span> <span class="n">n_points</span> <span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">Q</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__Compute_Grid</span><span class="p">(</span><span class="n">n_points</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">Q</span><span class="p">)</span></div>
+
+     <span class="c1">#-------------------------------------------------------------</span>
+
+    <span class="k">def</span> <span class="nf">__Compute_Grid</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_bz</span><span class="p">,</span>  <span class="n">method</span><span class="o">=</span><span class="s2">&quot;Riemann&quot;</span><span class="p">,</span> <span class="n">Q</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Internal</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">n_bz_A</span><span class="p">,</span><span class="n">n_bz_B</span><span class="p">,</span> <span class="n">n_bz_C</span> <span class="o">=</span> <span class="n">n_bz</span><span class="p">,</span> <span class="p">(</span><span class="n">n_bz</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">n_bz</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="k">else</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">nk</span> <span class="o">=</span> <span class="n">n_bz_A</span><span class="o">*</span> <span class="n">n_bz_B</span><span class="o">*</span> <span class="n">n_bz_C</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resize_arrays</span><span class="p">(</span><span class="n">nk</span><span class="p">)</span>
+
+        <span class="c1"># compute the points where to evaluate the function in the BZ and with the weights</span>
+        <span class="k">def</span> <span class="nf">pts1d</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">N</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span><span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="n">N</span>
+
+        <span class="k">if</span> <span class="n">method</span><span class="o">==</span><span class="s2">&quot;Riemann&quot;</span><span class="p">:</span>
+            <span class="n">bz_weights</span><span class="o">=</span><span class="mf">1.0</span><span class="o">/</span><span class="n">nk</span>
+            <span class="n">k_index</span> <span class="o">=</span><span class="mi">0</span>
+            <span class="k">for</span> <span class="n">nz</span> <span class="ow">in</span> <span class="n">pts1d</span><span class="p">(</span><span class="n">n_bz_C</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">ny</span> <span class="ow">in</span> <span class="n">pts1d</span><span class="p">(</span><span class="n">n_bz_B</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">nx</span> <span class="ow">in</span> <span class="n">pts1d</span><span class="p">(</span><span class="n">n_bz_A</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">bz_points</span><span class="p">[</span><span class="n">k_index</span><span class="p">,:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">nx</span><span class="p">,</span><span class="n">ny</span><span class="p">,</span><span class="n">nz</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">]</span>
+                        <span class="n">k_index</span> <span class="o">+=</span><span class="mi">1</span>
+
+        <span class="k">elif</span> <span class="n">method</span><span class="o">==</span><span class="s2">&quot;Gauss&quot;</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Gauss: NR gauleg not checked&quot;</span>
+            <span class="n">k_index</span> <span class="o">=</span><span class="mi">0</span>
+            <span class="k">for</span> <span class="n">wa</span><span class="p">,</span><span class="n">ptsa</span> <span class="ow">in</span> <span class="n">NR</span><span class="o">.</span><span class="n">Gauleg</span><span class="p">(</span><span class="o">-</span><span class="n">pi</span><span class="p">,</span><span class="n">pi</span><span class="p">,</span><span class="n">n_bz_A</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">wb</span><span class="p">,</span><span class="n">ptsb</span> <span class="ow">in</span> <span class="n">NR</span><span class="o">.</span><span class="n">Gauleg</span><span class="p">(</span><span class="o">-</span><span class="n">pi</span><span class="p">,</span><span class="n">pi</span><span class="p">,</span><span class="n">n_bz_B</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">wc</span><span class="p">,</span><span class="n">ptsc</span> <span class="ow">in</span> <span class="n">NR</span><span class="o">.</span><span class="n">Gauleg</span><span class="p">(</span><span class="o">-</span><span class="n">pi</span><span class="p">,</span><span class="n">pi</span><span class="p">,</span><span class="n">n_bz_C</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">bz_points</span><span class="p">[</span><span class="n">k_index</span><span class="p">,:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">ptsa</span><span class="p">,</span><span class="n">ptsb</span><span class="p">,</span><span class="n">ptsc</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">]</span> <span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">bz_weights</span><span class="p">[</span><span class="n">k_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">wa</span> <span class="o">*</span> <span class="n">wb</span> <span class="o">*</span> <span class="n">wc</span>
+                        <span class="n">k_index</span> <span class="o">+=</span><span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;Summation method unknown&quot;</span><span class="p">)</span>
+
+        <span class="c1"># A shift</span>
+        <span class="k">if</span> <span class="n">Q</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">Q</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span>
+                <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span><span class="mi">1</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Q is not of correct type&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">k_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N_kpts</span><span class="p">()):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bz_points</span><span class="p">[</span><span class="n">k_index</span><span class="p">,:]</span> <span class="o">+=</span><span class="n">Q</span>
+
+        <span class="c1"># Compute the discretized hoppings from the Superlattice</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hopping</span><span class="p">[:,:,:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SL</span><span class="o">.</span><span class="n">hopping</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bz_points</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">orthogonal_basis</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mu_pattern</span><span class="p">[:,:]</span> <span class="o">=</span>  <span class="bp">self</span><span class="o">.</span><span class="n">SL</span><span class="o">.</span><span class="n">MuPattern</span><span class="p">[:,:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="mi">0</span> <span class="p">,</span> <span class="s2">&quot;not checked&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">overlap</span><span class="p">[:,:,:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SL</span><span class="o">.</span><span class="n">Overlap</span><span class="p">(</span><span class="n">bz_points</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span>
+            <span class="n">mupat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SL</span><span class="o">.</span><span class="n">MuPattern</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">k_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">N_kpts</span><span class="p">()):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">mu_pattern</span><span class="p">[:,:,</span><span class="n">k_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">Num</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span> <span class="n">mupat</span> <span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">Overlap</span><span class="p">[:,:,</span><span class="n">k_index</span><span class="p">])</span>
+
+    <span class="c1">#-------------------------------------------------------------</span>
+
+
+    <span class="k">def</span> <span class="nf">__Compute_Grid_One_patch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">patch</span><span class="p">,</span> <span class="n">n_bz</span><span class="p">,</span> <span class="n">method</span> <span class="o">=</span> <span class="s2">&quot;Riemann&quot;</span><span class="p">,</span> <span class="n">Q</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Internal</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">tritemp</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">patch</span><span class="o">.</span><span class="n">_triangles</span><span class="p">)</span>
+        <span class="n">ntri</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tritemp</span><span class="p">)</span><span class="o">/</span><span class="mi">3</span>
+        <span class="n">nk</span> <span class="o">=</span> <span class="n">n_bz</span><span class="o">*</span><span class="n">n_bz</span><span class="o">*</span><span class="n">ntri</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resize_arrays</span><span class="p">(</span><span class="n">nk</span><span class="p">)</span>
+
+        <span class="c1"># Reshape the list to group 3 points together</span>
+        <span class="n">triangles</span> <span class="o">=</span> <span class="n">tritemp</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">ntri</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">total_weight</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Loop over all k-points in the triangles</span>
+        <span class="n">k_index</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">),</span><span class="n">w</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">triangles</span><span class="p">,</span><span class="n">patch</span><span class="o">.</span><span class="n">_weights</span><span class="p">):</span>
+          <span class="n">g</span> <span class="o">=</span> <span class="p">((</span><span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="o">+</span><span class="n">c</span><span class="p">)</span><span class="o">/</span><span class="mf">3.0</span><span class="o">-</span><span class="n">a</span><span class="p">)</span><span class="o">/</span><span class="n">n_bz</span><span class="p">;</span>
+          <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_bz</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">i</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">n_bz</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_bz</span><span class="o">-</span><span class="n">i</span><span class="p">):</span>
+              <span class="n">t</span> <span class="o">=</span> <span class="n">j</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">n_bz</span><span class="p">)</span>
+              <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+                <span class="n">rv</span> <span class="o">=</span> <span class="n">a</span><span class="o">+</span><span class="n">s</span><span class="o">*</span><span class="p">(</span><span class="n">b</span><span class="o">-</span><span class="n">a</span><span class="p">)</span><span class="o">+</span><span class="n">t</span><span class="o">*</span><span class="p">(</span><span class="n">c</span><span class="o">-</span><span class="n">a</span><span class="p">)</span><span class="o">+</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">g</span>
+                <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">n_bz</span><span class="o">-</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">bz_points</span><span class="p">[</span><span class="n">k_index</span><span class="p">]</span>  <span class="o">=</span> <span class="n">rv</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">bz_weights</span><span class="p">[</span><span class="n">k_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">w</span><span class="o">/</span><span class="p">(</span><span class="n">n_bz</span><span class="o">*</span><span class="n">n_bz</span><span class="p">)</span>
+                  <span class="n">total_weight</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bz_weights</span><span class="p">[</span><span class="n">k_index</span><span class="p">]</span>
+                  <span class="n">k_index</span> <span class="o">=</span> <span class="n">k_index</span><span class="o">+</span><span class="mi">1</span>
+
+        <span class="c1"># Normalize weights so that they sum up to 1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bz_weights</span> <span class="o">/=</span> <span class="n">total_weight</span>
+
+        <span class="c1"># Compute the discretized hoppings from the Superlattice</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hopping</span><span class="p">[:,:,:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SL</span><span class="o">.</span><span class="n">hopping</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bz_points</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">orthogonal_basis</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mu_pattern</span><span class="p">[:,:]</span> <span class="o">=</span>  <span class="bp">self</span><span class="o">.</span><span class="n">SL</span><span class="o">.</span><span class="n">MuPattern</span><span class="p">[:,:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="mi">0</span> <span class="p">,</span> <span class="s2">&quot;not checked&quot;</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2011-2017, The TRIQS collaboration.
+    </div>
+  </body>
+</html>
