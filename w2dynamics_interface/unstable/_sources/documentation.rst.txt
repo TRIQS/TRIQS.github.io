@@ -18,6 +18,7 @@ User guide
    :maxdepth: 1
 
    guide/aim.rst
+   guide/aim_G4iw_ph.rst
    guide/settingparameters
    guide/additional_remarks
 
