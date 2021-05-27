@@ -130,13 +130,13 @@
   <div class="section" id="triqs-gfs-gf-view">
 <span id="id1"></span><h1>triqs::gfs::gf_view<a class="headerlink" href="#triqs-gfs-gf-view" title="Permalink to this headline">¶</a></h1>
 <p><em>#include &lt;triqs/gfs.hpp&gt;</em></p>
-<p class="cppsynopsis">template&lt;typename Var, typename Target&gt; class  <span class="red">gf_view</span></p>
+<p class="cppsynopsis">template&lt;typename Mesh, typename Target, typename Layout, typename EvalPolicy&gt; class  <span class="red">gf_view</span></p>
 <p>The Green function container.</p>
 <div class="section" id="template-parameters">
 <h2>Template parameters<a class="headerlink" href="#template-parameters" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
-<li><strong>Var</strong>:      The domain of definition</li>
+<li><strong>Mesh</strong>:      The domain of definition</li>
 <li><strong>Target</strong>:   The target domain</li>
 </ul>
 </div></blockquote>
@@ -145,93 +145,73 @@
 <h2>Member types<a class="headerlink" href="#member-types" title="Permalink to this headline">¶</a></h2>
 <table border="1" class="docutils">
 <colgroup>
-<col width="22%" />
-<col width="42%" />
-<col width="37%" />
+<col width="18%" />
+<col width="51%" />
+<col width="31%" />
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td>mutable_view_type</td>
-<td>gf_view&lt;Var, Target&gt;</td>
+<td>gf_view&lt;Mesh, Target, Layout, EvalPolicy&gt;</td>
 <td>&#160;</td>
 </tr>
 <tr class="row-even"><td>const_view_type</td>
-<td>gf_const_view&lt;Var, Target&gt;</td>
+<td>gf_const_view&lt;Mesh, Target, Layout, EvalPolicy&gt;</td>
 <td>Associated const view type</td>
 </tr>
 <tr class="row-odd"><td>view_type</td>
-<td>gf_view&lt;Var, Target&gt;</td>
+<td>gf_view&lt;Mesh, Target, Layout, EvalPolicy&gt;</td>
 <td>Associated (non const) view type</td>
 </tr>
 <tr class="row-even"><td>regular_type</td>
-<td>gf&lt;Var, Target&gt;</td>
+<td>gf&lt;Mesh, Target, typename Layout::contiguous_t, EvalPolicy&gt;</td>
 <td>Associated regular type (gf&lt;….&gt;)</td>
 </tr>
 <tr class="row-odd"><td>real_t</td>
-<td>gf_view&lt;Var, typename Target::real_t&gt;</td>
+<td>gf_view&lt;Mesh, typename Target::real_t, Layout, EvalPolicy&gt;</td>
 <td>The associated real type</td>
 </tr>
-<tr class="row-even"><td>variable_t</td>
-<td>Var</td>
-<td>Template type</td>
-</tr>
-<tr class="row-odd"><td>target_t</td>
+<tr class="row-even"><td>target_t</td>
 <td>Target</td>
 <td>Template type</td>
 </tr>
-<tr class="row-even"><td>mesh_t</td>
-<td>gf_mesh&lt;Var&gt;</td>
+<tr class="row-odd"><td>mesh_t</td>
+<td>Mesh</td>
 <td>Mesh type</td>
 </tr>
-<tr class="row-odd"><td>domain_t</td>
+<tr class="row-even"><td>domain_t</td>
 <td>typename mesh_t::domain_t</td>
 <td>Domain type</td>
 </tr>
-<tr class="row-even"><td>mesh_point_t</td>
+<tr class="row-odd"><td>mesh_point_t</td>
 <td>typename mesh_t::mesh_point_t</td>
 <td>Type of the mesh point</td>
 </tr>
-<tr class="row-odd"><td>mesh_index_t</td>
+<tr class="row-even"><td>mesh_index_t</td>
 <td>typename mesh_t::index_t</td>
 <td>&#160;</td>
 </tr>
-<tr class="row-even"><td>linear_mesh_index_t</td>
+<tr class="row-odd"><td>linear_mesh_index_t</td>
 <td>typename mesh_t::linear_index_t</td>
 <td>&#160;</td>
 </tr>
-<tr class="row-odd"><td>indices_t</td>
+<tr class="row-even"><td>indices_t</td>
 <td>gf_indices</td>
 <td>&#160;</td>
 </tr>
-<tr class="row-even"><td>evaluator_t</td>
-<td>gf_evaluator&lt;Var, Target&gt;</td>
+<tr class="row-odd"><td>evaluator_t</td>
+<td>typename EvalPolicy::template evaluator_t&lt;Mesh, Target&gt;</td>
 <td>&#160;</td>
 </tr>
-<tr class="row-odd"><td>scalar_t</td>
+<tr class="row-even"><td>scalar_t</td>
 <td>typename Target::scalar_t</td>
 <td>Real or Complex</td>
 </tr>
-<tr class="row-even"><td>data_regular_t</td>
-<td>arrays::array&lt;scalar_t, data_rank&gt;</td>
-<td>&#160;</td>
-</tr>
-<tr class="row-odd"><td>data_view_t</td>
-<td>typename data_regular_t::view_type</td>
-<td>&#160;</td>
-</tr>
-<tr class="row-even"><td>data_const_view_t</td>
-<td>typename data_regular_t::const_view_type</td>
-<td>&#160;</td>
-</tr>
 <tr class="row-odd"><td>data_t</td>
-<td>gf_view::data_view_t</td>
+<td>nda::basic_array_view&lt;scalar_t, data_rank, Layout&gt;</td>
 <td>Type of the data array</td>
 </tr>
-<tr class="row-even"><td>data_memory_layout_t</td>
-<td>memory_layout_t&lt;data_rank&gt;</td>
-<td>Type of the memory layout</td>
-</tr>
-<tr class="row-odd"><td>target_shape_t</td>
-<td>arrays::mini_vector&lt;int, Target::rank&gt;</td>
+<tr class="row-even"><td>target_shape_t</td>
+<td>std::array&lt;long, Target::rank&gt;</td>
 <td>&#160;</td>
 </tr>
 </tbody>
@@ -289,9 +269,6 @@
 <td>&#160;</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="gf_view/target_indices.html#triqs-gfs-gf-view-target-indices"><span class="std std-ref">target_indices</span></a></td>
-<td>&#160;</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="gf_view/memory_layout.html#triqs-gfs-gf-view-memory-layout"><span class="std std-ref">memory_layout</span></a></td>
 <td>&#160;</td>
 </tr>
 </tbody>

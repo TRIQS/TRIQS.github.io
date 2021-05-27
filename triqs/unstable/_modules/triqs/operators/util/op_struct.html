@@ -149,7 +149,7 @@
     <span class="k">return</span> <span class="n">mkind</span></div>
 
 <span class="c1"># Set block structure of GF</span>
-<div class="viewcode-block" id="set_operator_structure"><a class="viewcode-back" href="../../../../documentation/manual/triqs/operators/util/op_struct.html#triqs.operators.util.op_struct.set_operator_structure">[docs]</a><span class="k">def</span> <span class="nf">set_operator_structure</span><span class="p">(</span><span class="n">spin_names</span><span class="p">,</span><span class="n">orb_names</span><span class="p">,</span><span class="n">off_diag</span><span class="p">):</span>
+<div class="viewcode-block" id="set_operator_structure"><a class="viewcode-back" href="../../../../documentation/manual/triqs/operators/util/op_struct.html#triqs.operators.util.op_struct.set_operator_structure">[docs]</a><span class="k">def</span> <span class="nf">set_operator_structure</span><span class="p">(</span><span class="n">spin_names</span><span class="p">,</span><span class="n">n_orb</span><span class="p">,</span><span class="n">off_diag</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Set the operator_structure for given spin and orbital names, according to</span>
 <span class="sd">    whether or not the Green&#39;s functions contain off-diagonal blocks.</span>
@@ -158,8 +158,8 @@
 <span class="sd">    ----------</span>
 <span class="sd">    spin_names : list of strings</span>
 <span class="sd">                 Names of the spins, e.g. [&#39;up&#39;,&#39;down&#39;].</span>
-<span class="sd">    orb_names : list of strings or int       </span>
-<span class="sd">                Names of the orbitals, e.g. [0,1,2] or [&#39;t2g&#39;,&#39;eg&#39;].</span>
+<span class="sd">    n_orb : int</span>
+<span class="sd">            Number of orbitals.</span>
 <span class="sd">    off_diag : boolean</span>
 <span class="sd">               Do we have (orbital) off-diagonal elements?</span>
 <span class="sd">               If yes, the operators and blocks are denoted by (&#39;spin&#39;, &#39;orbital&#39;),</span>
@@ -172,13 +172,18 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n_orb</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">warnings</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;set_operator_structure takes as a second argument the number of orbitals, not a list of orbital names&quot;</span><span class="p">)</span>
+        <span class="n">n_orb</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">n_orb</span><span class="p">)</span>
+
     <span class="n">op_struct</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">if</span> <span class="n">off_diag</span><span class="p">:</span> <span class="c1"># outer blocks are spin blocks</span>
         <span class="k">for</span> <span class="n">sn</span> <span class="ow">in</span> <span class="n">spin_names</span><span class="p">:</span>
-            <span class="n">op_struct</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">sn</span><span class="p">,</span> <span class="p">[</span><span class="n">on</span> <span class="k">for</span> <span class="n">on</span> <span class="ow">in</span> <span class="n">orb_names</span><span class="p">]])</span>
+            <span class="n">op_struct</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">sn</span><span class="p">,</span> <span class="n">n_orb</span><span class="p">])</span>
     <span class="k">else</span><span class="p">:</span> <span class="c1"># outer blocks are spin-orbital blocks</span>
-        <span class="k">for</span> <span class="n">sn</span><span class="p">,</span> <span class="n">on</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="n">spin_names</span><span class="p">,</span><span class="n">orb_names</span><span class="p">):</span>
-            <span class="n">op_struct</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">sn</span><span class="o">+</span><span class="s1">&#39;_</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">on</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+        <span class="k">for</span> <span class="n">sn</span><span class="p">,</span> <span class="n">on</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="n">spin_names</span><span class="p">,</span><span class="nb">range</span><span class="p">(</span><span class="n">n_orb</span><span class="p">)):</span>
+            <span class="n">op_struct</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">sn</span><span class="o">+</span><span class="s1">&#39;_</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">on</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
 
     <span class="k">return</span> <span class="n">op_struct</span></div>
 </pre></div>

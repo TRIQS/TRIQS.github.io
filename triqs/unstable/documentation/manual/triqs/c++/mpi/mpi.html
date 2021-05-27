@@ -147,7 +147,7 @@ In most cases, we use <code class="docutils literal notranslate"><span class="pr
 The leading dimension of the array needs to be sliced, slice length and adress of the first element of each slice have to be computed and finally the MPI C API function has to be called.
 This can be packaged in the library once and for all.</p>
 <p>Using the library these operations look as follows:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">triqs</span><span class="o">::</span><span class="n">arrays</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="mi">3</span><span class="o">&gt;</span> <span class="n">A</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">);</span> <span class="c1">// a three-dimensional array</span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">nda</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="mi">3</span><span class="o">&gt;</span> <span class="n">A</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">);</span> <span class="c1">// a three-dimensional array</span>
 <span class="n">triqs</span><span class="o">::</span><span class="n">mpi</span><span class="o">::</span><span class="n">scatter</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
 <span class="c1">//do something with the corresponding part of A on each node</span>
 <span class="n">triqs</span><span class="o">::</span><span class="n">mpi</span><span class="o">::</span><span class="n">gather</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
@@ -217,12 +217,11 @@ In addition, the library provides a mechanism to enable MPI support for custom c
 </div>
 <div class="section" id="mpi-example">
 <h2>MPI example<a class="headerlink" href="#mpi-example" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#include &lt;triqs/arrays.hpp&gt;</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#include &lt;nda/nda.hpp&gt;</span>
+<span class="c1">#include &lt;nda/mpi.hpp&gt;</span>
 <span class="c1">#include &lt;iostream&gt;</span>
 
-<span class="n">using</span> <span class="n">namespace</span> <span class="n">triqs</span><span class="p">;</span>
-<span class="n">using</span> <span class="n">namespace</span> <span class="n">triqs</span><span class="p">::</span><span class="n">arrays</span><span class="p">;</span>
-<span class="n">using</span> <span class="n">namespace</span> <span class="n">mpi</span><span class="p">;</span>
+<span class="n">using</span> <span class="n">namespace</span> <span class="n">nda</span><span class="p">;</span>
 
 <span class="nb">int</span> <span class="n">main</span><span class="p">(</span><span class="nb">int</span> <span class="n">argc</span><span class="p">,</span> <span class="n">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
 
@@ -230,17 +229,17 @@ In addition, the library provides a mechanism to enable MPI support for custom c
   <span class="n">mpi</span><span class="p">::</span><span class="n">communicator</span> <span class="n">world</span><span class="p">;</span>
 
   <span class="nb">int</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
-  <span class="n">mpi_broadcast</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
-  <span class="n">a</span> <span class="o">=</span> <span class="n">mpi_reduce</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+  <span class="n">mpi</span><span class="p">::</span><span class="n">broadcast</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+  <span class="n">a</span> <span class="o">=</span> <span class="n">mpi</span><span class="p">::</span><span class="n">reduce</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
 
   <span class="n">array</span><span class="o">&lt;</span><span class="nb">int</span><span class="p">,</span> <span class="mi">2</span><span class="o">&gt;</span> <span class="n">A</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
   <span class="n">A</span><span class="p">()</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 
   <span class="n">std</span><span class="p">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">A</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="p">::</span><span class="n">endl</span><span class="p">;</span>
 
-  <span class="n">mpi_scatter</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
+  <span class="n">mpi</span><span class="p">::</span><span class="n">scatter</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
   <span class="n">A</span> <span class="o">+=</span> <span class="n">world</span><span class="o">.</span><span class="n">rank</span><span class="p">();</span>
-  <span class="n">mpi_gather</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
+  <span class="n">mpi</span><span class="p">::</span><span class="n">gather</span><span class="p">(</span><span class="n">A</span><span class="p">);</span>
 
   <span class="n">std</span><span class="p">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">A</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="p">::</span><span class="n">endl</span><span class="p">;</span>
 <span class="p">}</span>

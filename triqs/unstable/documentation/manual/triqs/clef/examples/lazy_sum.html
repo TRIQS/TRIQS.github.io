@@ -118,49 +118,6 @@
 <h1>A lazy sum<a class="headerlink" href="#a-lazy-sum" title="Permalink to this headline">¶</a></h1>
 <p>Here is a little functional <cite>sum</cite> that sums a function f over various domains
 and accepts lazy expressions as arguments.</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;triqs/clef.hpp&gt;</span><span class="cp"></span>
-
-<span class="n">template</span> <span class="o">&lt;</span><span class="kr">typename</span> <span class="n">Domain</span><span class="o">&gt;</span> <span class="k">struct</span> <span class="n">sum_impl</span> <span class="p">{</span>
-  <span class="n">Domain</span> <span class="n">d</span><span class="p">;</span>
-
-  <span class="c1">// C++14</span>
-  <span class="c1">// double operator() (NotClefExpression const &amp; f) const { double s=0; for (int u=0; u&lt;10; ++u) s += f(u/10.0); return s;}</span>
-
-  <span class="c1">// C++11 form</span>
-  <span class="n">template</span> <span class="o">&lt;</span><span class="kr">typename</span> <span class="n">F</span><span class="o">&gt;</span> <span class="kr">typename</span> <span class="n">std</span><span class="o">::</span><span class="n">enable_if</span><span class="o">&lt;!</span><span class="n">triqs</span><span class="o">::</span><span class="n">clef</span><span class="o">::</span><span class="n">is_clef_expression</span><span class="o">&lt;</span><span class="n">F</span><span class="o">&gt;::</span><span class="n">value</span><span class="p">,</span> <span class="kt">double</span><span class="o">&gt;::</span><span class="n">type</span> <span class="n">operator</span><span class="p">()(</span><span class="n">F</span> <span class="k">const</span> <span class="o">&amp;</span><span class="n">f</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
-    <span class="kt">double</span> <span class="n">s</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">u</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">u</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="o">++</span><span class="n">u</span><span class="p">)</span> <span class="n">s</span> <span class="o">+=</span> <span class="n">f</span><span class="p">(</span><span class="n">u</span> <span class="o">/</span> <span class="mf">10.0</span><span class="p">);</span>
-    <span class="k">return</span> <span class="n">s</span><span class="p">;</span>
-  <span class="p">}</span>
-
-  <span class="n">TRIQS_CLEF_IMPLEMENT_LAZY_CALL</span><span class="p">(</span><span class="n">sum_impl</span><span class="p">);</span>
-
-  <span class="n">friend</span> <span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span><span class="n">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span> <span class="o">&amp;</span><span class="n">out</span><span class="p">,</span> <span class="n">sum_impl</span> <span class="k">const</span> <span class="o">&amp;</span><span class="n">x</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="n">out</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;sum&quot;</span><span class="p">;</span> <span class="p">}</span>
-<span class="p">};</span>
-
-<span class="c1">// a little factory ...</span>
-<span class="n">template</span> <span class="o">&lt;</span><span class="kr">typename</span> <span class="n">Domain</span><span class="o">&gt;</span> <span class="n">sum_impl</span><span class="o">&lt;</span><span class="n">Domain</span><span class="o">&gt;</span> <span class="n">sum_functional</span><span class="p">(</span><span class="n">Domain</span> <span class="n">d</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="p">{</span><span class="n">d</span><span class="p">};</span> <span class="p">}</span>
-
-<span class="k">struct</span> <span class="n">DOM</span> <span class="p">{};</span>
-
-<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
-  <span class="n">triqs</span><span class="o">::</span><span class="n">clef</span><span class="o">::</span><span class="n">placeholder</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span> <span class="n">x_</span><span class="p">;</span>
-  <span class="n">triqs</span><span class="o">::</span><span class="n">clef</span><span class="o">::</span><span class="n">placeholder</span><span class="o">&lt;</span><span class="mi">2</span><span class="o">&gt;</span> <span class="n">y_</span><span class="p">;</span>
-  <span class="n">DOM</span> <span class="n">d</span><span class="p">;</span>
-
-  <span class="c1">// integrate_on_d is the integration functional</span>
-  <span class="k">auto</span> <span class="n">integrate_on_d</span> <span class="o">=</span> <span class="n">sum_functional</span><span class="p">(</span><span class="n">d</span><span class="p">);</span>
-
-  <span class="c1">// This is a simple application of the sum to a function</span>
-  <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">integrate_on_d</span><span class="p">(</span><span class="n">x_</span> <span class="o">&gt;&gt;</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x_</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-
-  <span class="c1">// A function y -&gt; y_ + integrate (x -&gt; 2*x + y)</span>
-  <span class="k">auto</span> <span class="n">e1</span> <span class="o">=</span> <span class="n">y_</span> <span class="o">+</span> <span class="n">integrate_on_d</span><span class="p">(</span><span class="n">x_</span> <span class="o">&gt;&gt;</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x_</span> <span class="o">+</span> <span class="n">y_</span><span class="p">);</span>
-  <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">e1</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-  <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">eval</span><span class="p">(</span><span class="n">e1</span><span class="p">,</span> <span class="n">y_</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
 </div>
 
 
