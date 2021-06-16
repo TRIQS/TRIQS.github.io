@@ -394,20 +394,24 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_class_version</span> <span class="o">=</span> <span class="mi">1</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url_name</span><span class="p">,</span> <span class="n">open_flag</span> <span class="o">=</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">key_as_string_only</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">descriptor</span><span class="p">,</span> <span class="n">open_flag</span> <span class="o">=</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">key_as_string_only</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
             <span class="n">reconstruct_python_object</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">init</span> <span class="o">=</span> <span class="p">{}):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">           Parameters</span>
 <span class="sd">           -----------</span>
-<span class="sd">           url_name : string</span>
-<span class="sd">             The url of the hdf5 file.</span>
+<span class="sd">           descriptor : string or bytes</span>
 
-<span class="sd">                  * If url is a simple string, it is interpreted as a local file name</span>
+<span class="sd">                  * If descriptor is a simple string, it is interpreted as a local file name</span>
 
-<span class="sd">                  * If url is a remote url (e.g. `http://ipht.cea.fr/triqs/data/single_site_bethe.output.h5` )</span>
-<span class="sd">                    then the h5 file is downloaded in temporary file and opened.</span>
+<span class="sd">                  * If descriptor is a remote url (e.g. `http://ipht.cea.fr/triqs/data/single_site_bethe.output.h5` )</span>
+<span class="sd">                    then the h5 file is downloaded as a temporary file and opened.</span>
 <span class="sd">                    In that case, ``open_flag`` must be &#39;r&#39;, read-only mode.</span>
 <span class="sd">                    The temporary file is deleted at exit.</span>
+
+<span class="sd">                  * If descriptor is a bytes object, we interpret the bytes as an hdf5 file</span>
+<span class="sd">                    and open it in memory only.</span>
+<span class="sd">                    In this case, ``open_flag`` must hold its default value &#39;a&#39;, read-write mode.</span>
+<span class="sd">                    </span>
 <span class="sd">           open_flag : Legal modes: r, w, a (default)</span>
 <span class="sd">           key_as_string_only : True (default)</span>
 <span class="sd">           init : any generator of tuple (key,val), e.g. a dict.items().</span>
@@ -417,7 +421,7 @@
 <span class="sd">           ----------</span>
 <span class="sd">           LocalFileName : string</span>
 <span class="sd">             the name of the file or of the local downloaded copy</span>
-<span class="sd">           url_name : string</span>
+<span class="sd">           descriptor : string</span>
 <span class="sd">             the name of the Url</span>
 
 <span class="sd">           Examples</span>
@@ -441,25 +445,33 @@
 <span class="sd">           &gt;&gt;&gt; HDFArchive( f, &#39;w&#39;, init = HDFArchive(fmp,&#39;r&#39;).items(lambda k :  k in [&#39;G&#39;] ))</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">import</span> <span class="nn">os</span><span class="o">,</span><span class="nn">os.path</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">descriptor</span><span class="p">,(</span><span class="nb">str</span><span class="p">,</span><span class="nb">bytes</span><span class="p">)),</span> <span class="s2">&quot;descriptor must be a string or bytes&quot;</span>
         <span class="k">assert</span> <span class="n">open_flag</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">],</span> <span class="s2">&quot;Invalid mode&quot;</span>
-        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">url_name</span><span class="p">,</span><span class="nb">str</span><span class="p">),</span> <span class="s2">&quot;url_name must be a string&quot;</span>
 
-        <span class="c1"># If it is a url, retrieve it and check mode is read only</span>
-        <span class="kn">import</span> <span class="nn">urllib.request</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">LocalFileName</span><span class="p">,</span> <span class="n">http_message</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlretrieve</span><span class="p">(</span><span class="n">url_name</span><span class="p">)</span>
-            <span class="c1"># a url must be read only</span>
-            <span class="k">assert</span> <span class="n">open_flag</span> <span class="o">==</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s2">&quot;You retrieve a distant Url </span><span class="si">%s</span><span class="s2"> which is not local, so it must be read-only. Use &#39;r&#39; option&quot;</span><span class="o">%</span><span class="n">url_name</span>
-        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span> <span class="c1"># Not a valid URL -&gt; Local File</span>
-            <span class="n">LocalFileName</span><span class="p">,</span> <span class="n">http_message</span> <span class="o">=</span> <span class="n">url_name</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">descriptor</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="n">open_flag</span> <span class="o">==</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s2">&quot;Memory files require read-write mode &#39;a&#39;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_init_root</span><span class="p">(</span><span class="n">descriptor</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">LocalFileName</span> <span class="o">=</span> <span class="s2">&quot;MemoryBuffer&quot;</span>
 
-        <span class="k">if</span> <span class="n">open_flag</span> <span class="o">==</span> <span class="s1">&#39;w&#39;</span><span class="p">:</span>
-            <span class="c1"># destroys the file, ignoring errors</span>
-            <span class="k">try</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">LocalFileName</span><span class="p">))</span>
-            <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span> <span class="k">pass</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">descriptor</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="kn">import</span> <span class="nn">os</span><span class="o">,</span><span class="nn">os.path</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_init_root</span><span class="p">(</span><span class="n">LocalFileName</span><span class="p">,</span> <span class="n">open_flag</span><span class="p">)</span>
+            <span class="c1"># If it is a url, retrieve it and check mode is read only</span>
+            <span class="kn">import</span> <span class="nn">urllib.request</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">LocalFileName</span><span class="p">,</span> <span class="n">http_message</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlretrieve</span><span class="p">(</span><span class="n">descriptor</span><span class="p">)</span>
+                <span class="c1"># a url must be read only</span>
+                <span class="k">assert</span> <span class="n">open_flag</span> <span class="o">==</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s2">&quot;You retrieve a distant Url </span><span class="si">%s</span><span class="s2"> which is not local, so it must be read-only. Use &#39;r&#39; option&quot;</span><span class="o">%</span><span class="n">descriptor</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span> <span class="c1"># Not a valid URL -&gt; Local File</span>
+                <span class="n">LocalFileName</span><span class="p">,</span> <span class="n">http_message</span> <span class="o">=</span> <span class="n">descriptor</span><span class="p">,</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="n">open_flag</span> <span class="o">==</span> <span class="s1">&#39;w&#39;</span><span class="p">:</span>
+                <span class="c1"># destroys the file, ignoring errors</span>
+                <span class="k">try</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">LocalFileName</span><span class="p">))</span>
+                <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span> <span class="k">pass</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_init_root</span><span class="p">(</span><span class="n">LocalFileName</span><span class="p">,</span> <span class="n">open_flag</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;key_as_string_only&#39;</span> <span class="p">:</span> <span class="n">key_as_string_only</span><span class="p">,</span>
                         <span class="s1">&#39;do_not_overwrite_entries&#39;</span> <span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
                         <span class="s1">&#39;reconstruct_python_object&#39;</span><span class="p">:</span> <span class="n">reconstruct_python_object</span><span class="p">,</span>
