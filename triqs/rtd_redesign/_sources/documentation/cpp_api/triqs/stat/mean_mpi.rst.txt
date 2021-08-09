@@ -1,0 +1,84 @@
+..
+   Generated automatically by cpp2rst
+
+.. highlight:: c
+.. role:: red
+.. role:: green
+.. role:: param
+
+
+.. _triqs__stat__mean_mpi:
+
+triqs::stat::mean_mpi
+=====================
+
+*#include <triqs/stat.hpp>*
+
+
+
+**Synopsis**
+
+ .. rst-class:: cppsynopsis
+
+       | :green:`template<typename V>`
+       | auto :red:`mean_mpi` (:ref:`communicator <mpi__communicator>` :param:`c`, V const & :param:`data`)
+
+
+
+
+
+Calculate the arithmetic mean [REF] of data spread over multiple MPI threads. Reduces the answer to all threads.
+
+
+
+
+
+Template parameters
+^^^^^^^^^^^^^^^^^^^
+
+ * :param:`V` Iterable type. Pre-conditions: elements must be addable to each other and must be MPI reducible
+
+
+Parameters
+^^^^^^^^^^
+
+ * :param:`data` Container with data
+
+
+Returns
+^^^^^^^
+
+Mean of data on all threads reduced to all threads; type is deduced from first element of :param:`data`
+
+Example
+^^^^^^^
+
+..
+   Included automatically from /home/ahampel/Downloads/triqs.src/doc/documentation/examples/triqs/stat/mean_2.cpp
+
+.. code-block:: cpp
+
+    #include <triqs/stat/mean_error.hpp>
+    #include <mpi/mpi.hpp>
+
+    using namespace triqs::stat;
+
+    int main() {
+      mpi::communicator world;
+      int rank = world.rank();
+      // Define linear data spread over the different mpi threads:
+      // thread 0: {1,2,3,4}; thread 1 {5,6,7,8}, etc.
+      std::vector<double> data{4. * rank + 1, 4. * rank + 2, 4. * rank + 3, 4. * rank + 4};
+
+      auto ave = mean_mpi(world, data);
+
+      std::cout << "Average: " << ave << std::endl;
+      // =  (1.0 + 4.0 * world.size()) / 2.0
+    }
+
+
+*Output*
+
+.. code-block:: text
+
+    Average: 2.5
