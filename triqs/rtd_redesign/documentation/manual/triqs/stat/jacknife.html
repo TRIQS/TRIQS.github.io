@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Introduction &mdash; TRIQS 3.0.0 documentation</title>
+  <title>Statistical Analysis: Jackknife &mdash; TRIQS 3.0.0 documentation</title>
   
 
   
@@ -633,7 +633,7 @@
     
       <li><a href="../../../../contents.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>Introduction</li>
+      <li>Statistical Analysis: Jackknife</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -652,18 +652,18 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <p>Statistical Analysis: Jackknife
-==============================+</p>
+  <div class="section" id="statistical-analysis-jackknife">
+<h1>Statistical Analysis: Jackknife<a class="headerlink" href="#statistical-analysis-jackknife" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="introduction">
-<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
 <p>This library provides statistical tools to analyze samples that are generated during a simulation. In particular, it provides routines for (a) accumulating and binning observables which are directly sampled a Monte Carlo simulation (b) caclualte average and errors for data and functions of data using jackknife resampling, (c) constructs histograms.</p>
 </div>
 <div class="section" id="processing-correlated-data">
-<h1>Processing Correlated Data<a class="headerlink" href="#processing-correlated-data" title="Permalink to this headline">¶</a></h1>
+<h2>Processing Correlated Data<a class="headerlink" href="#processing-correlated-data" title="Permalink to this headline">¶</a></h2>
 <p>In general, the output samples produced in Monte Carlo type simulations are <em>not</em> independent of one another, but correlated over a characteristic number of steps – the correlation time <span class="math notranslate nohighlight">\(\tau\)</span>. This depends on the simulation and observable.  In order to proceed with conventional statistical analysis, we have to obtain independent samples from the correlated data by binning [LINK]. The central object in the code for this is the <a class="reference internal" href="../../../cpp_api/triqs/stat/accumulator.html#triqs-stat-accumulator"><span class="std std-ref">accumulator class</span></a>. This provides functions to both to estimate <span class="math notranslate nohighlight">\(\tau\)</span> and to actually bin and store data.</p>
 </div>
 <div class="section" id="averages-and-standard-errors">
-<h1>Averages and Standard Errors<a class="headerlink" href="#averages-and-standard-errors" title="Permalink to this headline">¶</a></h1>
+<h2>Averages and Standard Errors<a class="headerlink" href="#averages-and-standard-errors" title="Permalink to this headline">¶</a></h2>
 <p>For independent samples <span class="math notranslate nohighlight">\(\lbrace x_i\rbrace _{i=0\dots N-1}\)</span> of the elementary observable <span class="math notranslate nohighlight">\(X\)</span>, estimates of the mean and standard error are:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\bar{X} \approx \frac{1}{N} \sum_{i=0}^{N-1} x_{i} \\  (\Delta \bar{X})^2 \approx \frac{N-1}{N} \frac{ \sigma^2(x)}{N}\end{split}\]</div>
@@ -676,10 +676,10 @@
 <p>TODO: Note that X, Y are generally cross correlated since they come from the same Markov chain</p>
 </div>
 <div class="section" id="note-numerical-stability">
-<h1>Note: Numerical Stability<a class="headerlink" href="#note-numerical-stability" title="Permalink to this headline">¶</a></h1>
+<h2>Note: Numerical Stability<a class="headerlink" href="#note-numerical-stability" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="accumulator">
-<h1>Accumulator<a class="headerlink" href="#accumulator" title="Permalink to this headline">¶</a></h1>
+<h2>Accumulator<a class="headerlink" href="#accumulator" title="Permalink to this headline">¶</a></h2>
 <p>The accumulator class takes in data obtain during the simulation run has a dual purpose:</p>
 <ol class="arabic simple">
 <li>to bin this data and store the result according to some preset parameters (so-called “linear binning”)</li>
@@ -691,7 +691,7 @@
 <p class="last">If feasible from a computational perspective, it is advisable to always run the logarithmic binning, in order to check consistency and diagnose if the autocorrelation time was underestimated.</p>
 </div>
 <div class="section" id="linear-lin-binning">
-<h2>Linear (Lin) Binning<a class="headerlink" href="#linear-lin-binning" title="Permalink to this headline">¶</a></h2>
+<h3>Linear (Lin) Binning<a class="headerlink" href="#linear-lin-binning" title="Permalink to this headline">¶</a></h3>
 <p>The linear binning is responsible for bining and storing the data. It takes in data and accumulates them in a temporary object up to a user-specified size. The data in full full accumulator are averaged and stored in a list of completed bins – these should give the independent statistical samples, which can be used for further analysis.</p>
 <p>[PICTURE]</p>
 <p>The binning is controlled by two parameters:</p>
@@ -718,7 +718,7 @@
 </table>
 </div>
 <div class="section" id="logarithmic-log-binning">
-<h2>Logarithmic (Log) Binning<a class="headerlink" href="#logarithmic-log-binning" title="Permalink to this headline">¶</a></h2>
+<h3>Logarithmic (Log) Binning<a class="headerlink" href="#logarithmic-log-binning" title="Permalink to this headline">¶</a></h3>
 <p>The logarithmic binning estimates autocorrelation times of the data, by calculating the standard error of the binned data with different bin sizes. For correlated data, the variance should grow as the bin size increases up to the the autocorrelation time, where the variance saturates [REFERENCES].</p>
 <p>The log binning uses bin sizes that are powers of two <span class="math notranslate nohighlight">\({2, 4, 8, 16, \ldots}\)</span> up to a maximum <span class="math notranslate nohighlight">\(2^{\texttt{n_log_bins}}\)</span> set by the user. Binning is performed only if there is more than one full bin of data - any partial accumulation at the end is not considered in the calculation. As more data is added, higher levels of binning automatically start being calculated.</p>
 <p>At the end, the log binning returns the list of variances which should be analyzed to see if saturation with bin size has occurred. An estimate of the autocorrelation time is given by [REF]:</p>
@@ -736,7 +736,7 @@
 </div></blockquote>
 </div>
 <div class="section" id="entering-data">
-<h2>Entering Data<a class="headerlink" href="#entering-data" title="Permalink to this headline">¶</a></h2>
+<h3>Entering Data<a class="headerlink" href="#entering-data" title="Permalink to this headline">¶</a></h3>
 <p>The accumulator is templated to take general types T. (where the basic elements are floating points). The input type must have the concept [?] of element wise multiplication [LINK BELOW]. (and addition).</p>
 <p>When constructing the accumulator, an object of type T – so-called “object_instance” – must be specified. This is needed</p>
 <p>This object is moved to the accumulator and sets the initial values on which the subsequence. In general, the object of type T with zero value(s) should passed as we start with no initial data (however, see REF[Entering Big Data]).</p>
@@ -744,7 +744,7 @@
 <p>// Simple Example</p>
 </div>
 <div class="section" id="entering-big-data-advanced">
-<h2>Entering Big Data [advanced]<a class="headerlink" href="#entering-big-data-advanced" title="Permalink to this headline">¶</a></h2>
+<h3>Entering Big Data [advanced]<a class="headerlink" href="#entering-big-data-advanced" title="Permalink to this headline">¶</a></h3>
 <p>Consider the case, where the construction of an object that we wish to accumulate is particularly intensive. We wish to make a new measurement by directly adding to the accumulator, rather than first creating a new object to be added. A simple example of this is a large matrix where we modify a few elements during each measurement.</p>
 <p>For this, the accumulator class has an interface (evaluated lazily), that gives bracket or parentheses access directly to elements of accumulators (lin and log at the same time). Since a measurement can consist of many direct access operations, once these operations are complete we need to manually advance the accumulator to specify that a measurement should be counted.</p>
 <p>In such cases, we will also generally specify a non-zero object in the constructor of the accumulator on which further manipulation occurs. [see model]</p>
@@ -752,32 +752,33 @@
 <p>TODO: Only try and add things, no other operation ???</p>
 </div>
 <div class="section" id="calculating-averages-and-variances">
-<h2>Calculating Averages and Variances<a class="headerlink" href="#calculating-averages-and-variances" title="Permalink to this headline">¶</a></h2>
+<h3>Calculating Averages and Variances<a class="headerlink" href="#calculating-averages-and-variances" title="Permalink to this headline">¶</a></h3>
 <p>Floating tail.</p>
 <p>Raw Averages / Variances</p>
 </div>
 <div class="section" id="error-and-accuracy-during-accumulation">
-<h2>Error and Accuracy during accumulation<a class="headerlink" href="#error-and-accuracy-during-accumulation" title="Permalink to this headline">¶</a></h2>
+<h3>Error and Accuracy during accumulation<a class="headerlink" href="#error-and-accuracy-during-accumulation" title="Permalink to this headline">¶</a></h3>
 <p>Formulae used for avareaging in log binning (for stability):</p>
 <p>For stability</p>
 <p>Give refereces</p>
 </div>
 </div>
 <div class="section" id="compression">
-<h1>Compression<a class="headerlink" href="#compression" title="Permalink to this headline">¶</a></h1>
+<h2>Compression<a class="headerlink" href="#compression" title="Permalink to this headline">¶</a></h2>
 <p>TODO</p>
 <p>Note that summation is simple (not compensated). Suggested using higher things if needed (double-double etc.).</p>
 <div class="section" id="paralleization-mpi-reduction">
-<h2>Paralleization / MPI Reduction<a class="headerlink" href="#paralleization-mpi-reduction" title="Permalink to this headline">¶</a></h2>
+<h3>Paralleization / MPI Reduction<a class="headerlink" href="#paralleization-mpi-reduction" title="Permalink to this headline">¶</a></h3>
 </div>
 </div>
 <div class="section" id="dependent-observables-jackknife-resampling">
-<h1>Dependent Observables: Jackknife Resampling<a class="headerlink" href="#dependent-observables-jackknife-resampling" title="Permalink to this headline">¶</a></h1>
+<h2>Dependent Observables: Jackknife Resampling<a class="headerlink" href="#dependent-observables-jackknife-resampling" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="concepts">
-<h1>Concepts<a class="headerlink" href="#concepts" title="Permalink to this headline">¶</a></h1>
+<h2>Concepts<a class="headerlink" href="#concepts" title="Permalink to this headline">¶</a></h2>
 <p>element wise multiplication</p>
 <div class="toctree-wrapper compound">
+</div>
 </div>
 </div>
 
