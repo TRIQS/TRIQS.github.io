@@ -6,9 +6,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Continuation of self-energies: Sr2RuO4 &#8212; TRIQS Analytic Continuation / MaxEnt  documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/triqs.css" />
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/triqs.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
@@ -90,7 +90,7 @@
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -154,37 +154,65 @@ of <code class="docutils literal notranslate"><span class="pre">isc.Gaux_iw</spa
 because the t<sub>2g</sub>-subspace consists of the <em>xy</em> and the degenerate <em>xz/yz</em> orbitals.
 Note that the self-energy in the h5-file is already symmetrized. We collect the results
 in the dict <code class="docutils literal notranslate"><span class="pre">res</span></code> and save it to the h5-file. Additionally, we save the <a class="reference internal" href="../reference/sigma_continuator.html#triqs_maxent.sigma_continuator.SigmaContinuator" title="triqs_maxent.sigma_continuator.SigmaContinuator"><code class="xref py py-class docutils literal notranslate"><span class="pre">SigmaContinuator</span></code></a>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span>
-<span class="lineno"> 2 </span><span class="kn">from</span> <span class="nn">triqs_maxent</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="lineno"> 3 </span><span class="kn">from</span> <span class="nn">h5</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="lineno"> 4 </span>
-<span class="lineno"> 5 </span><span class="c1"># Load self-energy from h5-file</span>
-<span class="lineno"> 6 </span><span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="s1">&#39;Sr2RuO4_b37.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
-<span class="lineno"> 7 </span>    <span class="n">S_iw</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;S_iw&#39;</span><span class="p">]</span>
-<span class="lineno"> 8 </span>    <span class="n">dc</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dc&#39;</span><span class="p">]</span>
-<span class="lineno"> 9 </span>
-<span class="lineno">10 </span><span class="c1"># Initialize SigmaContinuator, we use the</span>
-<span class="lineno">11 </span><span class="c1"># double counting (dc) as constant shift c.</span>
-<span class="lineno">12 </span><span class="n">isc</span> <span class="o">=</span> <span class="n">InversionSigmaContinuator</span><span class="p">(</span><span class="n">S_iw</span><span class="p">,</span> <span class="n">dc</span><span class="p">)</span>
-<span class="lineno">13 </span>
-<span class="lineno">14 </span><span class="c1"># run TauMaxEnt for each block and collect results</span>
-<span class="lineno">15 </span><span class="c1"># in dict res.</span>
-<span class="lineno">16 </span><span class="n">res</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="lineno">17 </span><span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">gaux_iw</span> <span class="ow">in</span> <span class="n">isc</span><span class="o">.</span><span class="n">Gaux_iw</span><span class="p">:</span>
-<span class="lineno">18 </span>    <span class="n">tm</span> <span class="o">=</span> <span class="n">TauMaxEnt</span><span class="p">()</span>
-<span class="lineno">19 </span>    <span class="n">tm</span><span class="o">.</span><span class="n">set_G_iw</span><span class="p">(</span><span class="n">gaux_iw</span><span class="p">)</span>
-<span class="lineno">20 </span>    <span class="n">tm</span><span class="o">.</span><span class="n">set_error</span><span class="p">(</span><span class="mf">1e-4</span><span class="p">)</span>
-<span class="lineno">21 </span>    <span class="n">tm</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="n">HyperbolicOmegaMesh</span><span class="p">(</span><span class="n">omega_min</span><span class="o">=-</span><span class="mi">10</span><span class="p">,</span> <span class="n">omega_max</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">n_points</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
-<span class="lineno">22 </span>    <span class="n">tm</span><span class="o">.</span><span class="n">alpha_mesh</span> <span class="o">=</span> <span class="n">LogAlphaMesh</span><span class="p">(</span><span class="n">alpha_min</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span> <span class="n">alpha_max</span><span class="o">=</span><span class="mf">1e2</span><span class="p">,</span> <span class="n">n_points</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
-<span class="lineno">23 </span>    <span class="n">res</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">tm</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
-<span class="lineno">24 </span>
-<span class="lineno">25 </span><span class="c1"># save results and the SigmaContinuator to h5-file</span>
-<span class="lineno">26 </span><span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="s1">&#39;Sr2RuO4_b37.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
-<span class="lineno">27 </span>    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">res</span><span class="p">:</span>
-<span class="lineno">28 </span>        <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;maxent_result_&#39;</span> <span class="o">+</span> <span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
-<span class="lineno">29 </span>    <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;isc&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">isc</span>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29</pre></div></td><td class="code"><div class="highlight"><pre><span></span>
+<span class="kn">from</span> <span class="nn">triqs_maxent</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">h5</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1"># Load self-energy from h5-file</span>
+<span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="s1">&#39;Sr2RuO4_b37.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+    <span class="n">S_iw</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;S_iw&#39;</span><span class="p">]</span>
+    <span class="n">dc</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dc&#39;</span><span class="p">]</span>
+
+<span class="c1"># Initialize SigmaContinuator, we use the</span>
+<span class="c1"># double counting (dc) as constant shift c.</span>
+<span class="n">isc</span> <span class="o">=</span> <span class="n">InversionSigmaContinuator</span><span class="p">(</span><span class="n">S_iw</span><span class="p">,</span> <span class="n">dc</span><span class="p">)</span>
+
+<span class="c1"># run TauMaxEnt for each block and collect results</span>
+<span class="c1"># in dict res.</span>
+<span class="n">res</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">gaux_iw</span> <span class="ow">in</span> <span class="n">isc</span><span class="o">.</span><span class="n">Gaux_iw</span><span class="p">:</span>
+    <span class="n">tm</span> <span class="o">=</span> <span class="n">TauMaxEnt</span><span class="p">()</span>
+    <span class="n">tm</span><span class="o">.</span><span class="n">set_G_iw</span><span class="p">(</span><span class="n">gaux_iw</span><span class="p">)</span>
+    <span class="n">tm</span><span class="o">.</span><span class="n">set_error</span><span class="p">(</span><span class="mf">1e-4</span><span class="p">)</span>
+    <span class="n">tm</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="n">HyperbolicOmegaMesh</span><span class="p">(</span><span class="n">omega_min</span><span class="o">=-</span><span class="mi">10</span><span class="p">,</span> <span class="n">omega_max</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">n_points</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+    <span class="n">tm</span><span class="o">.</span><span class="n">alpha_mesh</span> <span class="o">=</span> <span class="n">LogAlphaMesh</span><span class="p">(</span><span class="n">alpha_min</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span> <span class="n">alpha_max</span><span class="o">=</span><span class="mf">1e2</span><span class="p">,</span> <span class="n">n_points</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+    <span class="n">res</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">tm</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+<span class="c1"># save results and the SigmaContinuator to h5-file</span>
+<span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="s1">&#39;Sr2RuO4_b37.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">res</span><span class="p">:</span>
+        <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;maxent_result_&#39;</span> <span class="o">+</span> <span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;isc&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">isc</span>
 </pre></div>
-</div>
+</td></tr></table></div>
 <p>In the second part of this example, we load the results of the first part and reconstruct
 a real-frequency self-energy from the auxiliary spectral function <span class="math notranslate nohighlight">\(A_{aux}(\omega)\)</span>.
 First we store the resulting spectral function of the <a class="reference internal" href="../reference/analyzers/analyzers.html#triqs_maxent.analyzers.linefit_analyzer.LineFitAnalyzer" title="triqs_maxent.analyzers.linefit_analyzer.LineFitAnalyzer"><code class="xref py py-class docutils literal notranslate"><span class="pre">LineFitAnalyzer</span></code></a> in a
@@ -196,46 +224,83 @@ the spectral function on a denser linear grid with <span class="math notranslate
 and <code class="docutils literal notranslate"><span class="pre">omega_max</span></code>. The auxiliary Green function is then calculated on a linear grid
 between <span class="math notranslate nohighlight">\(-1\ \mathrm{eV}\)</span> and <span class="math notranslate nohighlight">\(1\ \mathrm{eV}\)</span> with <span class="math notranslate nohighlight">\(4000\)</span> points (<code class="docutils literal notranslate"><span class="pre">np_omega</span></code>) and
 the resulting self-energy is accessible with <code class="docutils literal notranslate"><span class="pre">isc.S_w</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span>
-<span class="lineno"> 2 </span><span class="kn">from</span> <span class="nn">triqs_maxent</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="lineno"> 3 </span><span class="kn">from</span> <span class="nn">h5</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="lineno"> 4 </span><span class="kn">from</span> <span class="nn">triqs.plot.mpl_interface</span> <span class="kn">import</span> <span class="n">oplot</span>
-<span class="lineno"> 5 </span>
-<span class="lineno"> 6 </span><span class="c1"># load res and SigmaContinuator from h5-file</span>
-<span class="lineno"> 7 </span><span class="n">res</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="lineno"> 8 </span><span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="s1">&#39;Sr2RuO4_b37.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
-<span class="lineno"> 9 </span>    <span class="n">S_iw</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;S_iw&#39;</span><span class="p">]</span>
-<span class="lineno">10 </span>    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">S_iw</span><span class="o">.</span><span class="n">indices</span><span class="p">:</span>
-<span class="lineno">11 </span>        <span class="n">res</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;maxent_result_&#39;</span> <span class="o">+</span> <span class="n">key</span><span class="p">]</span>
-<span class="lineno">12 </span>    <span class="n">isc</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;isc&#39;</span><span class="p">]</span>
-<span class="lineno">13 </span>
-<span class="lineno">14 </span><span class="c1"># get S_w from the auxilliary spectral function Aaux_w</span>
-<span class="lineno">15 </span><span class="n">Aaux_w</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="lineno">16 </span><span class="n">w</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;up_0&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">omega</span>
-<span class="lineno">17 </span><span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">res</span><span class="p">:</span>
-<span class="lineno">18 </span>    <span class="n">Aaux_w</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">analyzer_results</span><span class="p">[</span><span class="s1">&#39;LineFitAnalyzer&#39;</span><span class="p">][</span><span class="s1">&#39;A_out&#39;</span><span class="p">]</span>
-<span class="lineno">19 </span>
-<span class="lineno">20 </span><span class="n">isc</span><span class="o">.</span><span class="n">set_Gaux_w_from_Aaux_w</span><span class="p">(</span><span class="n">Aaux_w</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">np_interp_A</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
-<span class="lineno">21 </span>                           <span class="n">np_omega</span><span class="o">=</span><span class="mi">4000</span><span class="p">,</span> <span class="n">w_min</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">w_max</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
-<span class="lineno">22 </span>
-<span class="lineno">23 </span><span class="c1"># save SigmaContinuator again (now it contains S_w)</span>
-<span class="lineno">24 </span><span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="s1">&#39;Sr2RuO4_b37.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
-<span class="lineno">25 </span>    <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;isc&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">isc</span>
-<span class="lineno">26 </span>
-<span class="lineno">27 </span><span class="c1"># check linfit and plot S_w</span>
-<span class="lineno">28 </span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
-<span class="lineno">29 </span><span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="lineno">30 </span><span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">res</span><span class="p">:</span>
-<span class="lineno">31 </span>    <span class="n">res</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">analyzer_results</span><span class="p">[</span><span class="s1">&#39;LineFitAnalyzer&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">plot_linefit</span><span class="p">()</span>
-<span class="lineno">32 </span><span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mf">1e1</span><span class="p">,</span> <span class="mf">1e4</span><span class="p">)</span>
-<span class="lineno">33 </span><span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-<span class="lineno">34 </span><span class="n">oplot</span><span class="p">(</span><span class="n">isc</span><span class="o">.</span><span class="n">S_w</span><span class="p">[</span><span class="s1">&#39;up_0&#39;</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;maxent xy&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-<span class="lineno">35 </span><span class="n">oplot</span><span class="p">(</span><span class="n">isc</span><span class="o">.</span><span class="n">S_w</span><span class="p">[</span><span class="s1">&#39;up_1&#39;</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;maxent xz&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-<span class="lineno">36 </span><span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\Sigma(\omega)$&#39;</span><span class="p">)</span>
-<span class="lineno">37 </span><span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">)</span>
-<span class="lineno">38 </span><span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38</pre></div></td><td class="code"><div class="highlight"><pre><span></span>
+<span class="kn">from</span> <span class="nn">triqs_maxent</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">h5</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">triqs.plot.mpl_interface</span> <span class="kn">import</span> <span class="n">oplot</span>
+
+<span class="c1"># load res and SigmaContinuator from h5-file</span>
+<span class="n">res</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="s1">&#39;Sr2RuO4_b37.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+    <span class="n">S_iw</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;S_iw&#39;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">S_iw</span><span class="o">.</span><span class="n">indices</span><span class="p">:</span>
+        <span class="n">res</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;maxent_result_&#39;</span> <span class="o">+</span> <span class="n">key</span><span class="p">]</span>
+    <span class="n">isc</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;isc&#39;</span><span class="p">]</span>
+
+<span class="c1"># get S_w from the auxilliary spectral function Aaux_w</span>
+<span class="n">Aaux_w</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">w</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;up_0&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">omega</span>
+<span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">res</span><span class="p">:</span>
+    <span class="n">Aaux_w</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">analyzer_results</span><span class="p">[</span><span class="s1">&#39;LineFitAnalyzer&#39;</span><span class="p">][</span><span class="s1">&#39;A_out&#39;</span><span class="p">]</span>
+
+<span class="n">isc</span><span class="o">.</span><span class="n">set_Gaux_w_from_Aaux_w</span><span class="p">(</span><span class="n">Aaux_w</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">np_interp_A</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+                           <span class="n">np_omega</span><span class="o">=</span><span class="mi">4000</span><span class="p">,</span> <span class="n">w_min</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">w_max</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+
+<span class="c1"># save SigmaContinuator again (now it contains S_w)</span>
+<span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="s1">&#39;Sr2RuO4_b37.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+    <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;isc&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">isc</span>
+
+<span class="c1"># check linfit and plot S_w</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">res</span><span class="p">:</span>
+    <span class="n">res</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">analyzer_results</span><span class="p">[</span><span class="s1">&#39;LineFitAnalyzer&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">plot_linefit</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mf">1e1</span><span class="p">,</span> <span class="mf">1e4</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">oplot</span><span class="p">(</span><span class="n">isc</span><span class="o">.</span><span class="n">S_w</span><span class="p">[</span><span class="s1">&#39;up_0&#39;</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;maxent xy&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">oplot</span><span class="p">(</span><span class="n">isc</span><span class="o">.</span><span class="n">S_w</span><span class="p">[</span><span class="s1">&#39;up_1&#39;</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;maxent xz&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\Sigma(\omega)$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
 </pre></div>
-</div>
+</td></tr></table></div>
 <img alt="../_images/sigma_continuator_SRO.png" class="align-center" src="../_images/sigma_continuator_SRO.png" />
 <p>The left graph shows the <span class="math notranslate nohighlight">\(\chi^2\)</span> versus <span class="math notranslate nohighlight">\(\alpha\)</span> curve for all orbitals and spins.
 Due to the degeneracies we only observe two lines (and their linefits) - one for the <em>xy</em> and one
