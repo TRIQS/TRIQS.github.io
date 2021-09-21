@@ -1,7 +1,7 @@
 .. _about:
 
 About omegamaxent_interface
-===========================
+***************************
 
 Authors
 -------
