@@ -135,7 +135,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../guide/conv_wien2k.html">Interface with Wien2k</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../guide/conv_vasp.html">Interface with VASP</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../guide/conv_elk.html">Interface with Elk</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../guide/conv_W90.html">Wannier90 Converter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../guide/conv_W90.html">Interface with Wannier90</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../guide/conv_generalhk.html">A general H(k)</a></li>
 </ul>
 </li>
@@ -450,6 +450,8 @@
 <span class="c1">#   this might fail in presence of degenerate eigenvalues (now just prints warning)</span>
 <span class="c1"># - make the code more MPI safe (error handling): if we run with more than one process</span>
 <span class="c1">#   and an error occurs on the masternode, the calculation does not abort</span>
+<span class="c1"># - in case of disentanglement, the outer window being close to Kohn-Sham energies</span>
+<span class="c1">#   can cause a problem in creating the udis_mat in read_wannier90data</span>
 <span class="c1">###</span>
 
 
@@ -865,8 +867,16 @@
                 <span class="c1"># corresponds to W90 result</span>
                 <span class="n">wannier_ham</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fourier_ham</span><span class="p">(</span><span class="n">hamr_full</span><span class="p">[</span><span class="n">isp</span><span class="p">])</span>
                 <span class="k">for</span> <span class="n">ik</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_k</span><span class="p">):</span>
-                    <span class="n">proj_mat_flattened</span> <span class="o">=</span> <span class="n">proj_mat</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span> <span class="n">isp</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nwfs</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">n_orbitals</span><span class="p">))</span>
+                    <span class="n">proj_mat_flattened</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">numpy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">n_orbitals</span><span class="p">),</span> <span class="n">numpy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">n_orbitals</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+                    <span class="n">iorb</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="k">for</span> <span class="n">icrsh</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_corr_shells</span><span class="p">):</span>
+                        <span class="n">dim</span> <span class="o">=</span> <span class="n">corr_shells</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="s1">&#39;dim&#39;</span><span class="p">]</span>
+                        <span class="n">proj_mat_flattened</span><span class="p">[</span><span class="n">iorb</span><span class="p">:</span><span class="n">iorb</span><span class="o">+</span><span class="n">dim</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">proj_mat</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span> <span class="n">isp</span><span class="p">][</span><span class="n">icrsh</span><span class="p">,</span><span class="mi">0</span><span class="p">:</span><span class="n">dim</span><span class="p">,:]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">n_orbitals</span><span class="p">))</span>
+                        <span class="n">iorb</span> <span class="o">+=</span> <span class="n">dim</span>
                     <span class="n">downfolded_ham</span> <span class="o">=</span> <span class="n">proj_mat_flattened</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">hamk</span><span class="p">[</span><span class="n">ik</span><span class="p">]</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">proj_mat_flattened</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">dim_corr_shells</span> <span class="o">&lt;</span> <span class="n">numpy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">n_orbitals</span><span class="p">):</span>
+                        <span class="n">downfolded_ham</span> <span class="o">=</span> <span class="n">downfolded_ham</span><span class="p">[:</span><span class="n">dim_corr_shells</span><span class="p">,:</span><span class="n">dim_corr_shells</span><span class="p">]</span>
+                        <span class="n">wannier_ham</span><span class="p">[</span><span class="n">ik</span><span class="p">]</span> <span class="o">=</span> <span class="n">wannier_ham</span><span class="p">[</span><span class="n">ik</span><span class="p">][:</span><span class="n">dim_corr_shells</span><span class="p">,:</span><span class="n">dim_corr_shells</span><span class="p">]</span>
 
                     <span class="k">if</span> <span class="ow">not</span> <span class="n">numpy</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">downfolded_ham</span><span class="p">,</span> <span class="n">wannier_ham</span><span class="p">[</span><span class="n">ik</span><span class="p">],</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
                         <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;WARNING: mismatch between downfolded Hamiltonian and &#39;</span>
