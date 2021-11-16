@@ -470,7 +470,8 @@
 
 <div class="viewcode-block" id="Wannier90Converter.__init__"><a class="viewcode-back" href="../../../reference/converters.html#triqs_dft_tools.converters.wannier90.Wannier90Converter.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seedname</span><span class="p">,</span> <span class="n">hdf_filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dft_subgrp</span><span class="o">=</span><span class="s1">&#39;dft_input&#39;</span><span class="p">,</span>
                  <span class="n">symmcorr_subgrp</span><span class="o">=</span><span class="s1">&#39;dft_symmcorr_input&#39;</span><span class="p">,</span> <span class="n">misc_subgrp</span><span class="o">=</span><span class="s1">&#39;dft_misc_input&#39;</span><span class="p">,</span>
-                 <span class="n">repacking</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">rot_mat_type</span><span class="o">=</span><span class="s1">&#39;hloc_diag&#39;</span><span class="p">,</span> <span class="n">bloch_basis</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">add_lambda</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                 <span class="n">repacking</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">rot_mat_type</span><span class="o">=</span><span class="s1">&#39;hloc_diag&#39;</span><span class="p">,</span> <span class="n">bloch_basis</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">add_lambda</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">w90zero</span><span class="o">=</span><span class="mf">2.e-6</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialise the class.</span>
 
@@ -495,6 +496,8 @@
 <span class="sd">            Should the Hamiltonian be written in Bloch rather than Wannier basis?</span>
 <span class="sd">        add_lambda : list of floats, optional</span>
 <span class="sd">            add local spin-orbit term</span>
+<span class="sd">        w90zero : float, optional</span>
+<span class="sd">            threshold on symmetry checks of Hamiltonian and rot_mat</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="s2">&quot;Wannier90Converter&quot;</span>
@@ -513,7 +516,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">fortran_to_replace</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;D&#39;</span><span class="p">:</span> <span class="s1">&#39;E&#39;</span><span class="p">}</span>
         <span class="c1"># threshold below which matrix elements from wannier90 should be</span>
         <span class="c1"># considered equal</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_w90zero</span> <span class="o">=</span> <span class="mf">2.e-6</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_w90zero</span> <span class="o">=</span> <span class="n">w90zero</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">rot_mat_type</span> <span class="o">=</span> <span class="n">rot_mat_type</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bloch_basis</span> <span class="o">=</span> <span class="n">bloch_basis</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">add_lambda</span> <span class="o">=</span> <span class="n">add_lambda</span>
@@ -1230,10 +1233,10 @@
             <span class="c1"># equivalent shells</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">numpy</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">eigval_lst</span><span class="p">[</span><span class="n">ish</span><span class="p">],</span> <span class="n">eigval_lst</span><span class="p">[</span><span class="n">sh_map</span><span class="p">[</span><span class="n">ish</span><span class="p">]],</span>
                     <span class="n">atol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_w90zero</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span>
-                    <span class="s2">&quot;ERROR: eigenvalue mismatch between equivalent shells! </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">ish</span><span class="p">)</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;ERROR: eigenvalue mismatch between equivalent shells! </span><span class="si">{</span><span class="n">ish</span><span class="si">:</span><span class="s1">d</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
                 <span class="n">eigval_diff</span> <span class="o">=</span> <span class="n">eigval_lst</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span> <span class="o">-</span> <span class="n">eigval_lst</span><span class="p">[</span><span class="n">sh_map</span><span class="p">[</span><span class="n">ish</span><span class="p">]]</span>
-                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Eigenvalue difference: &quot;</span> <span class="o">+</span> <span class="nb">format</span><span class="p">(</span><span class="n">eigval_diff</span><span class="p">))</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Eigenvalue difference </span><span class="si">{</span><span class="n">eigval_diff</span><span class="si">}</span><span class="s1">, but threshold set to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_w90zero</span><span class="si">:</span><span class="s1">.1e</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Consider lowering threshold if you are certain the mapping is correct.&#39;</span><span class="p">)</span>
                 <span class="n">succeeded</span> <span class="o">=</span> <span class="kc">False</span>
 
             <span class="c1"># check that rotation matrices are unitary</span>
@@ -1242,7 +1245,7 @@
             <span class="n">tmp_mat</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">rot_mat</span><span class="p">[</span><span class="n">ish</span><span class="p">],</span><span class="n">rot_mat</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">numpy</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">tmp_mat</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">nw</span><span class="p">),</span>
                                   <span class="n">atol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_w90zero</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;ERROR: rot_mat for shell </span><span class="si">%d</span><span class="s2"> is not unitary!&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">ish</span><span class="p">))</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;ERROR: rot_mat for shell </span><span class="si">{</span><span class="n">ish</span><span class="si">:</span><span class="s1">d</span><span class="si">}</span><span class="s1"> is not unitary!&#39;</span><span class="p">)</span>
                 <span class="n">succeeded</span> <span class="o">=</span> <span class="kc">False</span>
 
             <span class="c1"># check that rotation matrices map equivalent H(0) blocks as they should</span>
@@ -1256,8 +1259,11 @@
                     <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">ham0_lst</span><span class="p">[</span><span class="n">ish</span><span class="p">],</span><span class="n">tmp_mat</span><span class="p">))</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">numpy</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">tmp_mat</span><span class="p">,</span> <span class="n">ham0_lst</span><span class="p">[</span><span class="n">sh_map</span><span class="p">[</span><span class="n">ish</span><span class="p">]],</span>
                                   <span class="n">atol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_w90zero</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;ERROR: rot_mat does not map H(0) correctly! </span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">ish</span><span class="p">))</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;ERROR: rot_mat does not map H(0) correctly! </span><span class="si">{</span><span class="n">ish</span><span class="si">:</span><span class="s1">d</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
                 <span class="n">succeeded</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># abort in case the rot_mat was not found correctly to avoid the user to ignore ERRORS</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">succeeded</span><span class="p">:</span> <span class="n">mpi</span><span class="o">.</span><span class="n">MPI</span><span class="o">.</span><span class="n">COMM_WORLD</span><span class="o">.</span><span class="n">Abort</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">succeeded</span><span class="p">,</span> <span class="n">rot_mat</span></div>
 
