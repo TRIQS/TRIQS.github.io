@@ -673,9 +673,11 @@
 <span class="c1"># Authors: Michel Ferrero, Olivier Parcollet, Nils Wentzell</span>
 
 
+<span class="kn">from</span> <span class="nn">h5.formats</span> <span class="kn">import</span> <span class="n">register_class</span>
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;BravaisLattice&#39;</span><span class="p">,</span> <span class="s1">&#39;BrillouinZone&#39;</span><span class="p">,</span> <span class="s1">&#39;TightBinding&#39;</span><span class="p">,</span> <span class="s1">&#39;dos&#39;</span><span class="p">,</span> <span class="s1">&#39;dos_patch&#39;</span><span class="p">,</span> <span class="s1">&#39;energies_on_bz_grid&#39;</span><span class="p">,</span> <span class="s1">&#39;energies_on_bz_path&#39;</span><span class="p">,</span> <span class="s1">&#39;energy_matrix_on_bz_path&#39;</span><span class="p">,</span>
            <span class="s1">&#39;hopping_stack&#39;</span><span class="p">,</span> <span class="s1">&#39;TBLattice&#39;</span><span class="p">]</span>
 
+<span class="kn">from</span> <span class="nn">..gf</span> <span class="kn">import</span> <span class="n">Gf</span><span class="p">,</span> <span class="n">MeshBrZone</span><span class="p">,</span> <span class="n">MeshCycLat</span>
 <span class="kn">from</span> <span class="nn">.lattice_tools</span> <span class="kn">import</span> <span class="n">BravaisLattice</span>
 <span class="kn">from</span> <span class="nn">.lattice_tools</span> <span class="kn">import</span> <span class="n">BrillouinZone</span>
 <span class="kn">from</span> <span class="nn">.lattice_tools</span> <span class="kn">import</span> <span class="n">TightBinding</span>
@@ -684,9 +686,10 @@
 <span class="kn">from</span> <span class="nn">.lattice_tools</span> <span class="kn">import</span> <span class="n">energies_on_bz_grid</span><span class="p">,</span> <span class="n">energies_on_bz_path</span><span class="p">,</span> <span class="n">hopping_stack</span><span class="p">,</span> <span class="n">energy_matrix_on_bz_path</span>
 <span class="kn">from</span> <span class="nn">triqs.dos</span> <span class="kn">import</span> <span class="n">DOS</span>
 <span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 
 
-<div class="viewcode-block" id="dos"><a class="viewcode-back" href="../../../documentation/manual/triqs/lattice_tools/dos.html#triqs.lattice.tight_binding.dos">[docs]</a><span class="k">def</span> <span class="nf">dos</span><span class="p">(</span><span class="n">tight_binding</span><span class="p">,</span> <span class="n">n_kpts</span><span class="p">,</span> <span class="n">n_eps</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="p">:</span> 
+<div class="viewcode-block" id="dos"><a class="viewcode-back" href="../../../documentation/manual/triqs/lattice_tools/dos.html#triqs.lattice.tight_binding.dos">[docs]</a><span class="k">def</span> <span class="nf">dos</span><span class="p">(</span><span class="n">tight_binding</span><span class="p">,</span> <span class="n">n_kpts</span><span class="p">,</span> <span class="n">n_eps</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    :param tight_binding: a tight_binding object</span>
 <span class="sd">    :param n_kpts: the number of k points to use in each dimension</span>
@@ -696,47 +699,224 @@
 <span class="sd">    :rtype: return a list of DOS, one for each band</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">eps</span><span class="p">,</span> <span class="n">arr</span> <span class="o">=</span> <span class="n">dos_c</span><span class="p">(</span><span class="n">tight_binding</span><span class="p">,</span> <span class="n">n_kpts</span><span class="p">,</span> <span class="n">n_eps</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">[</span> <span class="n">DOS</span> <span class="p">(</span><span class="n">eps</span><span class="p">,</span> <span class="n">arr</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="p">]</span></div>
+    <span class="k">return</span> <span class="p">[</span><span class="n">DOS</span><span class="p">(</span><span class="n">eps</span><span class="p">,</span> <span class="n">arr</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span></div>
 
-<span class="k">def</span> <span class="nf">dos_patch</span><span class="p">(</span><span class="n">tight_binding</span><span class="p">,</span> <span class="n">triangles</span><span class="p">,</span> <span class="n">n_eps</span><span class="p">,</span> <span class="n">n_div</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="p">:</span>  
+
+<span class="k">def</span> <span class="nf">dos_patch</span><span class="p">(</span><span class="n">tight_binding</span><span class="p">,</span> <span class="n">triangles</span><span class="p">,</span> <span class="n">n_eps</span><span class="p">,</span> <span class="n">n_div</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    To be written</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">eps</span><span class="p">,</span> <span class="n">arr</span> <span class="o">=</span> <span class="n">dos_patch_c</span><span class="p">(</span><span class="n">tight_binding</span><span class="p">,</span> <span class="n">triangles</span><span class="p">,</span> <span class="n">n_eps</span><span class="p">,</span> <span class="n">n_div</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">DOS</span> <span class="p">(</span><span class="n">eps</span><span class="p">,</span> <span class="n">arr</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">DOS</span><span class="p">(</span><span class="n">eps</span><span class="p">,</span> <span class="n">arr</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
 
-<span class="c1"># for backward compatibility. Not documented. </span>
-<span class="k">class</span> <span class="nc">TBLattice</span><span class="p">:</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="n">hopping</span><span class="p">,</span> <span class="n">orbital_positions</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="p">],</span> <span class="n">orbital_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">]):</span>
+<span class="k">class</span> <span class="nc">TBLattice</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 
-        <span class="c1"># the k are int32 which boost python does like to convert </span>
-        <span class="k">def</span> <span class="nf">reg</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="p">:</span> <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">k</span><span class="p">)</span> 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_hop</span> <span class="o">=</span> <span class="nb">dict</span> <span class="p">(</span> <span class="p">(</span> <span class="n">reg</span><span class="p">(</span><span class="n">k</span><span class="p">),</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">hopping</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
-        <span class="n">orb</span> <span class="o">=</span> <span class="nb">dict</span> <span class="p">(</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">orb</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">orb</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">orbital_positions</span> <span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">bl</span> <span class="o">=</span> <span class="n">BravaisLattice</span><span class="p">(</span><span class="n">units</span><span class="p">,</span> <span class="n">orbital_positions</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot; Class describing a tight binding hamiltonian on top of a bravais lattice.</span>
+<span class="sd">    Has objects of type BravaisLattice, BrillouinZone and TightBinding as attributes,</span>
+<span class="sd">    and exposes part of their interfaces.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    bl : BravaisLattice</span>
+<span class="sd">        The associated Bravais Lattice</span>
+
+<span class="sd">    bz : BrillouinZone</span>
+<span class="sd">        The associated Brillouin Zone</span>
+
+<span class="sd">    tb : TightBinding</span>
+<span class="sd">        The tight-binding Hamiltonian</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span>
+                 <span class="n">hoppings</span><span class="o">=</span><span class="nb">dict</span><span class="p">(),</span>
+                 <span class="n">orbital_positions</span><span class="o">=</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span>
+                 <span class="n">orbital_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">hopping</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        units : list of tuples of floats</span>
+<span class="sd">            Basis vectors for the real space lattice.</span>
+
+<span class="sd">        hoppings : dict</span>
+<span class="sd">            Dictionary with tuples of integers as keys,</span>
+<span class="sd">            describing real space hoppings in multiples of</span>
+<span class="sd">            the real space lattice basis vectors, and values being</span>
+<span class="sd">            numpy ndarray hopping matrices in the orbital indices.</span>
+
+<span class="sd">        orbital_positions : list of three three-tuples of floats.</span>
+<span class="sd">            Internal orbital positions in the unit-cell.</span>
+
+<span class="sd">        orbital_names : list of strings</span>
+<span class="sd">            Names for each orbital.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">hopping</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;Keyword hopping in TBLattice.__init__ deprecated; use hoppings instead.&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
+            <span class="n">hoppings</span> <span class="o">=</span> <span class="n">hopping</span>
+
+        <span class="k">if</span> <span class="n">orbital_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">orbital_names</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">orbital_positions</span><span class="p">)</span> <span class="o">*</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bl</span> <span class="o">=</span> <span class="n">BravaisLattice</span><span class="p">(</span><span class="n">units</span><span class="p">,</span> <span class="n">orbital_positions</span><span class="p">,</span> <span class="n">orbital_names</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bz</span> <span class="o">=</span> <span class="n">BrillouinZone</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">tb</span> <span class="o">=</span> <span class="n">TightBinding</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hop</span><span class="p">)</span> <span class="c1">#, orbital_positions )</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="o">.</span><span class="n">dim</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">NOrbitalsInUnitCell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="o">.</span><span class="n">n_orbitals</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">Units</span> <span class="o">=</span> <span class="n">units</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">OrbitalPositions</span> <span class="o">=</span> <span class="n">orbital_positions</span> 
-        <span class="bp">self</span><span class="o">.</span><span class="n">OrbitalNames</span> <span class="o">=</span> <span class="n">orbital_names</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">MuPattern</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NOrbitalsInUnitCell</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tb</span> <span class="o">=</span> <span class="n">TightBinding</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="p">,</span> <span class="n">hoppings</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">latt_to_real_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="p">:</span> 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="o">.</span><span class="n">lattice_to_real_coordinates</span> <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">))</span>
-        <span class="c1"># modified since array are not converted automatically any more</span>
-        <span class="c1">##return self.bl.lattice_to_real_coordinates (p ) #numpy.array(p.float64))</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">hoppings</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">displ</span><span class="p">):</span> <span class="n">hop</span> <span class="k">for</span> <span class="n">displ</span><span class="p">,</span> <span class="n">hop</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tb</span><span class="o">.</span><span class="n">displ_vec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tb</span><span class="o">.</span><span class="n">overlap_mat_vec</span><span class="p">)}</span>
 
-    <span class="k">def</span> <span class="nf">hopping_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hop</span>
+    <span class="k">def</span> <span class="nf">get_kmesh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_k</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a mesh on the Brillouin zone with a given discretization</span>
 
-    <span class="k">def</span> <span class="nf">hopping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k_stack</span><span class="p">)</span> <span class="p">:</span>
-        <span class="k">return</span> <span class="n">hopping_stack</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tb</span><span class="p">,</span> <span class="n">k_stack</span><span class="p">)</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n_k : int or three-tuple of int</span>
+<span class="sd">            The linear dimension(s)</span>
 
-    <span class="c1">#def dos(self) : d = dos (TB, nkpts= 100, neps = 100, name = &#39;dos2&#39;)</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        MeshBrZone</span>
+<span class="sd">            The mesh on the Brillouin zone</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n_k</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">MeshBrZone</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bz</span><span class="p">,</span> <span class="n">n_k</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">MeshBrZone</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bz</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">n_k</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">get_rmesh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_r</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a mesh on the Bravais lattice with a given periodicity</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n_r : int or three-tuple of int</span>
+<span class="sd">            The periodicity in each dimension</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        MeshCycLat</span>
+<span class="sd">            The cyclic lattice mesh</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n_r</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">MeshCycLat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="p">,</span> <span class="n">n_r</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">MeshCycLat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">n_r</span><span class="p">))</span>
+
+    <span class="c1"># ---- Expose BravaisLattice API ----</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ndim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of dimensions of the lattice&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="o">.</span><span class="n">ndim</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">units</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of dimensions of the lattice&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="o">.</span><span class="n">units</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">n_orbitals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of orbitals in the unit cell&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="o">.</span><span class="n">n_orbitals</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">orbital_positions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The list of orbital positions&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="o">.</span><span class="n">orbital_positions</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">orbital_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The list of orbital names&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="o">.</span><span class="n">orbital_names</span>
+
+    <span class="c1"># ---- Expose TightBinding API ----</span>
+
+    <span class="k">def</span> <span class="nf">lattice_to_real_coordinates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tb</span><span class="o">.</span><span class="n">lattice_to_real_coordinates</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">lattice_to_real_coordinates</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">TightBinding</span><span class="o">.</span><span class="n">lattice_to_real_coordinates</span><span class="o">.</span><span class="vm">__doc__</span>
+
+    <span class="k">def</span> <span class="nf">fourier</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tb</span><span class="o">.</span><span class="n">fourier</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+    <span class="n">fourier</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">TightBinding</span><span class="o">.</span><span class="n">fourier</span><span class="o">.</span><span class="vm">__doc__</span>
+
+    <span class="k">def</span> <span class="nf">dispersion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tb</span><span class="o">.</span><span class="n">dispersion</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+    <span class="n">dispersion</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">TightBinding</span><span class="o">.</span><span class="n">dispersion</span><span class="o">.</span><span class="vm">__doc__</span>
+
+    <span class="c1"># ---- H5 Serialization ----</span>
+
+    <span class="k">def</span> <span class="nf">__reduce_to_dict__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;BravaisLattice&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="p">,</span>
+                <span class="s2">&quot;BrillouinZone&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">bz</span><span class="p">,</span>
+                <span class="s2">&quot;TightBinding&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tb</span><span class="p">}</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">__factory_from_dict__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="n">bl</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;BravaisLattice&quot;</span><span class="p">]</span>
+        <span class="n">tb</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;TightBinding&quot;</span><span class="p">]</span>
+        <span class="n">hoppings</span> <span class="o">=</span> <span class="p">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">displ</span><span class="p">):</span> <span class="n">hop</span> <span class="k">for</span> <span class="n">displ</span><span class="p">,</span> <span class="n">hop</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+            <span class="n">tb</span><span class="o">.</span><span class="n">displ_vec</span><span class="p">,</span> <span class="n">tb</span><span class="o">.</span><span class="n">overlap_mat_vec</span><span class="p">)}</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">bl</span><span class="o">.</span><span class="n">units</span><span class="p">[:</span><span class="n">bl</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="p">:</span><span class="n">bl</span><span class="o">.</span><span class="n">ndim</span><span class="p">],</span>
+                   <span class="n">hoppings</span><span class="p">,</span>
+                   <span class="n">bl</span><span class="o">.</span><span class="n">orbital_positions</span><span class="p">,</span>
+                   <span class="n">bl</span><span class="o">.</span><span class="n">orbital_names</span><span class="p">)</span>
+
+    <span class="c1"># ---- Comparison ----</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">TBLattice</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tb</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">tb</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">bz</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">bz</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">bl</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">bl</span>
+
+    <span class="c1"># ---- Print ----</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tb</span><span class="p">)</span>
+
+    <span class="c1"># ---- Backward Compatibility ----</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">Units</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;TBLattice.Units is deprecated; use TBLattice.units instead.&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">NOrbitalsInUnitCell</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;TBLattice.tb is deprecated; use TBLattice.n_orbitals instead.&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_orbitals</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">OrbitalPositions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;TBLattice.OrbitalPositions is deprecated; use TBLattice.orbital_positions instead.&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">orbital_positions</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">OrbitalNames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;TBLattice.OrbitalNames is deprecated; use TBLattice.orbital_names instead.&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">orbital_names</span>
+
+    <span class="k">def</span> <span class="nf">hopping_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;TBLattice.hopping_dict() is deprecated; use TBLattice.hoppings instead.&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hoppings</span>
+
+    <span class="k">def</span> <span class="nf">hopping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;TBLattice.hopping(k) is deprecated; use TBLattice.dispersion(k) instead.&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">hopping_stack</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
 
 
+<span class="n">register_class</span><span class="p">(</span><span class="n">TBLattice</span><span class="p">)</span>
 </pre></div>
 
            </div>
