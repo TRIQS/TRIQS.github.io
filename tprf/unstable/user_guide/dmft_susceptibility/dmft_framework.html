@@ -499,20 +499,21 @@
         <span class="n">orbital_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">,</span> <span class="s1">&#39;do&#39;</span><span class="p">],</span>
         <span class="n">hopping</span> <span class="o">=</span> <span class="p">{(</span><span class="mi">0</span><span class="p">,</span> <span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="p">(</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="p">:</span> <span class="n">T</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="p">:</span> <span class="n">T</span><span class="p">})</span>
     
-    <span class="n">p</span><span class="o">.</span><span class="n">e_k</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">on_mesh_brillouin_zone</span><span class="p">(</span><span class="n">n_k</span> <span class="o">=</span> <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">n_k</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">n_k</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">kmesh</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">get_kmesh</span><span class="p">(</span><span class="n">n_k</span> <span class="o">=</span> <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">n_k</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">n_k</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">e_k</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">fourier</span><span class="p">(</span><span class="n">kmesh</span><span class="p">)</span>
 
     <span class="c1"># -- Initial zero guess for the self-energy    </span>
     <span class="n">p</span><span class="o">.</span><span class="n">sigma_w</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">MeshImFreq</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="s1">&#39;Fermion&#39;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">n_iw</span><span class="p">),</span> <span class="n">target_shape</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
     <span class="n">p</span><span class="o">.</span><span class="n">sigma_w</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
 
-    <span class="k">return</span> <span class="n">p</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="solve-self-consistent-dmft">
 <h3>Solve Self-Consistent DMFT<a class="headerlink" href="#solve-self-consistent-dmft" title="Permalink to this headline">¶</a></h3>
 <p>The function <cite>solve_self_consistent_dmft</cite> repeatedly runs the DMFT self consistency step and looks for convergence in the local Legendre Green’s function <span class="math notranslate nohighlight">\(G_l\)</span>.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">solve_self_consistent_dmft</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<span class="k">def</span> <span class="nf">solve_self_consistent_dmft</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
 
     <span class="n">ps</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">dmft_iter</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">n_iter</span><span class="p">):</span>
@@ -524,7 +525,6 @@
 
     <span class="k">if</span> <span class="n">dmft_iter</span> <span class="o">&gt;=</span> <span class="n">p</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span> <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;--&gt; Warning: DMFT Not converged!&#39;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span> <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;--&gt; DMFT Converged: dG_l = </span><span class="si">{:f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">dG_l</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">ps</span>
 </pre></div>
 </div>
 </div>
@@ -540,7 +540,8 @@
 <li>compute a new self energy <span class="math notranslate nohighlight">\(\Sigma\)</span> from the sampled Greens function <cite>p.G_l</cite> and Weiss field <cite>p.G0_w</cite></li>
 <li>set the lattice self energy <cite>p.sigma_w</cite> from the impurity self energy <cite>p.Sigma_w</cite></li>
 </ul>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">dmft_self_consistent_step</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<span class="k">def</span> <span class="nf">dmft_self_consistent_step</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
 
     <span class="n">p</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
     <span class="n">p</span><span class="o">.</span><span class="n">iter</span> <span class="o">+=</span> <span class="mi">1</span>
@@ -577,7 +578,6 @@
     <span class="n">p</span><span class="o">.</span><span class="n">M</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">rho</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">p</span><span class="o">.</span><span class="n">rho</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
     <span class="n">p</span><span class="o">.</span><span class="n">dM</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">M</span> <span class="o">-</span> <span class="n">M_old</span><span class="p">)</span>
     
-    <span class="k">return</span> <span class="n">p</span>
 </pre></div>
 </div>
 </div>

@@ -410,114 +410,8 @@
 
 <span class="kn">import</span> <span class="nn">itertools</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">triqs.lattice.tight_binding</span> <span class="kn">import</span> <span class="n">TBLattice</span>
 
-<span class="kn">from</span> <span class="nn">triqs.lattice.lattice_tools</span> <span class="kn">import</span> <span class="n">BrillouinZone</span> <span class="k">as</span> <span class="n">BrillouinZone</span>
-<span class="kn">from</span> <span class="nn">triqs.lattice.lattice_tools</span> <span class="kn">import</span> <span class="n">BravaisLattice</span> <span class="k">as</span> <span class="n">BravaisLattice</span>
-<span class="kn">from</span> <span class="nn">triqs.lattice.lattice_tools</span> <span class="kn">import</span> <span class="n">TightBinding</span> <span class="k">as</span> <span class="n">TightBinding</span>
-
-<span class="kn">from</span> <span class="nn">triqs.lattice.lattice_tools</span> <span class="kn">import</span> <span class="n">dos</span> <span class="k">as</span> <span class="n">dos_c</span>
-<span class="kn">from</span> <span class="nn">triqs.lattice.lattice_tools</span> <span class="kn">import</span> <span class="n">dos_patch</span> <span class="k">as</span> <span class="n">dos_patch_c</span>
-
-<span class="kn">from</span> <span class="nn">triqs.lattice.lattice_tools</span> <span class="kn">import</span> <span class="n">energies_on_bz_grid</span><span class="p">,</span> <span class="n">energies_on_bz_path</span><span class="p">,</span> <span class="n">hopping_stack</span><span class="p">,</span> <span class="n">energy_matrix_on_bz_path</span>
-
-<span class="kn">from</span> <span class="nn">triqs.dos</span> <span class="kn">import</span> <span class="n">DOS</span>
-<span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">Gf</span><span class="p">,</span> <span class="n">MeshBrZone</span><span class="p">,</span> <span class="n">MeshCycLat</span>
-
-<div class="viewcode-block" id="TBLattice"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.tight_binding.TBLattice">[docs]</a><span class="k">class</span> <span class="nc">TBLattice</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-
-    <span class="sd">&quot;&quot;&quot; Class describing a tight binding lattice model.</span>
-
-<span class="sd">    This class is based in the TRIQS tight binding class and has been extended with</span>
-<span class="sd">    some extra convienience methods and documentation.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-
-<span class="sd">    units : list of three-tuples of floats</span>
-<span class="sd">        Basis vectors for the real space lattice.</span>
-
-<span class="sd">    hopping : dict</span>
-<span class="sd">        Dictionary with three tuple of integeers as keys, </span>
-<span class="sd">        describing real space hoppings in multiples of </span>
-<span class="sd">        the real space lattice basis vectors, and values being </span>
-<span class="sd">        numpy ndarray hopping matrices in the orbital indices.</span>
-
-<span class="sd">    orbital_positions : list of three three-tuples of floats.</span>
-<span class="sd">        Internal orbital positions in the unit-cell.</span>
-
-<span class="sd">    orbital_names : list of strings</span>
-<span class="sd">        Names for each orbital.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="n">hopping</span><span class="p">,</span> <span class="n">orbital_positions</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="p">],</span> <span class="n">orbital_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">]):</span>
-
-        <span class="c1"># the k are int32 which boost python does like to convert </span>
-        <span class="k">def</span> <span class="nf">reg</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="p">:</span> <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">k</span><span class="p">)</span> 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_hop</span> <span class="o">=</span> <span class="nb">dict</span> <span class="p">(</span> <span class="p">(</span> <span class="n">reg</span><span class="p">(</span><span class="n">k</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">hopping</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
-        <span class="n">orb</span> <span class="o">=</span> <span class="nb">dict</span> <span class="p">(</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">orb</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">orb</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">orbital_positions</span> <span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">bl</span> <span class="o">=</span> <span class="n">BravaisLattice</span><span class="p">(</span><span class="n">units</span><span class="p">,</span> <span class="n">orbital_positions</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">bz</span> <span class="o">=</span> <span class="n">BrillouinZone</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">tb</span> <span class="o">=</span> <span class="n">TightBinding</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hop</span><span class="p">)</span> <span class="c1">#, orbital_positions )</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="o">.</span><span class="n">dim</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">NOrbitalsInUnitCell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="o">.</span><span class="n">n_orbitals</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">Units</span> <span class="o">=</span> <span class="n">units</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">OrbitalPositions</span> <span class="o">=</span> <span class="n">orbital_positions</span> 
-        <span class="bp">self</span><span class="o">.</span><span class="n">OrbitalNames</span> <span class="o">=</span> <span class="n">orbital_names</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">MuPattern</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NOrbitalsInUnitCell</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">latt_to_real_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="p">:</span> 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="o">.</span><span class="n">lattice_to_real_coordinates</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">))</span>
-
-    <span class="k">def</span> <span class="nf">hopping_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hop</span>
-
-    <span class="k">def</span> <span class="nf">hopping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k_stack</span><span class="p">)</span> <span class="p">:</span>
-        <span class="k">return</span> <span class="n">hopping_stack</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tb</span><span class="p">,</span> <span class="n">k_stack</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">periodization_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_k</span><span class="p">):</span>
-        <span class="n">n_k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">n_k</span><span class="p">)</span>
-        <span class="k">assert</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">n_k</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="p">)</span>
-        <span class="k">assert</span><span class="p">(</span> <span class="n">n_k</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">int</span> <span class="p">)</span>
-        <span class="n">periodization_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">n_k</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">periodization_matrix</span>
-    
-    <span class="k">def</span> <span class="nf">get_kmesh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_k</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">MeshBrZone</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bz</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">periodization_matrix</span><span class="p">(</span><span class="n">n_k</span><span class="p">))</span>
-
-    <span class="k">def</span> <span class="nf">get_rmesh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_k</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">MeshCycLat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">periodization_matrix</span><span class="p">(</span><span class="n">n_k</span><span class="p">))</span>
-    
-<div class="viewcode-block" id="TBLattice.on_mesh_brillouin_zone"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.tight_binding.TBLattice.on_mesh_brillouin_zone">[docs]</a>    <span class="k">def</span> <span class="nf">on_mesh_brillouin_zone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_k</span><span class="p">):</span>
-
-        <span class="sd">&quot;&quot;&quot; Construct a discretization of the tight binding model in</span>
-<span class="sd">        reciprocal space with given number of k-points.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-
-<span class="sd">        n_k : three-tuple of ints</span>
-<span class="sd">            Number of k-points in every dimension.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-
-<span class="sd">        e_k : TRIQS Greens function on a Brillioun zone mesh</span>
-<span class="sd">            Reciprocal space tight binding dispersion.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        
-        <span class="n">target_shape</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">NOrbitalsInUnitCell</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span>
-
-        <span class="n">kmesh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_kmesh</span><span class="p">(</span><span class="n">n_k</span><span class="p">)</span>
-
-        <span class="n">e_k</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">kmesh</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="n">target_shape</span><span class="p">)</span>
-
-        <span class="n">k_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">k</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kmesh</span><span class="p">])</span>
-        <span class="n">k_vec_rel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bz</span><span class="o">.</span><span class="n">units</span><span class="p">())</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">k_vec</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>   
-        <span class="n">e_k</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hopping</span><span class="p">(</span><span class="n">k_vec_rel</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">e_k</span></div></div>
 
 <span class="c1"># ----------------------------------------------------------------------</span>
 <div class="viewcode-block" id="create_square_lattice"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.tight_binding.create_square_lattice">[docs]</a><span class="k">def</span> <span class="nf">create_square_lattice</span><span class="p">(</span><span class="n">norb</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">tp</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">zeeman</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">spin</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -563,6 +457,7 @@
     <span class="k">if</span> <span class="n">spin</span><span class="p">:</span>
         <span class="n">norb</span> <span class="o">*=</span> <span class="mi">2</span>
 
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
     <span class="n">t_matrix</span> <span class="o">=</span> <span class="o">-</span><span class="n">t</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">norb</span><span class="p">)</span>
     <span class="n">tp_matrix</span> <span class="o">=</span> <span class="o">-</span><span class="n">tp</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">norb</span><span class="p">)</span>
     <span class="n">zeeman_matrix</span> <span class="o">=</span> <span class="n">zeeman</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">([(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="n">orb</span> <span class="k">for</span> <span class="n">orb</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">)])</span>
@@ -596,6 +491,7 @@
     <span class="n">full_units</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
     <span class="n">units</span> <span class="o">=</span> <span class="n">full_units</span><span class="p">[:</span><span class="n">dim</span><span class="p">]</span>
 
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
     <span class="k">if</span> <span class="n">norb</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">t_matrix</span> <span class="o">=</span> <span class="o">-</span><span class="n">t</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">norb</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">norb</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
@@ -612,6 +508,8 @@
     <span class="n">model_for_tests</span> <span class="o">=</span> <span class="n">TBLattice</span><span class="p">(</span><span class="n">units</span><span class="p">,</span> <span class="n">hoppings</span><span class="p">,</span> <span class="n">orbital_positions</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">model_for_tests</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;TBLattice&#39;</span><span class="p">,</span> <span class="s1">&#39;create_square_lattice&#39;</span><span class="p">,</span> <span class="s1">&#39;create_model_for_tests&#39;</span><span class="p">]</span>
 </pre></div>
 
            </div>
