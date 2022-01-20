@@ -1,7 +1,7 @@
 .. _about:
 
 About w2dynamics_interface
-==========================
+**************************
 
 Authors
 -------
