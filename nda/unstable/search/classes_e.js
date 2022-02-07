@@ -15,6 +15,7 @@ var searchData=
   ['ph_5fset_3c_20t_2e_2e_2e_20_3e_12',['ph_set&lt; T... &gt;',['../structnda_1_1clef_1_1ph__set.html',1,'nda::clef']]],
   ['ph_5fset_3c_20t0_2c_20t_2e_2e_2e_20_3e_13',['ph_set&lt; T0, T... &gt;',['../structnda_1_1clef_1_1ph__set_3_01T0_00_01T_8_8_8_01_4.html',1,'nda::clef']]],
   ['placeholder_14',['placeholder',['../structnda_1_1clef_1_1placeholder.html',1,'nda::clef']]],
-  ['print_5ftuple_5fimpl_15',['print_tuple_impl',['../structnda_1_1clef_1_1print__tuple__impl.html',1,'nda::clef']]],
-  ['print_5ftuple_5fimpl_3c_20m_2c_20m_20_3e_16',['print_tuple_impl&lt; m, m &gt;',['../structnda_1_1clef_1_1print__tuple__impl_3_01m_00_01m_01_4.html',1,'nda::clef']]]
+  ['plus_15',['plus',['../structnda_1_1clef_1_1tags_1_1plus.html',1,'nda::clef::tags']]],
+  ['print_5ftuple_5fimpl_16',['print_tuple_impl',['../structnda_1_1clef_1_1print__tuple__impl.html',1,'nda::clef']]],
+  ['print_5ftuple_5fimpl_3c_20m_2c_20m_20_3e_17',['print_tuple_impl&lt; m, m &gt;',['../structnda_1_1clef_1_1print__tuple__impl_3_01m_00_01m_01_4.html',1,'nda::clef']]]
 ];

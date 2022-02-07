@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['zeros_0',['zeros',['../classnda_1_1basic__array.html#a5669198cc115b17bd6da10353b6b3739',1,'nda::basic_array::zeros()'],['../namespacenda.html#aa0086b1d47f551e50ef8658e8e200dbc',1,'nda::zeros()']]]
+  ['q_5fof_5fn_0',['q_of_n',['../namespacenda_1_1slice__static.html#ac0f910bee38a323e817a109b45ffafb1',1,'nda::slice_static']]],
+  ['q_5fof_5fp_5fmap_1',['q_of_p_map',['../namespacenda_1_1slice__static.html#a9489af12b1d4dc16985510a6ef35774c',1,'nda::slice_static']]]
 ];

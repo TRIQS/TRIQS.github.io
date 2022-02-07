@@ -1,8 +1,5 @@
 var searchData=
 [
-  ['tan_0',['tan',['../namespacenda.html#a8d905ab278504713cab3599e778a5b59',1,'nda']]],
-  ['tanh_1',['tanh',['../namespacenda.html#ae04b88bd925b486f5dda6fa2c3892aad',1,'nda']]],
-  ['terminal_2',['terminal',['../structnda_1_1clef_1_1tags_1_1terminal.html',1,'nda::clef::tags']]],
-  ['trace_3',['trace',['../namespacenda.html#a02d439ad1a5a02cedfe5face4cb66a1b',1,'nda']]],
-  ['transpose_4',['transpose',['../classnda_1_1idx__map.html#a467a22f13e707152f920fe9bf0cb0ee7',1,'nda::idx_map']]]
+  ['q_5fof_5fn_0',['q_of_n',['../namespacenda_1_1slice__static.html#ac0f910bee38a323e817a109b45ffafb1',1,'nda::slice_static']]],
+  ['q_5fof_5fp_5fmap_1',['q_of_p_map',['../namespacenda_1_1slice__static.html#a9489af12b1d4dc16985510a6ef35774c',1,'nda::slice_static']]]
 ];
