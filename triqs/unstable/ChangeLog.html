@@ -427,10 +427,10 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Changelog</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#version-3-1-0">Version 3.1.0</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#porting-script">Porting Script</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#green-function-meshes-c">Green function meshes (C++)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#move-multi-array-to-triqs-nda-library">Move multi-array to TRIQS/nda library</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#deprecate-use-of-string-indices-for-green-functions">Deprecate use of string indices for Green functions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#change-in-gf-struct-objects">Change in gf_struct objects</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#green-function-meshes-c">Green function meshes (C++)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#move-multi-array-into-triqs-nda-library">Move multi-array into TRIQS/nda library</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#triqs-stat-rework">triqs::stat Rework</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#bath-discretization-function">Bath discretization function</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#jenkins-sanitizer-checks">Jenkins Sanitizer Checks</a></li>
@@ -449,7 +449,6 @@
 <li class="toctree-l3"><a class="reference internal" href="#mesh">mesh</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#mpi">mpi</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#nda">nda</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#stat">stat</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#version-3-0-2">Version 3.0.2</a><ul>
@@ -703,7 +702,7 @@
 <li>introduces a new website theme</li>
 <li>fixes several library issues</li>
 </ul>
-<p>We thank all the people who have contributed to this release: Weh Andreas, Maxime Charlebois, Philipp D, Philipp Dumitrescu, Alexander Hampel, Jonathan Karp, Igor Krivenko, Henri Menke, Olivier Parcollet, Markus Richter, Dylan Simon, Hugo U. R. Strand, Nils Wentzell, Sophie Beck, Rok Žitko</p>
+<p>We thank all the people who have contributed to this release: Weh Andreas, Maxime Charlebois, Philipp Dumitrescu, Alexander Hampel, Jonathan Karp, Igor Krivenko, Henri Menke, Olivier Parcollet, Markus Richter, Dylan Simon, Hugo U. R. Strand, Nils Wentzell, Sophie Beck, Rok Žitko</p>
 <div class="section" id="porting-script">
 <h3>Porting Script<a class="headerlink" href="#porting-script" title="Permalink to this headline">¶</a></h3>
 <p>TRIQS 3.1.0 introduced a changes (summarized below) that require adjustments in TRIQS-based applications.
@@ -716,66 +715,6 @@ chmod u+x port_to_triqs3
 </div>
 <p>Make sure to review all changes before you commit them.
 If you run into problems porting your application to this release, feel free to contact us by opening a <a class="reference external" href="https://github.com/TRIQS/triqs/discussions" rel="noopener noreferrer" target="_blank">discussion</a> on github.</p>
-</div>
-<div class="section" id="green-function-meshes-c">
-<h3>Green function meshes (C++)<a class="headerlink" href="#green-function-meshes-c" title="Permalink to this headline">¶</a></h3>
-<p>The Green functions are now templated directly on the mesh types, making the <code class="docutils literal notranslate"><span class="pre">gf_mesh</span></code> template obsolete.
-The meshes were further regrouped in the <code class="docutils literal notranslate"><span class="pre">triqs::mesh</span></code> namespace with some renamings:</p>
-<ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">gf_mesh&lt;imfreq&gt;</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">mesh::imfreq</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">gf_mesh&lt;cyclic_lattice&gt;</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">mesh::cyclat</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">gf_mesh&lt;brillouin_zone&gt;</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">mesh::brzone</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">gf_mesh&lt;cartesian_product&lt;..&gt;&gt;</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">mesh::prod&lt;..&gt;</span></code></li>
-</ul>
-<p>We have kept aliases for backward compatibility.</p>
-<p>This means for example that</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span> <span class="k">auto</span> <span class="n">m</span> <span class="o">=</span> <span class="n">gf_mesh</span><span class="o">&lt;</span><span class="n">imfreq</span><span class="o">&gt;</span><span class="p">{....};</span>
- <span class="k">auto</span> <span class="n">g</span> <span class="o">=</span> <span class="n">gf</span><span class="o">&lt;</span><span class="n">imfreq</span><span class="o">&gt;</span><span class="p">{</span><span class="n">m</span><span class="p">,</span> <span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">}};</span>
-</pre></div>
-</div>
-<p>should now read</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span> <span class="k">auto</span> <span class="n">m</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">::</span><span class="n">imfreq</span><span class="p">{....};</span>
- <span class="k">auto</span> <span class="n">g</span> <span class="o">=</span> <span class="n">gf</span><span class="o">&lt;</span><span class="n">imfreq</span><span class="o">&gt;</span><span class="p">{</span><span class="n">m</span><span class="p">,</span> <span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">}};</span> <span class="c1">// as before</span>
-</pre></div>
-</div>
-<p>The <code class="docutils literal notranslate"><span class="pre">triqs::lattice::brillouin_zone</span></code> was previously used both as the Brillouin Zone domain type
-and as the tag for the associated mesh. If your code uses this class you should replace
-those occurances where the latter meaning applies with <code class="docutils literal notranslate"><span class="pre">mesh::brzone</span></code>. In short:</p>
-<ul class="simple">
-<li>triqs::lattice::brillouin_zone represents the Brillouin Zone domain</li>
-<li>triqs::mesh::brzone is the mesh on this domain</li>
-</ul>
-<p>Before:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span>  <span class="k">auto</span> <span class="n">m</span> <span class="o">=</span> <span class="n">gf_mesh</span><span class="o">&lt;</span><span class="n">brillouin_zone</span><span class="o">&gt;</span><span class="p">{....};</span>
-  <span class="k">auto</span> <span class="n">g</span> <span class="o">=</span> <span class="n">gf</span><span class="o">&lt;</span><span class="n">cartesian_product</span><span class="o">&lt;</span><span class="n">brillouin_zone</span><span class="p">,</span><span class="n">imfreq</span><span class="o">&gt;&gt;</span> <span class="p">{{</span><span class="n">m</span><span class="p">,</span> <span class="p">...},</span> <span class="p">....};</span> 
-</pre></div>
-</div>
-<p>Now:</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span>  <span class="k">auto</span> <span class="n">m</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">::</span><span class="n">brzone</span><span class="p">{....};</span>
-  <span class="k">auto</span> <span class="n">g</span> <span class="o">=</span> <span class="n">gf</span><span class="o">&lt;</span><span class="n">prod</span><span class="o">&lt;</span><span class="n">brzone</span><span class="p">,</span><span class="n">imfreq</span><span class="o">&gt;&gt;</span><span class="p">{{</span><span class="n">m</span><span class="p">,</span> <span class="p">...},</span> <span class="p">....};</span>
-</pre></div>
-</div>
-<p>Backward compatibility help:</p>
-<ul class="simple">
-<li>gf_mesh<T> is aliased to T, with deprecation.</li>
-<li><a class="reference external" href="https://raw.githubusercontent.com/TRIQS/triqs/unstable/porting_tools/port_to_triqs3" rel="noopener noreferrer" target="_blank">porting script</a> mentioned above</li>
-</ul>
-</div>
-<div class="section" id="move-multi-array-to-triqs-nda-library">
-<h3>Move multi-array to TRIQS/nda library<a class="headerlink" href="#move-multi-array-to-triqs-nda-library" title="Permalink to this headline">¶</a></h3>
-<p>We have moved the multi-array functionality out of the TRIQS library
-and into the <a class="reference external" href="https://github.com/triqs/nda" rel="noopener noreferrer" target="_blank">TRIQS/nda</a> repository.
-TRIQS/nda is a standalone multi-array library that does not depend
-on any components of triqs.</p>
-<p>Note that most of the classes and functions previously available
-in the <code class="docutils literal notranslate"><span class="pre">triqs::arrays</span></code> namespace are now defined in the <code class="docutils literal notranslate"><span class="pre">nda</span></code> namespace.
-The relevant header files for nda are</p>
-<ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">nda/nda.hpp</span></code> for array, matrix, vector, their view classes, arithmetic ops and algorithms</li>
-<li><code class="docutils literal notranslate"><span class="pre">nda/h5.hpp</span></code> for hdf5 read and write functions</li>
-<li><code class="docutils literal notranslate"><span class="pre">nda/mpi.hpp</span></code> for mpi functionalities</li>
-<li><code class="docutils literal notranslate"><span class="pre">nda/linalg.hpp</span></code> for linear algebra functions</li>
-</ul>
 </div>
 <div class="section" id="deprecate-use-of-string-indices-for-green-functions">
 <h3>Deprecate use of string indices for Green functions<a class="headerlink" href="#deprecate-use-of-string-indices-for-green-functions" title="Permalink to this headline">¶</a></h3>
@@ -814,13 +753,86 @@ a list of indices. Correspondingly, the C++ type <code class="docutils literal n
 <p>Note that we provide backward compatibility layers in most effected functions and in particular
 in the interfaces of our applications TRIQS/cthyb, TRIQS/tprf and TRIQS/dft_tools.</p>
 </div>
+<div class="section" id="green-function-meshes-c">
+<h3>Green function meshes (C++)<a class="headerlink" href="#green-function-meshes-c" title="Permalink to this headline">¶</a></h3>
+<p>The Green functions are now templated directly on the mesh types, making the <code class="docutils literal notranslate"><span class="pre">gf_mesh</span></code> template obsolete.
+The meshes were further regrouped in the <code class="docutils literal notranslate"><span class="pre">triqs::mesh</span></code> namespace with some renamings:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">gf_mesh&lt;imfreq&gt;</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">mesh::imfreq</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">gf_mesh&lt;cyclic_lattice&gt;</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">mesh::cyclat</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">gf_mesh&lt;brillouin_zone&gt;</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">mesh::brzone</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">gf_mesh&lt;cartesian_product&lt;..&gt;&gt;</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">mesh::prod&lt;..&gt;</span></code></li>
+</ul>
+<p>We have kept aliases for backward compatibility.</p>
+<p>This means for example that</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span> <span class="k">auto</span> <span class="n">m</span> <span class="o">=</span> <span class="n">gf_mesh</span><span class="o">&lt;</span><span class="n">imfreq</span><span class="o">&gt;</span><span class="p">{....};</span>
+ <span class="k">auto</span> <span class="n">g</span> <span class="o">=</span> <span class="n">gf</span><span class="o">&lt;</span><span class="n">imfreq</span><span class="o">&gt;</span><span class="p">{</span><span class="n">m</span><span class="p">,</span> <span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">}};</span>
+</pre></div>
+</div>
+<p>should now read</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span> <span class="k">auto</span> <span class="n">m</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">::</span><span class="n">imfreq</span><span class="p">{....};</span>
+ <span class="k">auto</span> <span class="n">g</span> <span class="o">=</span> <span class="n">gf</span><span class="o">&lt;</span><span class="n">imfreq</span><span class="o">&gt;</span><span class="p">{</span><span class="n">m</span><span class="p">,</span> <span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">}};</span> <span class="c1">// as before</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">triqs::lattice::brillouin_zone</span></code> was previously used both as the Brillouin Zone domain type
+and as the tag for the associated mesh. If your code uses this class you should replace
+those occurrences where the latter meaning applies with <code class="docutils literal notranslate"><span class="pre">mesh::brzone</span></code>. In short:</p>
+<ul class="simple">
+<li>triqs::lattice::brillouin_zone represents the Brillouin Zone domain</li>
+<li>triqs::mesh::brzone is the mesh on this domain</li>
+</ul>
+<p>Before:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span>  <span class="k">auto</span> <span class="n">m</span> <span class="o">=</span> <span class="n">gf_mesh</span><span class="o">&lt;</span><span class="n">brillouin_zone</span><span class="o">&gt;</span><span class="p">{....};</span>
+  <span class="k">auto</span> <span class="n">g</span> <span class="o">=</span> <span class="n">gf</span><span class="o">&lt;</span><span class="n">cartesian_product</span><span class="o">&lt;</span><span class="n">brillouin_zone</span><span class="p">,</span><span class="n">imfreq</span><span class="o">&gt;&gt;</span> <span class="p">{{</span><span class="n">m</span><span class="p">,</span> <span class="p">...},</span> <span class="p">....};</span>
+</pre></div>
+</div>
+<p>Now:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span>  <span class="k">auto</span> <span class="n">m</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">::</span><span class="n">brzone</span><span class="p">{....};</span>
+  <span class="k">auto</span> <span class="n">g</span> <span class="o">=</span> <span class="n">gf</span><span class="o">&lt;</span><span class="n">prod</span><span class="o">&lt;</span><span class="n">brzone</span><span class="p">,</span><span class="n">imfreq</span><span class="o">&gt;&gt;</span><span class="p">{{</span><span class="n">m</span><span class="p">,</span> <span class="p">...},</span> <span class="p">....};</span>
+</pre></div>
+</div>
+<p>Backward compatibility help:</p>
+<ul class="simple">
+<li>gf_mesh<T> is aliased to T, with deprecation.</li>
+<li><a class="reference external" href="https://raw.githubusercontent.com/TRIQS/triqs/unstable/porting_tools/port_to_triqs3" rel="noopener noreferrer" target="_blank">porting script</a> mentioned above</li>
+</ul>
+</div>
+<div class="section" id="move-multi-array-into-triqs-nda-library">
+<h3>Move multi-array into TRIQS/nda library<a class="headerlink" href="#move-multi-array-into-triqs-nda-library" title="Permalink to this headline">¶</a></h3>
+<p>We have moved the multi-array functionality out of the TRIQS library
+and into the <a class="reference external" href="https://github.com/triqs/nda" rel="noopener noreferrer" target="_blank">TRIQS/nda</a> repository.
+TRIQS/nda is a standalone multi-array library that does not depend
+on any components of triqs.</p>
+<p>Note that most of the classes and functions previously available
+in the <code class="docutils literal notranslate"><span class="pre">triqs::arrays</span></code> namespace are now defined in the <code class="docutils literal notranslate"><span class="pre">nda</span></code> namespace.
+The relevant header files for nda are</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">nda/nda.hpp</span></code> for array, matrix, vector, their view classes, arithmetic ops and algorithms</li>
+<li><code class="docutils literal notranslate"><span class="pre">nda/h5.hpp</span></code> for hdf5 read and write functions</li>
+<li><code class="docutils literal notranslate"><span class="pre">nda/mpi.hpp</span></code> for mpi functionalities</li>
+<li><code class="docutils literal notranslate"><span class="pre">nda/linalg.hpp</span></code> for linear algebra functions</li>
+</ul>
+</div>
 <div class="section" id="triqs-stat-rework">
 <h3>triqs::stat Rework<a class="headerlink" href="#triqs-stat-rework" title="Permalink to this headline">¶</a></h3>
 <p>TBW</p>
 </div>
 <div class="section" id="bath-discretization-function">
 <h3>Bath discretization function<a class="headerlink" href="#bath-discretization-function" title="Permalink to this headline">¶</a></h3>
-<p>TBW</p>
+<p>To fit a given hybridization function, either in imaginary frequency or time we provide now a bath discretization function (triqs.gf.tools.discretize_bath).
+Given a input <code class="docutils literal notranslate"><span class="pre">delta_in</span></code> and a number of bath sites <code class="docutils literal notranslate"><span class="pre">Nb</span></code> the function will fit <code class="docutils literal notranslate"><span class="pre">Nb</span></code> bath energies and hoppings on the input Green function mesh.
+The optimization is performed using scipy optimize minimizer BFGS (+basin hopping) or Nelder-Mead. More information can be found in the doc string.</p>
+<p>We also added a function <code class="docutils literal notranslate"><span class="pre">make_delta</span></code> in <code class="docutils literal notranslate"><span class="pre">triqs.gf.tools</span></code> to construct a hybridization function on the imaginary axis for given hoppings and bath energies.</p>
+<p>features of <code class="docutils literal notranslate"><span class="pre">discretize_bath</span></code>:</p>
+<ul class="simple">
+<li>allow to fit BlockGf objects, with blocks of arbitrary size</li>
+<li>allow to fit complex hybridization functions</li>
+<li>fit is directly performed on <code class="docutils literal notranslate"><span class="pre">iw</span></code> or <code class="docutils literal notranslate"><span class="pre">tau</span></code> depending on the input</li>
+<li>Nelder-Mead, or gradient based minimizer BFGS and basin hopping BFGS from scipy</li>
+<li>input guesses can be provided either as complete guess for the hoppings and / or energies, or as a single value for all hoppings</li>
+<li>if no guess for the hoppings is passed, the first guess is constructed from:
+<code class="docutils literal notranslate"><span class="pre">lim_{iw-&gt;inf}</span> <span class="pre">iw</span> <span class="pre">*</span> <span class="pre">Delta(iw)</span></code> or from <code class="docutils literal notranslate"><span class="pre">-Delta(0)</span> <span class="pre">-</span> <span class="pre">Delta(beta)</span></code> correspondingly.</li>
+</ul>
 </div>
 <div class="section" id="jenkins-sanitizer-checks">
 <h3>Jenkins Sanitizer Checks<a class="headerlink" href="#jenkins-sanitizer-checks" title="Permalink to this headline">¶</a></h3>
@@ -831,7 +843,11 @@ LLVM sanitizer checks enabled. In particular we make use of the <a class="refere
 </div>
 <div class="section" id="new-website-theme">
 <h3>New website theme<a class="headerlink" href="#new-website-theme" title="Permalink to this headline">¶</a></h3>
-<p>TBW</p>
+<p>We changed the sphinx theme of the documentation to the <a class="reference external" href="https://sphinx-rtd-theme.readthedocs.io/" rel="noopener noreferrer" target="_blank">read the docs theme</a>.
+The navigation of the website is done with a vertical sidebar on the left.
+Additionally we fixed various broken references in the code manual, that sphinx could not build.
+This theme is also deployed for all other triqs applications in version 3.1.0.
+If you should find any broken websites please open an <a class="reference external" href="https://github.com/TRIQS/triqs/issues" rel="noopener noreferrer" target="_blank">issue</a>.</p>
 </div>
 <div class="section" id="tightbinding-and-tblattice-improvements">
 <h3>TightBinding and TBLattice improvements<a class="headerlink" href="#tightbinding-and-tblattice-improvements" title="Permalink to this headline">¶</a></h3>
@@ -839,7 +855,8 @@ LLVM sanitizer checks enabled. In particular we make use of the <a class="refere
 This effects the C++ class <code class="docutils literal notranslate"><span class="pre">triqs::lattice::tight_binding</span></code> as well as the Python classes
 <code class="docutils literal notranslate"><span class="pre">triqs.lattice.TightBinding</span></code> and <code class="docutils literal notranslate"><span class="pre">triqs.lattice.TBLattice</span></code>. All classes now provide
 member functions <code class="docutils literal notranslate"><span class="pre">fourier(k)</span></code> and <code class="docutils literal notranslate"><span class="pre">dispersion(k)</span></code> to calculate <code class="docutils literal notranslate"><span class="pre">h(k)</span></code> and its energy spectrum
-for single k-points, arrays of k-points and even on a given k-point mesh.</p>
+for single k-points, arrays of k-points and even on a given k-point mesh.
+We also deprecate the function <code class="docutils literal notranslate"><span class="pre">hopping</span></code>, which is now equivalent to <code class="docutils literal notranslate"><span class="pre">fourier</span></code> due to its confusing name.</p>
 <p>We have further added additional Python utility functions <code class="docutils literal notranslate"><span class="pre">triqs.lattice.utils</span></code></p>
 <ul class="simple">
 <li><code class="docutils literal notranslate"><span class="pre">TB_from_wannier90</span></code>: Create TBLattice object from a wannier90 output file</li>
@@ -881,7 +898,7 @@ To compile this release from source, a modern compiler is required. In particula
 <li>Fix #825: quantum_number_eigenvalues returned incorrect values when constraining the number of particles</li>
 <li>Expose atom_diag constructor for limiting particle subspaces to python</li>
 <li>Provide access to fock_states and unitary matrix by subspace without copy</li>
-<li>Implement autopartition with additionnal effective hybridization term in block determination of atom_diag.</li>
+<li>Implement autopartition with additional effective hybridization term in block determination of atom_diag.</li>
 <li>Adjust atomdiag implementation after change in convention of nda::linalg::eigenelements</li>
 <li>Add function get_subspace_dims to atom_diag</li>
 <li>Expose block-structure constraining constructor to python</li>
@@ -947,7 +964,7 @@ To compile this release from source, a modern compiler is required. In particula
 <li>Add block_gf constructor from mesh and std::vector<a class="reference external" href="std::integral" rel="noopener noreferrer" target="_blank">std::integral</a></li>
 <li>Add function block_sizes to block_gf and block_gf_view</li>
 <li>Wrap make_gf_from_fourier(block_gf, n_iw / n_tau) to python</li>
-<li>Fix issue in block[2]_gf scalar arithmetic + test</li>
+<li>Fix issue in block_gf and block2_gf scalar arithmetic + test</li>
 <li>Fix python gf multiplication for nondiagonal matrix shapes + Test</li>
 <li>Fix make_real_in_tau and is_gf_real_in_tau for matrix_valued Gfs</li>
 <li>Add test for on comparison of gf with transpose of self</li>
@@ -1059,66 +1076,6 @@ To compile this release from source, a modern compiler is required. In particula
 <li>Consistently use nda:: over arrays::</li>
 <li>Replace any occurance of clef::_ph by clef::placeholder to account for renaming in nda</li>
 <li>Replace any clef::placeholder_prime by clef::placeholder</li>
-</ul>
-</div>
-<div class="section" id="stat">
-<h3>stat<a class="headerlink" href="#stat" title="Permalink to this headline">¶</a></h3>
-<ul class="simple">
-<li>Add missing conversion from complex to real in mean_error.hpp</li>
-<li>Correct module name in triqs/stat/histograms_desc.py</li>
-<li>Fix sqrt usage in jacknife.hpp</li>
-<li>Move stacked_array to nda namespace</li>
-<li>In autocorr and jacknife test use relative double accuracy check, Adjust for IntelLLVM compat</li>
-<li>Fix type inconsistency in mpi_reduce_MQ</li>
-<li>Fix type inconsistency in log_bin_errors_all_reduce</li>
-<li>Make rng based autocorr test compatible with libstdcxx</li>
-<li>fix in MQ reduce type and test</li>
-<li>fix log_bin_errors_all_reduce pivot index</li>
-<li>internal simplification of all_reduce log bins</li>
-<li>name change to log_bin_errors_all_reduce</li>
-<li>fix test for single mpi thread</li>
-<li>return counts in log_bin_errors</li>
-<li>adjust double accuracy in test</li>
-<li>MPI reduce log errors of unequal length</li>
-<li>make mpi reducer for M,Q data</li>
-<li>fix log_bin_error_mpi</li>
-<li>quickfix for mpi reduction of log binner</li>
-<li>update test to use complex literal</li>
-<li>fix fragile move construct in lin_binner</li>
-<li>Replace conj_r by conj, use nda::real over std::real, add make_real and get_real_t</li>
-<li>add make_real function for types</li>
-<li>start fixing real(M[0]) issues</li>
-<li>nda include fix</li>
-<li>histogram update for new nda library</li>
-<li>run port_to_triqs3 on stat files</li>
-<li>fix rebase code error</li>
-<li>adjusts golden ratio test</li>
-<li>adjust precision on test</li>
-<li>Clean  hdf5</li>
-<li>add stat doc and examples</li>
-<li>accumulator &lt;&lt; now return *this to chain; clean up stat tests</li>
-<li>reworks log_binning</li>
-<li>fixes casting to real issue in log_bin; adds tests</li>
-<li>Documentation</li>
-<li>Add documentation</li>
-<li>Clang format</li>
-<li>Fix mpi jacknife</li>
-<li>Fix mean_err in mpi and test</li>
-<li>updates doc descriptions and adds examples for docs</li>
-<li>improves tests and fixes bug in mean_error_mpi</li>
-<li>adds documentation</li>
-<li>adds documentation for stat; moves golden_ration test</li>
-<li>propagates change of statistics to stat folder rename</li>
-<li>renames statistics folders to stat</li>
-<li>updates in code documentation</li>
-<li>updates histograms.hpp comments for new doc generator</li>
-<li>updates stat.hpp header</li>
-<li>renames general header statistics.hpp to stat.hpp</li>
-<li>change namespace of histogram</li>
-<li>fixes include to accumulator_gold_test</li>
-<li>separates out mean_error functions; adds docs</li>
-<li>reworks entire accumulator class:</li>
-<li>fixes mpi &amp; intertool includes and naming</li>
 </ul>
 </div>
 </div>
