@@ -1,0 +1,99 @@
+..
+   Generated automatically by cpp2rst
+
+.. highlight:: c
+.. role:: red
+.. role:: green
+.. role:: param
+
+
+.. _triqs__stat__accumulator:
+
+triqs::stat::accumulator
+========================
+
+*#include <triqs/stat.hpp>*
+
+.. rst-class:: cppsynopsis
+
+     template<typename T> class  :red:`accumulator`
+
+The class takes in measurements during a Monte Carlo simulation and serves a dual purpose:
+
+(a) It can estimate the auto-correlation time of the data (so-called "logarithmic binning").
+(b) It can average groups of consecutive measurements and store the final data (so-called "linear binning").
+
+The accumulators can be configured to perform either or both of these purposes, as needed. The design is
+purposefully flexible -- it is useful both where the auto-correlation time :math:`\tau` of the data is known as well as
+when it has to be estimated during the simulation.
+
+Logarithmic (Log) Binning
+-------------------------
+
+This part of the accumulator is used to estimate the autocorrelation time of the data, by calculating the standard
+error of the data binned with different bin sizes. For correlated data, the error should grow as the bin size
+increases up to the autocorrelation time, where it saturates.
+
+The log binning uses bin sizes that are powers of two :math:`2, 4, 8, 16, \ldots` up to a user-defined maximum. Note
+that binning is performed only once there is at one full bin of data at a given size -- any partial accumulation
+is not considered. In the the end, one can obtain the list of standard errors for the different levels of binning;
+this should be analyzed to see if saturation with size has occurred.
+
+.. note:: Underestimating the auto-correlation time and a lack of ergodicity are common sources of systematic
+errors in Monte Carlo simulations. Provided the computational and memory costs are acceptable, it is advisable to
+always turn on logarithmic binning to check that :math:`\tau` was estimated correctly and acts as expected.
+
+Linear (Lin) Binning
+--------------------
+
+This part of the accumulator is responsible for partially averaging (binning) and storing the data. It takes in
+data and accumulates it in a bin up to a user-defined bin-size. At every point, a bin stores the mean value of the
+data within it bin. If the bin size is larger then the auto-correlation time :math:`\tau` of the measurement, the bins
+are independent statistical samples, which can be used for further analysis.
+
+
+Member functions
+----------------
+
+.. table::
+   :widths: 40 60
+
+
+   +----------------------------------------------------------------------------------------+----------------------------------------------------------+
+   | :ref:`(constructor) <triqs__stat__accumulator__constructor>`                           |                                                          |
+   +----------------------------------------------------------------------------------------+----------------------------------------------------------+
+   | :ref:`n_log_bins_max <triqs__stat__accumulator__n_log_bins_max>`                       | Max. number of bins in the logarithmic accumulator       |
+   +----------------------------------------------------------------------------------------+----------------------------------------------------------+
+   | :ref:`n_log_bins <triqs__stat__accumulator__n_log_bins>`                               | Number of bins in the logarithmic accumulator            |
+   +----------------------------------------------------------------------------------------+----------------------------------------------------------+
+   | :ref:`n_lin_bins_max <triqs__stat__accumulator__n_lin_bins_max>`                       | Max. number of bins in the linear accumulator            |
+   +----------------------------------------------------------------------------------------+----------------------------------------------------------+
+   | :ref:`n_lin_bins <triqs__stat__accumulator__n_lin_bins>`                               | Number of bins in the linear accumulator                 |
+   +----------------------------------------------------------------------------------------+----------------------------------------------------------+
+   | :ref:`lin_bin_capacity <triqs__stat__accumulator__lin_bin_capacity>`                   | Capacity of a linear bin                                 |
+   +----------------------------------------------------------------------------------------+----------------------------------------------------------+
+   | :ref:`operator\<\< <triqs__stat__accumulator__operatorLTLT>`                           | Input a measurement into the accumulator                 |
+   +----------------------------------------------------------------------------------------+----------------------------------------------------------+
+   | :ref:`log_bin_errors <triqs__stat__accumulator__log_bin_errors>`                       | Get standard errors of log binned data                   |
+   +----------------------------------------------------------------------------------------+----------------------------------------------------------+
+   | :ref:`log_bin_errors_all_reduce <triqs__stat__accumulator__log_bin_errors_all_reduce>` | Get standard errors of log binned data (MPI Version)     |
+   +----------------------------------------------------------------------------------------+----------------------------------------------------------+
+   | :ref:`linear_bins <triqs__stat__accumulator__linear_bins>`                             | Returns data stored from linear binning                  |
+   +----------------------------------------------------------------------------------------+----------------------------------------------------------+
+   | :ref:`compress_linear_bins <triqs__stat__accumulator__compress_linear_bins>`           | Increases linear bin capacity and compresses data within |
+   +----------------------------------------------------------------------------------------+----------------------------------------------------------+
+
+.. toctree::
+    :hidden:
+
+    accumulator/constructor
+    accumulator/n_log_bins_max
+    accumulator/n_log_bins
+    accumulator/n_lin_bins_max
+    accumulator/n_lin_bins
+    accumulator/lin_bin_capacity
+    accumulator/operator<<
+    accumulator/log_bin_errors
+    accumulator/log_bin_errors_all_reduce
+    accumulator/linear_bins
+    accumulator/compress_linear_bins
