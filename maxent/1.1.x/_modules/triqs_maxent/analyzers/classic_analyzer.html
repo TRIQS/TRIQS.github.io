@@ -1,0 +1,195 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>triqs_maxent.analyzers.classic_analyzer &#8212; TRIQS Analytic Continuation / MaxEnt  documentation</title>
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/triqs.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head><body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../../install.html">Install</a></li>
+    
+    <li><a href="../../../documentation.html">Documentation</a></li>
+    
+    <li><a href="../../../issues.html">Issues</a></li>
+    
+    <li><a href="../../../about.html">About maxent</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../../index.html">maxent</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">performing analytic continuation</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">triqs_maxent.analyzers.classic_analyzer</a></li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for triqs_maxent.analyzers.classic_analyzer</h1><div class="highlight"><pre>
+<span></span><span class="c1"># TRIQS application maxent</span>
+<span class="c1"># Copyright (C) 2018 Gernot J. Kraberger</span>
+<span class="c1"># Copyright (C) 2018 Simons Foundation</span>
+<span class="c1"># Authors: Gernot J. Kraberger and Manuel Zingl</span>
+<span class="c1">#</span>
+<span class="c1"># This program is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+
+
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.analyzer</span> <span class="kn">import</span> <span class="n">Analyzer</span><span class="p">,</span> <span class="n">AnalyzerResult</span>
+
+
+<div class="viewcode-block" id="ClassicAnalyzer"><a class="viewcode-back" href="../../../reference/analyzers/analyzers.html#triqs_maxent.analyzers.classic_analyzer.ClassicAnalyzer">[docs]</a><span class="k">class</span> <span class="nc">ClassicAnalyzer</span><span class="p">(</span><span class="n">Analyzer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Analyzer using the classic MaxEnt method</span>
+
+<span class="sd">    This returns the spectrum :math:`A_\\alpha(\\omega)` that has the</span>
+<span class="sd">    maximum probability (see :py:class:`.BryanAnalyzer` for a plot of</span>
+<span class="sd">    the probability).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+<span class="sd">    name : str</span>
+<span class="sd">        the name of the method, defaults to `ClassicAnalyzer`.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ==========</span>
+<span class="sd">    A_out : array (vector)</span>
+<span class="sd">        the output, i.e. the one true spectrum</span>
+<span class="sd">    alpha_index : int</span>
+<span class="sd">        the index of the output in the ``A_values`` array</span>
+<span class="sd">    info : str</span>
+<span class="sd">        some information about what the analyzer did</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ClassicAnalyzer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ClassicAnalyzer.analyze"><a class="viewcode-back" href="../../../reference/analyzers/analyzers.html#triqs_maxent.analyzers.classic_analyzer.ClassicAnalyzer.analyze">[docs]</a>    <span class="k">def</span> <span class="nf">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">maxent_result</span><span class="p">,</span> <span class="n">matrix_element</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Perform the analysis</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        maxent_result : :py:class:`.MaxEntResult`</span>
+<span class="sd">            the result where the :math:`\alpha`-dependent data is taken</span>
+<span class="sd">            from</span>
+<span class="sd">        matrix_element : tuple</span>
+<span class="sd">            the matrix element (if applicable) that should be analyzed</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result : :py:class:`AnalyzerResult`</span>
+<span class="sd">            the result of the analysis, including the :math:`A_{out}`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">elem</span><span class="p">(</span><span class="n">what</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">maxent_result</span><span class="o">.</span><span class="n">_get_element</span><span class="p">(</span><span class="n">what</span><span class="p">,</span> <span class="n">matrix_element</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">AnalyzerResult</span><span class="p">()</span>
+        <span class="n">res</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">elem</span><span class="p">(</span><span class="n">maxent_result</span><span class="o">.</span><span class="n">probability</span><span class="p">))):</span>
+            <span class="n">res</span><span class="p">[</span><span class="s1">&#39;info&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Probability not calculated. Cannot use ClassicAnalyzer.&#39;</span>
+            <span class="k">return</span> <span class="n">res</span>
+
+        <span class="n">res</span><span class="p">[</span><span class="s1">&#39;alpha_index&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanargmax</span><span class="p">(</span><span class="n">elem</span><span class="p">(</span><span class="n">maxent_result</span><span class="o">.</span><span class="n">probability</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;alpha_index&#39;</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;probability is all NaN&#39;</span><span class="p">)</span>
+
+        <span class="n">res</span><span class="p">[</span><span class="s1">&#39;A_out&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">elem</span><span class="p">(</span><span class="n">maxent_result</span><span class="o">.</span><span class="n">A</span><span class="p">)[</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;alpha_index&#39;</span><span class="p">]]</span>
+        <span class="n">res</span><span class="p">[</span><span class="s1">&#39;info&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Ideal alpha (classic): </span><span class="si">{}</span><span class="s1"> (= index </span><span class="si">{}</span><span class="s1"> zero-based)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">maxent_result</span><span class="o">.</span><span class="n">alpha</span><span class="p">[</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;alpha_index&#39;</span><span class="p">]],</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;alpha_index&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">res</span></div></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">triqs_maxent.analyzers.classic_analyzer</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017-2018 G. J. Kraberger and M. Zingl.
+    </div>
+  </body>
+</html>

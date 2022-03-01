@@ -1,0 +1,526 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>triqs_maxent.kernels &#8212; TRIQS Analytic Continuation / MaxEnt  documentation</title>
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/triqs.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head><body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../install.html">Install</a></li>
+    
+    <li><a href="../../documentation.html">Documentation</a></li>
+    
+    <li><a href="../../issues.html">Issues</a></li>
+    
+    <li><a href="../../about.html">About maxent</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../index.html">maxent</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">performing analytic continuation</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">triqs_maxent.kernels</a></li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for triqs_maxent.kernels</h1><div class="highlight"><pre>
+<span></span><span class="c1"># TRIQS application maxent</span>
+<span class="c1"># Copyright (C) 2018 Gernot J. Kraberger</span>
+<span class="c1"># Copyright (C) 2018 Simons Foundation</span>
+<span class="c1"># Authors: Gernot J. Kraberger and Manuel Zingl</span>
+<span class="c1">#</span>
+<span class="c1"># This program is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+
+
+<span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module provides kernels for the analytic continuation.</span>
+<span class="sd">In general, we have :math:`G_i = \sum_j K_{ij} H_j`.</span>
+<span class="sd">Note that for non-uniform :math:`\omega`-grids, :math:`H = A \Delta\omega`.</span>
+
+<span class="sd">At the moment, only the kernel for the continuation of :math:`G(\tau)`</span>
+<span class="sd">is implemented, i.e., the :py:class:`.TauKernel`.</span>
+
+<span class="sd">For any kernel the preblur version can be used by the :py:class:`.PreblurKernel`</span>
+<span class="sd">(see :ref:`preblur`).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.preblur</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+<div class="viewcode-block" id="KernelSVD"><a class="viewcode-back" href="../../reference/kernels.html#triqs_maxent.kernels.KernelSVD">[docs]</a><span class="k">class</span> <span class="nc">KernelSVD</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; A kernel object with a singular value decomposition</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    K : array</span>
+<span class="sd">        the kernel matrix</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">K</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_U</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_S</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_V</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_K</span> <span class="o">=</span> <span class="n">K</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_threshold</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="KernelSVD.svd"><a class="viewcode-back" href="../../reference/kernels.html#triqs_maxent.kernels.KernelSVD.svd">[docs]</a>    <span class="k">def</span> <span class="nf">svd</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Perform the SVD if not yet performed</span>
+
+<span class="sd">        Usually, this function does not need to be called by the user.</span>
+
+<span class="sd">        We have :math:`K = USV^\dagger`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_U</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_U</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_S</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">,</span>
+                                                      <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_V</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_V</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>  <span class="c1"># due to different conventions</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_U</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_S</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_V</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">U</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get the matrix of left-singular vectors of the kernel</span>
+
+<span class="sd">        If not performed already, the SVD is done.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_U</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">svd</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_U</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">S</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get the vector of singular values of the kernel</span>
+
+<span class="sd">        If not performed already, the SVD is done.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_S</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">svd</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_S</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">V</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get the matrix of right-singular vectors of the kernel</span>
+
+<span class="sd">        If not performed already, the SVD is done.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_V</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">svd</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_V</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">K</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The actual kernel matrix &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_K</span>
+
+<div class="viewcode-block" id="KernelSVD.reduce_singular_space"><a class="viewcode-back" href="../../reference/kernels.html#triqs_maxent.kernels.KernelSVD.reduce_singular_space">[docs]</a>    <span class="k">def</span> <span class="nf">reduce_singular_space</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">1.e-14</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Reduce the singular space</span>
+
+<span class="sd">        All singular values smaller than the ``threshold`` are dropped</span>
+<span class="sd">        from ``S``, ``U``, ``V``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        threshold : float</span>
+<span class="sd">            the threshold for dropping singular values</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_threshold</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">threshold</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">threshold</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_threshold</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_U</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_V</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_S</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_threshold</span> <span class="o">=</span> <span class="n">threshold</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S</span> <span class="o">&gt;=</span> <span class="n">threshold</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_U</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_U</span><span class="p">[:,</span> <span class="n">L</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_S</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_S</span><span class="p">[</span><span class="n">L</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_V</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_V</span><span class="p">[:,</span> <span class="n">L</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span></div></div>
+
+
+<div class="viewcode-block" id="Kernel"><a class="viewcode-back" href="../../reference/kernels.html#triqs_maxent.kernels.Kernel">[docs]</a><span class="k">class</span> <span class="nc">Kernel</span><span class="p">(</span><span class="n">KernelSVD</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; The kernel for the analytic continuation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Kernel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_T</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">K_delta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The kernel including a :math:`\Delta\omega`.</span>
+
+<span class="sd">        Use this to get the reconstructed Green function as</span>
+<span class="sd">        :math:`G_{rec} = K_{delta} A`.</span>
+<span class="sd">        Note that it does not get rotated with :py:meth:`.transform`,</span>
+<span class="sd">        i.e. it gives back the original :math:`G_{rec}`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_K_delta</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="bp">NotImplemented</span><span class="p">(</span><span class="s2">&quot;Use a subclass of Kernel&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Kernel.parameter_change"><a class="viewcode-back" href="../../reference/kernels.html#triqs_maxent.kernels.Kernel.parameter_change">[docs]</a>    <span class="k">def</span> <span class="nf">parameter_change</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Notify the kernel of a parameter change</span>
+
+<span class="sd">        This should be called when, e.g., the data variable (e.g., :math:`\tau`)</span>
+<span class="sd">        or the omega-mesh is changed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fill_values</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">_fill_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="bp">NotImplemented</span><span class="p">(</span><span class="s2">&quot;Use a subclass of Kernel&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Kernel.transform"><a class="viewcode-back" href="../../reference/kernels.html#triqs_maxent.kernels.Kernel.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">T_</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; multiply the kernel from the left with the matrix ``T_``</span>
+
+<span class="sd">        ``T_`` is the absolute rotation with respect to the unrotated</span>
+<span class="sd">        quantities</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">T_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_T</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">T</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_T</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_T</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">T</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">T_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_T</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">T</span> <span class="o">=</span> <span class="n">T_</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_T</span> <span class="o">=</span> <span class="n">T_</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_U</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">U</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_K</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="DataKernel"><a class="viewcode-back" href="../../reference/kernels.html#triqs_maxent.kernels.DataKernel">[docs]</a><span class="k">class</span> <span class="nc">DataKernel</span><span class="p">(</span><span class="n">Kernel</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot; A kernel given by a matrix</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data_variable : array</span>
+<span class="sd">        the array of the data variable, i.e. the variable that the</span>
+<span class="sd">        input-data depends on; typically, one continues :math:`G(\tau)`,</span>
+<span class="sd">        then this would correspond to the :math:`\tau`-grid.</span>
+<span class="sd">    omega : OmegaMesh</span>
+<span class="sd">        the frequency mesh</span>
+<span class="sd">    K : array</span>
+<span class="sd">        the kernel matrix</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_variable</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">DataKernel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_variable</span> <span class="o">=</span> <span class="n">data_variable</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="n">omega</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_K</span> <span class="o">=</span> <span class="n">K</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_K_delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,j-&gt;ij&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_K</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">omega</span><span class="o">.</span><span class="n">delta</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_variable</span></div>
+
+
+<div class="viewcode-block" id="TauKernel"><a class="viewcode-back" href="../../reference/kernels.html#triqs_maxent.kernels.TauKernel">[docs]</a><span class="k">class</span> <span class="nc">TauKernel</span><span class="p">(</span><span class="n">Kernel</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot; A kernel for continuing :math:`G(\tau)`</span>
+
+<span class="sd">    This kernel is defined as</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        K(\tau, \omega) =  - \frac{\exp(-\tau\omega)}{1 + \exp(\beta \omega)}.</span>
+
+<span class="sd">    With this, we have</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        G(\tau) = \int d\omega\, K(\tau, \omega) A(\omega).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tau : array</span>
+<span class="sd">        the :math:`\tau`-mesh where the data is given</span>
+<span class="sd">    omega : OmegaMesh</span>
+<span class="sd">        the :math:`\omega`-mesh where the spectral function should be</span>
+<span class="sd">        calculated</span>
+<span class="sd">    beta : float</span>
+<span class="sd">        the inverse temperature; if not given, it is taken to be the</span>
+<span class="sd">        last ``tau``-value</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">TauKernel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tau</span> <span class="o">=</span> <span class="n">tau</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="n">omega</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fill_values</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_fill_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># invalidate U, S, V</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_U</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_S</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_V</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span>
+        <span class="k">if</span> <span class="n">beta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">oomega</span><span class="p">,</span> <span class="n">ttau</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">omega</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau</span><span class="p">)</span>
+        <span class="c1"># we implement two different (mathematically equivalent) expressions</span>
+        <span class="c1"># for K depending on the sign of omega, for numerical reasons</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="n">oomega</span> <span class="o">&gt;=</span> <span class="mf">0.0</span>
+        <span class="n">iL</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">L</span><span class="p">)</span>
+        <span class="n">nL</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">L</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">oomega</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_K</span><span class="p">[</span><span class="n">iL</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">oomega</span><span class="p">[</span><span class="n">iL</span><span class="p">]</span> <span class="o">*</span> <span class="n">ttau</span><span class="p">[</span><span class="n">iL</span><span class="p">])</span> <span class="o">/</span> \
+            <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">beta</span> <span class="o">*</span> <span class="n">oomega</span><span class="p">[</span><span class="n">iL</span><span class="p">])</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_K</span><span class="p">[</span><span class="n">nL</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">oomega</span><span class="p">[</span><span class="n">nL</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">beta</span> <span class="o">-</span> <span class="n">ttau</span><span class="p">[</span><span class="n">nL</span><span class="p">]))</span> <span class="o">/</span> \
+            <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">beta</span> <span class="o">*</span> <span class="n">oomega</span><span class="p">[</span><span class="n">nL</span><span class="p">]))</span>
+
+        <span class="c1"># include trapz integration in the kernel</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_K_delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,j-&gt;ij&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_K</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">omega</span><span class="o">.</span><span class="n">delta</span><span class="p">)</span>
+
+        <span class="n">T</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_T</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># if self._T is set, the kernel should be transformed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot; :math:`\tau` &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tau</span>
+
+    <span class="nd">@data_variable</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">data_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tau</span> <span class="o">=</span> <span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="IOmegaKernel"><a class="viewcode-back" href="../../reference/kernels.html#triqs_maxent.kernels.IOmegaKernel">[docs]</a><span class="k">class</span> <span class="nc">IOmegaKernel</span><span class="p">(</span><span class="n">Kernel</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot; A kernel for continuing :math:`G(i\omega)`</span>
+
+<span class="sd">    This kernel is defined as</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        K(i\omega, \omega) = \frac{1}{i\omega - \omega}</span>
+
+<span class="sd">    With this, we have</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        G(i\omega) = \int d\omega\, K(i\omega, \omega) A(\omega).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    iomega : array</span>
+<span class="sd">        the :math:`iomega`-mesh where the data is given</span>
+<span class="sd">        (as a real array, i.e. it is internally multiplied by ``1.0j``)</span>
+<span class="sd">    omega : OmegaMesh</span>
+<span class="sd">        the :math:`\omega`-mesh where the spectral function should be</span>
+<span class="sd">        calculated</span>
+<span class="sd">    beta : float</span>
+<span class="sd">        the inverse temperature; if not given, it is taken from the difference</span>
+<span class="sd">        of the first two :math:`i\omega` values</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iomega</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">IOmegaKernel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iomega</span> <span class="o">=</span> <span class="n">iomega</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="n">omega</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fill_values</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_fill_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># invalidate U, S, V</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_U</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_S</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_V</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span>
+        <span class="k">if</span> <span class="n">beta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">beta</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iomega</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">iomega</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">oomega</span><span class="p">,</span> <span class="n">iiomega</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">omega</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">iomega</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">oomega</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_K</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span><span class="n">j</span> <span class="o">*</span> <span class="n">iiomega</span> <span class="o">-</span> <span class="n">oomega</span><span class="p">)</span>
+
+        <span class="c1"># include trapz integration in the kernel</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_K_delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,j-&gt;ij&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_K</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">omega</span><span class="o">.</span><span class="n">delta</span><span class="p">)</span>
+
+        <span class="n">T</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_T</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># if self._T is set, the kernel should be transformed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot; :math:`i\omega` &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">iomega</span>
+
+    <span class="nd">@data_variable</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">data_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iomega</span> <span class="o">=</span> <span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="PreblurKernel"><a class="viewcode-back" href="../../reference/kernels.html#triqs_maxent.kernels.PreblurKernel">[docs]</a><span class="k">class</span> <span class="nc">PreblurKernel</span><span class="p">(</span><span class="n">Kernel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; A kernel for the preblur formalism</span>
+
+<span class="sd">    In the preblur formalism, the equation :math:`G = KA` is replaced</span>
+<span class="sd">    by :math:`G = KBH`, with a hidden image :math:`H` and a blur matrix</span>
+<span class="sd">    :math:`B`.</span>
+
+<span class="sd">    The dicretization of :math:`\omega` has to be accounted for by</span>
+<span class="sd">    including a :math:`\Delta\omega`. In fact, the total equation is</span>
+<span class="sd">    :math:`G_i = \sum_{jk} K_{ij} \Delta\omega_j B_{jk} H_k`, where</span>
+<span class="sd">    :math:`H_k` already includes a :math:`\Delta\omega_k`.</span>
+
+<span class="sd">    Note that the ``PreblurKernel`` should always be used together</span>
+<span class="sd">    with the :py:class:`.PreblurA_of_H`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    K : :py:class:`Kernel`</span>
+<span class="sd">        the kernel to use up to the preblur matrix (e.g. a :py:class:`.TauKernel` instance)</span>
+<span class="sd">    b : float</span>
+<span class="sd">        the blur parameter, i.e., the width of the Gaussian that the hidden</span>
+<span class="sd">        image is convolved with to get the blurred spectral function</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="n">KernelSVD</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_T</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span> <span class="o">=</span> <span class="n">K</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_b</span> <span class="o">=</span> <span class="n">b</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fill_values</span><span class="p">()</span>
+
+<div class="viewcode-block" id="PreblurKernel.parameter_change"><a class="viewcode-back" href="../../reference/kernels.html#triqs_maxent.kernels.PreblurKernel.parameter_change">[docs]</a>    <span class="k">def</span> <span class="nf">parameter_change</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fill_values</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">_fill_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># invalidate U, S, V</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_U</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_S</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_V</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_B</span> <span class="o">=</span> <span class="n">get_preblur</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">omega</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_b</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">K</span><span class="p">,</span>
+                         <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,i-&gt;ij&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_B</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">omega</span><span class="o">.</span><span class="n">delta</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_K_delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">K_delta</span>
+
+<div class="viewcode-block" id="PreblurKernel.transform"><a class="viewcode-back" href="../../reference/kernels.html#triqs_maxent.kernels.PreblurKernel.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fill_values</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">get_omega</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">omega</span>
+
+    <span class="k">def</span> <span class="nf">set_omega</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">omega</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="n">omega</span>
+
+    <span class="n">omega</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_omega</span><span class="p">,</span> <span class="n">set_omega</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">data_variable</span>
+
+    <span class="nd">@data_variable</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">data_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">data_variable</span> <span class="o">=</span> <span class="n">value</span></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">triqs_maxent.kernels</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017-2018 G. J. Kraberger and M. Zingl.
+    </div>
+  </body>
+</html>

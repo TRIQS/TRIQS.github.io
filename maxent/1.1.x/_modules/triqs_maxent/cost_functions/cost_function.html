@@ -1,0 +1,381 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>triqs_maxent.cost_functions.cost_function &#8212; TRIQS Analytic Continuation / MaxEnt  documentation</title>
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/triqs.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head><body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../../install.html">Install</a></li>
+    
+    <li><a href="../../../documentation.html">Documentation</a></li>
+    
+    <li><a href="../../../issues.html">Issues</a></li>
+    
+    <li><a href="../../../about.html">About maxent</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../../index.html">maxent</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">performing analytic continuation</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">triqs_maxent.cost_functions.cost_function</a></li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for triqs_maxent.cost_functions.cost_function</h1><div class="highlight"><pre>
+<span></span><span class="c1"># TRIQS application maxent</span>
+<span class="c1"># Copyright (C) 2018 Gernot J. Kraberger</span>
+<span class="c1"># Copyright (C) 2018 Simons Foundation</span>
+<span class="c1"># Authors: Gernot J. Kraberger and Manuel Zingl</span>
+<span class="c1">#</span>
+<span class="c1"># This program is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+
+
+
+<span class="kn">from</span> <span class="nn">..functions</span> <span class="kn">import</span> <span class="n">DoublyDerivableFunction</span><span class="p">,</span> <span class="n">cached</span><span class="p">,</span> \
+    <span class="n">NormalChi2</span><span class="p">,</span> <span class="n">NormalEntropy</span><span class="p">,</span> <span class="n">NormalH_of_v</span><span class="p">,</span> <span class="n">IdentityA_of_H</span>
+
+
+<div class="viewcode-block" id="CostFunction"><a class="viewcode-back" href="../../../reference/cost_functions.html#triqs_maxent.cost_functions.cost_function.CostFunction">[docs]</a><span class="k">class</span> <span class="nc">CostFunction</span><span class="p">(</span><span class="n">DoublyDerivableFunction</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot; The base class for the function to be minimized</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    chi2 : Chi2</span>
+<span class="sd">        the expression for chi2 (e.g. :py:class:`.NormalChi2`)</span>
+<span class="sd">    S : Entropy</span>
+<span class="sd">        the expression for S (e.g. :py:class:`.NormalEntropy`)</span>
+<span class="sd">    H_of_v : H_of_v</span>
+<span class="sd">        the expression for :math:`H(v)` (e.g. :py:class:`.NormalH_of_v`)</span>
+<span class="sd">    A_of_H : A_of_H</span>
+<span class="sd">        the expression for :math:`A(H)` (e.g. :py:class:`.IdentityA_of_H`)</span>
+<span class="sd">    chi2_factor : float</span>
+<span class="sd">        an additional factor for the :math:`\chi^2` term of the cost function</span>
+<span class="sd">        (default: 1.0)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">chi2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">S</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">H_of_v</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">A_of_H</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">chi2_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_chi2</span> <span class="o">=</span> <span class="n">chi2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_S</span> <span class="o">=</span> <span class="n">S</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_H_of_v</span> <span class="o">=</span> <span class="n">H_of_v</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_A_of_H</span> <span class="o">=</span> <span class="n">A_of_H</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chi2_factor</span> <span class="o">=</span> <span class="n">chi2_factor</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chi2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_chi2</span> <span class="o">=</span> <span class="n">NormalChi2</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_S</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_S</span> <span class="o">=</span> <span class="n">NormalEntropy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_H_of_v</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_H_of_v</span> <span class="o">=</span> <span class="n">NormalH_of_v</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_A_of_H</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">omega</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">omega</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chi2</span><span class="o">.</span><span class="n">omega</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_A_of_H</span> <span class="o">=</span> <span class="n">IdentityA_of_H</span><span class="p">(</span><span class="n">omega</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_alpha</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="CostFunction.set_alpha"><a class="viewcode-back" href="../../../reference/cost_functions.html#triqs_maxent.cost_functions.cost_function.CostFunction.set_alpha">[docs]</a>    <span class="k">def</span> <span class="nf">set_alpha</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Set the hyper-parameter. &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_alpha</span> <span class="o">=</span> <span class="n">alpha</span></div>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">CostFunction</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_H_of_v</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">H_of_v</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_x</span><span class="p">)</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">_H_of_v</span><span class="o">.</span><span class="n">f</span><span class="p">()</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_A_of_H</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">A_of_H</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+        <span class="c1"># we explicitly set it to the same object</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_H_of_v</span><span class="o">.</span><span class="n">_x</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">_x</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_A_of_H</span><span class="o">.</span><span class="n">_x</span> <span class="o">=</span> <span class="n">H</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_chi2</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">chi2</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_chi2</span><span class="o">.</span><span class="n">_x</span> <span class="o">=</span> <span class="n">H</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_S</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">S</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_S</span><span class="o">.</span><span class="n">_x</span> <span class="o">=</span> <span class="n">H</span>
+        <span class="k">return</span> <span class="n">ret</span>
+
+<div class="viewcode-block" id="CostFunction.f"><a class="viewcode-back" href="../../../reference/cost_functions.html#triqs_maxent.cost_functions.cost_function.CostFunction.f">[docs]</a>    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Calculate the function to be minimized, :math:`Q_{\alpha}(v)`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+<span class="sd">        v : array</span>
+<span class="sd">            vector in singular space giving the solution;</span>
+<span class="sd">            if None, the last supplied value should be reused</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Please use a subclass of CostFunction.&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CostFunction.d"><a class="viewcode-back" href="../../../reference/cost_functions.html#triqs_maxent.cost_functions.cost_function.CostFunction.d">[docs]</a>    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Calculate the derivative of the function to be minimized</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+<span class="sd">        v : array</span>
+<span class="sd">            vector in singular space giving the solution</span>
+<span class="sd">            if None, the last supplied value should be reused</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Please use a subclass of CostFunction.&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CostFunction.dd"><a class="viewcode-back" href="../../../reference/cost_functions.html#triqs_maxent.cost_functions.cost_function.CostFunction.dd">[docs]</a>    <span class="k">def</span> <span class="nf">dd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Calculate the 2nd derivative of the function to be minimized</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+<span class="sd">        v : array</span>
+<span class="sd">            vector in singular space giving the solution</span>
+<span class="sd">            if None, the last supplied value should be reused</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Please use a subclass of CostFunction.&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CostFunction.parameter_change"><a class="viewcode-back" href="../../../reference/cost_functions.html#triqs_maxent.cost_functions.cost_function.CostFunction.parameter_change">[docs]</a>    <span class="k">def</span> <span class="nf">parameter_change</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+    <span class="c1">####### Helper functions #######</span>
+
+    <span class="k">def</span> <span class="nf">get_K</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">K</span>
+
+    <span class="k">def</span> <span class="nf">set_K</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">update_chi2</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">update_H_of_v</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">update_Q</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">set_K</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">update_chi2</span><span class="o">=</span><span class="n">update_chi2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">H_of_v</span><span class="o">.</span><span class="n">set_K</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">update_H_of_v</span><span class="o">=</span><span class="n">update_H_of_v</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">update_Q</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+    <span class="n">K</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_K</span><span class="p">,</span> <span class="n">set_K</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_G</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">G</span>
+
+    <span class="k">def</span> <span class="nf">set_G</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">update_chi2</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">update_Q</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">set_G</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">update_chi2</span><span class="o">=</span><span class="n">update_chi2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">update_Q</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+    <span class="n">G</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_G</span><span class="p">,</span> <span class="n">set_G</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_err</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">err</span>
+
+    <span class="k">def</span> <span class="nf">set_err</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">err</span><span class="p">,</span> <span class="n">update_chi2</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">update_Q</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">set_err</span><span class="p">(</span><span class="n">err</span><span class="p">,</span> <span class="n">update_chi2</span><span class="o">=</span><span class="n">update_chi2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">update_Q</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+    <span class="n">err</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_err</span><span class="p">,</span> <span class="n">set_err</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_omega</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">omega</span>
+
+    <span class="k">def</span> <span class="nf">set_omega</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                  <span class="n">omega</span><span class="p">,</span>
+                  <span class="n">update_K</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                  <span class="n">update_chi2</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                  <span class="n">update_D</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                  <span class="n">update_S</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                  <span class="n">update_H_of_v</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                  <span class="n">update_A_of_H</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                  <span class="n">update_Q</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">set_omega</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">update_K</span><span class="o">=</span><span class="n">update_K</span><span class="p">,</span> <span class="n">update_chi2</span><span class="o">=</span><span class="n">update_chi2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">update_K</span><span class="p">:</span>
+            <span class="c1"># we use update_H_of_v = False here, because it gets updated</span>
+            <span class="c1"># anyhow when omega is set later on</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">H_of_v</span><span class="o">.</span><span class="n">set_K</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">,</span> <span class="n">update_H_of_v</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">set_omega</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">update_D</span><span class="o">=</span><span class="n">update_D</span><span class="p">,</span> <span class="n">update_S</span><span class="o">=</span><span class="n">update_S</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">H_of_v</span><span class="o">.</span><span class="n">set_omega</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span>
+                              <span class="n">update_D</span><span class="o">=</span><span class="n">update_D</span><span class="p">,</span>
+                              <span class="n">update_H_of_v</span><span class="o">=</span><span class="n">update_H_of_v</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_of_H</span><span class="o">.</span><span class="n">set_omega</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">update_A_of_H</span><span class="o">=</span><span class="n">update_A_of_H</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">update_Q</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+    <span class="n">omega</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_omega</span><span class="p">,</span> <span class="n">set_omega</span><span class="p">)</span>
+
+    <span class="c1"># ``data_variable`` is a name we use for tau</span>
+    <span class="c1"># because in general we might want to use a different kernel</span>
+    <span class="c1"># and then the supplied data is not G(tau) but, eg, G(iw)</span>
+    <span class="k">def</span> <span class="nf">get_data_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">data_variable</span>
+
+    <span class="k">def</span> <span class="nf">set_data_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                          <span class="n">data_variable</span><span class="p">,</span>
+                          <span class="n">update_K</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                          <span class="n">update_chi2</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">update_Q</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                          <span class="n">update_H_of_v</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">set_data_variable</span><span class="p">(</span><span class="n">data_variable</span><span class="p">,</span> <span class="n">update_K</span><span class="o">=</span><span class="n">update_K</span><span class="p">,</span>
+                                    <span class="n">update_chi2</span><span class="o">=</span><span class="n">update_chi2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">update_K</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">H_of_v</span><span class="o">.</span><span class="n">set_K</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">,</span> <span class="n">update_H_of_v</span><span class="o">=</span><span class="n">update_H_of_v</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">update_Q</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+    <span class="n">data_variable</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_data_variable</span><span class="p">,</span> <span class="n">set_data_variable</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_D</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">D</span>
+
+    <span class="k">def</span> <span class="nf">set_D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+              <span class="n">D</span><span class="p">,</span>
+              <span class="n">update_S</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">update_H_of_v</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">update_Q</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">update_A_of_H</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">set_D</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">update_S</span><span class="o">=</span><span class="n">update_S</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">H_of_v</span><span class="o">.</span><span class="n">set_D</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">update_H_of_v</span><span class="o">=</span><span class="n">update_H_of_v</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">A_of_H</span><span class="o">.</span><span class="n">set_omega</span><span class="p">(</span><span class="n">D</span><span class="o">.</span><span class="n">omega</span><span class="p">,</span> <span class="n">update_A_of_H</span><span class="o">=</span><span class="n">update_A_of_H</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">update_Q</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+    <span class="n">D</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_D</span><span class="p">,</span> <span class="n">set_D</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_chi2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chi2</span>
+
+    <span class="k">def</span> <span class="nf">set_chi2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chi2</span><span class="p">,</span> <span class="n">update_Q</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_chi2</span> <span class="o">=</span> <span class="n">chi2</span>
+        <span class="k">if</span> <span class="n">update_Q</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+    <span class="n">chi2</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_chi2</span><span class="p">,</span> <span class="n">set_chi2</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_S</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_S</span>
+
+    <span class="k">def</span> <span class="nf">set_S</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">update_Q</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_S</span> <span class="o">=</span> <span class="n">S</span>
+        <span class="k">if</span> <span class="n">update_Q</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+    <span class="n">S</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_S</span><span class="p">,</span> <span class="n">set_S</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_H_of_v</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_H_of_v</span>
+
+    <span class="k">def</span> <span class="nf">set_H_of_v</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H_of_v</span><span class="p">,</span> <span class="n">update_Q</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_H_of_v</span> <span class="o">=</span> <span class="n">H_of_v</span>
+        <span class="k">if</span> <span class="n">update_Q</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+    <span class="n">H_of_v</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_H_of_v</span><span class="p">,</span> <span class="n">set_H_of_v</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_A_of_H</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_A_of_H</span>
+
+    <span class="k">def</span> <span class="nf">set_A_of_H</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A_of_H</span><span class="p">,</span> <span class="n">update_Q</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_A_of_H</span> <span class="o">=</span> <span class="n">A_of_H</span>
+        <span class="k">if</span> <span class="n">update_Q</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+    <span class="n">A_of_H</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_A_of_H</span><span class="p">,</span> <span class="n">set_A_of_H</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">G_orig</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_G_orig&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_G_orig</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">triqs_maxent.cost_functions.cost_function</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017-2018 G. J. Kraberger and M. Zingl.
+    </div>
+  </body>
+</html>

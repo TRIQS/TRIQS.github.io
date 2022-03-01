@@ -1,0 +1,343 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>triqs_maxent.logtaker &#8212; TRIQS Analytic Continuation / MaxEnt  documentation</title>
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/triqs.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head><body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../install.html">Install</a></li>
+    
+    <li><a href="../../documentation.html">Documentation</a></li>
+    
+    <li><a href="../../issues.html">Issues</a></li>
+    
+    <li><a href="../../about.html">About maxent</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../index.html">maxent</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">performing analytic continuation</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">triqs_maxent.logtaker</a></li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for triqs_maxent.logtaker</h1><div class="highlight"><pre>
+<span></span><span class="c1"># TRIQS application maxent</span>
+<span class="c1"># Copyright (C) 2018 Gernot J. Kraberger</span>
+<span class="c1"># Copyright (C) 2018 Simons Foundation</span>
+<span class="c1"># Authors: Gernot J. Kraberger and Manuel Zingl</span>
+<span class="c1">#</span>
+<span class="c1"># This program is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+
+
+
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+
+
+<div class="viewcode-block" id="VerbosityFlags"><a class="viewcode-back" href="../../reference/logtaker.html#triqs_maxent.logtaker.VerbosityFlags">[docs]</a><span class="k">class</span> <span class="nc">VerbosityFlags</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Setting verbosity</span>
+
+<span class="sd">    This describes different verbosity levels for controlling how much</span>
+<span class="sd">    output is generated.</span>
+
+<span class="sd">    Note that the actual integer values are considered implementation</span>
+<span class="sd">    details and might not be conserved across versions.</span>
+
+<span class="sd">    VerbosityFlags can be combined using ``|``, e.g. in order to write</span>
+<span class="sd">    out header and timing information, use::</span>
+
+<span class="sd">        self.verbose = VerbosityFlags.Header | VerbosityFlags.Timing</span>
+
+<span class="sd">    Additional VerbosityFlags can be set with ``|=``::</span>
+
+<span class="sd">        self.verbose |= VerbosityFlags.AlphaLoop</span>
+
+<span class="sd">    and unset with ``&amp;= ~``::</span>
+
+<span class="sd">        self.verbose &amp;= ~VerbosityFlags.AlphaLoop</span>
+
+<span class="sd">    Testing for a particular flag can be done with ``&amp;``.</span>
+
+<span class="sd">    Use this in the :py:class:`.Logtaker` or in the</span>
+<span class="sd">    :py:meth:`.MaxEntLoop.set_verbosity` method.</span>
+
+<span class="sd">    The following shows a typical output of the code and together with</span>
+<span class="sd">    the VerbosityFlags for the individual lines:</span>
+
+<span class="sd">    .. code-block:: none</span>
+
+<span class="sd">        ElementInfo     Calculating diagonal elements.</span>
+<span class="sd">                        Calling MaxEnt for element 0 0</span>
+<span class="sd">        Header          2018-11-22 16:51:11.012704</span>
+<span class="sd">                        MaxEnt run</span>
+<span class="sd">                        TRIQS application maxent</span>
+<span class="sd">                        ...</span>
+<span class="sd">                        scaling alpha by a factor 201 (number of data points)</span>
+<span class="sd">        AlphaLoop       alpha[0] =   1.00500000e+05, chi2 =   6.90348835e+04, n_iter=       9</span>
+<span class="sd">        SolverDetails   6 Q: 7.031977e+06, max_f: 1.494887e-05, conv: 5.297643e-16</span>
+<span class="sd">        AlphaLoop       alpha[1] =   2.69610927e+04, chi2 =   2.69219648e+04, n_iter=       7</span>
+<span class="sd">                        ...</span>
+<span class="sd">        Timing          MaxEnt loop finished in 0:00:00.548325</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">Quiet</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">Header</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">ElementInfo</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">Timing</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">AlphaLoop</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="n">SolverDetails</span> <span class="o">=</span> <span class="mi">16</span>
+    <span class="n">Errors</span> <span class="o">=</span> <span class="mi">32</span>
+
+    <span class="n">Default</span> <span class="o">=</span> <span class="n">Header</span> <span class="o">|</span> <span class="n">ElementInfo</span> <span class="o">|</span> <span class="n">Timing</span> <span class="o">|</span> <span class="n">AlphaLoop</span> <span class="o">|</span> <span class="n">Errors</span></div>
+
+
+<div class="viewcode-block" id="Logtaker"><a class="viewcode-back" href="../../reference/logtaker.html#triqs_maxent.logtaker.Logtaker">[docs]</a><span class="k">class</span> <span class="nc">Logtaker</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Handling logging and error messages.</span>
+
+<span class="sd">    This class allows to log all the information that is written to the</span>
+<span class="sd">    screen to a file as well.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error_log</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">VerbosityFlags</span><span class="o">.</span><span class="n">Default</span>
+
+        <span class="c1"># which verbosity messages should be printed in one line</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">one_line</span> <span class="o">=</span> <span class="n">VerbosityFlags</span><span class="o">.</span><span class="n">SolverDetails</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># the verbose level of the logfile; if None, use self.verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logfile_verbose</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># the last line ending written</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">end</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_welcome_message_printed</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="Logtaker.error_message"><a class="viewcode-back" href="../../reference/logtaker.html#triqs_maxent.logtaker.Logtaker.error_message">[docs]</a>    <span class="k">def</span> <span class="nf">error_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; report error and keep track of the error message</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+<span class="sd">        msg : str</span>
+<span class="sd">            the error message</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_error_log</span> <span class="o">+=</span> <span class="p">[</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="n">VerbosityFlags</span><span class="o">.</span><span class="n">Errors</span><span class="p">,</span> <span class="s1">&#39;ERROR: &#39;</span> <span class="o">+</span> <span class="n">msg</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Logtaker.log_time"><a class="viewcode-back" href="../../reference/logtaker.html#triqs_maxent.logtaker.Logtaker.log_time">[docs]</a>    <span class="k">def</span> <span class="nf">log_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message_verbosity</span><span class="o">=</span><span class="n">VerbosityFlags</span><span class="o">.</span><span class="n">Header</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; print the current time &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="n">message_verbosity</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()))</span></div>
+
+<div class="viewcode-block" id="Logtaker.get_error_messages"><a class="viewcode-back" href="../../reference/logtaker.html#triqs_maxent.logtaker.Logtaker.get_error_messages">[docs]</a>    <span class="k">def</span> <span class="nf">get_error_messages</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; get a list of all error messages raised &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_error_log</span></div>
+
+<div class="viewcode-block" id="Logtaker.clear_error_messages"><a class="viewcode-back" href="../../reference/logtaker.html#triqs_maxent.logtaker.Logtaker.clear_error_messages">[docs]</a>    <span class="k">def</span> <span class="nf">clear_error_messages</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; clear the list of all error messages raised &quot;&quot;&quot;</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_error_log</span><span class="p">[:]</span></div>
+
+<div class="viewcode-block" id="Logtaker.welcome_message"><a class="viewcode-back" href="../../reference/logtaker.html#triqs_maxent.logtaker.Logtaker.welcome_message">[docs]</a>    <span class="k">def</span> <span class="nf">welcome_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">always</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">message_verbosity</span><span class="o">=</span><span class="n">VerbosityFlags</span><span class="o">.</span><span class="n">Header</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; print a welcome message &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">always</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_welcome_message_printed</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_time</span><span class="p">(</span><span class="n">message_verbosity</span><span class="o">=</span><span class="n">message_verbosity</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="n">message_verbosity</span><span class="p">,</span> <span class="s2">&quot;MaxEnt run&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="n">message_verbosity</span><span class="p">,</span> <span class="s2">&quot;TRIQS application maxent&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="n">message_verbosity</span><span class="p">,</span>
+                         <span class="s2">&quot;Copyright(C) 2018 Gernot J. Kraberger</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span>
+                         <span class="s2">&quot;Copyright(C) 2018 Simons Foundation</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span>
+                         <span class="s2">&quot;Authors: Gernot J. Kraberger and Manuel Zingl&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">(</span>
+                <span class="n">message_verbosity</span><span class="p">,</span>
+                <span class="s2">&quot;This program comes with ABSOLUTELY NO WARRANTY.</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span>
+                <span class="s2">&quot;This is free software, and you are welcome to redistribute&quot;</span> <span class="o">+</span>
+                <span class="s2">&quot;it under certain conditions; see file LICENSE.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">(</span>
+                <span class="n">message_verbosity</span><span class="p">,</span>
+                <span class="s2">&quot;Please cite this code and the appropriate original papers (see documentation).</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_welcome_message_printed</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+    <span class="k">def</span> <span class="nf">verbosity_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">iserr</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;The function verbosity_message was &#39;</span>
+                                  <span class="s1">&#39;removed. Please use message instead.&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Logtaker.open_logfile"><a class="viewcode-back" href="../../reference/logtaker.html#triqs_maxent.logtaker.Logtaker.open_logfile">[docs]</a>    <span class="k">def</span> <span class="nf">open_logfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">append</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; open the log file</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+<span class="sd">        name : str</span>
+<span class="sd">            the name of the log file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span> <span class="k">if</span> <span class="n">append</span> <span class="k">else</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Logtaker.close_logfile"><a class="viewcode-back" href="../../reference/logtaker.html#triqs_maxent.logtaker.Logtaker.close_logfile">[docs]</a>    <span class="k">def</span> <span class="nf">close_logfile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; close the log file &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Logtaker.message"><a class="viewcode-back" href="../../reference/logtaker.html#triqs_maxent.logtaker.Logtaker.message">[docs]</a>    <span class="k">def</span> <span class="nf">message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message_verbosity</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; print a message and write it to the log file</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+<span class="sd">        message_verbosity : :py:class:`.VerbosityFlags`</span>
+<span class="sd">            verbosity flags that must be set in order to write that</span>
+<span class="sd">            message (can be one flag or a ``|`` combination)</span>
+<span class="sd">        msg : str</span>
+<span class="sd">            the message; it can contain {} that are formatted with</span>
+<span class="sd">            ``format`` using the ``args`` and ``kwargs``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># check whether all flags given in message_verbosity are set in</span>
+        <span class="c1"># self.verbose</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">&amp;</span> <span class="n">message_verbosity</span> <span class="o">==</span> <span class="n">message_verbosity</span><span class="p">:</span>
+
+            <span class="c1"># if one of the verbosity flags given for this message</span>
+            <span class="c1"># triggers one line behavior</span>
+            <span class="k">if</span> <span class="n">message_verbosity</span> <span class="o">&amp;</span> <span class="bp">self</span><span class="o">.</span><span class="n">one_line</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">end</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                <span class="c1"># go back to the start of the line</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span> <span class="o">==</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="c1"># last printed line did not end with newline; print</span>
+                <span class="c1"># newline now</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">end</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logfile_verbose</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">logfile_verbose</span>
+            <span class="k">if</span> <span class="n">logfile_verbose</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">logfile_verbose</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span>
+
+            <span class="c1"># there is no one line behavior for the logfile</span>
+
+            <span class="k">if</span> <span class="n">logfile_verbose</span> <span class="o">&amp;</span> <span class="n">message_verbosity</span> <span class="o">==</span> <span class="n">message_verbosity</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Logtaker.logged_message"><a class="viewcode-back" href="../../reference/logtaker.html#triqs_maxent.logtaker.Logtaker.logged_message">[docs]</a>    <span class="k">def</span> <span class="nf">logged_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; print a message and write it to the log file</span>
+
+<span class="sd">        .. warning::</span>
+
+<span class="sd">            The use of ``logged_message`` is deprecated.</span>
+<span class="sd">            Use ``message`` instead.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+<span class="sd">        msg : str</span>
+<span class="sd">            the message</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;logged_message is deprecated. Use message instead.&quot;</span><span class="p">,</span>
+            <span class="ne">DeprecationWarning</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">solver_verbose_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="n">VerbosityFlags</span><span class="o">.</span><span class="n">SolverDetails</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">triqs_maxent.logtaker</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017-2018 G. J. Kraberger and M. Zingl.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,354 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Continuation of metallic solutions using preblur &#8212; TRIQS Analytic Continuation / MaxEnt  documentation</title>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/triqs.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=default"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Continuation of matrix-valued functions" href="elementwise.html" />
+    <link rel="prev" title="Visualization" href="visualization.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head><body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../install.html">Install</a></li>
+    
+    <li><a href="../documentation.html">Documentation</a></li>
+    
+    <li><a href="../issues.html">Issues</a></li>
+    
+    <li><a href="../about.html">About maxent</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../index.html">maxent</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">performing analytic continuation</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="elementwise.html" title="Continuation of matrix-valued functions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="visualization.html" title="Visualization"
+             accesskey="P">previous</a> |</li>
+    <li><a href="../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../documentation.html" accesskey="U">Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Continuation of metallic solutions using preblur</a></li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="visualization.html"
+                        title="previous chapter">Visualization</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="elementwise.html"
+                        title="next chapter">Continuation of matrix-valued functions </a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/guide/preblur.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="continuation-of-metallic-solutions-using-preblur">
+<span id="preblur"></span><h1>Continuation of metallic solutions using preblur<a class="headerlink" href="#continuation-of-metallic-solutions-using-preblur" title="Permalink to this headline">¶</a></h1>
+<p>The MaxEnt formalism has the tendency of producing spurious noise around the <span class="math notranslate nohighlight">\(\omega=0\)</span> point.
+This is usually not problematic for insulating solutions, but not desirable for metallic spectral functions.</p>
+<p>One strategy to tackle this is the so-called preblur technique <a class="footnote-reference brackets" href="#f1" id="id1">1</a>.
+There, a so-called <em>hidden image</em> <span class="math notranslate nohighlight">\(H\)</span> is introduced, with the spectral function being <span class="math notranslate nohighlight">\(A = B H\)</span> <a class="footnote-reference brackets" href="#f2" id="id2">2</a>.
+The matrix <span class="math notranslate nohighlight">\(B\)</span> is the blur matrix; multiplying by <span class="math notranslate nohighlight">\(B\)</span> is equal to a convolution with a Gaussian (its width <span class="math notranslate nohighlight">\(b\)</span> is an external parameter).
+Then, in the cost function, both <span class="math notranslate nohighlight">\(H\)</span> and <span class="math notranslate nohighlight">\(A\)</span> are used,</p>
+<div class="math notranslate nohighlight">
+\[Q_{\alpha}(v) = \frac12 \chi^2(A(H(v))) - \alpha S(H(v)).\]</div>
+<p>The parametrization <span class="math notranslate nohighlight">\(H(v)\)</span> is, e.g., Bryan’s parametrization, <span class="math notranslate nohighlight">\(H(v) = D e^{Vv}\)</span>.
+The parametrization <span class="math notranslate nohighlight">\(A(H)\)</span> is, of course, <span class="math notranslate nohighlight">\(A = B H\)</span>.</p>
+<p>The class <a class="reference internal" href="../reference/cost_functions.html#triqs_maxent.cost_functions.maxent_cost_function.MaxEntCostFunction" title="triqs_maxent.cost_functions.maxent_cost_function.MaxEntCostFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">MaxEntCostFunction</span></code></a> accepts a parameter <code class="docutils literal notranslate"><span class="pre">A_of_H</span></code>.
+Only two different parametrizations for <span class="math notranslate nohighlight">\(A(H)\)</span> are implemented: the <a class="reference internal" href="../reference/functions.html#triqs_maxent.functions.IdentityA_of_H" title="triqs_maxent.functions.IdentityA_of_H"><code class="xref py py-class docutils literal notranslate"><span class="pre">IdentityA_of_H</span></code></a> and <a class="reference internal" href="../reference/functions.html#triqs_maxent.functions.PreblurA_of_H" title="triqs_maxent.functions.PreblurA_of_H"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreblurA_of_H</span></code></a> variants.
+The former just chooses the usual <span class="math notranslate nohighlight">\(A(H) = H\)</span>, the latter uses <span class="math notranslate nohighlight">\(A(H) = BH\)</span> as discussed here.</p>
+<p>Note that, for performance reasons, the kernel has to be redefined to include the blur matrix. This is done by choosing the <a class="reference internal" href="../reference/kernels.html#triqs_maxent.kernels.PreblurKernel" title="triqs_maxent.kernels.PreblurKernel"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreblurKernel</span></code></a>.</p>
+<p>The calculation should be performed using different values for <span class="math notranslate nohighlight">\(b\)</span>.
+The best value of <span class="math notranslate nohighlight">\(b\)</span> can be determined similarly to determining <span class="math notranslate nohighlight">\(\alpha\)</span>; e.g., by calculating the probability of every <span class="math notranslate nohighlight">\(b\)</span> or by looking at <span class="math notranslate nohighlight">\(\log(\chi^2)\)</span> of <span class="math notranslate nohighlight">\(\log b\)</span>.</p>
+<p class="rubric">Example</p>
+<p>A full example:</p>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91</pre></div></td><td class="code"><div class="highlight"><pre><span></span>
+<span class="kn">from</span> <span class="nn">triqs_maxent.analyzers.linefit_analyzer</span> <span class="kn">import</span> <span class="n">fit_piecewise</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># TRIQS 2.1</span>
+    <span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="o">*</span>
+    <span class="n">GfImFreq</span>
+<span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+    <span class="c1"># TRIQS 1.4</span>
+    <span class="kn">from</span> <span class="nn">triqs.gf.local</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">triqs_maxent</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">triqs_maxent.analyzers.linefit_analyzer</span> <span class="kn">import</span> <span class="n">fit_piecewise</span>
+
+<span class="c1"># whether we want to save and plot the results</span>
+<span class="n">save</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">plot</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="c1"># construct a test Green function</span>
+<span class="c1"># for reference, G(w)</span>
+<span class="n">G_w</span> <span class="o">=</span> <span class="n">GfReFreq</span><span class="p">(</span><span class="n">window</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">indices</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">G_w</span> <span class="o">&lt;&lt;</span> <span class="n">SemiCircular</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># the G(iw)</span>
+<span class="n">G_iw</span> <span class="o">=</span> <span class="n">GfImFreq</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n_points</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+<span class="n">G_iw</span> <span class="o">&lt;&lt;</span> <span class="n">SemiCircular</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># we inverse Fourier-transform G(iw) to G(tau)</span>
+<span class="n">G_tau</span> <span class="o">=</span> <span class="n">GfImTime</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="n">G_iw</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n_points</span><span class="o">=</span><span class="mi">102</span><span class="p">)</span>
+<span class="n">G_tau</span><span class="o">.</span><span class="n">set_from_fourier</span><span class="p">(</span><span class="n">G_iw</span><span class="p">)</span>
+<span class="c1"># and add some noise (MaxEnt does not work without noise)</span>
+<span class="n">G_tau</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">G_tau</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> \
+    <span class="mf">1.e-4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">G_tau</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+
+<span class="n">tm</span> <span class="o">=</span> <span class="n">TauMaxEnt</span><span class="p">()</span>
+<span class="c1"># the following allows to Ctrl-C the calculation and choose what to do</span>
+<span class="n">tm</span><span class="o">.</span><span class="n">interactive</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">tm</span><span class="o">.</span><span class="n">set_G_tau</span><span class="p">(</span><span class="n">G_tau</span><span class="p">)</span>
+<span class="c1"># set an appropriate alpha mesh</span>
+<span class="n">tm</span><span class="o">.</span><span class="n">alpha_mesh</span> <span class="o">=</span> <span class="n">LogAlphaMesh</span><span class="p">(</span><span class="n">alpha_min</span><span class="o">=</span><span class="mf">0.08</span><span class="p">,</span> <span class="n">alpha_max</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">n_points</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+<span class="n">tm</span><span class="o">.</span><span class="n">set_error</span><span class="p">(</span><span class="mf">1.e-4</span><span class="p">)</span>
+
+<span class="c1"># run without preblur</span>
+<span class="n">result_normal</span> <span class="o">=</span> <span class="n">tm</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="n">last_result</span> <span class="o">=</span> <span class="n">result_normal</span>
+
+<span class="n">K_tau</span> <span class="o">=</span> <span class="n">tm</span><span class="o">.</span><span class="n">K</span>
+
+<span class="c1"># loop over different values of the preblur parameter b</span>
+<span class="n">results_preblur</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">]:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Running for b = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
+    <span class="n">tm</span><span class="o">.</span><span class="n">A_of_H</span> <span class="o">=</span> <span class="n">PreblurA_of_H</span><span class="p">(</span><span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="n">tm</span><span class="o">.</span><span class="n">omega</span><span class="p">)</span>
+    <span class="n">tm</span><span class="o">.</span><span class="n">K</span> <span class="o">=</span> <span class="n">PreblurKernel</span><span class="p">(</span><span class="n">K</span><span class="o">=</span><span class="n">K_tau</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">)</span>
+    <span class="c1"># initialize A(w) with the last result, this leads to faster convergence</span>
+    <span class="n">tm</span><span class="o">.</span><span class="n">A_init</span> <span class="o">=</span> <span class="n">last_result</span><span class="o">.</span><span class="n">analyzer_results</span><span class="p">[</span><span class="s1">&#39;LineFitAnalyzer&#39;</span><span class="p">][</span><span class="s1">&#39;A_out&#39;</span><span class="p">]</span>
+    <span class="n">results_preblur</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="n">tm</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+    <span class="n">last_result</span> <span class="o">=</span> <span class="n">results_preblur</span><span class="p">[</span><span class="n">b</span><span class="p">]</span>
+
+<span class="c1"># save the results</span>
+<span class="k">if</span> <span class="n">save</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">h5</span> <span class="kn">import</span> <span class="n">HDFArchive</span>
+    <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="s1">&#39;preblur.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+        <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;result_normal&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">result_normal</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;results_preblur&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">data</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results_preblur</span><span class="p">]</span>
+
+<span class="c1"># extract the chi2 value from the optimal alpha for each blur parameter</span>
+<span class="n">chi2s</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="c1"># we have to reverse-sort it because fit_piecewise expects it in that order</span>
+<span class="n">b_vals</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">results_preblur</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">b_vals</span><span class="p">:</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">results_preblur</span><span class="p">[</span><span class="n">b</span><span class="p">]</span>
+    <span class="n">alpha_index</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">analyzer_results</span><span class="p">[</span><span class="s1">&#39;LineFitAnalyzer&#39;</span><span class="p">][</span><span class="s1">&#39;alpha_index&#39;</span><span class="p">]</span>
+    <span class="n">chi2s</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">chi2</span><span class="p">[</span><span class="n">alpha_index</span><span class="p">])</span>
+
+<span class="c1"># perform a linefit to get the optimal b value</span>
+<span class="n">b_index</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">fit_piecewise</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">b_vals</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">chi2s</span><span class="p">))</span>
+<span class="n">b_ideal</span> <span class="o">=</span> <span class="n">b_vals</span><span class="p">[</span><span class="n">b_index</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Ideal b value = &#39;</span><span class="p">,</span> <span class="n">b_ideal</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">plot</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+    <span class="kn">from</span> <span class="nn">triqs.plot.mpl_interface</span> <span class="kn">import</span> <span class="n">oplot</span>
+    <span class="n">oplot</span><span class="p">(</span><span class="n">G_w</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;S&#39;</span><span class="p">)</span>
+    <span class="n">result_normal</span><span class="o">.</span><span class="n">analyzer_results</span><span class="p">[</span><span class="s1">&#39;LineFitAnalyzer&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">plot_A_out</span><span class="p">()</span>
+    <span class="n">results_preblur</span><span class="p">[</span><span class="n">b_ideal</span><span class="p">]</span><span class="o">.</span><span class="n">analyzer_results</span><span class="p">[</span><span class="s1">&#39;LineFitAnalyzer&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">plot_A_out</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\omega$&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$A(\omega)$&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="s1">&#39;original&#39;</span><span class="p">,</span> <span class="s1">&#39;normal&#39;</span><span class="p">,</span> <span class="s1">&#39;preblur&#39;</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="o">-</span><span class="mf">2.5</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;preblur_A.png&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+<img alt="../_images/preblur_A.png" src="../_images/preblur_A.png" />
+<p class="rubric">Footnotes</p>
+<dl class="footnote brackets">
+<dt class="label" id="f1"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>J. Skilling, Fundamentals of MaxEnt in data analysis, in Maximum Entropy in Action, edited by B.Buck and V.A. Macaulay (Clarendon Press, Oxford, UK, 1991), p. 19.</p>
+</dd>
+<dt class="label" id="f2"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
+<dd><p>As a slight complication, for non-uniform <span class="math notranslate nohighlight">\(\omega\)</span> meshes, we have <span class="math notranslate nohighlight">\(A = B H /\Delta \omega\)</span> and <span class="math notranslate nohighlight">\(G_{rec} = K \Delta \omega B H\)</span>, where <span class="math notranslate nohighlight">\(H\)</span> contains a <span class="math notranslate nohighlight">\(\Delta\omega\)</span> (i.e. the hidden image itself would be <span class="math notranslate nohighlight">\(H/\Delta\omega\)</span>).</p>
+</dd>
+</dl>
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="elementwise.html" title="Continuation of matrix-valued functions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="visualization.html" title="Visualization"
+             >previous</a> |</li>
+    <li><a href="../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../documentation.html" >Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Continuation of metallic solutions using preblur</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017-2018 G. J. Kraberger and M. Zingl.
+    </div>
+  </body>
+</html>

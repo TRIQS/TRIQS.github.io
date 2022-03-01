@@ -1,0 +1,361 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>triqs_maxent.minimizers.levenberg_minimizer &#8212; TRIQS Analytic Continuation / MaxEnt  documentation</title>
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/triqs.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head><body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../../install.html">Install</a></li>
+    
+    <li><a href="../../../documentation.html">Documentation</a></li>
+    
+    <li><a href="../../../issues.html">Issues</a></li>
+    
+    <li><a href="../../../about.html">About maxent</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../../index.html">maxent</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">performing analytic continuation</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">triqs_maxent.minimizers.levenberg_minimizer</a></li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for triqs_maxent.minimizers.levenberg_minimizer</h1><div class="highlight"><pre>
+<span></span><span class="c1"># TRIQS application maxent</span>
+<span class="c1"># Copyright (C) 2018 Gernot J. Kraberger</span>
+<span class="c1"># Copyright (C) 2018 Simons Foundation</span>
+<span class="c1"># Authors: Gernot J. Kraberger and Manuel Zingl</span>
+<span class="c1">#</span>
+<span class="c1"># This program is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+
+
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.minimizer</span> <span class="kn">import</span> <span class="n">Minimizer</span>
+<span class="kn">from</span> <span class="nn">.convergence_methods</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+<div class="viewcode-block" id="LevenbergMinimizer"><a class="viewcode-back" href="../../../reference/minimizers/levenberg_minimizer.html#triqs_maxent.minimizers.levenberg_minimizer.LevenbergMinimizer">[docs]</a><span class="k">class</span> <span class="nc">LevenbergMinimizer</span><span class="p">(</span><span class="n">Minimizer</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot; The Levenberg minimization algorithm.</span>
+
+<span class="sd">    The task of this algorithm is to minimize a function :math:`Q`</span>
+<span class="sd">    with respect to a quantity :math:`H`. That is equivalent to searching</span>
+<span class="sd">    a solution to :math:`f := \partial Q/\partial H = 0`.</span>
+<span class="sd">    We assume that the equation is parametrized by a solution vector</span>
+<span class="sd">    :math:`v` (i.e., we are looking for a solution in :math:`H(v)`).</span>
+<span class="sd">    We then calculate the matrix :math:`J = \frac{\partial}{\partial v} \frac{\partial Q}{\partial H}`.</span>
+
+<span class="sd">    Depending on the settings of the parameters, the solution is searched</span>
+<span class="sd">    for in the following way:</span>
+
+<span class="sd">        * ``J_squared=False, marquardt = False``:</span>
+<span class="sd">          :math:`(J + \mu 1)\delta v = f`</span>
+<span class="sd">        * ``J_squared=False, marquardt = True``:</span>
+<span class="sd">          :math:`(J + \mathrm{diag} J)\delta v = f`</span>
+<span class="sd">        * ``J_squared=True, marquardt = False``:</span>
+<span class="sd">          :math:`(J^TJ + \mu 1)\delta v = f`</span>
+<span class="sd">        * ``J_squared=True, marquardt = True``:</span>
+<span class="sd">          :math:`(J^TJ + \mathrm{diag} J^T J)\delta v = f`</span>
+
+<span class="sd">    Then, :math:`v` is updated by subtracting :math:`\delta v`.</span>
+
+<span class="sd">    The step length is determined by the damping parameter :math:`\mu`,</span>
+<span class="sd">    which is chosen so that :math:`Q` is minimal.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+<span class="sd">    convergence : :py:mod:`ConvergenceMethod &lt;.convergence_methods&gt;`</span>
+<span class="sd">        method to check convergence; the default is</span>
+<span class="sd">        ``MaxDerivativeConvergenceMethod(1.e-4) | RelativeFunctionChangeConvergenceMethod(1.e-16)``</span>
+<span class="sd">    maxiter : int</span>
+<span class="sd">        the maximum number of iterations</span>
+<span class="sd">    miniter : int</span>
+<span class="sd">        the minimum number of iterations</span>
+<span class="sd">    J_squared : bool</span>
+<span class="sd">        if ``True``, the algorithm solves</span>
+<span class="sd">        :math:`(J^TJ +\mu 1) \delta v = J^T f`, else</span>
+<span class="sd">        :math:`(J +\mu 1) \delta v = f`.</span>
+<span class="sd">    marquardt : bool</span>
+<span class="sd">        if ``True``, the algorithm uses</span>
+<span class="sd">        :math:`\mathrm{diag}(J)` or :math:`\mathrm{diag}(J^T J)` (depending on the</span>
+<span class="sd">        parameter ``J_squared``), instead of the identity matrix.</span>
+<span class="sd">    mu0 : float</span>
+<span class="sd">        the initial value of the Levenberg damping parameter</span>
+<span class="sd">    nu : float</span>
+<span class="sd">        the relative increase/decrease of mu when necessary</span>
+<span class="sd">    max_mu : float</span>
+<span class="sd">        the maximum number of mu, to prevent infinite loops</span>
+<span class="sd">    verbose_callback : function</span>
+<span class="sd">        a function used to print verbosity information</span>
+<span class="sd">        e.g., the print function</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n_iter : int</span>
+<span class="sd">        the total number of iterations performed since the creation</span>
+<span class="sd">        of the class</span>
+<span class="sd">    n_iter_last : int</span>
+<span class="sd">        the number of iterations performed when ``minimize`` was last called</span>
+<span class="sd">    converged : bool</span>
+<span class="sd">        whether the algorithm converged in fewer than ``maxiter`` loops</span>
+<span class="sd">        when ``minimze`` was last called</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">convergence</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">maxiter</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+                 <span class="n">miniter</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">J_squared</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">marquardt</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">mu0</span><span class="o">=</span><span class="mf">1.e-18</span><span class="p">,</span>
+                 <span class="n">nu</span><span class="o">=</span><span class="mf">1.3</span><span class="p">,</span>
+                 <span class="n">max_mu</span><span class="o">=</span><span class="mf">1.e20</span><span class="p">,</span>
+                 <span class="n">verbose_callback</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">convergence</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">convergence</span> <span class="o">=</span> <span class="n">OrConvergenceMethod</span><span class="p">(</span>
+                <span class="n">MaxDerivativeConvergenceMethod</span><span class="p">(</span><span class="mf">1.e-4</span><span class="p">),</span>
+                <span class="n">RelativeFunctionChangeConvergenceMethod</span><span class="p">(</span><span class="mf">1.e-16</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">convergence</span> <span class="o">=</span> <span class="n">convergence</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxiter</span> <span class="o">=</span> <span class="n">maxiter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">miniter</span> <span class="o">=</span> <span class="n">miniter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">J_squared</span> <span class="o">=</span> <span class="n">J_squared</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">marquardt</span> <span class="o">=</span> <span class="n">marquardt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mu0</span> <span class="o">=</span> <span class="n">mu0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="o">=</span> <span class="n">nu</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_mu</span> <span class="o">=</span> <span class="n">max_mu</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose_callback</span> <span class="o">=</span> <span class="n">verbose_callback</span>
+
+        <span class="c1"># the number of iterations performed in total</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># the number of iterations performed in last call</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_iter_last</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="LevenbergMinimizer.minimize"><a class="viewcode-back" href="../../../reference/minimizers/levenberg_minimizer.html#triqs_maxent.minimizers.levenberg_minimizer.LevenbergMinimizer.minimize">[docs]</a>    <span class="k">def</span> <span class="nf">minimize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">v0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Perform the minimization.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+<span class="sd">        function : DoublyDerivableFunction</span>
+<span class="sd">            the function to be minimized</span>
+<span class="sd">        v0 : array</span>
+<span class="sd">            the initial function argument :math:`v`</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+<span class="sd">        v : array</span>
+<span class="sd">            the vector :math:`v` at the minimum</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;If nu &lt;= 1, there will be an infinite loop.&#39;</span><span class="p">)</span>
+
+        <span class="c1"># obviously, we are not converged yet</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">converged</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="c1"># initialize the damping parameter</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu0</span>
+        <span class="c1"># initialize v</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">v0</span>
+
+        <span class="c1"># we set the initial function value</span>
+        <span class="n">func_val</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="n">Q1</span> <span class="o">=</span> <span class="n">func_val</span><span class="o">.</span><span class="n">f</span><span class="p">()</span>
+        <span class="n">Q0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+        <span class="c1"># the main iteration</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maxiter</span><span class="p">):</span>
+            <span class="c1"># here, f is the Jacobian of the function wrt v</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">func_val</span><span class="o">.</span><span class="n">d</span><span class="p">()</span>
+            <span class="c1"># the Jacobian of f</span>
+            <span class="n">J</span> <span class="o">=</span> <span class="n">func_val</span><span class="o">.</span><span class="n">dd</span><span class="p">()</span>
+
+            <span class="c1"># check convergence</span>
+            <span class="n">conv_status</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">converged</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convergence</span><span class="p">(</span><span class="n">func_val</span><span class="p">,</span>
+                                                           <span class="n">v</span><span class="p">,</span> <span class="n">Q0</span><span class="o">=</span><span class="n">Q0</span><span class="p">,</span> <span class="n">Q1</span><span class="o">=</span><span class="n">Q1</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose_callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{:6d}</span><span class="s1"> &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot;Q: </span><span class="si">{:12.6e}</span><span class="s2">, &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">func_val</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="s1">&#39;max_f: </span><span class="si">{:12.6e}</span><span class="s1">, &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">f</span><span class="p">)))</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="s1">&#39;conv: </span><span class="si">{:12.6e}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">conv_status</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">verbose_callback</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+            <span class="c1"># declare converged</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">converged</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">miniter</span><span class="p">:</span>
+                <span class="k">break</span>
+
+            <span class="c1"># change J and f by multiplying the equation with J^T</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">J_squared</span><span class="p">:</span>
+                <span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">J</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span> <span class="n">f</span><span class="p">)</span>
+                <span class="n">J</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">J</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span> <span class="n">J</span><span class="p">)</span>
+
+            <span class="c1"># define the identity matrix</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">marquardt</span><span class="p">:</span>
+                <span class="n">Id</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">J</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">Id</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">J</span><span class="p">))</span>
+
+            <span class="c1"># adjusting mu until the function value Q is minimal</span>
+
+            <span class="c1"># let Q0 be the last Q-value</span>
+            <span class="n">Q0</span> <span class="o">=</span> <span class="n">Q1</span>
+            <span class="c1"># the change in v to the next iteration</span>
+            <span class="n">dv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">J</span> <span class="o">+</span> <span class="n">mu</span> <span class="o">*</span> <span class="n">Id</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+
+            <span class="c1"># in the following, there might be some unphysical values of</span>
+            <span class="c1"># v that are supplied to the function. Turn off warnings.</span>
+            <span class="n">old_seterr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">seterr</span><span class="p">(</span><span class="nb">all</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+
+            <span class="c1"># first, we check what the Q of the new iteration will be</span>
+            <span class="n">Q1</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">v</span> <span class="o">-</span> <span class="n">dv</span><span class="p">)</span><span class="o">.</span><span class="n">f</span><span class="p">()</span>
+            <span class="c1"># as Q has to decrease in every iteration, we increase mu</span>
+            <span class="c1"># until this is the case (Q0 is the function value from the</span>
+            <span class="c1"># last iteration)</span>
+            <span class="k">while</span> <span class="p">(</span><span class="n">Q1</span> <span class="o">&gt;</span> <span class="n">Q0</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">Q1</span><span class="p">))</span> <span class="ow">and</span> <span class="n">mu</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_mu</span><span class="p">:</span>
+                <span class="n">mu</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span>
+                <span class="n">dv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">J</span> <span class="o">+</span> <span class="n">mu</span> <span class="o">*</span> <span class="n">Id</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+                <span class="n">Q1</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">v</span> <span class="o">-</span> <span class="n">dv</span><span class="p">)</span><span class="o">.</span><span class="n">f</span><span class="p">()</span>
+
+            <span class="c1"># we check what increasing mu does to Q</span>
+            <span class="n">dv2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">J</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="o">*</span> <span class="n">mu</span> <span class="o">*</span> <span class="n">Id</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+            <span class="n">Q2</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">v</span> <span class="o">-</span> <span class="n">dv2</span><span class="p">)</span><span class="o">.</span><span class="n">f</span><span class="p">()</span>
+
+            <span class="c1"># if Q decreased when mu was increased, we will try to</span>
+            <span class="c1"># further decrease Q by further increasing mu</span>
+            <span class="k">if</span> <span class="n">Q2</span> <span class="o">&lt;</span> <span class="n">Q1</span><span class="p">:</span>
+                <span class="n">nuf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span>
+                <span class="n">mu</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span>
+                <span class="n">Q2</span> <span class="o">=</span> <span class="n">Q1</span>
+                <span class="n">dvnew</span> <span class="o">=</span> <span class="n">dv2</span>
+            <span class="c1"># if Q increased when mu was increased, we will try to</span>
+            <span class="c1"># further increase Q by decreasing mu</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">nuf</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span>
+                <span class="n">mu</span> <span class="o">/=</span> <span class="n">nuf</span>
+                <span class="n">dvnew</span> <span class="o">=</span> <span class="n">dv</span>
+
+            <span class="n">Q1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>  <span class="c1"># just to make sure the loop runs at least once</span>
+            <span class="k">while</span> <span class="p">(</span><span class="n">Q2</span> <span class="o">&lt;</span> <span class="n">Q1</span> <span class="ow">and</span> <span class="n">mu</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_mu</span>
+                    <span class="ow">and</span> <span class="n">mu</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span><span class="p">):</span>
+                <span class="n">Q1</span> <span class="o">=</span> <span class="n">Q2</span>
+                <span class="n">dv</span> <span class="o">=</span> <span class="n">dvnew</span>
+                <span class="n">mu</span> <span class="o">*=</span> <span class="n">nuf</span>
+                <span class="n">dvnew</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">J</span> <span class="o">+</span> <span class="n">mu</span> <span class="o">*</span> <span class="n">Id</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+                <span class="n">Q2</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">v</span> <span class="o">-</span> <span class="n">dvnew</span><span class="p">)</span><span class="o">.</span><span class="n">f</span><span class="p">()</span>
+
+            <span class="c1"># here, we require v to be physical again. Reset the seterr status.</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">seterr</span><span class="p">(</span><span class="o">**</span><span class="n">old_seterr</span><span class="p">)</span>
+
+            <span class="c1"># update v</span>
+            <span class="n">v</span> <span class="o">-=</span> <span class="n">dv</span>
+            <span class="n">func_val</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="c1"># just to be sure that Q1 is accurate (will be used in the next</span>
+            <span class="c1"># loop)</span>
+            <span class="n">Q1</span> <span class="o">=</span> <span class="n">func_val</span><span class="o">.</span><span class="n">f</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_iter_last</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">+=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">v</span></div></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">triqs_maxent.minimizers.levenberg_minimizer</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017-2018 G. J. Kraberger and M. Zingl.
+    </div>
+  </body>
+</html>

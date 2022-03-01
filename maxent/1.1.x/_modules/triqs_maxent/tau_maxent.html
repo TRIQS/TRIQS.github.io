@@ -1,0 +1,469 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>triqs_maxent.tau_maxent &#8212; TRIQS Analytic Continuation / MaxEnt  documentation</title>
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/triqs.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head><body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../install.html">Install</a></li>
+    
+    <li><a href="../../documentation.html">Documentation</a></li>
+    
+    <li><a href="../../issues.html">Issues</a></li>
+    
+    <li><a href="../../about.html">About maxent</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../index.html">maxent</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">performing analytic continuation</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">triqs_maxent.tau_maxent</a></li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for triqs_maxent.tau_maxent</h1><div class="highlight"><pre>
+<span></span><span class="c1"># TRIQS application maxent</span>
+<span class="c1"># Copyright (C) 2018 Gernot J. Kraberger</span>
+<span class="c1"># Copyright (C) 2018 Simons Foundation</span>
+<span class="c1"># Authors: Gernot J. Kraberger and Manuel Zingl</span>
+<span class="c1">#</span>
+<span class="c1"># This program is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+
+
+
+<span class="kn">from</span> <span class="nn">.triqs_support</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">if</span> <span class="n">if_triqs_1</span><span class="p">():</span>
+    <span class="kn">from</span> <span class="nn">triqs.gf.local</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">elif</span> <span class="n">if_triqs_2</span><span class="p">():</span>
+    <span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.maxent_loop</span> <span class="kn">import</span> <span class="n">MaxEntLoop</span>
+<span class="kn">from</span> <span class="nn">.omega_meshes</span> <span class="kn">import</span> <span class="n">HyperbolicOmegaMesh</span>
+<span class="kn">from</span> <span class="nn">.default_models</span> <span class="kn">import</span> <span class="n">FlatDefaultModel</span>
+<span class="kn">from</span> <span class="nn">.kernels</span> <span class="kn">import</span> <span class="n">TauKernel</span>
+<span class="kn">from</span> <span class="nn">.cost_functions</span> <span class="kn">import</span> <span class="n">BryanCostFunction</span><span class="p">,</span> <span class="n">MaxEntCostFunction</span>
+<span class="kn">from</span> <span class="nn">.functions</span> <span class="kn">import</span> <span class="n">NormalEntropy</span><span class="p">,</span> <span class="n">PlusMinusEntropy</span>
+<span class="kn">from</span> <span class="nn">.functions</span> <span class="kn">import</span> <span class="n">NormalH_of_v</span><span class="p">,</span> <span class="n">PlusMinusH_of_v</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+
+<div class="viewcode-block" id="TauMaxEnt"><a class="viewcode-back" href="../../reference/tau_maxent.html#triqs_maxent.tau_maxent.TauMaxEnt">[docs]</a><span class="k">class</span> <span class="nc">TauMaxEnt</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Perform MaxEnt with a :math:`G(\tau)` kernel.</span>
+
+<span class="sd">    The methods and properties of :py:class:`.MaxEntLoop` are, in general,</span>
+<span class="sd">    shadowed by ``TauMaxEnt``, i.e., they can be used in a ``TauMaxEnt``</span>
+<span class="sd">    object as well.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cov_threshold : float</span>
+<span class="sd">        when setting a covariance using :py:meth:`.TauMaxEnt.set_cov`, this threshold</span>
+<span class="sd">        is used to ignore small eigenvalues</span>
+<span class="sd">    **kwargs :</span>
+<span class="sd">        are passed on to :py:class:`.MaxEntLoop`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># this is needed to make the getattr/setattr magic work</span>
+    <span class="n">maxent_loop</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cov_threshold</span><span class="o">=</span><span class="mf">1.e-14</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxent_loop</span> <span class="o">=</span> <span class="n">MaxEntLoop</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="n">omega</span> <span class="o">=</span> <span class="n">HyperbolicOmegaMesh</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">D</span> <span class="o">=</span> <span class="n">FlatDefaultModel</span><span class="p">(</span><span class="n">omega</span><span class="p">)</span>
+        <span class="c1"># just some artificial tau data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">K</span> <span class="o">=</span> <span class="n">TauKernel</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">omega</span><span class="p">)</span>
+        <span class="c1"># N.B.: can only set omega after having initialized a kernel</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="n">omega</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cov_threshold</span> <span class="o">=</span> <span class="n">cov_threshold</span>
+
+    <span class="c1"># getattr and setattr allows us to access the MaxEntLoop attributes</span>
+    <span class="c1"># as if they were TauMaxEnt attributes</span>
+    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">object</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;maxent_loop&#39;</span><span class="p">),</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maxent_loop</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maxent_loop</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TauMaxEnt.set_G_tau"><a class="viewcode-back" href="../../reference/tau_maxent.html#triqs_maxent.tau_maxent.TauMaxEnt.set_G_tau">[docs]</a>    <span class="nd">@require_triqs</span>
+    <span class="k">def</span> <span class="nf">set_G_tau</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G_tau</span><span class="p">,</span> <span class="n">re</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">tau_new</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Set :math:`G(\tau)` from TRIQS GfImTime</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+<span class="sd">        G_tau : GfImTime</span>
+<span class="sd">            The data for the analytic continuation.</span>
+<span class="sd">            For Green functions with more than 1x1 matrix structure,</span>
+<span class="sd">            choose a particular matrix element.</span>
+<span class="sd">        re : logical</span>
+<span class="sd">            If True, the real part of the data is continued, else the</span>
+<span class="sd">            imaginary part.</span>
+<span class="sd">        tau_new : array</span>
+<span class="sd">            G_tau is interpolated on a new tau grid as given by tau_new.</span>
+<span class="sd">            If not given, the original tau grid of G_tau is used.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">G_tau</span><span class="p">,</span> <span class="n">BlockGf</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s1">&#39;TRIQS BlockGfs are not supported by TauMaxEnt.</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span>
+                <span class="s1">&#39;Consider looping over over the blocks and calling TauMaxEnt individually for each GfImTime.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">G_tau</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">MeshImTime</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s1">&#39;set_G_tau only accepts TRIQS GfImTime objects.</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span>
+                <span class="s1">&#39;Use the appropriate set_* method for other data formats.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">G_tau</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">()]:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s1">&#39;Please choose one matrix element of G(tau) or use ElementwiseMaxEnt.&#39;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># this will work in TRIQS 2.1</span>
+            <span class="n">tau</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">G_tau</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span><span class="o">.</span><span class="n">real</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="c1"># this will work in TRIQS 1.4</span>
+            <span class="n">tau</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">G_tau</span><span class="o">.</span><span class="n">mesh</span><span class="p">))</span><span class="o">.</span><span class="n">real</span>
+        <span class="k">if</span> <span class="n">re</span><span class="p">:</span>
+            <span class="c1"># if the target shape is (1,1), we need to pick the (0,0)</span>
+            <span class="c1"># element; else, the target shape is (), i.e. only a one-dim</span>
+            <span class="c1"># array is returned</span>
+            <span class="k">if</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">G_tau</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">G</span> <span class="o">=</span> <span class="n">G_tau</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">G</span> <span class="o">=</span> <span class="n">G_tau</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">G_tau</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">G</span> <span class="o">=</span> <span class="n">G_tau</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imag</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">G</span> <span class="o">=</span> <span class="n">G_tau</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span>
+
+        <span class="k">if</span> <span class="n">tau_new</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">tau_new</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">G</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tau</span> <span class="o">=</span> <span class="n">tau_new</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">G</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tau</span> <span class="o">=</span> <span class="n">tau</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_T</span><span class="p">,</span> <span class="n">G_original_basis</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TauMaxEnt.set_G_iw"><a class="viewcode-back" href="../../reference/tau_maxent.html#triqs_maxent.tau_maxent.TauMaxEnt.set_G_iw">[docs]</a>    <span class="nd">@require_triqs</span>
+    <span class="k">def</span> <span class="nf">set_G_iw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G_iw</span><span class="p">,</span> <span class="n">np_tau</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Set :math:`G(\tau)` from TRIQS GfImFreq</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+<span class="sd">        G_iw : GfImFreq</span>
+<span class="sd">            The data for the analytic continuation. A Fourier transform is performed</span>
+<span class="sd">        np_tau : int</span>
+<span class="sd">            Number of target tau points (must be &gt;= ``(3*len(G_iw.mesh)+1`` or</span>
+<span class="sd">            -1; then ``(3*len(G_iw.mesh)+1)`` is chosen)</span>
+<span class="sd">        **kwargs :</span>
+<span class="sd">            arguments supplied to :py:meth:`set_G_tau`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">G_iw</span><span class="p">,</span> <span class="n">BlockGf</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s1">&#39;TRIQS BlockGfs are not supported by TauMaxEnt.</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span>
+                <span class="s1">&#39;Consider looping over over the blocks and calling TauMaxEnt individually for each GfImFreq.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">G_iw</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">MeshImFreq</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s1">&#39;set_G_iw only accepts TRIQS GfImFreq objects.</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span>
+                <span class="s1">&#39;Use the appropriate set_* method for other data formats.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">np_tau</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># this is the shortest mesh that does not provoke an error</span>
+            <span class="c1"># in set_from_fourier</span>
+            <span class="n">np_tau</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">G_iw</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># this will work in TRIQS 2.1</span>
+            <span class="n">G_tau</span> <span class="o">=</span> <span class="n">GfImTime</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="n">G_iw</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span>
+                             <span class="n">target_shape</span><span class="o">=</span><span class="n">G_iw</span><span class="o">.</span><span class="n">target_shape</span><span class="p">,</span>
+                             <span class="n">n_points</span><span class="o">=</span><span class="n">np_tau</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AssertionError</span><span class="p">:</span>
+            <span class="c1"># this will work in TRIQS 1.4</span>
+            <span class="n">G_tau</span> <span class="o">=</span> <span class="n">GfImTime</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="n">G_iw</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="n">G_iw</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span>
+                             <span class="n">n_points</span><span class="o">=</span><span class="n">np_tau</span><span class="p">)</span>
+        <span class="n">G_tau</span><span class="o">.</span><span class="n">set_from_fourier</span><span class="p">(</span><span class="n">G_iw</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_G_tau</span><span class="p">(</span><span class="n">G_tau</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TauMaxEnt.set_G_tau_data"><a class="viewcode-back" href="../../reference/tau_maxent.html#triqs_maxent.tau_maxent.TauMaxEnt.set_G_tau_data">[docs]</a>    <span class="k">def</span> <span class="nf">set_G_tau_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">G_tau</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Set :math:`G(\tau)` from array.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+<span class="sd">        tau : array</span>
+<span class="sd">            tau-grid</span>
+<span class="sd">        G_tau : array</span>
+<span class="sd">            The data for the analytic continuation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">tau</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">G_tau</span><span class="p">),</span> \
+            <span class="s2">&quot;tau and G_tau don&#39;t have the same dimension&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tau</span> <span class="o">=</span> <span class="n">tau</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">G_tau</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_T</span><span class="p">,</span> <span class="n">G_original_basis</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TauMaxEnt.set_G_tau_file"><a class="viewcode-back" href="../../reference/tau_maxent.html#triqs_maxent.tau_maxent.TauMaxEnt.set_G_tau_file">[docs]</a>    <span class="k">def</span> <span class="nf">set_G_tau_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">tau_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">G_col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">err_col</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Set :math:`G(\tau)` from data file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+<span class="sd">        filename : str</span>
+<span class="sd">            the name of the file to load.</span>
+<span class="sd">            The first column (see ``tau_col``) is the :math:`\tau`-grid,</span>
+<span class="sd">            the second column (see ``G_col``) is the :math:`G(\tau)`</span>
+<span class="sd">            data.</span>
+<span class="sd">        tau_col : int</span>
+<span class="sd">            the 0-based column number of the :math:`\tau`-grid</span>
+<span class="sd">        G_col : int</span>
+<span class="sd">            the 0-based column number of the :math:`G(\tau)`-data</span>
+<span class="sd">        err_col : int</span>
+<span class="sd">            the 0-based column number of the error-data or None if the</span>
+<span class="sd">            error is not supplied via a file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">dat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tau</span> <span class="o">=</span> <span class="n">dat</span><span class="p">[:,</span> <span class="n">tau_col</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">dat</span><span class="p">[:,</span> <span class="n">G_col</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">err_col</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">err</span> <span class="o">=</span> <span class="n">dat</span><span class="p">[:,</span> <span class="n">err_col</span><span class="p">]</span>
+            <span class="c1"># undo any transformation</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">G_original_basis</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_T</span><span class="p">,</span> <span class="n">G_original_basis</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TauMaxEnt.set_error"><a class="viewcode-back" href="../../reference/tau_maxent.html#triqs_maxent.tau_maxent.TauMaxEnt.set_error">[docs]</a>    <span class="k">def</span> <span class="nf">set_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Set error from array.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+<span class="sd">        error : scalar or array</span>
+<span class="sd">            the error of the data, either in the same shape as the</span>
+<span class="sd">            supplied ``G_tau`` or as a scalar (then it&#39;s the same for</span>
+<span class="sd">            all :math:`\tau`-values).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isreal</span><span class="p">(</span><span class="n">error</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;complex error supplied, only real accepted&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">err</span> <span class="o">=</span> <span class="n">error</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Supply scalar error or with length of G_tau.&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">err</span> <span class="o">=</span> <span class="n">error</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="c1"># undo any transformation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TauMaxEnt.set_cov"><a class="viewcode-back" href="../../reference/tau_maxent.html#triqs_maxent.tau_maxent.TauMaxEnt.set_cov">[docs]</a>    <span class="k">def</span> <span class="nf">set_cov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cov</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Set covariance matrix from array.</span>
+
+<span class="sd">        The covariance matrix is diagonalized and the analytic continuation</span>
+<span class="sd">        problem is rotated into the eigenbasis. Thus, diagonal errors can</span>
+<span class="sd">        be used. The errors are the square roots of the eigenvalues of the</span>
+<span class="sd">        covariance matrix. Due to numerics, small eigenvalues have to be ignored;</span>
+<span class="sd">        this is done according to the parameter ``cov_threshold``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+<span class="sd">        cov : array</span>
+<span class="sd">            covariance matrix, :math:`N_\tau \times N_\tau`.</span>
+<span class="sd">            It has to be symmetric.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cov</span> <span class="o">=</span> <span class="n">cov</span>
+
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">cov</span> <span class="o">-</span> <span class="n">cov</span><span class="o">.</span><span class="n">transpose</span><span class="p">()))</span> <span class="o">&lt;</span> <span class="mf">1.e-10</span><span class="p">,</span> \
+            <span class="s1">&#39;Supplied covariance matrix is not symmetric.&#39;</span>
+
+        <span class="c1"># diagonalize the covariance matrix</span>
+        <span class="n">e</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">cov</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">e</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logtaker</span><span class="o">.</span><span class="n">error_message</span><span class="p">(</span>
+                <span class="s2">&quot;Eigenvalues of the covariance matrix are not all positive; they will be ignored. Smallest negative value: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="n">e</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cov_threshold</span>  <span class="c1"># no abs</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="p">[</span><span class="n">L</span><span class="p">]</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="p">[:,</span> <span class="n">L</span><span class="p">]</span>
+        <span class="c1"># to avoid error in chi2 when updating the kernel</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">err</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># rotate self.G and the kernel into the basis where it is diagonal</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cost_function</span><span class="p">,</span> <span class="s2">&quot;_G_orig&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cost_function</span><span class="o">.</span><span class="n">_G_orig</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_transform_G</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">T_to</span><span class="p">,</span> <span class="n">T_from</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">T_to</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">T_from</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">T</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">T</span> <span class="o">=</span> <span class="n">T_from</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">T_from</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">T</span> <span class="o">=</span> <span class="n">T_to</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">T</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">T_to</span><span class="p">,</span> <span class="n">T_from</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">T_</span><span class="p">,</span> <span class="n">G_original_basis</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; rotate G and K from the left with the matrix T_</span>
+
+<span class="sd">        T_ is the absolute rotation with respect to the unrotated</span>
+<span class="sd">        quantities</span>
+
+<span class="sd">        If you reset G in the original (untransformed) basis, call this</span>
+<span class="sd">        function with the desired transformation and G_original_basis=True.</span>
+
+<span class="sd">        Note that the error is not transformed accordingly (as the use-case</span>
+<span class="sd">        is that a covariance matrix is diagonalized). If required, this</span>
+<span class="sd">        has to be done by the user (however, only diagonal errors will</span>
+<span class="sd">        be handled).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">G_original_basis</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cost_function</span><span class="o">.</span><span class="n">_G_orig</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_transform_G</span><span class="p">(</span><span class="n">T_</span><span class="p">,</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">G_original_basis</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_T</span><span class="p">)</span>
+        <span class="c1"># this also sets self._T, which is shadowed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">T_</span><span class="p">)</span>
+        <span class="c1"># this is to trigger updating e.g. chi2 when K changes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span>
+
+<div class="viewcode-block" id="TauMaxEnt.set_cov_file"><a class="viewcode-back" href="../../reference/tau_maxent.html#triqs_maxent.tau_maxent.TauMaxEnt.set_cov_file">[docs]</a>    <span class="k">def</span> <span class="nf">set_cov_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Set covariance matrix from data file.</span>
+
+<span class="sd">        See :py:meth:`.TauMaxEnt.set_cov` for more info.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+<span class="sd">        filename : str</span>
+<span class="sd">            the name of the file to load.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_cov</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="nf">get_tau</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxent_loop</span><span class="o">.</span><span class="n">get_data_variable</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">set_tau</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">update_K</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">update_chi2</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">update_Q</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">update_H_of_v</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxent_loop</span><span class="o">.</span><span class="n">set_data_variable</span><span class="p">(</span><span class="n">tau</span><span class="p">,</span>
+                                           <span class="n">update_K</span><span class="o">=</span><span class="n">update_K</span><span class="p">,</span>
+                                           <span class="n">update_chi2</span><span class="o">=</span><span class="n">update_chi2</span><span class="p">,</span>
+                                           <span class="n">update_Q</span><span class="o">=</span><span class="n">update_Q</span><span class="p">,</span>
+                                           <span class="n">update_H_of_v</span><span class="o">=</span><span class="n">update_H_of_v</span><span class="p">)</span>
+
+    <span class="n">tau</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_tau</span><span class="p">,</span> <span class="n">set_tau</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_T</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">_T</span></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">triqs_maxent.tau_maxent</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017-2018 G. J. Kraberger and M. Zingl.
+    </div>
+  </body>
+</html>

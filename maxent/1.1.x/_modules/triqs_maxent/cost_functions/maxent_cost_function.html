@@ -1,0 +1,278 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>triqs_maxent.cost_functions.maxent_cost_function &#8212; TRIQS Analytic Continuation / MaxEnt  documentation</title>
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/triqs.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head><body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../../install.html">Install</a></li>
+    
+    <li><a href="../../../documentation.html">Documentation</a></li>
+    
+    <li><a href="../../../issues.html">Issues</a></li>
+    
+    <li><a href="../../../about.html">About maxent</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../../index.html">maxent</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">performing analytic continuation</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">triqs_maxent.cost_functions.maxent_cost_function</a></li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for triqs_maxent.cost_functions.maxent_cost_function</h1><div class="highlight"><pre>
+<span></span><span class="c1"># TRIQS application maxent</span>
+<span class="c1"># Copyright (C) 2018 Gernot J. Kraberger</span>
+<span class="c1"># Copyright (C) 2018 Simons Foundation</span>
+<span class="c1"># Authors: Gernot J. Kraberger and Manuel Zingl</span>
+<span class="c1">#</span>
+<span class="c1"># This program is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+
+
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.cost_function</span> <span class="kn">import</span> <span class="n">CostFunction</span>
+<span class="kn">from</span> <span class="nn">..functions</span> <span class="kn">import</span> <span class="n">cached</span>
+
+
+<div class="viewcode-block" id="MaxEntCostFunction"><a class="viewcode-back" href="../../../reference/cost_functions.html#triqs_maxent.cost_functions.maxent_cost_function.MaxEntCostFunction">[docs]</a><span class="k">class</span> <span class="nc">MaxEntCostFunction</span><span class="p">(</span><span class="n">CostFunction</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot; The usual MaxEnt cost function</span>
+
+<span class="sd">    The expression for the cost function is</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        Q_\alpha(v) = \frac12 \chi^2(H(v)) \eta - \alpha S(H(v)),</span>
+
+<span class="sd">    where :math:`\eta` is an additional factor for the :math:`\chi^2` term,</span>
+<span class="sd">    which can be given as ``chi2_factor`` (default: ``1.0``).</span>
+
+<span class="sd">    This function implements the usual derivatives ``d`` and ``dd``,</span>
+<span class="sd">    where by default (i.e., with ``d_dv = False``) ``d`` is</span>
+<span class="sd">    :math:`\frac{\partial Q_\alpha}{\partial H}` and ``dd`` is</span>
+<span class="sd">    :math:`\frac{\partial^2 Q_\alpha}{\partial H \partial v}`.</span>
+<span class="sd">    If ``dA_projection&gt;0``, the derivatives are projected into singular</span>
+<span class="sd">    space; either by multiplying from the left by :math:`V^\dagger` (i.e., the</span>
+<span class="sd">    matrix with the right singular vectors, if ``dA_projection=1``) or by</span>
+<span class="sd">    :math:`\partial H/\partial v` (if ``dA_projection=2``).</span>
+
+<span class="sd">    If ``d_dv = True``, we have ``d`` giving :math:`\frac{\partial Q_\alpha}{\partial v}`;</span>
+<span class="sd">    ``dd`` is again the derivative of ``d`` with respect to ``v``.</span>
+
+<span class="sd">    This cost function should be used for general :math:`\chi^2` and :math:`S`.</span>
+<span class="sd">    If you use the normal values, it is possible to use the :py:class:`.BryanCostFunction` instead.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    d_dv : bool</span>
+<span class="sd">        see explanation above</span>
+<span class="sd">    dA_projection : int (0, 1, 2)</span>
+<span class="sd">        see explanation above; it is ignored if ``d_dv = True``</span>
+<span class="sd">    **kwargs</span>
+<span class="sd">        gets passed to :py:class:`.CostFunction`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d_dv</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dA_projection</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d_dv</span> <span class="o">=</span> <span class="n">d_dv</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dA_projection</span> <span class="o">=</span> <span class="n">dA_projection</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MaxEntCostFunction</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MaxEntCostFunction.f"><a class="viewcode-back" href="../../../reference/cost_functions.html#triqs_maxent.cost_functions.maxent_cost_function.MaxEntCostFunction.f">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Calculate the function to be minimized, :math:`Q_{\alpha}(v)`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+<span class="sd">        v : array</span>
+<span class="sd">            vector in singular space giving the solution</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">H</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">H_of_v</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="n">chi2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+
+        <span class="n">Q</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">chi2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi2_factor</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alpha</span> <span class="o">*</span> <span class="n">S</span>
+        <span class="k">return</span> <span class="n">Q</span></div>
+
+<div class="viewcode-block" id="MaxEntCostFunction.dH"><a class="viewcode-back" href="../../../reference/cost_functions.html#triqs_maxent.cost_functions.maxent_cost_function.MaxEntCostFunction.dH">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">dH</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Calculate the derivative of the function with respect to H&quot;&quot;&quot;</span>
+
+        <span class="n">H</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">H_of_v</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="n">dchi2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+        <span class="n">dS</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">dchi2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi2_factor</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alpha</span> <span class="o">*</span> <span class="n">dS</span></div>
+
+<div class="viewcode-block" id="MaxEntCostFunction.d"><a class="viewcode-back" href="../../../reference/cost_functions.html#triqs_maxent.cost_functions.maxent_cost_function.MaxEntCostFunction.d">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Calculate the derivative of the function to be minimized</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+<span class="sd">        v : array</span>
+<span class="sd">            vector in singular space giving the solution</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">dQ_dH</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dH</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">d_dv</span><span class="p">:</span>
+            <span class="n">dH_dv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">H_of_v</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">dH_dv</span> <span class="o">=</span> <span class="n">dH_dv</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dH_dv</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="n">retval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dH_dv</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span> <span class="n">dQ_dH</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dA_projection</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="c1"># TODO</span>
+                <span class="n">retval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span> <span class="n">dQ_dH</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">dA_projection</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">dH_dv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">H_of_v</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="n">dH_dv</span> <span class="o">=</span> <span class="n">dH_dv</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dH_dv</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="n">retval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dH_dv</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span> <span class="n">dQ_dH</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">retval</span> <span class="o">=</span> <span class="n">dQ_dH</span>
+        <span class="k">return</span> <span class="n">retval</span></div>
+
+<div class="viewcode-block" id="MaxEntCostFunction.ddH"><a class="viewcode-back" href="../../../reference/cost_functions.html#triqs_maxent.cost_functions.maxent_cost_function.MaxEntCostFunction.ddH">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">ddH</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Calculate the 2nd derivative of the function with respect to H&quot;&quot;&quot;</span>
+
+        <span class="n">H</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">H_of_v</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="n">ddchi2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">dd</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+        <span class="n">ddS</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">dd</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">ddchi2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi2_factor</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alpha</span> <span class="o">*</span> <span class="n">ddS</span></div>
+
+<div class="viewcode-block" id="MaxEntCostFunction.dd"><a class="viewcode-back" href="../../../reference/cost_functions.html#triqs_maxent.cost_functions.maxent_cost_function.MaxEntCostFunction.dd">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">dd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Calculate the 2nd derivative of the function to be minimized</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+<span class="sd">        v : array</span>
+<span class="sd">            vector in singular space giving the solution</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">ddQ_dHdH</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ddH</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="n">dH_dv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">H_of_v</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="n">n_index_H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">dH_dv</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">ddQ_dHdH</span> <span class="o">=</span> <span class="n">ddQ_dHdH</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">n_index_H</span><span class="p">,</span> <span class="n">n_index_H</span><span class="p">))</span>
+        <span class="n">dH_dv</span> <span class="o">=</span> <span class="n">dH_dv</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">n_index_H</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">d_dv</span><span class="p">:</span>
+            <span class="n">dQ_dH</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dH</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">ddH_dvdv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">H_of_v</span><span class="o">.</span><span class="n">dd</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dH_dv</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">dH_dv</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="c1"># we make use of the fact that the Jacobian is symmetric</span>
+            <span class="n">retval</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">ddQ_dHdH</span><span class="p">,</span> <span class="n">dH_dv</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span> <span class="n">dH_dv</span><span class="p">)</span> <span class="o">+</span>
+                      <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;k,kij-&gt;ij&#39;</span><span class="p">,</span> <span class="n">dQ_dH</span><span class="p">,</span> <span class="n">ddH_dvdv</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dA_projection</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="c1"># TODO</span>
+                <span class="n">retval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span>
+                                <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">ddQ_dHdH</span><span class="p">,</span> <span class="n">dH_dv</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">dA_projection</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">retval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dH_dv</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">ddQ_dHdH</span><span class="p">,</span> <span class="n">dH_dv</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">retval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">ddQ_dHdH</span><span class="p">,</span> <span class="n">dH_dv</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">retval</span></div></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">triqs_maxent.cost_functions.maxent_cost_function</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017-2018 G. J. Kraberger and M. Zingl.
+    </div>
+  </body>
+</html>

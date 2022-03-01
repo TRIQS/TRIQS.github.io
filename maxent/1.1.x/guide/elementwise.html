@@ -1,0 +1,346 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Continuation of matrix-valued functions &#8212; TRIQS Analytic Continuation / MaxEnt  documentation</title>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/triqs.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=default"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Real-material application: SrVO3" href="srvo3.html" />
+    <link rel="prev" title="Continuation of metallic solutions using preblur" href="preblur.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head><body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../install.html">Install</a></li>
+    
+    <li><a href="../documentation.html">Documentation</a></li>
+    
+    <li><a href="../issues.html">Issues</a></li>
+    
+    <li><a href="../about.html">About maxent</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../index.html">maxent</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">performing analytic continuation</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="srvo3.html" title="Real-material application: SrVO3"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="preblur.html" title="Continuation of metallic solutions using preblur"
+             accesskey="P">previous</a> |</li>
+    <li><a href="../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../documentation.html" accesskey="U">Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Continuation of matrix-valued functions </a></li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="preblur.html"
+                        title="previous chapter">Continuation of metallic solutions using preblur</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="srvo3.html"
+                        title="next chapter">Real-material application: SrVO<sub>3</sub></a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/guide/elementwise.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="continuation-of-matrix-valued-functions">
+<span id="elementwise"></span><h1>Continuation of matrix-valued functions <a class="footnote-reference brackets" href="#maxent" id="id1">1</a><a class="headerlink" href="#continuation-of-matrix-valued-functions" title="Permalink to this headline">¶</a></h1>
+<p>In principle one can perform the analytic continuation separately for each matrix element,
+using the conventional entropy for diagonal elements and the modified entropy for the off-diagonals.
+We term this way of dealing with matrix-valued Green function <a class="reference internal" href="../reference/elementwise_maxent.html#triqs_maxent.elementwise_maxent.ElementwiseMaxEnt" title="triqs_maxent.elementwise_maxent.ElementwiseMaxEnt"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElementwiseMaxEnt</span></code></a>.</p>
+<p>Using, e.g., a flat default model for each element reflects the total absence of previous knowledge
+on the problem. However, we know that a necessary condition for the positive semi-definiteness of
+the resulting spectral function matrix is</p>
+<div class="math notranslate nohighlight">
+\[| A_{ll'} | \leq \sqrt{A_{ll} A_{l'l'}}.
+\label{eq:condition-posdef}\]</div>
+<p>For example, for a problem where all diagonal elements of the spectral function are zero at a
+certain frequency <span class="math notranslate nohighlight">\(\omega\)</span>, this condition implies that also all off-diagonal elements have
+to be zero at this <span class="math notranslate nohighlight">\(\omega\)</span>. Thus, once the diagonal elements have been analytically continued,
+this condition constitutes additional knowledge about the problem which can be incorporated by choosing
+a default model for the off-diagonal elements <span class="math notranslate nohighlight">\(D_{ll'}(\omega)\)</span> accordingly,</p>
+<div class="math notranslate nohighlight">
+\[D_{ll'}(\omega) = \sqrt{A_{ll}(\omega)A_{l'l'}(\omega)}+\epsilon.
+\label{eq:poor-man-default}\]</div>
+<p>Here, <span class="math notranslate nohighlight">\(\epsilon\)</span> is a small number to prevent the default model from becoming zero, so that no
+division by zero occurs in the entropy term. We call this approach <a class="reference internal" href="../reference/elementwise_maxent.html#triqs_maxent.elementwise_maxent.PoormanMaxEnt" title="triqs_maxent.elementwise_maxent.PoormanMaxEnt"><code class="xref py py-class docutils literal notranslate"><span class="pre">PoormanMaxEnt</span></code></a>.</p>
+<p>The example below shows the continuation of 2x2 model Green function. The special choice of
+the default model does indeed improve the results of the off-diagonal elements.
+However, for physical systems, the resulting spectral function matrix has to be positive semi-definite
+and Hermitian, which is usually not the case when the analytic continuation is carried out separately
+for each matrix element. Using the Poorman scheme usually improves the solution, but the only way
+to ensure that the obtained spectral function is indeed positive semi-definite and Hermitian is by
+treating the spectral function matrix as a whole. We plan to make the <strong>FullMatrixMaxEnt</strong>
+public in the future.</p>
+<p class="rubric">Example</p>
+<p>An example for a 2x2 matrix:</p>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77</pre></div></td><td class="code"><div class="highlight"><pre><span></span>
+<span class="kn">from</span> <span class="nn">triqs_maxent</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1"># Generate a 2x2 model Green function</span>
+<span class="c1">#####################################</span>
+<span class="c1"># TRIQS Green functions</span>
+<span class="n">G_iw</span> <span class="o">=</span> <span class="n">GfImFreq</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">n_points</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+<span class="n">G_w</span> <span class="o">=</span> <span class="n">GfReFreq</span><span class="p">(</span><span class="n">indices</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">window</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">n_points</span><span class="o">=</span><span class="mi">5000</span><span class="p">)</span>
+
+<span class="c1"># Initialize Green functions with a set of rectangles</span>
+<span class="n">G_iw</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">Flat</span><span class="p">(</span><span class="mf">0.6</span><span class="p">)</span> <span class="o">-</span> <span class="n">Flat</span><span class="p">(</span><span class="mf">0.3</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">*</span> <span class="mf">2.0</span>
+<span class="n">G_iw</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="p">((</span><span class="n">Flat</span><span class="p">(</span><span class="mf">0.3</span><span class="p">)</span> <span class="o">-</span> <span class="n">Flat</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span> <span class="o">/</span> <span class="mf">3.0</span><span class="p">)</span> <span class="o">*</span> <span class="mf">6.0</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">+</span>
+               <span class="p">(</span><span class="n">Flat</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span> <span class="o">-</span> <span class="n">Flat</span><span class="p">(</span><span class="mf">0.8</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">10.0</span> <span class="o">/</span> <span class="mf">8.0</span><span class="p">))</span> <span class="o">*</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="mf">10.0</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">/</span> <span class="mf">4.0</span>
+<span class="n">G_w</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">Flat</span><span class="p">(</span><span class="mf">0.6</span><span class="p">)</span> <span class="o">-</span> <span class="n">Flat</span><span class="p">(</span><span class="mf">0.3</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">*</span> <span class="mf">2.0</span>
+<span class="n">G_w</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="p">((</span><span class="n">Flat</span><span class="p">(</span><span class="mf">0.3</span><span class="p">)</span> <span class="o">-</span> <span class="n">Flat</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span> <span class="o">/</span> <span class="mf">3.0</span><span class="p">)</span> <span class="o">*</span> <span class="mf">6.0</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">+</span>
+              <span class="p">(</span><span class="n">Flat</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span> <span class="o">-</span> <span class="n">Flat</span><span class="p">(</span><span class="mf">0.8</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">10.0</span> <span class="o">/</span> <span class="mf">8.0</span><span class="p">))</span> <span class="o">*</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="mf">10.0</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">/</span> <span class="mf">4.0</span>
+
+<span class="c1"># Rotation to generate off-diagonals</span>
+<span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">7</span>
+<span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">),</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)],</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">)]])</span>
+<span class="n">G_iw_rot</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">G_iw</span><span class="p">)</span>
+<span class="n">G_iw_rot</span><span class="o">.</span><span class="n">from_L_G_R</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">G_iw</span><span class="p">,</span> <span class="n">R</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span>
+<span class="n">G_w_rot</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">G_w</span><span class="p">)</span>
+<span class="n">G_w_rot</span><span class="o">.</span><span class="n">from_L_G_R</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">G_w</span><span class="p">,</span> <span class="n">R</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span>
+
+<span class="c1"># Calculate G(tau) and add some noise</span>
+<span class="n">G_tau_rot</span> <span class="o">=</span> <span class="n">GfImTime</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="n">G_iw_rot</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="n">G_iw_rot</span><span class="o">.</span><span class="n">indices</span><span class="p">)</span>
+<span class="n">G_tau_rot</span><span class="o">.</span><span class="n">set_from_fourier</span><span class="p">(</span><span class="n">G_iw_rot</span><span class="p">)</span>
+<span class="n">G_tau_rot</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">G_tau_rot</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span> <span class="o">+</span> <span class="mf">1.e-4</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">G_tau_rot</span><span class="o">.</span><span class="n">data</span><span class="p">)),</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">G_tau_rot</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+
+<span class="c1"># Run Elementwise and Poorman MaxEnt</span>
+<span class="c1">####################################</span>
+
+<span class="c1"># Elementwise (all elements individually)</span>
+<span class="n">ew</span> <span class="o">=</span> <span class="n">ElementwiseMaxEnt</span><span class="p">(</span><span class="n">use_hermiticity</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ew</span><span class="o">.</span><span class="n">set_G_tau</span><span class="p">(</span><span class="n">G_tau_rot</span><span class="p">,</span> <span class="n">tau_new</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">G_iw_rot</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="mi">200</span><span class="p">))</span>
+<span class="n">ew</span><span class="o">.</span><span class="n">set_error</span><span class="p">(</span><span class="mf">1e-4</span><span class="p">)</span>
+<span class="n">result_ew</span> <span class="o">=</span> <span class="n">ew</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+<span class="c1"># Poorman (construct default model for off-diagonals from diagonal solution)</span>
+<span class="n">pm</span> <span class="o">=</span> <span class="n">PoormanMaxEnt</span><span class="p">(</span><span class="n">use_hermiticity</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">pm</span><span class="o">.</span><span class="n">set_G_tau</span><span class="p">(</span><span class="n">G_tau_rot</span><span class="p">,</span> <span class="n">tau_new</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">G_iw_rot</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="mi">200</span><span class="p">))</span>
+<span class="n">pm</span><span class="o">.</span><span class="n">set_error</span><span class="p">(</span><span class="mf">1.e-4</span><span class="p">)</span>
+<span class="n">result_pm</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+
+<span class="c1"># Plot resulting spectra</span>
+<span class="c1">########################</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="n">matplotlib</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.figsize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span>
+<span class="n">matplotlib</span><span class="o">.</span><span class="n">rcParams</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;font.size&#39;</span><span class="p">:</span> <span class="mi">16</span><span class="p">})</span>
+<span class="kn">from</span> <span class="nn">triqs.plot.mpl_interface</span> <span class="kn">import</span> <span class="n">oplot</span>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">G_iw_rot</span><span class="o">.</span><span class="n">N1</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">G_iw_rot</span><span class="o">.</span><span class="n">N2</span><span class="p">):</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">oplot</span><span class="p">(</span><span class="n">G_w_rot</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;S&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Model&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">result_ew</span><span class="o">.</span><span class="n">omega</span><span class="p">,</span>
+                 <span class="n">result_ew</span><span class="o">.</span><span class="n">get_A_out</span><span class="p">(</span><span class="s1">&#39;LineFitAnalyzer&#39;</span><span class="p">)[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">],</span>
+                 <span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Elementwise&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">result_pm</span><span class="o">.</span><span class="n">omega</span><span class="p">,</span>
+                 <span class="n">result_pm</span><span class="o">.</span><span class="n">get_A_out</span><span class="p">(</span><span class="s1">&#39;LineFitAnalyzer&#39;</span><span class="p">)[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">],</span>
+                 <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Poorman&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;A$_{</span><span class="si">%s%s</span><span class="s1">}$($\omega$)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\omega$ (eV)&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper right&#39;</span><span class="p">,</span> <span class="n">prop</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mi">12</span><span class="p">})</span>
+
+<span class="c1"># Interactive Visualization in Jupyter Notebook</span>
+<span class="c1">###############################################</span>
+
+<span class="kn">from</span> <span class="nn">triqs_maxent.plot.jupyter_plot_maxent</span> <span class="kn">import</span> <span class="n">JupyterPlotMaxEnt</span>
+<span class="n">JupyterPlotMaxEnt</span><span class="p">(</span><span class="n">result_pm</span><span class="p">)</span>
+</pre></div>
+</td></tr></table></div>
+<img alt="../_images/elementwise_A.png" class="align-center" src="../_images/elementwise_A.png" />
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This model with very sharp edges is a complicated case for the Maximum Entropy method; it tends to smoothen them out considerably.
+However, the obtained curves show roughly the quality of the results that can be obtained with MaxEnt.
+After all, the analytic continuation is an ill-posed problem. For a given <span class="math notranslate nohighlight">\(G(\tau)\)</span> (with noise) one can find
+infinitely many <span class="math notranslate nohighlight">\(A(\omega)\)</span> to satisfy the data within the given error bars.
+The comparision of the original (sharp) spectral function to the MaxEnt <span class="math notranslate nohighlight">\(A(\omega)\)</span> demonstrates the accuracy
+of analytic continuations:
+The overall structure and features are reproduced, but details are smeard out (especially at higher frequencies).
+In any case, one <strong>cannot</strong> expect that <span class="math notranslate nohighlight">\(A_i(\omega)\to G(\tau) \to A_c(\omega\)</span>) results in
+<span class="math notranslate nohighlight">\(A_i(\omega) = A_c(\omega)\)</span>.</p>
+</div>
+<p class="rubric">Footnotes</p>
+<dl class="footnote brackets">
+<dt class="label" id="maxent"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p><a class="reference external" href="https://link.aps.org/doi/10.1103/PhysRevB.96.155128">G. J. Kraberger, R. Triebl, M. Zingl and M. Aichhorn, Phys. Rev. B 96, 155128 (2017)</a></p>
+</dd>
+</dl>
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="srvo3.html" title="Real-material application: SrVO3"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="preblur.html" title="Continuation of metallic solutions using preblur"
+             >previous</a> |</li>
+    <li><a href="../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../documentation.html" >Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Continuation of matrix-valued functions </a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017-2018 G. J. Kraberger and M. Zingl.
+    </div>
+  </body>
+</html>

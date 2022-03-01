@@ -1,0 +1,267 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>triqs_maxent.analyzers.bryan_analyzer &#8212; TRIQS Analytic Continuation / MaxEnt  documentation</title>
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/triqs.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head><body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../../install.html">Install</a></li>
+    
+    <li><a href="../../../documentation.html">Documentation</a></li>
+    
+    <li><a href="../../../issues.html">Issues</a></li>
+    
+    <li><a href="../../../about.html">About maxent</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../../index.html">maxent</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">performing analytic continuation</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">triqs_maxent.analyzers.bryan_analyzer</a></li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for triqs_maxent.analyzers.bryan_analyzer</h1><div class="highlight"><pre>
+<span></span><span class="c1"># TRIQS application maxent</span>
+<span class="c1"># Copyright (C) 2018 Gernot J. Kraberger</span>
+<span class="c1"># Copyright (C) 2018 Simons Foundation</span>
+<span class="c1"># Authors: Gernot J. Kraberger and Manuel Zingl</span>
+<span class="c1">#</span>
+<span class="c1"># This program is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+
+
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.analyzer</span> <span class="kn">import</span> <span class="n">Analyzer</span><span class="p">,</span> <span class="n">AnalyzerResult</span>
+
+
+<div class="viewcode-block" id="get_delta"><a class="viewcode-back" href="../../../reference/analyzers/analyzers.html#triqs_maxent.analyzers.bryan_analyzer.get_delta">[docs]</a><span class="k">def</span> <span class="nf">get_delta</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Get the integration delta for arbitrarily-spaced vector</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    v : numpy array</span>
+<span class="sd">        values of e.g. omega</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    delta : numpy array</span>
+<span class="sd">        integration delta v for the generalized trapezoidal integration</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+    <span class="n">delta</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="o">-</span> <span class="n">v</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.0</span>
+    <span class="n">delta</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.0</span>
+    <span class="n">delta</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">v</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.0</span>
+    <span class="k">return</span> <span class="n">delta</span></div>
+
+
+<div class="viewcode-block" id="BryanAnalyzer"><a class="viewcode-back" href="../../../reference/analyzers/analyzers.html#triqs_maxent.analyzers.bryan_analyzer.BryanAnalyzer">[docs]</a><span class="k">class</span> <span class="nc">BryanAnalyzer</span><span class="p">(</span><span class="n">Analyzer</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Bryan&#39;s analyzer</span>
+
+<span class="sd">    This analyzer averages the spectral :math:`A_\alpha(\omega)` over</span>
+<span class="sd">    :math:`\alpha`, weighted by the probability :math:`p(\alpha)`.</span>
+<span class="sd">    This is known as the Bryan MaxEnt method.</span>
+
+<span class="sd">    Given the probability (e.g., the one in the following plot, which is not normalized),</span>
+<span class="sd">    first the correct normalization is performed and then an average over all</span>
+<span class="sd">    spectral functions weighted by the probability is done.</span>
+
+<span class="sd">    The normalized probability is</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \bar{p} = \sum_i p_i \Delta\alpha_i</span>
+
+<span class="sd">    and the output spectral function is</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        A_{out}(\omega) = \sum_i \bar{p}_i A_{\alpha_i}(\omega) \Delta\alpha_i.</span>
+
+<span class="sd">    If ``average_by_integration`` is ``True``, :math:`\Delta\alpha` is</span>
+<span class="sd">    calculated using the trapezoidal rule; else, it is just taken to be one.</span>
+
+<span class="sd">    .. plot::</span>
+
+<span class="sd">        import matplotlib.pyplot as plt</span>
+<span class="sd">        import numpy as np</span>
+<span class="sd">        log_prob = [ -133.77644825014883, -131.1811908969303, -128.87341313304904, -126.82613548679048, -125.01469769984743, -123.41663004550679, -122.01152204906518, -120.78088130473434, -119.70797803270561, -118.77769170465523, -117.9763548787618, -117.29161778070646, -116.71230318712861, -116.22830157384657, -115.83044965526712, -115.51044678567999, -115.26075975426504, -115.07455020581381, -114.94560323182378, -114.86826719005813, -114.83739408789381, -114.84829352389285, -114.89667888116442, -114.97863680101291, -115.0905799690475, -115.22921464699886, -115.39151433606989, -115.5746861915961, -115.77614736900517, -115.99350342514697, -116.2245185175958, -116.4671120942432, -116.71933049377914, -116.97932853127824, -117.24536855479826, -117.5158025086968, -117.78907087999886, -118.06368576040379, -118.33825708524627, -118.61146172746481, -118.88209449357468, -119.14906945217739, -119.41146583894628, -119.66854741331817, -119.91990114496151, -120.16545905975504, -120.4056296141437, -120.64136582811162, -120.87420189716848, -121.10607386134298, -121.3389742988314, -121.57441157558964, -121.81295817443836, -122.05409935782784, -122.29644776767404, -122.53822785898488, -122.77762927908799, -123.01305326403487, -123.24343091919015, -123.46821951105106]</span>
+<span class="sd">        alpha = np.logspace(-1, np.log10(30), len(log_prob))[::-1]</span>
+<span class="sd">        p = np.exp(log_prob - np.max(log_prob))</span>
+<span class="sd">        plt.semilogx(alpha, p)</span>
+<span class="sd">        plt.xlabel(r&#39;$\alpha$&#39;)</span>
+<span class="sd">        plt.ylabel(r&#39;$p(\alpha)$&#39;)</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+<span class="sd">    average_by_integration : bool</span>
+<span class="sd">        if True, the average spectral function is calculated by integrating</span>
+<span class="sd">        over all alphas weighted by the probability using the trapezoidal</span>
+<span class="sd">        rule;</span>
+<span class="sd">        if False (the default), it is calculated by summing over all alphas weighted</span>
+<span class="sd">        by the probability</span>
+<span class="sd">    name : str</span>
+<span class="sd">        the name of the method, defaults to `BryanAnalyzer`.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ==========</span>
+<span class="sd">    A_out : array (vector)</span>
+<span class="sd">        the output, i.e. the one true spectrum</span>
+<span class="sd">    info : str</span>
+<span class="sd">        some information about what the analyzer did</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">average_by_integration</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">average_by_integration</span> <span class="o">=</span> <span class="n">average_by_integration</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BryanAnalyzer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BryanAnalyzer.analyze"><a class="viewcode-back" href="../../../reference/analyzers/analyzers.html#triqs_maxent.analyzers.bryan_analyzer.BryanAnalyzer.analyze">[docs]</a>    <span class="k">def</span> <span class="nf">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">maxent_result</span><span class="p">,</span> <span class="n">matrix_element</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Perform the analysis</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        maxent_result : :py:class:`.MaxEntResult`</span>
+<span class="sd">            the result where the :math:`\alpha`-dependent data is taken</span>
+<span class="sd">            from</span>
+<span class="sd">        matrix_element : tuple</span>
+<span class="sd">            the matrix element (if applicable) that should be analyzed</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result : :py:class:`AnalyzerResult`</span>
+<span class="sd">            the result of the analysis, including the :math:`A_{out}`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">elem</span><span class="p">(</span><span class="n">what</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">maxent_result</span><span class="o">.</span><span class="n">_get_element</span><span class="p">(</span><span class="n">what</span><span class="p">,</span> <span class="n">matrix_element</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">AnalyzerResult</span><span class="p">()</span>
+        <span class="n">res</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">elem</span><span class="p">(</span><span class="n">maxent_result</span><span class="o">.</span><span class="n">probability</span><span class="p">))):</span>
+            <span class="n">res</span><span class="p">[</span><span class="s1">&#39;info&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Probability not calculated. Cannot use BryanAnalyzer.&#39;</span>
+            <span class="k">return</span> <span class="n">res</span>
+
+        <span class="n">res</span><span class="p">[</span><span class="s1">&#39;A_out&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">maxent_result</span><span class="o">.</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">elem</span><span class="p">(</span><span class="n">maxent_result</span><span class="o">.</span><span class="n">probability</span><span class="p">)</span> <span class="o">-</span>
+                      <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">elem</span><span class="p">(</span><span class="n">maxent_result</span><span class="o">.</span><span class="n">probability</span><span class="p">)))</span>
+        <span class="n">prob_L</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">prob</span><span class="p">)))</span>
+        <span class="c1"># normalize probability</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">average_by_integration</span><span class="p">:</span>
+            <span class="n">prob</span><span class="p">[</span><span class="n">prob_L</span><span class="p">]</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">trapz</span><span class="p">(</span><span class="n">prob</span><span class="p">[</span><span class="n">prob_L</span><span class="p">],</span> <span class="n">maxent_result</span><span class="o">.</span><span class="n">alpha</span><span class="p">[</span><span class="n">prob_L</span><span class="p">])</span>
+            <span class="n">delta_alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">prob</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+            <span class="n">delta_alpha</span><span class="p">[</span><span class="n">prob_L</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_delta</span><span class="p">(</span><span class="n">maxent_result</span><span class="o">.</span><span class="n">alpha</span><span class="p">[</span><span class="n">prob_L</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">prob</span><span class="p">[</span><span class="n">prob_L</span><span class="p">]</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">prob</span><span class="p">[</span><span class="n">prob_L</span><span class="p">])</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">maxent_result</span><span class="o">.</span><span class="n">alpha</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">prob</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">average_by_integration</span><span class="p">:</span>
+                <span class="n">res</span><span class="p">[</span><span class="s1">&#39;A_out&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">prob</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> \
+                    <span class="n">elem</span><span class="p">(</span><span class="n">maxent_result</span><span class="o">.</span><span class="n">A</span><span class="p">)[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">delta_alpha</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">res</span><span class="p">[</span><span class="s1">&#39;A_out&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">prob</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">elem</span><span class="p">(</span><span class="n">maxent_result</span><span class="o">.</span><span class="n">A</span><span class="p">)[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="n">res</span><span class="p">[</span><span class="s1">&#39;info&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Bryan analyzer: average of A weighted by probability calculated.&#39;</span>
+        <span class="k">return</span> <span class="n">res</span></div></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">triqs_maxent.analyzers.bryan_analyzer</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017-2018 G. J. Kraberger and M. Zingl.
+    </div>
+  </body>
+</html>

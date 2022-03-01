@@ -1,0 +1,296 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>triqs_maxent.analyzers.linefit_analyzer &#8212; TRIQS Analytic Continuation / MaxEnt  documentation</title>
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/triqs.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head><body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../../install.html">Install</a></li>
+    
+    <li><a href="../../../documentation.html">Documentation</a></li>
+    
+    <li><a href="../../../issues.html">Issues</a></li>
+    
+    <li><a href="../../../about.html">About maxent</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../../index.html">maxent</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">performing analytic continuation</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">triqs_maxent.analyzers.linefit_analyzer</a></li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for triqs_maxent.analyzers.linefit_analyzer</h1><div class="highlight"><pre>
+<span></span><span class="c1"># TRIQS application maxent</span>
+<span class="c1"># Copyright (C) 2018 Gernot J. Kraberger</span>
+<span class="c1"># Copyright (C) 2018 Simons Foundation</span>
+<span class="c1"># Authors: Gernot J. Kraberger and Manuel Zingl</span>
+<span class="c1">#</span>
+<span class="c1"># This program is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+
+
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.analyzer</span> <span class="kn">import</span> <span class="n">Analyzer</span><span class="p">,</span> <span class="n">AnalyzerResult</span>
+
+<span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">np</span><span class="p">,</span> <span class="s1">&#39;full&#39;</span><span class="p">):</span>
+    <span class="c1"># polyfill full for older numpy:</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">full</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">f</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">+</span> <span class="n">f</span>
+
+<div class="viewcode-block" id="fit_piecewise"><a class="viewcode-back" href="../../../reference/analyzers/analyzers.html#triqs_maxent.analyzers.linefit_analyzer.fit_piecewise">[docs]</a><span class="k">def</span> <span class="nf">fit_piecewise</span><span class="p">(</span><span class="n">logx</span><span class="p">,</span> <span class="n">logy</span><span class="p">,</span> <span class="n">p2_deg</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; piecewise linear fit (e.g. for chi2)</span>
+
+<span class="sd">    The curve is fitted by two linear curves; for the first few indices,</span>
+<span class="sd">    the fit is done by choosing both the slope and the y-axis intercept.</span>
+<span class="sd">    If ``p2_deg`` is ``0``, a constant curve is fitted (i.e., the only</span>
+<span class="sd">    fit parameter is the y-axis intercept) for the last few indices,</span>
+<span class="sd">    if it is ``1`` also the slope is fitted.</span>
+
+<span class="sd">    The point (i.e., data point index) up to where the first linear curve</span>
+<span class="sd">    is used (and from where the second linear curve is used) is also determined</span>
+<span class="sd">    by minimizing the misfit. I.e., we search the minimum misfit with</span>
+<span class="sd">    respect to the fit parameters of the linear curve and with respect</span>
+<span class="sd">    to the index up to where the first curve is used.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    logx : array</span>
+<span class="sd">        the x-coordinates of the curve that should be fitted piecewise</span>
+<span class="sd">    logy : array</span>
+<span class="sd">        the y-corrdinates of the curve that should be fitted piecewise</span>
+<span class="sd">    p2_deg : int</span>
+<span class="sd">        ``0`` or ``1``, giving the polynomial degree of the second curve</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">chi2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">logx</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="n">p1</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">logx</span><span class="p">)</span>
+    <span class="n">p2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">logx</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">denan</span><span class="p">(</span><span class="n">what</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">check</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">check</span> <span class="o">=</span> <span class="n">what</span>
+        <span class="k">return</span> <span class="n">what</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">check</span><span class="p">))]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">logx</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="n">chi2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">p1</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">residuals</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">singular_values</span><span class="p">,</span> <span class="n">rcond</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span>
+                <span class="n">denan</span><span class="p">(</span><span class="n">logx</span><span class="p">[:</span><span class="n">i</span><span class="p">],</span> <span class="n">logy</span><span class="p">[:</span><span class="n">i</span><span class="p">]),</span> <span class="n">denan</span><span class="p">(</span><span class="n">logy</span><span class="p">[:</span><span class="n">i</span><span class="p">]),</span> <span class="n">deg</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">residuals</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">chi2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">residuals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">p2</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">residuals</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">singular_values</span><span class="p">,</span> <span class="n">rcond</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span>
+                <span class="n">denan</span><span class="p">(</span><span class="n">logx</span><span class="p">[</span><span class="n">i</span><span class="p">:],</span> <span class="n">logy</span><span class="p">[</span><span class="n">i</span><span class="p">:]),</span> <span class="n">denan</span><span class="p">(</span><span class="n">logy</span><span class="p">[</span><span class="n">i</span><span class="p">:]),</span>
+                <span class="n">deg</span><span class="o">=</span><span class="n">p2_deg</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">residuals</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">chi2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">residuals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">p1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="n">p2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="n">chi2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanargmin</span><span class="p">(</span><span class="n">chi2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;chi2 is all NaN&#39;</span><span class="p">)</span>
+
+    <span class="n">X_x</span> <span class="o">=</span> <span class="p">((</span><span class="n">p2</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">p2_deg</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">p2</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="n">p1</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> \
+        <span class="p">(</span><span class="n">p1</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">p2</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">p2_deg</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">))</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanargmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">logx</span> <span class="o">-</span> <span class="n">X_x</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">idx</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;abs(logx - X_x) is all NaN&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">p1</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">p2</span><span class="p">[</span><span class="n">i</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="LineFitAnalyzer"><a class="viewcode-back" href="../../../reference/analyzers/analyzers.html#triqs_maxent.analyzers.linefit_analyzer.LineFitAnalyzer">[docs]</a><span class="k">class</span> <span class="nc">LineFitAnalyzer</span><span class="p">(</span><span class="n">Analyzer</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Analyzer searching the kink in :math:`\chi^2`</span>
+
+<span class="sd">    This analyzer fits a piecewise linear function consisting of two</span>
+<span class="sd">    straight lines to the function :math:`\log\chi^2(\log\alpha)` (the</span>
+<span class="sd">    blue curve in the example plot below),</span>
+<span class="sd">    using the slope and y-intercept of the linear functions (the orange and</span>
+<span class="sd">    green curves in the example plot below) as fit</span>
+<span class="sd">    parameters, together with the point where the description changes</span>
+<span class="sd">    from one piece to the other.</span>
+<span class="sd">    The :math:`\alpha`-value closest to their intersection is chosen</span>
+<span class="sd">    to give the final spectral function.</span>
+
+<span class="sd">    .. plot::</span>
+
+<span class="sd">        import matplotlib.pyplot as plt</span>
+<span class="sd">        import numpy as np</span>
+<span class="sd">        from triqs_maxent.analyzers.linefit_analyzer import fit_piecewise</span>
+<span class="sd">        chi2 = [29349.131935651938, 22046.546280176568, 16571.918154748197, 12487.464413222642, 9445.982385619374, 7178.502063034175, 5481.286491560124, 4203.095677764095, 3233.499702682774, 2492.7723059042005, 1923.6134333677408, 1484.7009011237717, 1145.8924661597946, 884.8005310524965, 684.4330049956029, 531.6146648070567, 415.9506388789646, 329.14872296705806, 264.5685376022979, 216.90786277834727, 181.96883131892676, 156.46999971120204, 137.88618534909426, 124.30790112614721, 114.31767388342703, 106.88286008781692, 101.26499523088836, 96.94522657033058, 93.56467085587808, 90.87798882482437, 88.71820342038981, 86.97077896408142, 85.5551277292544, 84.41192628409034, 83.49484873710317, 82.76553387129734, 82.19079735392212, 81.74128618303814, 81.39095719753091, 81.11694546963328, 80.89956952736446, 80.72238218084304, 80.57227364014592, 80.43956708639224, 80.31784061686754, 80.20324577429295, 80.09354393085312, 79.98731507910087, 79.88352134738581, 79.78132986379869, 79.68005975635513, 79.57917682677997, 79.47830114687353, 79.3772153699245, 79.27587158258149, 79.17439295434937, 79.07307358453718, 78.97237532888748, 78.87292433093153, 78.77550599359282]</span>
+<span class="sd">        alpha = np.logspace(0, np.log10(2.e5) , len(chi2))[::-1]</span>
+<span class="sd">        plt.loglog(alpha, chi2)</span>
+<span class="sd">        plt.xlabel(r&#39;$\alpha$&#39;)</span>
+<span class="sd">        plt.ylabel(r&#39;$\chi^2$&#39;)</span>
+<span class="sd">        _, p = \</span>
+<span class="sd">            fit_piecewise(np.log(alpha),</span>
+<span class="sd">                          np.log(chi2))</span>
+<span class="sd">        yl = plt.ylim()</span>
+<span class="sd">        plt.loglog(alpha, np.exp(p[0][1]+p[0][0]*np.log(alpha)))</span>
+<span class="sd">        plt.loglog(alpha, np.exp(p[1][0]*np.ones(len(alpha))))</span>
+<span class="sd">        plt.ylim(yl)</span>
+
+<span class="sd">    Please be careful to include a sufficient number of :math:`\alpha`</span>
+<span class="sd">    points; however, when using too large :math:`\alpha`-values, the</span>
+<span class="sd">    curve starts to flatten again - then, a piecewise fit using three</span>
+<span class="sd">    linear curves would be necessary (which is not implemented).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+<span class="sd">    linefit_deg : int</span>
+<span class="sd">        whether the leftmost piece should have zero slope (``linefit_deg=0``)</span>
+<span class="sd">        or whether its slope should be fitted (``linefit_deg=1``);</span>
+<span class="sd">        defaults to ``0``.</span>
+<span class="sd">    name : str</span>
+<span class="sd">        the name of the method, defaults to `LineFitAnalyzer`.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ==========</span>
+<span class="sd">    A_out : array (vector)</span>
+<span class="sd">        the output, i.e. the one true spectrum</span>
+<span class="sd">    alpha_index : int</span>
+<span class="sd">        the index of the output in the ``A_values`` array</span>
+<span class="sd">    linefit_params : list</span>
+<span class="sd">        the polyfit parameters of the two lines</span>
+<span class="sd">    info : str</span>
+<span class="sd">        some information about what the analyzer did</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">linefit_deg</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linefit_deg</span> <span class="o">=</span> <span class="n">linefit_deg</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LineFitAnalyzer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LineFitAnalyzer.analyze"><a class="viewcode-back" href="../../../reference/analyzers/analyzers.html#triqs_maxent.analyzers.linefit_analyzer.LineFitAnalyzer.analyze">[docs]</a>    <span class="k">def</span> <span class="nf">analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">maxent_result</span><span class="p">,</span> <span class="n">matrix_element</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Perform the analysis</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        maxent_result : :py:class:`.MaxEntResult`</span>
+<span class="sd">            the result where the :math:`\alpha`-dependent data is taken</span>
+<span class="sd">            from</span>
+<span class="sd">        matrix_element : tuple</span>
+<span class="sd">            the matrix element (if applicable) that should be analyzed</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result : :py:class:`AnalyzerResult`</span>
+<span class="sd">            the result of the analysis, including the :math:`A_{out}`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">elem</span><span class="p">(</span><span class="n">what</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">maxent_result</span><span class="o">.</span><span class="n">_get_element</span><span class="p">(</span><span class="n">what</span><span class="p">,</span> <span class="n">matrix_element</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">AnalyzerResult</span><span class="p">()</span>
+        <span class="n">res</span><span class="p">[</span><span class="s1">&#39;alpha_index&#39;</span><span class="p">],</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;linefit_params&#39;</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">fit_piecewise</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">maxent_result</span><span class="o">.</span><span class="n">alpha</span><span class="p">),</span>
+                          <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">elem</span><span class="p">(</span><span class="n">maxent_result</span><span class="o">.</span><span class="n">chi2</span><span class="p">)),</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">linefit_deg</span><span class="p">)</span>
+
+        <span class="n">res</span><span class="p">[</span><span class="s1">&#39;A_out&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">elem</span><span class="p">(</span><span class="n">maxent_result</span><span class="o">.</span><span class="n">A</span><span class="p">)[</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;alpha_index&#39;</span><span class="p">]]</span>
+        <span class="n">res</span><span class="p">[</span><span class="s1">&#39;linefit_deg&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linefit_deg</span>
+        <span class="n">res</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">res</span><span class="p">[</span><span class="s1">&#39;info&#39;</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="s1">&#39;Ideal alpha (linefit): </span><span class="si">{}</span><span class="s1"> (= index </span><span class="si">{}</span><span class="s1"> zero-based)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">maxent_result</span><span class="o">.</span><span class="n">alpha</span><span class="p">[</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;alpha_index&#39;</span><span class="p">]],</span>
+            <span class="n">res</span><span class="p">[</span><span class="s1">&#39;alpha_index&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">res</span></div></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">triqs_maxent.analyzers.linefit_analyzer</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017-2018 G. J. Kraberger and M. Zingl.
+    </div>
+  </body>
+</html>

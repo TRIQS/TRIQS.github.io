@@ -1,0 +1,1136 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>triqs_maxent.functions &#8212; TRIQS Analytic Continuation / MaxEnt  documentation</title>
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/triqs.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../about.html" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head><body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../../install.html">Install</a></li>
+    
+    <li><a href="../../documentation.html">Documentation</a></li>
+    
+    <li><a href="../../issues.html">Issues</a></li>
+    
+    <li><a href="../../about.html">About maxent</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../../index.html">maxent</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">performing analytic continuation</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">triqs_maxent.functions</a></li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for triqs_maxent.functions</h1><div class="highlight"><pre>
+<span></span><span class="c1"># TRIQS application maxent</span>
+<span class="c1"># Copyright (C) 2018 Gernot J. Kraberger</span>
+<span class="c1"># Copyright (C) 2018 Simons Foundation</span>
+<span class="c1"># Authors: Gernot J. Kraberger and Manuel Zingl</span>
+<span class="c1">#</span>
+<span class="c1"># This program is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This file defines a bunch of functions that represent physical</span>
+<span class="sd">functions in the MaxEnt formalism.</span>
+
+<span class="sd">The base classes for all these are :class:`.DoublyDerivableFunction`</span>
+<span class="sd">and/or :class:`.InvertibleFunction`.</span>
+
+<span class="sd">The most important functions defined are</span>
+
+<span class="sd">  * the definition of the :math:`\chi^2`, which comes as :py:class:`.NormalChi2`.</span>
+<span class="sd">  * the definition of the entropy; for diagonal elements of Green functions</span>
+<span class="sd">    the :py:class:`.NormalEntropy` should be used, for off-diagonals the</span>
+<span class="sd">    :py:class:`.PlusMinusEntropy`.</span>
+<span class="sd">  * the definition of the parametrization of :math:`H(v)` in singular</span>
+<span class="sd">    space (which maps a vector :math:`v` in singular space to a spectral</span>
+<span class="sd">    function :math:`H`); here, again we have a :py:class:`.NormalH_of_v`</span>
+<span class="sd">    and a :py:class:`.PlusMinusH_of_v`.</span>
+<span class="sd">  * the definition of the parametrization of :math:`A(H)`; for normal</span>
+<span class="sd">    calculations the :py:class:`.IdentityA_of_H` takes care of the factor</span>
+<span class="sd">    :math:`\Delta\omega` in non-uniform :math:`\omega` meshes. For preblur</span>
+<span class="sd">    calculations (see :ref:`preblur`), the :py:class:`.PreblurA_of_H` additionally</span>
+<span class="sd">    blurs the hidden image :math:`H` to get the spectral function :math:`A`.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">.maxent_util</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.preblur</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.kernels</span> <span class="kn">import</span> <span class="n">KernelSVD</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+
+<span class="k">def</span> <span class="nf">safelog</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
+    <span class="c1"># a logarithm that does not produce as many nans</span>
+    <span class="n">A</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">1.e-100</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">1.e-100</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">view_complex</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">reshape</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">reshape</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">A</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex_</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">A</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">complex_</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+
+<span class="k">def</span> <span class="nf">view_real</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">reshape</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">reshape</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">A</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">A</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="p">(</span><span class="mi">2</span><span class="p">,))</span>
+
+
+<div class="viewcode-block" id="cached"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.cached">[docs]</a><span class="k">def</span> <span class="nf">cached</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; A descriptor for cached functions &quot;&quot;&quot;</span>
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">new_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># use an x that has been supplied before</span>
+        <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">x</span> <span class="ow">is</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_x&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">func</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cached</span><span class="p">:</span>
+                <span class="c1"># cache the result</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_cached</span><span class="p">[</span><span class="n">func</span><span class="p">]</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cached</span><span class="p">[</span><span class="n">func</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">new_func</span></div>
+
+<span class="c1"># =====================================================================</span>
+<span class="c1">#  Generic</span>
+<span class="c1"># =====================================================================</span>
+
+
+<span class="k">class</span> <span class="nc">GenericFunction</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">parameter_change</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Notify the function that parameters have changed</span>
+
+<span class="sd">        This allows to reprocess certain values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+
+<div class="viewcode-block" id="CachedFunction"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.CachedFunction">[docs]</a><span class="k">class</span> <span class="nc">CachedFunction</span><span class="p">(</span><span class="n">GenericFunction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; A function that remembers its values</span>
+
+<span class="sd">    The general way to use the functions that are cached, which here are</span>
+<span class="sd">    all the functions derived from GenericFunction, is to supply the</span>
+<span class="sd">    argument to the function class and then get either the function value</span>
+<span class="sd">    as ``.f()``, the derivative as ``.d()``, or the second derivative as ``.dd()``.</span>
+<span class="sd">    Note that it is advisable to supply the argument once (e.g. ``cf(x)``) and evaluate</span>
+<span class="sd">    everything afterwards as then the results are being cached.</span>
+
+<span class="sd">    Note that just the reference of the supplied argument is stored, i.e.</span>
+<span class="sd">    if you change it there might be inconsistent results.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>  <span class="c1"># a shallow copy</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_cached</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="c1"># the following is a trick to ensure that id(self._x) != id(x)</span>
+        <span class="c1"># thus, when calling a function with self._x, the cached version</span>
+        <span class="c1"># is used, but with any other x (including the original object,</span>
+        <span class="c1"># which might have been modified without changing the id, i.e.</span>
+        <span class="c1"># the memory pointer) the function is reevaluated</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">view</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">ret</span></div>
+
+
+<div class="viewcode-block" id="DoublyDerivableFunction"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.DoublyDerivableFunction">[docs]</a><span class="k">class</span> <span class="nc">DoublyDerivableFunction</span><span class="p">(</span><span class="n">CachedFunction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Template for a double derivable function</span>
+
+<span class="sd">    This function has the methods ``f``, ``d`` and ``dd``, representing</span>
+<span class="sd">    the function values and its two derivatives.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extra_args</span> <span class="o">=</span> <span class="n">kwargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+<div class="viewcode-block" id="DoublyDerivableFunction.f"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.DoublyDerivableFunction.f">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; function value &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DoublyDerivableFunction.d"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.DoublyDerivableFunction.d">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; first derivative &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DoublyDerivableFunction.dd"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.DoublyDerivableFunction.dd">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">dd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; second derivative &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DoublyDerivableFunction.check_derivatives"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.DoublyDerivableFunction.check_derivatives">[docs]</a>    <span class="k">def</span> <span class="nf">check_derivatives</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">around</span><span class="p">,</span> <span class="n">renorm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="mf">1.e-8</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; check derivatives using numerical derivation</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        around : array</span>
+<span class="sd">            the value that should be inserted for ``x`` in the functions</span>
+<span class="sd">        renorm : bool or float</span>
+<span class="sd">            if bool: if False, do not renormalize, if True: renormalize</span>
+<span class="sd">            by the function value; if float, renormalize by the value</span>
+<span class="sd">            of the float; this allows to get some kind of relative error</span>
+<span class="sd">        prec : float</span>
+<span class="sd">            the precision of the check, i.e. if the error is larger than</span>
+<span class="sd">            ``prec``, a  warning will be issued</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        success : bool</span>
+<span class="sd">            whether the test passed (True) or not (False)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">d_success</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_d</span><span class="p">(</span><span class="n">around</span><span class="p">,</span> <span class="n">renorm</span><span class="p">,</span> <span class="n">prec</span><span class="p">)</span>
+        <span class="n">dd_success</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_dd</span><span class="p">(</span><span class="n">around</span><span class="p">,</span> <span class="n">renorm</span><span class="p">,</span> <span class="n">prec</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">d_success</span> <span class="ow">and</span> <span class="n">dd_success</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DoublyDerivableFunction.check_d"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.DoublyDerivableFunction.check_d">[docs]</a>    <span class="k">def</span> <span class="nf">check_d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">around</span><span class="p">,</span> <span class="n">renorm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="mf">1.e-8</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; check first derivative</span>
+
+<span class="sd">        see :py:meth:`.check_derivatives`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">check_der</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">,</span> <span class="n">around</span><span class="p">,</span> <span class="n">renorm</span><span class="p">,</span> <span class="n">prec</span><span class="p">,</span>
+                         <span class="s2">&quot;1st derivative &quot;</span> <span class="o">+</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DoublyDerivableFunction.check_dd"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.DoublyDerivableFunction.check_dd">[docs]</a>    <span class="k">def</span> <span class="nf">check_dd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">around</span><span class="p">,</span> <span class="n">renorm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="mf">1.e-8</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; check second derivative</span>
+
+<span class="sd">        see :py:meth:`.check_derivatives`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">check_der</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dd</span><span class="p">,</span> <span class="n">around</span><span class="p">,</span> <span class="n">renorm</span><span class="p">,</span> <span class="n">prec</span><span class="p">,</span>
+                         <span class="s2">&quot;2nd derivative &quot;</span> <span class="o">+</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="InvertibleFunction"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.InvertibleFunction">[docs]</a><span class="k">class</span> <span class="nc">InvertibleFunction</span><span class="p">(</span><span class="n">CachedFunction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Template for an invertible function</span>
+
+<span class="sd">    This function has the methods ``f`` and ``inv``, representing</span>
+<span class="sd">    the function values and the inverse function</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extra_args</span> <span class="o">=</span> <span class="n">kwargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+<div class="viewcode-block" id="InvertibleFunction.f"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.InvertibleFunction.f">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; function value &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="InvertibleFunction.inv"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.InvertibleFunction.inv">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">inv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; inverse function value &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="InvertibleFunction.check_inv"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.InvertibleFunction.check_inv">[docs]</a>    <span class="k">def</span> <span class="nf">check_inv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="mf">1.e-8</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; check whether inv is really the inverse of f &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">y2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">y2</span><span class="p">))</span> <span class="o">&gt;</span> <span class="n">prec</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;Inverse of function is not correct:</span>
+<span class="s2">                     </span><span class="si">{}</span><span class="s2"> - difference: </span><span class="si">{}</span><span class="s2"></span>
+<span class="s2">                  &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                             <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">y2</span><span class="p">))))</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div></div>
+
+
+<div class="viewcode-block" id="NullFunction"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NullFunction">[docs]</a><span class="k">class</span> <span class="nc">NullFunction</span><span class="p">(</span><span class="n">DoublyDerivableFunction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; A constant function that is zero &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="NullFunction.f"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NullFunction.f">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="NullFunction.d"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NullFunction.d">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">x</span></div>
+
+<div class="viewcode-block" id="NullFunction.dd"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NullFunction.dd">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">dd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span></div></div>
+
+<span class="c1"># =====================================================================</span>
+<span class="c1">#  Chi2</span>
+<span class="c1"># =====================================================================</span>
+
+
+<div class="viewcode-block" id="Chi2"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.Chi2">[docs]</a><span class="k">class</span> <span class="nc">Chi2</span><span class="p">(</span><span class="n">DoublyDerivableFunction</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot; A function giving the least squares</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    K : :py:class:`.Kernel`</span>
+<span class="sd">        the kernel to use</span>
+<span class="sd">    G : array</span>
+<span class="sd">        the Green function data</span>
+<span class="sd">    err : array</span>
+<span class="sd">        the error of the Green function data (must have the same length</span>
+<span class="sd">        as G)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">K</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">G</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_K</span> <span class="o">=</span> <span class="n">K</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_G</span> <span class="o">=</span> <span class="n">G</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_err</span> <span class="o">=</span> <span class="n">err</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+    <span class="c1">####### Helper functions #######</span>
+
+    <span class="k">def</span> <span class="nf">get_K</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_K</span>
+
+    <span class="k">def</span> <span class="nf">set_K</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">update_chi2</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_K</span> <span class="o">=</span> <span class="n">K</span>
+        <span class="k">if</span> <span class="n">update_chi2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+    <span class="n">K</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_K</span><span class="p">,</span> <span class="n">set_K</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_G</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_G</span>
+
+    <span class="k">def</span> <span class="nf">set_G</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">update_chi2</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_G</span> <span class="o">=</span> <span class="n">G</span>
+        <span class="k">if</span> <span class="n">update_chi2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+    <span class="n">G</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_G</span><span class="p">,</span> <span class="n">set_G</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_err</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_err</span>
+
+    <span class="k">def</span> <span class="nf">set_err</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">err</span><span class="p">,</span> <span class="n">update_chi2</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_err</span> <span class="o">=</span> <span class="n">err</span>
+        <span class="k">if</span> <span class="n">update_chi2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+    <span class="n">err</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_err</span><span class="p">,</span> <span class="n">set_err</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_omega</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">omega</span>
+
+    <span class="k">def</span> <span class="nf">set_omega</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">update_K</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">update_chi2</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="n">omega</span>
+        <span class="k">if</span> <span class="n">update_K</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">update_chi2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+    <span class="n">omega</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_omega</span><span class="p">,</span> <span class="n">set_omega</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_data_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">data_variable</span>
+
+    <span class="k">def</span> <span class="nf">set_data_variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                          <span class="n">data_variable</span><span class="p">,</span>
+                          <span class="n">update_K</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                          <span class="n">update_chi2</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">data_variable</span> <span class="o">=</span> <span class="n">data_variable</span>
+        <span class="k">if</span> <span class="n">update_K</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">update_chi2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+    <span class="n">data_variable</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_data_variable</span><span class="p">,</span> <span class="n">set_data_variable</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">input_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">axes_preference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span></div>
+
+
+<div class="viewcode-block" id="NormalChi2"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NormalChi2">[docs]</a><span class="k">class</span> <span class="nc">NormalChi2</span><span class="p">(</span><span class="n">Chi2</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot; A function giving the usual least squares</span>
+
+<span class="sd">    This is calculated as</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \chi^2 = \sum_i \frac{(G_i - \sum_j K_{ij} H_j)^2}{\sigma_i^2}</span>
+
+<span class="sd">    Note that :math:`H = A\Delta\omega` (in the usual case, see :ref:`preblur` for a different definition).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    K : :py:class:`.Kernel`</span>
+<span class="sd">        the kernel to use</span>
+<span class="sd">    G : array</span>
+<span class="sd">        the Green function data</span>
+<span class="sd">    err : array</span>
+<span class="sd">        the error of the Green function data (must have the same length</span>
+<span class="sd">        as G)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="NormalChi2.f"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NormalChi2.f">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">err</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="NormalChi2.d"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NormalChi2.d">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">)</span> <span class="o">/</span>
+                      <span class="bp">self</span><span class="o">.</span><span class="n">err</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="NormalChi2.dd"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NormalChi2.dd">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">dd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="c1"># this is constant</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">d2</span></div>
+
+<div class="viewcode-block" id="NormalChi2.parameter_change"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NormalChi2.parameter_change">[docs]</a>    <span class="k">def</span> <span class="nf">parameter_change</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Notify that the parameters (either ``K`` or ``err``) have changed &quot;&quot;&quot;</span>
+        <span class="c1"># we calculate the value of the second derivative as it is constant</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">err</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">d2</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;il,ik,i-&gt;kl&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="p">),</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="p">,</span> <span class="mf">1.</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">err</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ComplexChi2"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.ComplexChi2">[docs]</a><span class="k">class</span> <span class="nc">ComplexChi2</span><span class="p">(</span><span class="n">Chi2</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot; A function giving the usual least squares</span>
+
+<span class="sd">    This is calculated as</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \chi^2 = \sum_i \frac{|G_i - \sum_j K_{ij} H_j|^2}{\sigma_i^2}</span>
+
+<span class="sd">    Note that :math:`H = A\Delta\omega` (in the usual case, see :ref:`preblur` for a different definition).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    K : :py:class:`.Kernel`</span>
+<span class="sd">        the kernel to use</span>
+<span class="sd">    G : array</span>
+<span class="sd">        the Green function data</span>
+<span class="sd">    err : array</span>
+<span class="sd">        the error of the Green function data (must have the same length</span>
+<span class="sd">        as G)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ComplexChi2.f"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.ComplexChi2.f">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="p">,</span> <span class="n">view_complex</span><span class="p">(</span><span class="n">A</span><span class="p">))</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">err</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ComplexChi2.d"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.ComplexChi2.d">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="p">,</span> <span class="n">view_complex</span><span class="p">(</span><span class="n">A</span><span class="p">))</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span>
+        <span class="k">return</span> <span class="n">view_real</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">diff</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">err</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+                                    <span class="n">np</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="ComplexChi2.dd"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.ComplexChi2.dd">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">dd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="c1"># this is constant</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">d2</span></div>
+
+<div class="viewcode-block" id="ComplexChi2.parameter_change"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.ComplexChi2.parameter_change">[docs]</a>    <span class="k">def</span> <span class="nf">parameter_change</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Notify that the parameters (either ``K`` or ``err``) have changed &quot;&quot;&quot;</span>
+        <span class="c1"># we calculate the value of the second derivative as it is constant</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">err</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">N_w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">E</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;il,ik,i-&gt;kl&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="p">),</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="p">,</span> <span class="mf">1.</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">err</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">d2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N_w</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">N_w</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">d2</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">d2</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">d2</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">d2</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">E</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">input_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">axes_preference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
+
+
+<span class="c1"># =====================================================================</span>
+<span class="c1">#  Entropy</span>
+<span class="c1"># =====================================================================</span>
+
+
+<div class="viewcode-block" id="Entropy"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.Entropy">[docs]</a><span class="k">class</span> <span class="nc">Entropy</span><span class="p">(</span><span class="n">DoublyDerivableFunction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; A function giving an entropy term for regularization</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    D : DefaultModel</span>
+<span class="sd">        the default model</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_D</span> <span class="o">=</span> <span class="n">D</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+    <span class="c1">####### Helper functions #######</span>
+
+    <span class="k">def</span> <span class="nf">get_D</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_D</span>
+
+    <span class="k">def</span> <span class="nf">set_D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">update_S</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_D</span> <span class="o">=</span> <span class="n">D</span>
+        <span class="k">if</span> <span class="n">update_S</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+    <span class="n">D</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_D</span><span class="p">,</span> <span class="n">set_D</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_omega</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">omega</span>
+
+    <span class="k">def</span> <span class="nf">set_omega</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">update_D</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">update_S</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="n">omega</span>
+        <span class="k">if</span> <span class="n">update_D</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">update_S</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+    <span class="n">omega</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_omega</span><span class="p">,</span> <span class="n">set_omega</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">input_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">),)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">axes_preference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span></div>
+
+
+<div class="viewcode-block" id="NormalEntropy"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NormalEntropy">[docs]</a><span class="k">class</span> <span class="nc">NormalEntropy</span><span class="p">(</span><span class="n">Entropy</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; The usual entropy</span>
+
+<span class="sd">    This calculates the entropy as</span>
+
+<span class="sd">    .. math ::</span>
+
+<span class="sd">        S = \sum_i (H_i - D_i - H_i \log(H_i/D_i)).</span>
+
+<span class="sd">    Note that :math:`H = A\Delta\omega` (in the usual case, see :ref:`preblur` for a different definition).</span>
+<span class="sd">    Also, the default model usually includes the :math:`\Delta\omega`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    D : DefaultModel</span>
+<span class="sd">        the default model</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="NormalEntropy.f"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NormalEntropy.f">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">A</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span> <span class="o">-</span> <span class="n">A</span> <span class="o">*</span> <span class="n">safelog</span><span class="p">(</span><span class="n">A</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="NormalEntropy.d"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NormalEntropy.d">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span> <span class="p">(</span><span class="n">safelog</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">-</span> <span class="n">safelog</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="NormalEntropy.dd"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NormalEntropy.dd">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">dd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="c1"># we need this to prevent a NaN in the calculation</span>
+        <span class="n">A</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">1.e-100</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">1.e-100</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">A</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="PlusMinusEntropy"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.PlusMinusEntropy">[docs]</a><span class="k">class</span> <span class="nc">PlusMinusEntropy</span><span class="p">(</span><span class="n">NormalEntropy</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; The Plus-Minus entropy</span>
+
+<span class="sd">    This calculates the entropy as</span>
+
+<span class="sd">    .. math ::</span>
+
+<span class="sd">        S = S_{normal}(H^+) + S_{normal}(H^-),</span>
+
+<span class="sd">    where :math:`S_{normal}` is the :py:class:`NormalEntropy`. We have</span>
+<span class="sd">    :math:`H = H^+ - H^-`.</span>
+
+<span class="sd">    Note that :math:`H = A\Delta\omega` (in the usual case, see :ref:`preblur` for a different definition).</span>
+<span class="sd">    Also, the default model usually includes the :math:`\Delta\omega`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    D : DefaultModel</span>
+<span class="sd">        the default model</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">_A_plus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">A</span><span class="o">**</span><span class="mf">2.0</span> <span class="o">+</span> <span class="mf">4.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">A</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">_A_minus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">A</span><span class="o">**</span><span class="mf">2.0</span> <span class="o">+</span> <span class="mf">4.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">A</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+
+<div class="viewcode-block" id="PlusMinusEntropy.f"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.PlusMinusEntropy.f">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">PlusMinusEntropy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_A_plus</span><span class="p">(</span><span class="n">A</span><span class="p">))</span> <span class="o">+</span> \
+            <span class="nb">super</span><span class="p">(</span><span class="n">PlusMinusEntropy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_A_minus</span><span class="p">(</span><span class="n">A</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PlusMinusEntropy.d"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.PlusMinusEntropy.d">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">PlusMinusEntropy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_A_plus</span><span class="p">(</span><span class="n">A</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PlusMinusEntropy.dd"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.PlusMinusEntropy.dd">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">dd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_A_plus</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_A_minus</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">PlusMinusEntropy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">dd</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ComplexPlusMinusEntropy"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.ComplexPlusMinusEntropy">[docs]</a><span class="k">class</span> <span class="nc">ComplexPlusMinusEntropy</span><span class="p">(</span><span class="n">PlusMinusEntropy</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; The Plus-Minus entropy for complex A</span>
+
+<span class="sd">    This calculates the entropy as</span>
+
+<span class="sd">    .. math ::</span>
+
+<span class="sd">        S = S_{plusminus}(\mathrm{Re}\, H) + S_{plusminus}(\mathrm{Im}\, H),</span>
+
+<span class="sd">    where :math:`S_{plusminus}` is the :py:class:`.PlusMinusEntropy`.</span>
+
+<span class="sd">    Note that :math:`H = A\Delta\omega` (in the usual case, see :ref:`preblur` for a different definition).</span>
+<span class="sd">    Also, the default model usually includes the :math:`\Delta\omega`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    D : DefaultModel</span>
+<span class="sd">        the default model</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="ComplexPlusMinusEntropy.f"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.ComplexPlusMinusEntropy.f">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="n">A_real</span> <span class="o">=</span> <span class="n">view_complex</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+        <span class="n">A_imag</span> <span class="o">=</span> <span class="n">view_complex</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="o">.</span><span class="n">imag</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">ComplexPlusMinusEntropy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">A_real</span><span class="p">)</span> <span class="o">+</span> \
+            <span class="nb">super</span><span class="p">(</span><span class="n">ComplexPlusMinusEntropy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">A_imag</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ComplexPlusMinusEntropy.d"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.ComplexPlusMinusEntropy.d">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="n">A_real</span> <span class="o">=</span> <span class="n">view_complex</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+        <span class="n">A_imag</span> <span class="o">=</span> <span class="n">view_complex</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="o">.</span><span class="n">imag</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span>
+            <span class="p">(</span><span class="nb">super</span><span class="p">(</span><span class="n">ComplexPlusMinusEntropy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">A_real</span><span class="p">),</span>
+             <span class="nb">super</span><span class="p">(</span><span class="n">ComplexPlusMinusEntropy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">d</span><span class="p">(</span><span class="n">A_imag</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="ComplexPlusMinusEntropy.dd"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.ComplexPlusMinusEntropy.dd">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">dd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="n">A_real</span> <span class="o">=</span> <span class="n">view_complex</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+        <span class="n">A_imag</span> <span class="o">=</span> <span class="n">view_complex</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="o">.</span><span class="n">imag</span>
+        <span class="n">dd_re</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">ComplexPlusMinusEntropy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">dd</span><span class="p">(</span><span class="n">A_real</span><span class="p">)</span>
+        <span class="n">dd_im</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">ComplexPlusMinusEntropy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">dd</span><span class="p">(</span><span class="n">A_imag</span><span class="p">)</span>
+        <span class="n">dd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">dd_re</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dd_re</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">dd</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">dd_re</span>
+        <span class="n">dd</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">dd_im</span>
+        <span class="k">return</span> <span class="n">dd</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">input_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">axes_preference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AbsoluteEntropy"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.AbsoluteEntropy">[docs]</a><span class="k">class</span> <span class="nc">AbsoluteEntropy</span><span class="p">(</span><span class="n">Entropy</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; The entropy with ``|A|``</span>
+
+<span class="sd">    .. warning:: This entropy is not convex!</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="AbsoluteEntropy.f"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.AbsoluteEntropy.f">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span> <span class="o">-</span>
+                       <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">*</span> <span class="n">safelog</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="AbsoluteEntropy.d"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.AbsoluteEntropy.d">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span> <span class="n">safelog</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">A</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AbsoluteEntropy.dd"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.AbsoluteEntropy.dd">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">dd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">A</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="ShiftedAbsoluteEntropy"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.ShiftedAbsoluteEntropy">[docs]</a><span class="k">class</span> <span class="nc">ShiftedAbsoluteEntropy</span><span class="p">(</span><span class="n">Entropy</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; The entropy with ``|A|+D`` &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="ShiftedAbsoluteEntropy.f"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.ShiftedAbsoluteEntropy.f">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span> <span class="o">-</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">+</span> \
+                      <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">)</span> <span class="o">*</span> <span class="n">safelog</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="ShiftedAbsoluteEntropy.d"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.ShiftedAbsoluteEntropy.d">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span> <span class="n">safelog</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">A</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ShiftedAbsoluteEntropy.dd"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.ShiftedAbsoluteEntropy.dd">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">dd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">))</span></div></div>
+
+<span class="c1"># =====================================================================</span>
+<span class="c1">#  H(v)</span>
+<span class="c1"># =====================================================================</span>
+
+
+<div class="viewcode-block" id="GenericH_of_v"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.GenericH_of_v">[docs]</a><span class="k">class</span> <span class="nc">GenericH_of_v</span><span class="p">(</span><span class="n">DoublyDerivableFunction</span><span class="p">,</span> <span class="n">InvertibleFunction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; A function giving the parametrization :math:`H(v)`</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    D : DefaultModel</span>
+<span class="sd">        the default model to use</span>
+<span class="sd">    K : :py:class:`.Kernel`</span>
+<span class="sd">        the kernel to use</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">K</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_D</span> <span class="o">=</span> <span class="n">D</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_K</span> <span class="o">=</span> <span class="n">K</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_B</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+    <span class="c1">####### Helper functions #######</span>
+
+    <span class="k">def</span> <span class="nf">get_D</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_D</span>
+
+    <span class="k">def</span> <span class="nf">set_D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">update_H_of_v</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_D</span> <span class="o">=</span> <span class="n">D</span>
+        <span class="k">if</span> <span class="n">update_H_of_v</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+    <span class="n">D</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_D</span><span class="p">,</span> <span class="n">set_D</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_K</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_K</span>
+
+    <span class="k">def</span> <span class="nf">set_K</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">update_H_of_v</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_K</span> <span class="o">=</span> <span class="n">K</span>
+        <span class="k">if</span> <span class="n">update_H_of_v</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+    <span class="n">K</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_K</span><span class="p">,</span> <span class="n">set_K</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_omega</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">omega</span>
+
+    <span class="k">def</span> <span class="nf">set_omega</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">update_D</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">update_H_of_v</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="n">omega</span>
+        <span class="k">if</span> <span class="n">update_D</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">update_H_of_v</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+    <span class="n">omega</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_omega</span><span class="p">,</span> <span class="n">set_omega</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">input_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">S</span><span class="p">),)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">axes_preference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span></div>
+
+
+<div class="viewcode-block" id="NormalH_of_v"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NormalH_of_v">[docs]</a><span class="k">class</span> <span class="nc">NormalH_of_v</span><span class="p">(</span><span class="n">GenericH_of_v</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Bryan&#39;s parametrization H(v)</span>
+
+<span class="sd">    This parametrization uses</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        H(v) = D \exp(Vv),</span>
+
+<span class="sd">    where :math:`V` is the matrix of the right-singular vectors of the</span>
+<span class="sd">    kernel.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    D : DefaultModel</span>
+<span class="sd">        the default model to use</span>
+<span class="sd">    K : :py:class:`.Kernel`</span>
+<span class="sd">        the kernel to use</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="NormalH_of_v.f"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NormalH_of_v.f">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="NormalH_of_v.d"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NormalH_of_v.d">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span> <span class="o">*</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">,</span> <span class="n">v</span><span class="p">))[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="NormalH_of_v.dd"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NormalH_of_v.dd">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">dd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;k,kj,kl,k-&gt;kjl&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">,</span>
+                         <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">,</span> <span class="n">v</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="NormalH_of_v.inv"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NormalH_of_v.inv">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">inv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span> <span class="n">safelog</span><span class="p">(</span><span class="n">A</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="PlusMinusH_of_v"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.PlusMinusH_of_v">[docs]</a><span class="k">class</span> <span class="nc">PlusMinusH_of_v</span><span class="p">(</span><span class="n">GenericH_of_v</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Plus/minus parametrization H(v)</span>
+
+<span class="sd">    This should be used with the :py:class:`.PlusMinusEntropy`.</span>
+<span class="sd">    The parametrization is</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        H(v) = D (e^{Vv} - e^{-Vv})</span>
+
+<span class="sd">    where :math:`V` is the matrix of the right-singular vectors of the</span>
+<span class="sd">    kernel.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    D : DefaultModel</span>
+<span class="sd">        the default model to use</span>
+<span class="sd">    K : :py:class:`.Kernel`</span>
+<span class="sd">        the kernel to use</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="PlusMinusH_of_v.f"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.PlusMinusH_of_v.f">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span> <span class="o">-</span>
+                           <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">,</span> <span class="n">v</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="PlusMinusH_of_v.d"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.PlusMinusH_of_v.d">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">,</span> <span class="n">v</span><span class="p">))[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">,</span> <span class="n">v</span><span class="p">))[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="PlusMinusH_of_v.dd"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.PlusMinusH_of_v.dd">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">dd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;k,kj,kl,k-&gt;kjl&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">,</span>
+                         <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">,</span> <span class="n">v</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="PlusMinusH_of_v.inv"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.PlusMinusH_of_v.inv">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">inv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span> <span class="n">safelog</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">A</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">A</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">)))</span></div></div>
+
+
+<div class="viewcode-block" id="ComplexPlusMinusH_of_v"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.ComplexPlusMinusH_of_v">[docs]</a><span class="k">class</span> <span class="nc">ComplexPlusMinusH_of_v</span><span class="p">(</span><span class="n">PlusMinusH_of_v</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Complex plus/minus parametrization H(v)</span>
+
+<span class="sd">    This should be used with the :py:class:`.ComplexPlusMinusEntropy`.</span>
+<span class="sd">    The parametrization is</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        H(v) = D (e^{Vv} - e^{-Vv}) TODO</span>
+
+<span class="sd">    where :math:`V` is the matrix of the right-singular vectors of the</span>
+<span class="sd">    kernel.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    D : DefaultModel</span>
+<span class="sd">        the default model to use</span>
+<span class="sd">    K : :py:class:`.Kernel`</span>
+<span class="sd">        the kernel to use</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ComplexPlusMinusH_of_v.f"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.ComplexPlusMinusH_of_v.f">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">view_real</span><span class="p">(</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">ComplexPlusMinusH_of_v</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">f</span><span class="p">(</span>
+                <span class="n">view_complex</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">reshape</span><span class="o">=</span><span class="kc">False</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="ComplexPlusMinusH_of_v.d"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.ComplexPlusMinusH_of_v.d">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="n">v_cplx</span> <span class="o">=</span> <span class="n">view_complex</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">reshape</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">cW</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cosh</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">,</span> <span class="n">v_cplx</span><span class="p">))</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)))</span>
+        <span class="n">ret</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span> <span class="o">*</span> <span class="n">cW</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span>
+        <span class="n">ret</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span> <span class="o">*</span> <span class="n">cW</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span>
+        <span class="n">ret</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span> <span class="o">*</span> <span class="n">cW</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span>
+        <span class="n">ret</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span> <span class="o">*</span> <span class="n">cW</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">view_real</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">reshape</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ComplexPlusMinusH_of_v.dd"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.ComplexPlusMinusH_of_v.dd">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">dd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="n">v_cplx</span> <span class="o">=</span> <span class="n">view_complex</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">reshape</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">VVsW</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;jt,jq,j-&gt;jtq&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">,</span>
+                         <span class="n">np</span><span class="o">.</span><span class="n">sinh</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">,</span> <span class="n">v_cplx</span><span class="p">)))</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)))</span>
+        <span class="n">ret</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">VVsW</span><span class="p">)</span>
+        <span class="n">ret</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">ret</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">ret</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">VVsW</span><span class="p">)</span>
+        <span class="n">ret</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">ret</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">ret</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">VVsW</span><span class="p">)</span>
+        <span class="n">ret</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">ret</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">ret</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">VVsW</span><span class="p">)</span>
+        <span class="n">ret</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">ret</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">ret</span></div>
+
+<div class="viewcode-block" id="ComplexPlusMinusH_of_v.inv"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.ComplexPlusMinusH_of_v.inv">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">inv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">view_real</span><span class="p">(</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">ComplexPlusMinusH_of_v</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span>
+                <span class="n">view_complex</span><span class="p">(</span><span class="n">A</span><span class="p">)),</span> <span class="n">reshape</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">input_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">S</span><span class="p">),)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">axes_preference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span></div>
+
+
+<div class="viewcode-block" id="NoExpH_of_v"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NoExpH_of_v">[docs]</a><span class="k">class</span> <span class="nc">NoExpH_of_v</span><span class="p">(</span><span class="n">GenericH_of_v</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Parametrization H(v) without the exponential &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="NoExpH_of_v.f"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NoExpH_of_v.f">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="NoExpH_of_v.d"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NoExpH_of_v.d">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span></div>
+
+<div class="viewcode-block" id="NoExpH_of_v.dd"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NoExpH_of_v.dd">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">dd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span></div>
+
+<div class="viewcode-block" id="NoExpH_of_v.inv"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.NoExpH_of_v.inv">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">inv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">V</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span> <span class="n">A</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="IdentityH_of_v"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.IdentityH_of_v">[docs]</a><span class="k">class</span> <span class="nc">IdentityH_of_v</span><span class="p">(</span><span class="n">GenericH_of_v</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Parametrization H(v)=v &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="IdentityH_of_v.parameter_change"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.IdentityH_of_v.parameter_change">[docs]</a>    <span class="k">def</span> <span class="nf">parameter_change</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">D</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">d2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">D</span><span class="o">.</span><span class="n">D</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="IdentityH_of_v.f"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.IdentityH_of_v.f">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">v</span></div>
+
+<div class="viewcode-block" id="IdentityH_of_v.d"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.IdentityH_of_v.d">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="IdentityH_of_v.dd"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.IdentityH_of_v.dd">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">dd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">d2</span></div>
+
+<div class="viewcode-block" id="IdentityH_of_v.inv"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.IdentityH_of_v.inv">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">inv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">A</span></div></div>
+
+<span class="c1"># =====================================================================</span>
+<span class="c1">#  A(H)</span>
+<span class="c1"># =====================================================================</span>
+
+
+<div class="viewcode-block" id="GenericA_of_H"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.GenericA_of_H">[docs]</a><span class="k">class</span> <span class="nc">GenericA_of_H</span><span class="p">(</span><span class="n">DoublyDerivableFunction</span><span class="p">,</span> <span class="n">InvertibleFunction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; A parametrization :math:`A(H)` &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">get_omega</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_omega</span>
+
+    <span class="k">def</span> <span class="nf">set_omega</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">update_A_of_H</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_omega</span> <span class="o">=</span> <span class="n">omega</span>
+        <span class="k">if</span> <span class="n">update_A_of_H</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+    <span class="n">omega</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_omega</span><span class="p">,</span> <span class="n">set_omega</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="IdentityA_of_H"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.IdentityA_of_H">[docs]</a><span class="k">class</span> <span class="nc">IdentityA_of_H</span><span class="p">(</span><span class="n">GenericA_of_H</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Parametrization A(H)=H</span>
+
+<span class="sd">    For non-uniform omega meshes, this takes care of the :math:`\Delta \omega`.</span>
+<span class="sd">    Use this whenever you don&#39;t use the :py:class:`.PreblurKernel`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">omega</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_omega</span> <span class="o">=</span> <span class="n">omega</span>
+
+<div class="viewcode-block" id="IdentityA_of_H.f"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.IdentityA_of_H.f">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H</span><span class="p">):</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">view_complex</span><span class="p">(</span><span class="n">H</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_omega</span><span class="o">.</span><span class="n">delta</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">H</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_omega</span><span class="o">.</span><span class="n">delta</span></div>
+
+<div class="viewcode-block" id="IdentityA_of_H.d"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.IdentityA_of_H.d">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mf">1.0</span>  <span class="c1"># np.eye(len(H)), but faster</span></div>
+
+<div class="viewcode-block" id="IdentityA_of_H.dd"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.IdentityA_of_H.dd">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">dd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mf">0.0</span>  <span class="c1"># np.zeros((len(H), len(H), len(H))), but faster</span></div>
+
+<div class="viewcode-block" id="IdentityA_of_H.inv"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.IdentityA_of_H.inv">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">inv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">view_real</span><span class="p">(</span><span class="n">A</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_omega</span><span class="o">.</span><span class="n">delta</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="PreblurA_of_H"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.PreblurA_of_H">[docs]</a><span class="k">class</span> <span class="nc">PreblurA_of_H</span><span class="p">(</span><span class="n">GenericA_of_H</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; A_of_H using preblur</span>
+
+<span class="sd">    With preblur, we have :math:`A(H) = BH` (up to a :math:`\Delta\omega`</span>
+<span class="sd">    for non-uniform omega meshes).</span>
+
+<span class="sd">    Use this whenever you use the :py:class:`.PreblurKernel`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    b : float</span>
+<span class="sd">        blur parameter (width of Gaussian)</span>
+<span class="sd">    omega : array</span>
+<span class="sd">        the omega mesh used for ``H_of_v``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">omega</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; A_of_H using preblur</span>
+
+<span class="sd">        b : float</span>
+<span class="sd">            blur parameter (width of Gaussian)</span>
+<span class="sd">        omega : array</span>
+<span class="sd">            the omega mesh used for H_of_v</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_omega</span> <span class="o">=</span> <span class="n">omega</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_b</span> <span class="o">=</span> <span class="n">b</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+<div class="viewcode-block" id="PreblurA_of_H.parameter_change"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.PreblurA_of_H.parameter_change">[docs]</a>    <span class="k">def</span> <span class="nf">parameter_change</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_B</span> <span class="o">=</span> <span class="n">get_preblur</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_omega</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_b</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreblurA_of_H.f"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.PreblurA_of_H.f">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_B</span><span class="p">,</span> <span class="n">H</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PreblurA_of_H.d"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.PreblurA_of_H.d">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_B</span></div>
+
+<div class="viewcode-block" id="PreblurA_of_H.dd"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.PreblurA_of_H.dd">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">dd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">H</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">H</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">H</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="PreblurA_of_H.inv"><a class="viewcode-back" href="../../reference/functions.html#triqs_maxent.functions.PreblurA_of_H.inv">[docs]</a>    <span class="nd">@cached</span>
+    <span class="k">def</span> <span class="nf">inv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_B</span><span class="p">,</span> <span class="n">A</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
+
+    <span class="k">def</span> <span class="nf">get_b</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_b</span>
+
+    <span class="k">def</span> <span class="nf">set_b</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">update_A_of_H</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_b</span> <span class="o">=</span> <span class="n">b</span>
+        <span class="k">if</span> <span class="n">update_A_of_H</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameter_change</span><span class="p">()</span>
+
+    <span class="n">b</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="n">get_b</span><span class="p">,</span> <span class="n">set_b</span><span class="p">)</span></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+    <li><a href="../../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">triqs_maxent.functions</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017-2018 G. J. Kraberger and M. Zingl.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,236 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>In-depth discussion of the program structure &#8212; TRIQS Analytic Continuation / MaxEnt  documentation</title>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/triqs.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=default"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Custom functions" href="customization.html" />
+    <link rel="prev" title="Continuation of self-energies: Sr2RuO4" href="sigma_continuator.html" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,700' rel='stylesheet' type='text/css'>
+    <script src="../_static/cufon-yui.js" type="text/javascript"></script>
+    <script src="../_static/spaceman.cufonfonts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      Cufon.replace('.triqs', { fontFamily: 'spaceman', hover: true }); 
+    </script>
+ 
+    <style type="text/css">
+      table.right { float: right; margin-left: 20px; }
+      table.right td { border: 1px solid #ccc; }
+      
+    </style>
+
+  </head><body>
+<div class="pageheader">
+  <ul>
+    
+    <li><a href="../install.html">Install</a></li>
+    
+    <li><a href="../documentation.html">Documentation</a></li>
+    
+    <li><a href="../issues.html">Issues</a></li>
+    
+    <li><a href="../about.html">About maxent</a></li>
+    
+  </ul>
+  <div>
+    <h1 style="padding:0; margin: 10px 0 0 0;"><a class="triqs" href="../index.html">maxent</a></h1>
+    <span style="font-size: 14px; margin: 0px; padding: 0px;">performing analytic continuation</span>
+  </div>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="customization.html" title="Custom functions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="sigma_continuator.html" title="Continuation of self-energies: Sr2RuO4"
+             accesskey="P">previous</a> |</li>
+    <li><a href="../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../documentation.html" accesskey="U">Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">In-depth discussion of the program structure</a></li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">In-depth discussion of the program structure</a><ul>
+<li><a class="reference internal" href="#structure-of-the-code">Structure of the code</a></li>
+<li><a class="reference internal" href="#the-concept-of-caching-the-evaluation">The concept of caching the evaluation</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="sigma_continuator.html"
+                        title="previous chapter">Continuation of self-energies: Sr<sub>2</sub>RuO<sub>4</sub></a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="customization.html"
+                        title="next chapter">Custom functions</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/guide/program_overview.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="in-depth-discussion-of-the-program-structure">
+<h1>In-depth discussion of the program structure<a class="headerlink" href="#in-depth-discussion-of-the-program-structure" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="structure-of-the-code">
+<h2>Structure of the code<a class="headerlink" href="#structure-of-the-code" title="Permalink to this headline">¶</a></h2>
+<p>The code is set up in different layers.</p>
+<p>The lowest layer are input quantities and parameters, such as the
+<a class="reference internal" href="../reference/omega_meshes.html#module-triqs_maxent.omega_meshes" title="triqs_maxent.omega_meshes"><code class="xref py py-mod docutils literal notranslate"><span class="pre">omega</span> <span class="pre">meshes</span></code></a>, the <a class="reference internal" href="../reference/alpha_meshes.html#module-triqs_maxent.alpha_meshes" title="triqs_maxent.alpha_meshes"><code class="xref py py-mod docutils literal notranslate"><span class="pre">values</span> <span class="pre">of</span> <span class="pre">alpha</span></code></a>,
+the input data (i.e., a Green function <span class="math notranslate nohighlight">\(G(\tau)\)</span> and its error).
+Furthermore, the kernel (e.g., the <code class="xref py py-class docutils literal notranslate"><span class="pre">TauKernel</span></code>) that linearly relates the
+spectral function to the input Green function has to be defined.</p>
+<p>The next layer is the choice of the <a class="reference internal" href="../reference/functions.html#triqs_maxent.functions.DoublyDerivableFunction" title="triqs_maxent.functions.DoublyDerivableFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">doubly</span> <span class="pre">derivable</span> <span class="pre">functions</span></code></a>
+for <span class="math notranslate nohighlight">\(\chi^2\)</span> (it will usually be the <a class="reference internal" href="../reference/functions.html#triqs_maxent.functions.NormalChi2" title="triqs_maxent.functions.NormalChi2"><code class="xref py py-class docutils literal notranslate"><span class="pre">NormalChi2</span></code></a>) and
+for <span class="math notranslate nohighlight">\(S\)</span> (e.g., the <a class="reference internal" href="../reference/functions.html#triqs_maxent.functions.NormalEntropy" title="triqs_maxent.functions.NormalEntropy"><code class="xref py py-class docutils literal notranslate"><span class="pre">NormalEntropy</span></code></a> or the <a class="reference internal" href="../reference/functions.html#triqs_maxent.functions.PlusMinusEntropy" title="triqs_maxent.functions.PlusMinusEntropy"><code class="xref py py-class docutils literal notranslate"><span class="pre">PlusMinusEntropy</span></code></a>).
+The function for <span class="math notranslate nohighlight">\(\chi^2\)</span> has as parameters the kernel (which itself depends on <span class="math notranslate nohighlight">\(\tau\)</span> and <span class="math notranslate nohighlight">\(\omega\)</span>),
+the Green function data and the error and evaluates the value of the misfit for a given spectral function.
+The function for <span class="math notranslate nohighlight">\(S\)</span> has as a parameter the default model (which depends on <span class="math notranslate nohighlight">\(\omega\)</span>)
+and evaluates the value of the entropy for a given spectral function.
+Typically, the solution of the optimization of the cost function <span class="math notranslate nohighlight">\(Q = \frac12 \chi^2 - \alpha S\)</span>
+is not searched in the space of <span class="math notranslate nohighlight">\(A(\omega)\)</span>, but <span class="math notranslate nohighlight">\(A(\omega)\)</span> is parametrized using the
+singular value decomposition of the kernel, using a parameter vector <span class="math notranslate nohighlight">\(v\)</span> in singular space.
+As a slight complication, for non-uniform <span class="math notranslate nohighlight">\(\omega\)</span> meshes,
+the cost function has to be optimized with respect to <span class="math notranslate nohighlight">\(H = A(\omega) \Delta\omega\)</span>.
+Therefore, we split the parametrization into <span class="math notranslate nohighlight">\(A(v) = A(H(v))\)</span>.
+Different parametrizations are possible, we provide, e.g., the <a class="reference internal" href="../reference/functions.html#triqs_maxent.functions.NormalH_of_v" title="triqs_maxent.functions.NormalH_of_v"><code class="xref py py-class docutils literal notranslate"><span class="pre">NormalH_of_v</span></code></a> and
+<a class="reference internal" href="../reference/functions.html#triqs_maxent.functions.PlusMinusH_of_v" title="triqs_maxent.functions.PlusMinusH_of_v"><code class="xref py py-class docutils literal notranslate"><span class="pre">PlusMinusH_of_v</span></code></a>, which are typically used together with <a class="reference internal" href="../reference/functions.html#triqs_maxent.functions.IdentityA_of_H" title="triqs_maxent.functions.IdentityA_of_H"><code class="xref py py-class docutils literal notranslate"><span class="pre">IdentityA_of_H</span></code></a>.</p>
+<p>The next layer is the cost function, which represents the <a class="reference internal" href="../reference/functions.html#triqs_maxent.functions.DoublyDerivableFunction" title="triqs_maxent.functions.DoublyDerivableFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">doubly</span> <span class="pre">derivable</span> <span class="pre">functions</span></code></a>
+<span class="math notranslate nohighlight">\(Q(v)\)</span>.
+It, of course, depends on the choices made in the previous layers.
+Here, for the first time, the <span class="math notranslate nohighlight">\(\alpha\)</span> dependence comes in; the cost function can only
+be evaluated once this parameter is chosen.
+For this, we offer the <a class="reference internal" href="../reference/cost_functions.html#triqs_maxent.cost_functions.maxent_cost_function.MaxEntCostFunction" title="triqs_maxent.cost_functions.maxent_cost_function.MaxEntCostFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">MaxEntCostFunction</span></code></a>.
+There is a different choice, the <a class="reference internal" href="../reference/cost_functions.html#triqs_maxent.cost_functions.bryan_cost_function.BryanCostFunction" title="triqs_maxent.cost_functions.bryan_cost_function.BryanCostFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">BryanCostFunction</span></code></a>, which uses optimizations for speed
+that imply the choice of the normal expressions for <span class="math notranslate nohighlight">\(\chi^2\)</span> and <span class="math notranslate nohighlight">\(S\)</span>.
+Therefore, the latter only works for diagonal elements of the spectral function.</p>
+<p>Given the <span class="math notranslate nohighlight">\(\alpha\)</span> dependence of the cost function, typically a loop over different values
+of <span class="math notranslate nohighlight">\(\alpha\)</span> has to be performed.
+This is the next layer, which consists of the <a class="reference internal" href="../reference/maxent_loop.html#triqs_maxent.maxent_loop.MaxEntLoop" title="triqs_maxent.maxent_loop.MaxEntLoop"><code class="xref py py-class docutils literal notranslate"><span class="pre">MaxEntLoop</span></code></a> class.
+It connects the cost function, a minimizer (which does the actual minimization, e.g. the <a class="reference internal" href="../reference/minimizers/levenberg_minimizer.html#triqs_maxent.minimizers.levenberg_minimizer.LevenbergMinimizer" title="triqs_maxent.minimizers.levenberg_minimizer.LevenbergMinimizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">LevenbergMinimizer</span></code></a>),
+an <a class="reference internal" href="../reference/alpha_meshes.html#module-triqs_maxent.alpha_meshes" title="triqs_maxent.alpha_meshes"><code class="xref py py-mod docutils literal notranslate"><span class="pre">alpha</span> <span class="pre">mesh</span></code></a>, an expression for the <a class="reference internal" href="../reference/probabilities.html#module-triqs_maxent.probabilities" title="triqs_maxent.probabilities"><code class="xref py py-mod docutils literal notranslate"><span class="pre">probability</span></code></a> of a given
+<span class="math notranslate nohighlight">\(\alpha\)</span> given the solution and <a class="reference internal" href="../reference/analyzers/analyzers.html#analyzersref"><span class="std std-ref">analyzers</span></a> that pick a particular <span class="math notranslate nohighlight">\(\alpha\)</span>.
+The <a class="reference internal" href="../reference/maxent_loop.html#triqs_maxent.maxent_loop.MaxEntLoop" title="triqs_maxent.maxent_loop.MaxEntLoop"><code class="xref py py-class docutils literal notranslate"><span class="pre">MaxEntLoop</span></code></a> class is the lowest layer that can perform an analytic continuation automatically
+and give back meaningful results with little effort.
+Of course, it has sensible defaults for all its dependencies.
+When <a class="reference internal" href="../reference/maxent_loop.html#triqs_maxent.maxent_loop.MaxEntLoop.run" title="triqs_maxent.maxent_loop.MaxEntLoop.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">running</span></code></a> the MaxEnt loop, it returns a <a class="reference internal" href="../reference/maxent_result.html#triqs_maxent.maxent_result.MaxEntResult" title="triqs_maxent.maxent_result.MaxEntResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">MaxEntResult</span></code></a> that
+contains the output spectral function as well as other quantities for diagnostic purposes.
+The data of the <a class="reference internal" href="../reference/maxent_result.html#triqs_maxent.maxent_result.MaxEntResult" title="triqs_maxent.maxent_result.MaxEntResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">MaxEntResult</span></code></a> can be written to an h5-file.</p>
+<p>In order to simplify the use for common cases, there is the <a class="reference internal" href="../reference/tau_maxent.html#triqs_maxent.tau_maxent.TauMaxEnt" title="triqs_maxent.tau_maxent.TauMaxEnt"><code class="xref py py-class docutils literal notranslate"><span class="pre">TauMaxEnt</span></code></a> class that provides
+a simplification layer for <a class="reference internal" href="../reference/maxent_loop.html#triqs_maxent.maxent_loop.MaxEntLoop" title="triqs_maxent.maxent_loop.MaxEntLoop"><code class="xref py py-class docutils literal notranslate"><span class="pre">MaxEntLoop</span></code></a>.
+It uses the <a class="reference internal" href="../reference/kernels.html#triqs_maxent.kernels.TauKernel" title="triqs_maxent.kernels.TauKernel"><code class="xref py py-class docutils literal notranslate"><span class="pre">TauKernel</span></code></a> and provides methods to set the Green function and the error.</p>
+<p>For matrix-valued spectral functions, the continuation can be performed element-wise by using the <a class="reference internal" href="../reference/elementwise_maxent.html#triqs_maxent.elementwise_maxent.ElementwiseMaxEnt" title="triqs_maxent.elementwise_maxent.ElementwiseMaxEnt"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElementwiseMaxEnt</span></code></a> layer
+on top of the <a class="reference internal" href="../reference/tau_maxent.html#triqs_maxent.tau_maxent.TauMaxEnt" title="triqs_maxent.tau_maxent.TauMaxEnt"><code class="xref py py-class docutils literal notranslate"><span class="pre">TauMaxEnt</span></code></a> class.</p>
+<p>We want to note that from each level downwards, typically the values of all the quantities are shadowed.
+This means, if we want to access the <span class="math notranslate nohighlight">\(omega\)</span>-mesh of an <a class="reference internal" href="../reference/elementwise_maxent.html#triqs_maxent.elementwise_maxent.ElementwiseMaxEnt" title="triqs_maxent.elementwise_maxent.ElementwiseMaxEnt"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElementwiseMaxEnt</span></code></a> class,
+all the following calls are equivalent:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">elementwise_maxent</span><span class="o">.</span><span class="n">omega</span>
+<span class="n">elementwise_maxent</span><span class="o">.</span><span class="n">maxent_diagonal</span><span class="o">.</span><span class="n">omega</span> <span class="c1"># maxent_diagonal is a TauMaxEnt instance</span>
+<span class="n">elementwise_maxent</span><span class="o">.</span><span class="n">maxent_diagonal</span><span class="o">.</span><span class="n">maxent_loop</span><span class="o">.</span><span class="n">omega</span>
+<span class="n">elementwise_maxent</span><span class="o">.</span><span class="n">maxent_diagonal</span><span class="o">.</span><span class="n">maxent_loop</span><span class="o">.</span><span class="n">cost_function</span><span class="o">.</span><span class="n">omega</span>
+<span class="n">elementwise_maxent</span><span class="o">.</span><span class="n">maxent_diagonal</span><span class="o">.</span><span class="n">maxent_loop</span><span class="o">.</span><span class="n">cost_function</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">omega</span>
+<span class="n">elementwise_maxent</span><span class="o">.</span><span class="n">maxent_diagonal</span><span class="o">.</span><span class="n">maxent_loop</span><span class="o">.</span><span class="n">cost_function</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">K</span><span class="o">.</span><span class="n">omega</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="the-concept-of-caching-the-evaluation">
+<h2>The concept of caching the evaluation<a class="headerlink" href="#the-concept-of-caching-the-evaluation" title="Permalink to this headline">¶</a></h2>
+<p>Whenever a <a class="reference internal" href="../reference/functions.html#triqs_maxent.functions.DoublyDerivableFunction" title="triqs_maxent.functions.DoublyDerivableFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">doubly</span> <span class="pre">derivable</span> <span class="pre">function</span></code></a> is called with a certain input,
+we want to save the output value if we need it later on.
+This leads to a considerable speed increase of the program.
+This is implemented for all py:class:<cite>doubly derivable functions &lt;.DoublyDerivableFunction&gt;</cite>.
+For instance, the <a class="reference internal" href="../reference/functions.html#triqs_maxent.functions.NormalChi2" title="triqs_maxent.functions.NormalChi2"><code class="xref py py-class docutils literal notranslate"><span class="pre">NormalChi2</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">chi2</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+<span class="n">chi2</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>will only evaluated once, the second time the cached value will be returned.
+The same holds for the first derivative, <code class="docutils literal notranslate"><span class="pre">chi2.d(A)</span></code>, and the
+second derivative, <code class="docutils literal notranslate"><span class="pre">chi2.dd(A)</span></code>.</p>
+<p>There is another way of supplying the argument to the function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">chi2_A</span> <span class="o">=</span> <span class="n">chi2</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+<span class="n">chi2_A</span><span class="o">.</span><span class="n">f</span><span class="p">()</span>
+<span class="n">chi2_A</span><span class="o">.</span><span class="n">d</span><span class="p">()</span>
+<span class="n">chi2_A</span><span class="o">.</span><span class="n">dd</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>That way, the supplied argument is saved and does not have to be repeated.</p>
+</div>
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="customization.html" title="Custom functions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="sigma_continuator.html" title="Continuation of self-energies: Sr2RuO4"
+             >previous</a> |</li>
+    <li><a href="../index.html">Home</a> &raquo;</li>
+
+          <li class="nav-item nav-item-1"><a href="../documentation.html" >Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">In-depth discussion of the program structure</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017-2018 G. J. Kraberger and M. Zingl.
+    </div>
+  </body>
+</html>
