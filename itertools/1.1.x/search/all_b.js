@@ -1,0 +1,5 @@
+var searchData=
+[
+  ['range_0',['range',['../classitertools_1_1range.html',1,'itertools::range'],['../classitertools_1_1range.html#a74ba266a769b2f6e69032e3eecbbcc77',1,'itertools::range::range()=default'],['../classitertools_1_1range.html#a7dfddfd34ad1c34b55101ba2101dd7af',1,'itertools::range::range(long first, long last) noexcept'],['../classitertools_1_1range.html#a083109ed16887b9aadd3a0a5a712f80f',1,'itertools::range::range(long first, long last, long step)'],['../classitertools_1_1range.html#a9db3a7a695fc7bbcd88b7489706685c1',1,'itertools::range::range(long last)']]],
+  ['reference_1',['reference',['../structitertools_1_1iterator__facade_3_01Iter_00_01Value_00_01std_1_1forward__iterator__tag_00_01Reference_00_01Difference_01_4.html#afdbcd6d73c6e6588a1d794ad03e5d504',1,'itertools::iterator_facade&lt; Iter, Value, std::forward_iterator_tag, Reference, Difference &gt;::reference()'],['../classitertools_1_1range_1_1const__iterator.html#ae6a9c0c7d2c1d29ef5a485d4d9e62d2d',1,'itertools::range::const_iterator::reference()']]]
+];

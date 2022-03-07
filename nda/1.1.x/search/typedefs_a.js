@@ -1,0 +1,6 @@
+var searchData=
+[
+  ['r_5ft_0',['R_t',['../structnda_1_1expr.html#ae14170f41b3a8ae55754abf16cf3178a',1,'nda::expr']]],
+  ['reference_1',['reference',['../structnda_1_1default__accessor_1_1accessor.html#abf571a448f2e5e8675fab5f8689090b7',1,'nda::default_accessor::accessor::reference()'],['../structnda_1_1no__alias__accessor_1_1accessor.html#a8951dc392fbcac4b1b07730abaa53736',1,'nda::no_alias_accessor::accessor::reference()'],['../classnda_1_1grid__iterator.html#ada0993f45d2fef511b0b680efdeb3686',1,'nda::grid_iterator::reference()'],['../classnda_1_1grid__iterator_3_011_01_4.html#a340b740a74bda3cbe27fcb237a549e2f',1,'nda::grid_iterator&lt; 1 &gt;::reference()'],['../classnda_1_1array__iterator.html#a788db957af915c9080e3cb5cd441173f',1,'nda::array_iterator::reference()'],['../classnda_1_1array__iterator_3_011_00_01T_00_01Pointer_01_4.html#a685f5699843545c77bf619fa7d4cbc98',1,'nda::array_iterator&lt; 1, T, Pointer &gt;::reference()']]],
+  ['regular_5ftype_2',['regular_type',['../classnda_1_1basic__array.html#aba13f8a984c3f0ed4a2902540dfbe14b',1,'nda::basic_array::regular_type()'],['../classnda_1_1basic__array__view.html#a03e78068ff099417289983cf3071b2a6',1,'nda::basic_array_view::regular_type()']]]
+];
