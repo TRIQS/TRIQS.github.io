@@ -211,7 +211,6 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../documentation.html#reference-manual">Reference manual</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../_python_api/triqs_dft_tools.block_structure.html">block_structure</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../_python_api/triqs_dft_tools.block_structure.gf_struct_flatten.html">triqs_dft_tools.block_structure.gf_struct_flatten</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_python_api/triqs_dft_tools.block_structure.BlockStructure.html">triqs_dft_tools.block_structure.BlockStructure</a></li>
 </ul>
 </li>
@@ -342,6 +341,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../ChangeLog.html">Changelog</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../ChangeLog.html#version-3-1-0">Version 3.1.0</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../ChangeLog.html#wannier90-converter">Wannier90 Converter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../ChangeLog.html#change-in-gf-struct">Change in gf_struct</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../ChangeLog.html#documentation">Documentation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../ChangeLog.html#cmake">Cmake</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../ChangeLog.html#other-changes">Other changes</a></li>
@@ -480,11 +480,11 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    gf_struct_sumk : list of list of tuple</span>
-<span class="sd">        gf_struct_sumk[ish][idx] = (block_name,list of indices in block)</span>
+<span class="sd">        gf_struct_sumk[ish][idx] = (block_name, dimension of block)</span>
 
 <span class="sd">        for correlated shell ish; idx is just a counter in the list</span>
 <span class="sd">    gf_struct_solver : list of dict</span>
-<span class="sd">        gf_struct_solver[ish][block] = list of indices in that block</span>
+<span class="sd">        gf_struct_solver[ish][block] = dimension of that block</span>
 
 <span class="sd">        for *inequivalent* correlated shell ish</span>
 <span class="sd">    solver_to_sumk : list of dict</span>
@@ -552,8 +552,27 @@
                  <span class="n">deg_shells</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">corr_to_inequiv</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                  <span class="n">transformation</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="c1"># Ensure backwards-compatibility with pre-3.1.x gf_structs</span>
+        <span class="n">show_gf_struct_warning</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">gf_struct_sumk</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">gf_struct</span> <span class="ow">in</span> <span class="n">gf_struct_sumk</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+                        <span class="n">gf_struct</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">block</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                        <span class="n">show_gf_struct_warning</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">gf_struct_solver</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">gf_struct</span> <span class="ow">in</span> <span class="n">gf_struct_solver</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">gf_struct</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">[</span><span class="n">block</span><span class="p">],</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+                        <span class="n">gf_struct</span><span class="p">[</span><span class="n">block</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">[</span><span class="n">block</span><span class="p">])</span>
+                        <span class="n">show_gf_struct_warning</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">show_gf_struct_warning</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Old (pre 3.1.x) form of gf_struct provided! The structure will be updated to the new convention!&#39;</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_sumk</span> <span class="o">=</span> <span class="n">gf_struct_sumk</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_solver</span> <span class="o">=</span> <span class="n">gf_struct_solver</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">solver_to_sumk</span> <span class="o">=</span> <span class="n">solver_to_sumk</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sumk_to_solver</span> <span class="o">=</span> <span class="n">sumk_to_solver</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">solver_to_sumk_block</span> <span class="o">=</span> <span class="n">solver_to_sumk_block</span>
@@ -568,13 +587,13 @@
 <span class="sd">        This is returned as a</span>
 <span class="sd">        list (for each shell)</span>
 <span class="sd">        of lists (for each block)</span>
-<span class="sd">        of tuples (block_name, block_indices).</span>
+<span class="sd">        of tuples (block_name, block_dimension).</span>
 
 <span class="sd">        That is,</span>
 <span class="sd">        ``gf_struct_solver_list[ish][b][0]``</span>
 <span class="sd">        is the name of the block number ``b`` of shell ``ish``, and</span>
 <span class="sd">        ``gf_struct_solver_list[ish][b][1]``</span>
-<span class="sd">        is a list of its indices.</span>
+<span class="sd">        is the dimension of the block ``b``.</span>
 
 <span class="sd">        The list for each shell is sorted alphabetically by block name.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -591,13 +610,13 @@
 <span class="sd">        This is returned as a</span>
 <span class="sd">        list (for each shell)</span>
 <span class="sd">        of lists (for each block)</span>
-<span class="sd">        of tuples (block_name, block_indices)</span>
+<span class="sd">        of tuples (block_name, block_dimension)</span>
 
 <span class="sd">        That is,</span>
 <span class="sd">        ``gf_struct_sumk_list[ish][b][0]``</span>
 <span class="sd">        is the name of the block number ``b`` of shell ``ish``, and</span>
 <span class="sd">        ``gf_struct_sumk_list[ish][b][1]``</span>
-<span class="sd">        is a list of its indices.</span>
+<span class="sd">        is the dimension of the block ``b``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_sumk</span>
 
@@ -611,7 +630,7 @@
 
 <span class="sd">        That is,</span>
 <span class="sd">        ``gf_struct_solver_dict[ish][bname]``</span>
-<span class="sd">        is a list of the indices of block ``bname`` of shell ``ish``.</span>
+<span class="sd">        is the dimension of block ``bname`` of shell ``ish``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_solver</span>
 
@@ -625,11 +644,11 @@
 
 <span class="sd">        That is,</span>
 <span class="sd">        ``gf_struct_sumk_dict[ish][bname]``</span>
-<span class="sd">        is a list of the indices of block ``bname`` of shell ``ish``.</span>
+<span class="sd">        is the dimension of block ``bname`` of shell ``ish``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_sumk</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">return</span> <span class="p">[{</span><span class="n">block</span><span class="p">:</span> <span class="n">indices</span> <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">indices</span> <span class="ow">in</span> <span class="n">gfs</span><span class="p">}</span>
+        <span class="k">return</span> <span class="p">[{</span><span class="n">block</span><span class="p">:</span> <span class="n">block_dim</span> <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">block_dim</span> <span class="ow">in</span> <span class="n">gfs</span><span class="p">}</span>
                 <span class="k">for</span> <span class="n">gfs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_sumk</span><span class="p">]</span>
 
     <span class="nd">@property</span>
@@ -681,7 +700,7 @@
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;gf_struct_solver not set.&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">trans</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">trans</span> <span class="o">=</span> <span class="p">[{</span><span class="n">block</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">))</span> <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">indices</span> <span class="ow">in</span> <span class="n">gfs</span><span class="p">}</span>
+            <span class="n">trans</span> <span class="o">=</span> <span class="p">[{</span><span class="n">block</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">block_dim</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">block_dim</span> <span class="ow">in</span> <span class="n">gfs</span><span class="p">}</span>
                      <span class="k">for</span> <span class="n">gfs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_sumk</span><span class="p">]</span>
 
         <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">trans</span><span class="p">,</span> <span class="nb">list</span><span class="p">),</span>\
@@ -693,12 +712,12 @@
         <span class="k">for</span> <span class="n">icrsh</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">trans</span><span class="p">))):</span>
             <span class="n">ish</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">corr_to_inequiv</span><span class="p">[</span><span class="n">icrsh</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">trans</span><span class="p">[</span><span class="n">icrsh</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">trans</span><span class="p">[</span><span class="n">icrsh</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">block</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">))</span>
-                                <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">indices</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_sumk</span><span class="p">[</span><span class="n">icrsh</span><span class="p">]}</span>
+                <span class="n">trans</span><span class="p">[</span><span class="n">icrsh</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">block</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">block_dim</span><span class="p">)</span>
+                                <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">block_dim</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_sumk</span><span class="p">[</span><span class="n">icrsh</span><span class="p">]}</span>
 
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">trans</span><span class="p">[</span><span class="n">icrsh</span><span class="p">],</span> <span class="nb">dict</span><span class="p">):</span>
                 <span class="n">trans</span><span class="p">[</span><span class="n">icrsh</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">block</span><span class="p">:</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">trans</span><span class="p">[</span><span class="n">icrsh</span><span class="p">])</span>
-                                <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">indices</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_sumk</span><span class="p">[</span><span class="n">icrsh</span><span class="p">]}</span>
+                                <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">block_dim</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_sumk</span><span class="p">[</span><span class="n">icrsh</span><span class="p">]}</span>
 
             <span class="k">assert</span> <span class="nb">list</span><span class="p">(</span><span class="n">trans</span><span class="p">[</span><span class="n">icrsh</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_sumk_dict</span><span class="p">[</span><span class="n">icrsh</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>\
                 <span class="s2">&quot;wrong block names used in transformation (icrsh = </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">icrsh</span><span class="p">)</span>
@@ -707,13 +726,13 @@
                 <span class="k">assert</span> <span class="n">trans</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="n">block</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">trans</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="n">block</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>\
                     <span class="s2">&quot;Transformation has to be quadratic; throwing away orbitals can be achieved on the level of the mapping. (icrsh = </span><span class="si">{}</span><span class="s2">, block = </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">icrsh</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
 
-                <span class="k">assert</span> <span class="n">trans</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="n">block</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_sumk_dict</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="n">block</span><span class="p">]),</span>\
+                <span class="k">assert</span> <span class="n">trans</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="n">block</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_sumk_dict</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="n">block</span><span class="p">],</span>\
                     <span class="s2">&quot;Transformation block shape does not match gf_struct_sumk. (icrsh = </span><span class="si">{}</span><span class="s2">, block = </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">icrsh</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
 
                 <span class="c1"># zero out all the lines of the transformation that are</span>
                 <span class="c1"># not included in gf_struct_solver</span>
-                <span class="k">for</span> <span class="n">iorb</span><span class="p">,</span> <span class="n">norb</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_sumk_dict</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="n">block</span><span class="p">]):</span>
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sumk_to_solver</span><span class="p">[</span><span class="n">ish</span><span class="p">][(</span><span class="n">block</span><span class="p">,</span> <span class="n">norb</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">iorb</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_sumk_dict</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="n">block</span><span class="p">]):</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sumk_to_solver</span><span class="p">[</span><span class="n">ish</span><span class="p">][(</span><span class="n">block</span><span class="p">,</span> <span class="n">iorb</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="n">trans</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="n">block</span><span class="p">][</span><span class="n">iorb</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="k">return</span> <span class="n">trans</span>
 
@@ -753,10 +772,10 @@
             <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_solver</span><span class="p">[</span><span class="n">ish</span><span class="p">]:</span>
                 <span class="n">block_sumk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver_to_sumk_block</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">block</span><span class="p">]</span>
                 <span class="n">T</span> <span class="o">=</span> <span class="n">eff_trans_sumk</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="n">block_sumk</span><span class="p">]</span>
-                <span class="n">ets</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">block</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_solver</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">block</span><span class="p">]),</span>
+                <span class="n">ets</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">block</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_solver</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">block</span><span class="p">],</span>
                                             <span class="nb">len</span><span class="p">(</span><span class="n">T</span><span class="p">)),</span>
                                            <span class="n">dtype</span><span class="o">=</span><span class="n">T</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_solver</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">block</span><span class="p">]:</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_solver</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">block</span><span class="p">]):</span>
                     <span class="n">i_sumk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver_to_sumk</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">block</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
                     <span class="k">assert</span> <span class="n">i_sumk</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">block_sumk</span><span class="p">,</span>\
                         <span class="s2">&quot;Wrong block in solver_to_sumk&quot;</span>
@@ -775,7 +794,7 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        gf_struct : list of dict</span>
-<span class="sd">            gf_struct[ish][block] = list of indices in that block</span>
+<span class="sd">            gf_struct[ish][block] = block dimension of that block</span>
 
 <span class="sd">            for (inequivalent) correlated shell ish</span>
 <span class="sd">        corr_to_inequiv : list</span>
@@ -797,7 +816,7 @@
             <span class="n">gss</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">gf_struct</span><span class="p">[</span><span class="n">ish</span><span class="p">]:</span>
                 <span class="n">so2sublock</span><span class="p">[</span><span class="n">block</span><span class="p">]</span><span class="o">=</span><span class="n">block</span>
-                <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">gf_struct</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">block</span><span class="p">]:</span>
+                <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">block</span><span class="p">]):</span>
                     <span class="n">so2su</span><span class="p">[(</span><span class="n">block</span><span class="p">,</span><span class="n">ind</span><span class="p">)]</span><span class="o">=</span><span class="p">(</span><span class="n">block</span><span class="p">,</span><span class="n">ind</span><span class="p">)</span>
                 <span class="n">gss</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">block</span><span class="p">,</span><span class="n">gf_struct</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">block</span><span class="p">]))</span>
             <span class="n">solver_to_sumk</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">so2su</span><span class="p">)</span>
@@ -841,16 +860,14 @@
 
 <span class="sd">        [{&#39;up&#39;:[0],&#39;down&#39;:[1]}]</span>
 
-<span class="sd">        Note that the indices will be renamed to be a 0-based</span>
-<span class="sd">        sequence of integers, i.e. the new structure will actually</span>
-<span class="sd">        be  [{&#39;up&#39;:[0],&#39;down&#39;:[0]}].</span>
+<span class="sd">        Note that as of version 3.1.x, the new structure itself will</span>
+<span class="sd">        actually be stored as  [{&#39;up&#39;:1,&#39;down&#39;:1}].</span>
 
 <span class="sd">        For dropped indices, sumk_to_solver will map to (None,None).</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        new_gf_struct : list of dict</span>
-<span class="sd">            formatted the same as gf_struct_solver:</span>
 
 <span class="sd">            new_gf_struct[ish][block]=list of indices in that block.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -886,7 +903,8 @@
 
             <span class="c1"># reindexing gf_struct so that it starts with 0</span>
             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">gf_struct</span><span class="p">:</span>
-                <span class="n">gf_struct</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">[</span><span class="n">k</span><span class="p">])))</span>
+                <span class="c1"># gf_struct[k]=list(range(len(gf_struct[k])))</span>
+                <span class="n">gf_struct</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_solver</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span><span class="o">=</span><span class="n">gf_struct</span></div>
 
 <div class="viewcode-block" id="BlockStructure.adapt_deg_shells"><a class="viewcode-back" href="../../_python_api/triqs_dft_tools.block_structure.BlockStructure.adapt_deg_shells.html#triqs_dft_tools.block_structure.BlockStructure.adapt_deg_shells">[docs]</a>    <span class="k">def</span> <span class="nf">adapt_deg_shells</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gf_struct</span><span class="p">,</span> <span class="n">ish</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
@@ -900,7 +918,7 @@
                         <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">gf_struct</span><span class="p">:</span>
                             <span class="k">del</span> <span class="n">degsh</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
                             <span class="k">continue</span>
-                        <span class="k">if</span> <span class="n">gf_struct</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_solver</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">key</span><span class="p">]:</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_solver</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">key</span><span class="p">]:</span>
                             <span class="n">v</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="n">degsh</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
                             <span class="n">degsh</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> \
                                 <span class="n">v</span><span class="p">[</span><span class="n">gf_struct</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="p">:][:,</span> <span class="n">gf_struct</span><span class="p">[</span><span class="n">key</span><span class="p">]]</span>
@@ -941,7 +959,6 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        new_gf_struct : list of dict</span>
-<span class="sd">            formatted the same as gf_struct_solver:</span>
 
 <span class="sd">            new_gf_struct[ish][block]=list of indices in that block.</span>
 
@@ -961,16 +978,16 @@
         <span class="c1"># one non-zero entry</span>
 
         <span class="k">for</span> <span class="n">icrsh</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">new_gf_struct</span><span class="p">)):</span>
-            <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">indices</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_sumk</span><span class="p">[</span><span class="n">icrsh</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">block_dim</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_sumk</span><span class="p">[</span><span class="n">icrsh</span><span class="p">]:</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">new_gf_struct</span><span class="p">[</span><span class="n">icrsh</span><span class="p">]:</span>
                     <span class="c1">#del new_gf_struct_transformed[block] # this MUST be wrong, as new_gf_struct_transformed needs to have a integer index for icrsh... # error when index is not kept at all</span>
                     <span class="k">continue</span>
                 <span class="n">T</span> <span class="o">=</span> <span class="n">eff_trans_sumk</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="n">block</span><span class="p">]</span>
-                <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">block_dim</span><span class="p">):</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">new_gf_struct</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="n">block</span><span class="p">]:</span>
                         <span class="n">T</span><span class="p">[:,</span> <span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
                 <span class="n">new_indices</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">block_dim</span><span class="p">):</span>
                     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">T</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="p">:])</span> <span class="o">&gt;</span> <span class="mf">1.e-15</span><span class="p">):</span>
                         <span class="n">new_indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
                 <span class="n">new_gf_struct_transformed</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="n">block</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_indices</span>
@@ -1041,6 +1058,11 @@
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">su2so</span><span class="p">:</span>
                     <span class="n">su2so</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
+            <span class="k">for</span> <span class="n">new_block</span> <span class="ow">in</span> <span class="n">gf_struct</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">[</span><span class="n">new_block</span><span class="p">])</span> <span class="o">==</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">[</span><span class="n">new_block</span><span class="p">]))))</span> <span class="p">,</span>\
+                    <span class="s2">&quot;New gf_struct does not have valid 0-based indices!&quot;</span>
+                <span class="n">gf_struct</span><span class="p">[</span><span class="n">new_block</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">[</span><span class="n">new_block</span><span class="p">])</span>
+
             <span class="bp">self</span><span class="o">.</span><span class="n">adapt_deg_shells</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">,</span> <span class="n">ish</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_solver</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span> <span class="o">=</span> <span class="n">gf_struct</span>
@@ -1092,8 +1114,8 @@
 <span class="sd">            which space the structure should correspond to</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">gf_function</span><span class="p">(</span><span class="n">indices</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">gf_function</span><span class="p">(</span><span class="n">target_shape</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">target_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
 
         <span class="k">def</span> <span class="nf">block_function</span><span class="p">(</span><span class="n">name_list</span><span class="p">,</span> <span class="n">block_list</span><span class="p">):</span>
             <span class="n">d</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
@@ -1115,7 +1137,7 @@
         <span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
         <span class="n">blocks</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
-            <span class="n">G</span> <span class="o">=</span> <span class="n">gf_function</span><span class="p">(</span><span class="n">indices</span><span class="o">=</span><span class="n">gf_struct</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">n</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">G</span> <span class="o">=</span> <span class="n">gf_function</span><span class="p">(</span><span class="n">target_shape</span><span class="o">=</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">n</span><span class="p">],</span><span class="n">gf_struct</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">n</span><span class="p">]),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
         <span class="n">G</span> <span class="o">=</span> <span class="n">block_function</span><span class="p">(</span><span class="n">name_list</span><span class="o">=</span><span class="n">names</span><span class="p">,</span> <span class="n">block_list</span><span class="o">=</span><span class="n">blocks</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">G</span>
@@ -1198,7 +1220,7 @@
             <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">gf</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
                 <span class="k">assert</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">gf_struct</span><span class="p">[</span><span class="n">ish</span><span class="p">],</span>\
                     <span class="s2">&quot;block &quot;</span> <span class="o">+</span> <span class="n">block</span> <span class="o">+</span> <span class="s2">&quot; not in struct (shell </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ish</span><span class="p">)</span>
-                <span class="k">assert</span> <span class="nb">list</span><span class="p">(</span><span class="n">gf</span><span class="o">.</span><span class="n">indices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">gf_struct</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">block</span><span class="p">]))],</span>\
+                <span class="k">assert</span> <span class="p">(</span><span class="n">gf</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">gf_struct</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">block</span><span class="p">],</span> <span class="n">gf_struct</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">block</span><span class="p">]),</span>\
                     <span class="s2">&quot;block &quot;</span> <span class="o">+</span> <span class="n">block</span> <span class="o">+</span> \
                     <span class="s2">&quot; has wrong indices (shell </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ish</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1208,7 +1230,7 @@
             <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">gf</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
                 <span class="k">assert</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">gf_struct</span><span class="p">[</span><span class="n">ish</span><span class="p">],</span>\
                     <span class="s2">&quot;block &quot;</span> <span class="o">+</span> <span class="n">block</span> <span class="o">+</span> <span class="s2">&quot; not in struct (shell </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ish</span><span class="p">)</span>
-                <span class="k">assert</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">gf</span><span class="p">)))</span> <span class="o">==</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">gf_struct</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">block</span><span class="p">]))],</span>\
+                <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">gf</span><span class="p">)</span> <span class="o">==</span> <span class="n">gf_struct</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">block</span><span class="p">],</span>\
                     <span class="s2">&quot;block &quot;</span> <span class="o">+</span> <span class="n">block</span> <span class="o">+</span> \
                     <span class="s2">&quot; has wrong indices (shell </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ish</span><span class="p">)</span>
 
@@ -1368,8 +1390,8 @@
             <span class="n">block_mapping_from</span> <span class="o">=</span> <span class="n">G_struct</span><span class="o">.</span><span class="n">sumk_to_solver_block</span><span class="p">[</span><span class="n">ish_from</span><span class="p">]</span>
         <span class="k">elif</span> <span class="n">space_from</span> <span class="o">==</span> <span class="s1">&#39;sumk&#39;</span><span class="p">:</span>
             <span class="n">gf_struct_from</span> <span class="o">=</span> <span class="n">G_struct</span><span class="o">.</span><span class="n">gf_struct_sumk_dict</span><span class="p">[</span><span class="n">ish_from</span><span class="p">]</span>
-            <span class="n">eff_trans_from</span> <span class="o">=</span> <span class="p">{</span><span class="n">block</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">))</span>
-                              <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">indices</span> <span class="ow">in</span> <span class="n">G_struct</span><span class="o">.</span><span class="n">gf_struct_sumk</span><span class="p">[</span><span class="n">ish_from</span><span class="p">]}</span>
+            <span class="n">eff_trans_from</span> <span class="o">=</span> <span class="p">{</span><span class="n">block</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">block_dim</span><span class="p">)</span>
+                              <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">block_dim</span> <span class="ow">in</span> <span class="n">G_struct</span><span class="o">.</span><span class="n">gf_struct_sumk</span><span class="p">[</span><span class="n">ish_from</span><span class="p">]}</span>
             <span class="n">block_mapping_from</span> <span class="o">=</span> <span class="p">{</span><span class="n">b</span><span class="p">:</span> <span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">gf_struct_from</span><span class="p">}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
@@ -1381,8 +1403,8 @@
             <span class="n">block_mapping_to</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver_to_sumk_block</span><span class="p">[</span><span class="n">ish_to</span><span class="p">]</span>
         <span class="k">elif</span> <span class="n">space_to</span> <span class="o">==</span> <span class="s1">&#39;sumk&#39;</span><span class="p">:</span>
             <span class="n">gf_struct_to</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_sumk_dict</span><span class="p">[</span><span class="n">ish_to</span><span class="p">]</span>
-            <span class="n">eff_trans_to</span> <span class="o">=</span> <span class="p">{</span><span class="n">block</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">))</span>
-                            <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">indices</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_sumk_list</span><span class="p">[</span><span class="n">ish_to</span><span class="p">]}</span>
+            <span class="n">eff_trans_to</span> <span class="o">=</span> <span class="p">{</span><span class="n">block</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">block_dim</span><span class="p">)</span>
+                            <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">block_dim</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_sumk_list</span><span class="p">[</span><span class="n">ish_to</span><span class="p">]}</span>
             <span class="n">block_mapping_to</span> <span class="o">=</span> <span class="p">{</span><span class="n">b</span><span class="p">:</span> <span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">gf_struct_to</span><span class="p">}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
@@ -1478,7 +1500,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">solver_to_sumk_block</span><span class="o">.</span><span class="n">append</span><span class="p">({})</span>
             <span class="k">for</span> <span class="n">frm</span><span class="p">,</span><span class="n">to</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sumk_to_solver</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
                 <span class="k">if</span> <span class="n">to</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_solver</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">frm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">frm</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct_solver</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">frm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">frm</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span><span class="o">=</span><span class="mi">1</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">sumk_to_solver</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">frm</span><span class="p">]</span><span class="o">=</span><span class="p">(</span><span class="n">frm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">frm</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span><span class="mi">0</span><span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">solver_to_sumk</span><span class="p">[</span><span class="n">ish</span><span class="p">][(</span><span class="n">frm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">frm</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span><span class="mi">0</span><span class="p">)]</span><span class="o">=</span><span class="n">frm</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">solver_to_sumk_block</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">frm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">frm</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span><span class="o">=</span><span class="n">frm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
@@ -1599,46 +1621,6 @@
         <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;transformation</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transformation</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">s</span></div>
-
-<div class="viewcode-block" id="gf_struct_flatten"><a class="viewcode-back" href="../../_python_api/triqs_dft_tools.block_structure.gf_struct_flatten.html#triqs_dft_tools.block_structure.gf_struct_flatten">[docs]</a><span class="k">def</span> <span class="nf">gf_struct_flatten</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    flattens gf_struct objecti</span>
-
-<span class="sd">    input gf_struct can looks like this:</span>
-
-<span class="sd">    [(&#39;up&#39;, [0, 1, 2]), (&#39;down&#39;, [0, 1, 2])]</span>
-
-<span class="sd">    and will be returned as</span>
-
-<span class="sd">    [(&#39;up&#39;, 3), (&#39;down&#39;, 3)]</span>
-
-<span class="sd">    Same for dict but replacing the values. This is for compatibility with the upcoming triqs releases.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    gf_struct: list of tuple or dict representing the Gf structure</span>
-<span class="sd">    __Returns:__</span>
-<span class="sd">    gf_struct_flat: flattens the values of the dict or the tuple representing the Gf indices by replacing them with the len of the list of indices</span>
-
-<span class="sd">    &#39;&#39;&#39;</span>
-
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-        <span class="c1"># create a copy of the original list</span>
-        <span class="n">gf_struct_flat</span> <span class="o">=</span> <span class="n">gf_struct</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">gf_struct_flat</span><span class="p">):</span>
-            <span class="c1"># exchange list of indices with length of list</span>
-            <span class="n">gf_struct_flat</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">block</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="c1"># create a copy of the original dict</span>
-        <span class="n">gf_struct_flat</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">gf_struct_flat</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="c1"># exchange list of indices with length of list</span>
-            <span class="n">gf_struct_flat</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;gf_struct input needs to be list or dict&#39;</span><span class="p">)</span>
-
-
-    <span class="k">return</span> <span class="n">gf_struct_flat</span></div>
 
 <span class="kn">from</span> <span class="nn">h5.formats</span> <span class="kn">import</span> <span class="n">register_class</span>
 <span class="n">register_class</span><span class="p">(</span><span class="n">BlockStructure</span><span class="p">)</span>

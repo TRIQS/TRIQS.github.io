@@ -211,7 +211,6 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../documentation.html#reference-manual">Reference manual</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../_python_api/triqs_dft_tools.block_structure.html">block_structure</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../_python_api/triqs_dft_tools.block_structure.gf_struct_flatten.html">triqs_dft_tools.block_structure.gf_struct_flatten</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../_python_api/triqs_dft_tools.block_structure.BlockStructure.html">triqs_dft_tools.block_structure.BlockStructure</a></li>
 </ul>
 </li>
@@ -342,6 +341,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../ChangeLog.html">Changelog</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../ChangeLog.html#version-3-1-0">Version 3.1.0</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../ChangeLog.html#wannier90-converter">Wannier90 Converter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../ChangeLog.html#change-in-gf-struct">Change in gf_struct</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../ChangeLog.html#documentation">Documentation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../ChangeLog.html#cmake">Cmake</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../ChangeLog.html#other-changes">Other changes</a></li>
@@ -466,7 +466,6 @@
 <span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">triqs.version</span> <span class="k">as</span> <span class="nn">triqs_version</span>
 <span class="kn">from</span> <span class="nn">triqs_dft_tools.sumk_dft</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">triqs_dft_tools.sumk_dft_tools</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">triqs_dft_tools.block_structure</span> <span class="kn">import</span> <span class="n">gf_struct_flatten</span>
 <span class="kn">from</span> <span class="nn">triqs.operators.util.hamiltonians</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">triqs.operators.util.U_matrix</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">triqs_cthyb</span> <span class="kn">import</span> <span class="o">*</span>
@@ -480,8 +479,8 @@
 
 <span class="n">SK</span> <span class="o">=</span> <span class="n">SumkDFT</span><span class="p">(</span><span class="n">hdf_file</span> <span class="o">=</span> <span class="n">filename</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span> <span class="n">use_dft_blocks</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
 
-<span class="n">beta</span> <span class="o">=</span> <span class="mf">5.0</span> 
- 
+<span class="n">beta</span> <span class="o">=</span> <span class="mf">5.0</span>
+
 <span class="n">Sigma</span> <span class="o">=</span> <span class="n">SK</span><span class="o">.</span><span class="n">block_structure</span><span class="o">.</span><span class="n">create_gf</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">)</span>
 <span class="n">SK</span><span class="o">.</span><span class="n">put_Sigma</span><span class="p">([</span><span class="n">Sigma</span><span class="p">])</span>
 <span class="n">G</span> <span class="o">=</span> <span class="n">SK</span><span class="o">.</span><span class="n">extract_G_loc</span><span class="p">()</span>
@@ -501,7 +500,7 @@
 <span class="n">orb_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">n_orb</span><span class="p">)]</span>
 
 <span class="c1">#gf_struct = set_operator_structure(spin_names, orb_names, orb_hyb)</span>
-<span class="n">gf_struct</span> <span class="o">=</span> <span class="n">gf_struct_flatten</span><span class="p">(</span><span class="n">SK</span><span class="o">.</span><span class="n">gf_struct_solver</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">gf_struct</span> <span class="o">=</span> <span class="n">SK</span><span class="o">.</span><span class="n">gf_struct_solver_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Sumk to Solver: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">SK</span><span class="o">.</span><span class="n">sumk_to_solver</span><span class="p">)</span>
 <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;GF struct sumk: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">SK</span><span class="o">.</span><span class="n">gf_struct_sumk</span><span class="p">)</span>
 <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;GF struct solver: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">SK</span><span class="o">.</span><span class="n">gf_struct_solver</span><span class="p">)</span>
@@ -509,7 +508,7 @@
 <span class="n">S</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span> <span class="n">gf_struct</span><span class="o">=</span><span class="n">gf_struct</span><span class="p">)</span>
 
 <span class="c1"># Construct the Hamiltonian and save it in Hamiltonian_store.txt</span>
-<span class="n">H</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">()</span> 
+<span class="n">H</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">()</span>
 <span class="n">U</span> <span class="o">=</span> <span class="mf">8.0</span>
 <span class="n">J</span> <span class="o">=</span> <span class="mf">1.0</span>
 
@@ -590,14 +589,14 @@
 
 <span class="c1"># The infamous DMFT self consistency cycle</span>
 <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">iteration_offset</span><span class="p">,</span> <span class="n">iteration_offset</span> <span class="o">+</span> <span class="n">n_iterations</span><span class="p">):</span>
-    
+
     <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Doing iteration: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">it</span><span class="p">)</span>
-    
+
     <span class="c1"># Get G0</span>
     <span class="n">S</span><span class="o">.</span><span class="n">G0_iw</span> <span class="o">&lt;&lt;</span> <span class="n">inverse</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Sigma_iw</span> <span class="o">+</span> <span class="n">inverse</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">G_iw</span><span class="p">))</span>
     <span class="c1"># Solve the impurity problem</span>
     <span class="n">S</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">h_int</span> <span class="o">=</span> <span class="n">H</span><span class="p">,</span> <span class="o">**</span><span class="n">p</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span> 
+    <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
         <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;DMFT_input&#39;</span><span class="p">][</span><span class="s1">&#39;Iterations&#39;</span><span class="p">][</span><span class="s1">&#39;solver_dict_it&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">it</span><span class="p">)]</span> <span class="o">=</span> <span class="n">p</span>
         <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;DMFT_results&#39;</span><span class="p">][</span><span class="s1">&#39;Iterations&#39;</span><span class="p">][</span><span class="s1">&#39;Gimp_it&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">it</span><span class="p">)]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G_iw</span>
         <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;DMFT_results&#39;</span><span class="p">][</span><span class="s1">&#39;Iterations&#39;</span><span class="p">][</span><span class="s1">&#39;Gtau_it&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">it</span><span class="p">)]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G_tau</span>
@@ -610,13 +609,13 @@
     <span class="n">SK</span><span class="o">.</span><span class="n">put_Sigma</span><span class="p">(</span><span class="n">Sigma_imp</span><span class="o">=</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">Sigma_iw</span><span class="p">])</span>
     <span class="n">SK</span><span class="o">.</span><span class="n">calc_mu</span><span class="p">(</span><span class="n">precision</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
     <span class="n">S</span><span class="o">.</span><span class="n">G_iw</span> <span class="o">&lt;&lt;</span> <span class="n">SK</span><span class="o">.</span><span class="n">extract_G_loc</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
-    
+
     <span class="c1"># print densities</span>
     <span class="k">for</span> <span class="n">sig</span><span class="p">,</span><span class="n">gf</span> <span class="ow">in</span> <span class="n">S</span><span class="o">.</span><span class="n">G_iw</span><span class="p">:</span>
         <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Orbital </span><span class="si">%s</span><span class="s2"> density: </span><span class="si">%.6f</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">sig</span><span class="p">,</span><span class="n">dm</span><span class="p">[</span><span class="n">sig</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]))</span>
     <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Total charge of Gloc : </span><span class="si">%.6f</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">S</span><span class="o">.</span><span class="n">G_iw</span><span class="o">.</span><span class="n">total_density</span><span class="p">())</span>
 
-    <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span> 
+    <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
         <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;DMFT_results&#39;</span><span class="p">][</span><span class="s1">&#39;iteration_count&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">it</span>
         <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;DMFT_results&#39;</span><span class="p">][</span><span class="s1">&#39;Iterations&#39;</span><span class="p">][</span><span class="s1">&#39;Sigma_it&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">it</span><span class="p">)]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Sigma_iw</span>
         <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;DMFT_results&#39;</span><span class="p">][</span><span class="s1">&#39;Iterations&#39;</span><span class="p">][</span><span class="s1">&#39;Gloc_it&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">it</span><span class="p">)]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G_iw</span>
