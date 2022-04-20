@@ -37,7 +37,7 @@
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="triqs_dft_tools.converters.wannier90.Wannier90Converter" href="triqs_dft_tools.converters.wannier90.Wannier90Converter.html" />
+    <link rel="next" title="triqs_dft_tools.converters.wannier90.build_kmesh" href="triqs_dft_tools.converters.wannier90.build_kmesh.html" />
     <link rel="prev" title="triqs_dft_tools.converters.vasp.VaspConverter.repack" href="triqs_dft_tools.converters.vasp.VaspConverter.repack.html" /> 
 </head>
 
@@ -463,7 +463,80 @@
 </style>
 <div class="section" id="module-triqs_dft_tools.converters.wannier90">
 <span id="wannier90"></span><h1>wannier90<a class="headerlink" href="#module-triqs_dft_tools.converters.wannier90" title="Permalink to this headline">¶</a></h1>
-<p>Wannier90 converter</p>
+<p>Wannier90 to HDF5 converter for TRIQS/dft_tools</p>
+<p>Written by Gabriele Sclauzero (Materials Theory, ETH Zurich), Dec 2015 – Jan 2016,
+updated by Maximilian Merkel (Materials Theory, ETH Zurich), Aug 2020 – Feb 2022,
+and by Sophie Beck (Materials Theory, ETH Zurich), Sep 2020 – Apr 2021,
+under the supervision of Claude Ederer (Materials Theory).
+Partially based on previous work by K. Dymkovski and the TRIQS/dft_tools team.</p>
+<p>Limitations of the current implementation:
+- the T rotation matrices are not used in this implementation</p>
+<p>Things to be improved/checked:
+- the case with SP=1 is only half implemented and never tested (do we need to</p>
+<blockquote>
+<div>define rot_mat_time_inv also if symm_op = 0?)</div></blockquote>
+<ul class="simple">
+<li>the calculation of rot_mat in find_rot_mat() relies on the eigenvalues of H(0);
+this might fail in presence of degenerate eigenvalues (now just prints warning)</li>
+<li>make the code more MPI safe (error handling): if we run with more than one process
+and an error occurs on the masternode, the calculation does not abort</li>
+<li>in case of disentanglement, the outer window being close to Kohn-Sham energies
+can cause a problem in creating the udis_mat_spin in read_wannier90data</li>
+<li>bloch_basis on SO coupled calculations has never been tested but might work</li>
+<li>would be helpful to read the order of orbitals from the nnkp or wout file
+and save it to, e.g., misc_subgrp for codes working on the generated h5</li>
+</ul>
+<p class="rubric">Functions</p>
+<table border="1" class="longtable docutils align-default">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="triqs_dft_tools.converters.wannier90.build_kmesh.html#triqs_dft_tools.converters.wannier90.build_kmesh" title="triqs_dft_tools.converters.wannier90.build_kmesh"><code class="xref py py-obj docutils literal notranslate"><span class="pre">build_kmesh</span></code></a>(kmesh_size[,&nbsp;kmesh_mode])</td>
+<td>Method for the generation of the k-point mesh.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="triqs_dft_tools.converters.wannier90.check_and_adapt_for_soc.html#triqs_dft_tools.converters.wannier90.check_and_adapt_for_soc" title="triqs_dft_tools.converters.wannier90.check_and_adapt_for_soc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_and_adapt_for_soc</span></code></a>(shells,&nbsp;corr_shells,&nbsp;…)</td>
+<td>Checks compatibilities, modifies shells and corr_shells and sets variables needed for spin-orbit coupled systems.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="triqs_dft_tools.converters.wannier90.check_bloch_basis_hk.html#triqs_dft_tools.converters.wannier90.check_bloch_basis_hk" title="triqs_dft_tools.converters.wannier90.check_bloch_basis_hk"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_bloch_basis_hk</span></code></a>(n_corr_shells,&nbsp;…)</td>
+<td>Check of the reciprocal-space Hamiltonian in bloch basis.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="triqs_dft_tools.converters.wannier90.check_hr.html#triqs_dft_tools.converters.wannier90.check_hr" title="triqs_dft_tools.converters.wannier90.check_hr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_hr</span></code></a>(wannier_hr,&nbsp;w90_zero,&nbsp;r_zero_index)</td>
+<td>Checks of the real-space Hamiltonian.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="triqs_dft_tools.converters.wannier90.check_wannier_basis_hk.html#triqs_dft_tools.converters.wannier90.check_wannier_basis_hk" title="triqs_dft_tools.converters.wannier90.check_wannier_basis_hk"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_wannier_basis_hk</span></code></a>(hopping,&nbsp;dim_corr_shells)</td>
+<td>Check of the reciprocal-space Hamiltonian in wannier basis.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="triqs_dft_tools.converters.wannier90.find_rot_mat.html#triqs_dft_tools.converters.wannier90.find_rot_mat" title="triqs_dft_tools.converters.wannier90.find_rot_mat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_rot_mat</span></code></a>(n_corr_shells,&nbsp;corr_shells,&nbsp;…)</td>
+<td>Method for finding the matrices that bring from local to global coordinate systems, based on the eigenvalues of H(R=0).</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="triqs_dft_tools.converters.wannier90.fourier_transform_hamiltonian.html#triqs_dft_tools.converters.wannier90.fourier_transform_hamiltonian" title="triqs_dft_tools.converters.wannier90.fourier_transform_hamiltonian"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fourier_transform_hamiltonian</span></code></a>(wannier_hr,&nbsp;…)</td>
+<td>Method for obtaining H(k) from H(R) via Fourier transform.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="triqs_dft_tools.converters.wannier90.generate_local_so_matrix_t2g.html#triqs_dft_tools.converters.wannier90.generate_local_so_matrix_t2g" title="triqs_dft_tools.converters.wannier90.generate_local_so_matrix_t2g"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_local_so_matrix_t2g</span></code></a>(add_lambda,&nbsp;…)</td>
+<td>Adds local spin-orbit interaction term to the t2g subspace.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="triqs_dft_tools.converters.wannier90.read_all_wannier90_data.html#triqs_dft_tools.converters.wannier90.read_all_wannier90_data" title="triqs_dft_tools.converters.wannier90.read_all_wannier90_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_all_wannier90_data</span></code></a>(n_spin_blocks,&nbsp;…)</td>
+<td>Reads in all the wannier90 data using the functions read_wannier90_hr_data and read_wannier90_blochbasis_data.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="triqs_dft_tools.converters.wannier90.read_input_file.html#triqs_dft_tools.converters.wannier90.read_input_file" title="triqs_dft_tools.converters.wannier90.read_input_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_input_file</span></code></a>(inp_file,&nbsp;fortran_to_replace)</td>
+<td>Reads the input file.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="triqs_dft_tools.converters.wannier90.read_misc_input.html#triqs_dft_tools.converters.wannier90.read_misc_input" title="triqs_dft_tools.converters.wannier90.read_misc_input"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_misc_input</span></code></a>(w90_seed,&nbsp;n_spin_blocks,&nbsp;n_k)</td>
+<td>Reads input from DFT code calculations to get occupations, the band window, the Fermi energy and the basis for the k points.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="triqs_dft_tools.converters.wannier90.read_wannier90_blochbasis_data.html#triqs_dft_tools.converters.wannier90.read_wannier90_blochbasis_data" title="triqs_dft_tools.converters.wannier90.read_wannier90_blochbasis_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_wannier90_blochbasis_data</span></code></a>(wannier_seed,&nbsp;…)</td>
+<td>Method for reading the files needed in the bloch_basis: seedname_u.mat, seedname.eig and potentially seedname_u_dis.mat.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="triqs_dft_tools.converters.wannier90.read_wannier90_hr_data.html#triqs_dft_tools.converters.wannier90.read_wannier90_hr_data" title="triqs_dft_tools.converters.wannier90.read_wannier90_hr_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_wannier90_hr_data</span></code></a>(wannier_seed)</td>
+<td>Method for reading the seedname_hr.dat file produced by Wannier90 (<a class="reference external" href="http://wannier.org" rel="noopener noreferrer" target="_blank">http://wannier.org</a>).</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="triqs_dft_tools.converters.wannier90.reorder_orbital_and_spin.html#triqs_dft_tools.converters.wannier90.reorder_orbital_and_spin" title="triqs_dft_tools.converters.wannier90.reorder_orbital_and_spin"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reorder_orbital_and_spin</span></code></a>(nwfs,&nbsp;wannier_hr,&nbsp;…)</td>
+<td>Changes order from wannier90 (first all up spin wannier orbitals, then all down spin) to triqs order (every up orbital is followed directly by the corresponding down orbital).</td>
+</tr>
+</tbody>
+</table>
 <p class="rubric">Classes</p>
 <table border="1" class="longtable docutils align-default">
 <colgroup>
@@ -484,7 +557,7 @@
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="triqs_dft_tools.converters.wannier90.Wannier90Converter.html" class="btn btn-neutral float-right" title="triqs_dft_tools.converters.wannier90.Wannier90Converter" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="triqs_dft_tools.converters.wannier90.build_kmesh.html" class="btn btn-neutral float-right" title="triqs_dft_tools.converters.wannier90.build_kmesh" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
         <a href="triqs_dft_tools.converters.vasp.VaspConverter.repack.html" class="btn btn-neutral float-left" title="triqs_dft_tools.converters.vasp.VaspConverter.repack" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
