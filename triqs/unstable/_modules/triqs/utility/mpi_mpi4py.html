@@ -1473,7 +1473,7 @@
 <span class="c1"># Authors: Olivier Parcollet, Nils Wentzell</span>
 
 
-<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span><span class="nn">sys</span><span class="o">,</span><span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span><span class="nn">sys</span><span class="o">,</span><span class="nn">datetime</span><span class="o">,</span> <span class="nn">time</span>
 <span class="n">myprint_err</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span> <span class="p">:</span> <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">x</span><span class="p">)</span>
 <span class="n">myprint_out</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span> <span class="p">:</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">x</span><span class="p">)</span>
 
@@ -1502,33 +1502,47 @@
     <span class="c1">#print &quot;node &quot;, rank, &quot; receives &quot;, r, &quot; from node &quot;, source</span>
     <span class="k">return</span> <span class="n">r</span></div>
 
-<div class="viewcode-block" id="barrier"><a class="viewcode-back" href="../../../documentation/python_api/triqs.utility.mpi_mpi4py.barrier.html#triqs.utility.mpi_mpi4py.barrier">[docs]</a><span class="k">def</span> <span class="nf">barrier</span><span class="p">()</span> <span class="p">:</span> 
-    <span class="n">world</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="barrier"><a class="viewcode-back" href="../../../documentation/python_api/triqs.utility.mpi_mpi4py.barrier.html#triqs.utility.mpi_mpi4py.barrier">[docs]</a><span class="k">def</span> <span class="nf">barrier</span><span class="p">(</span><span class="n">poll_msec</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Use asynchronous synchronization, otherwise mpi.barrier uses up all the CPU time during</span>
+<span class="sd">    the run of subprocess. if poll_msec is 0.0 or None the default mpi barrier of mpi4py</span>
+<span class="sd">    is used.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    poll_msec: float, time step for pinging the status of the sleeping ranks in msec</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">poll_msec</span><span class="p">:</span>
+        <span class="n">world</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">req</span> <span class="o">=</span> <span class="n">world</span><span class="o">.</span><span class="n">Ibarrier</span><span class="p">()</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="n">req</span><span class="o">.</span><span class="n">Test</span><span class="p">():</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">poll_msec</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)</span></div>
 
 <span class="c1"># temporary patch</span>
 <span class="c1"># need to change the code for all all_reduce to use this layer....</span>
-<div class="viewcode-block" id="all_reduce"><a class="viewcode-back" href="../../../documentation/python_api/triqs.utility.mpi_mpi4py.all_reduce.html#triqs.utility.mpi_mpi4py.all_reduce">[docs]</a><span class="k">def</span> <span class="nf">all_reduce</span><span class="p">(</span><span class="n">WORLD</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">F</span><span class="p">)</span> <span class="p">:</span> 
+<div class="viewcode-block" id="all_reduce"><a class="viewcode-back" href="../../../documentation/python_api/triqs.utility.mpi_mpi4py.all_reduce.html#triqs.utility.mpi_mpi4py.all_reduce">[docs]</a><span class="k">def</span> <span class="nf">all_reduce</span><span class="p">(</span><span class="n">WORLD</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">F</span><span class="p">)</span> <span class="p">:</span>
     <span class="k">return</span> <span class="n">world</span><span class="o">.</span><span class="n">allreduce</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
 
 
 <span class="n">Verbosity_Level_Report_Max</span> <span class="o">=</span> <span class="mi">1</span>
 <div class="viewcode-block" id="report"><a class="viewcode-back" href="../../../documentation/python_api/triqs.utility.mpi_mpi4py.report.html#triqs.utility.mpi_mpi4py.report">[docs]</a><span class="k">def</span> <span class="nf">report</span><span class="p">(</span><span class="o">*</span><span class="n">x</span><span class="p">,</span><span class="o">**</span><span class="n">opt</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; print on the master, do nothing on the nodes &quot;&quot;&quot;</span>
-    <span class="k">try</span> <span class="p">:</span> 
+    <span class="k">try</span> <span class="p">:</span>
         <span class="k">if</span> <span class="n">opt</span><span class="p">[</span><span class="s1">&#39;Verbosity_Level&#39;</span><span class="p">]</span> <span class="o">&gt;</span>  <span class="n">Verbosity_Level_Report_Max</span> <span class="p">:</span> <span class="k">return</span>
     <span class="k">except</span> <span class="p">:</span>
         <span class="k">pass</span>
     <span class="k">if</span> <span class="n">All_Nodes_report</span> <span class="ow">and</span> <span class="n">rank</span><span class="o">!=</span><span class="mi">0</span> <span class="p">:</span>
           <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
               <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;report_node</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">rank</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span> <span class="c1">#             print y</span>
-              
+
     <span class="k">if</span> <span class="n">rank</span><span class="o">==</span><span class="mi">0</span> <span class="p">:</span>
-        <span class="n">myprint</span><span class="p">,</span><span class="n">myflush</span> <span class="o">=</span> <span class="p">(</span><span class="n">myprint_err</span><span class="p">,</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">flush</span><span class="p">)</span>  <span class="k">if</span> <span class="s1">&#39;stderr&#39;</span> <span class="ow">in</span> <span class="n">opt</span> <span class="ow">and</span> <span class="n">opt</span><span class="p">[</span><span class="s1">&#39;stderr&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="p">(</span><span class="n">myprint_out</span><span class="p">,</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">)</span>   
+        <span class="n">myprint</span><span class="p">,</span><span class="n">myflush</span> <span class="o">=</span> <span class="p">(</span><span class="n">myprint_err</span><span class="p">,</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">flush</span><span class="p">)</span>  <span class="k">if</span> <span class="s1">&#39;stderr&#39;</span> <span class="ow">in</span> <span class="n">opt</span> <span class="ow">and</span> <span class="n">opt</span><span class="p">[</span><span class="s1">&#39;stderr&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="p">(</span><span class="n">myprint_out</span><span class="p">,</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
           <span class="n">myprint</span><span class="p">(</span> <span class="n">y</span><span class="p">)</span>  <span class="c1"># open(&#39;report&#39;,&#39;a&#39;).write(str(y) + &#39;\n&#39;) #             print y</span>
-          <span class="n">myflush</span><span class="p">()</span> <span class="c1"># be sure to flush the buffer!  </span></div>
-        
-<div class="viewcode-block" id="slice_inf"><a class="viewcode-back" href="../../../documentation/python_api/triqs.utility.mpi_mpi4py.slice_inf.html#triqs.utility.mpi_mpi4py.slice_inf">[docs]</a><span class="k">def</span> <span class="nf">slice_inf</span><span class="p">(</span><span class="n">imin</span><span class="p">,</span><span class="n">imax</span><span class="p">)</span> <span class="p">:</span> 
+          <span class="n">myflush</span><span class="p">()</span> <span class="c1"># be sure to flush the buffer!</span></div>
+
+<div class="viewcode-block" id="slice_inf"><a class="viewcode-back" href="../../../documentation/python_api/triqs.utility.mpi_mpi4py.slice_inf.html#triqs.utility.mpi_mpi4py.slice_inf">[docs]</a><span class="k">def</span> <span class="nf">slice_inf</span><span class="p">(</span><span class="n">imin</span><span class="p">,</span><span class="n">imax</span><span class="p">)</span> <span class="p">:</span>
   <span class="n">j</span><span class="o">=</span><span class="p">(</span><span class="n">imax</span> <span class="o">-</span> <span class="n">imin</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="n">size</span>
   <span class="n">i</span><span class="o">=</span> <span class="n">imax</span> <span class="o">-</span> <span class="n">imin</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">size</span><span class="o">*</span><span class="n">j</span>
   <span class="k">return</span> <span class="n">imin</span> <span class="o">+</span> <span class="n">rank</span><span class="o">*</span><span class="p">(</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>  <span class="k">if</span>  <span class="n">rank</span><span class="o">&lt;=</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span> <span class="k">else</span> <span class="n">imin</span> <span class="o">+</span> <span class="n">rank</span><span class="o">*</span><span class="n">j</span> <span class="o">+</span> <span class="n">i</span></div>
