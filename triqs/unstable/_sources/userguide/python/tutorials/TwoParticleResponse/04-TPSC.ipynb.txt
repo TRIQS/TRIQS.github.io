@@ -1,0 +1,424 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Two-particle self consistency (TPSC)\n",
+    "\n",
+    "Now, we use the Lindhard function to solve the TPSC approximation explained in the lecture notes\n",
+    "of André-Marie Tremblay and in the following [review](https://arxiv.org/abs/1107.1534). \n",
+    "\n",
+    "In TPSC, the vertices for charge and spin fluctuations are different but are still local, i.e. momentum and frequency independent like the bare $U$ in the Hubbard model. This allows conservations laws and the Pauli principle to be satisfied. \n",
+    "\n",
+    "More specifically, the spin and charge susceptibilities are \n",
+    "\n",
+    "$$ \\chi_{sp}(\\mathbf{q}, i\\omega_n) \\equiv \\frac{\\chi_0(\\mathbf{q}, i\\omega_n)}{1 - \\frac{U_{sp}}{2} \\chi_0(\\mathbf{q}, i\\omega_n)} $$\n",
+    "\n",
+    "$$ \\chi_{ch}(\\mathbf{q}, i\\omega_n) \\equiv \\frac{\\chi_0(\\mathbf{q}, i\\omega_n)}{1 + \\frac{U_{ch}}{2} \\chi_0(\\mathbf{q}, i\\omega_n)} $$\n",
+    "\n",
+    "The sum over all momenta and frequencies of the spin susceptibility gives the equal-time equal-position correlation function. This gives the sum-rule  \n",
+    "\n",
+    "\\begin{equation}\n",
+    "\\frac{T}{N}\\sum_{\\mathbf{q},i\\omega_n} \\chi_{sp}(\\mathbf{q}, i\\omega_n)=\\left< (n_\\uparrow - n_\\downarrow)^2\\right>=n-2\\left< n_\\uparrow n_\\downarrow\\right>\n",
+    "\\end{equation}\n",
+    "\n",
+    "because the Pauli principle requires that $\\left< n_\\uparrow^2\\right>=\\left< n_\\uparrow\\right>$ since the occupation number on a site is either 0 or 1.\n",
+    "\n",
+    "Substituting the TPSC value of the spin susceptibility, the double occupancy and $U_{sp}$ can be determined from\n",
+    "\n",
+    "\\begin{equation}\n",
+    "\\frac{T}{N}\\sum_{\\mathbf{q},i\\omega_n} \\frac{\\chi_0(\\mathbf{q},i\\omega_n)}{1-\\frac{U_{sp}}{2}\\chi_0(\\mathbf{q},i\\omega_n)}=n-2\\left< n_\\uparrow n_\\downarrow\\right>\n",
+    "\\end{equation}\n",
+    "\n",
+    "using the ansatz\n",
+    "\n",
+    "\\begin{equation}\n",
+    "U_{sp}\\left<n_\\uparrow\\right> \\left<n_\\downarrow\\right>=U\\left<n_\\uparrow n_\\downarrow\\right>.\n",
+    "\\end{equation}\n",
+    "\n",
+    "at fixed density $n \\equiv \\langle n_\\uparrow \\rangle + \\langle n_\\downarrow \\rangle$.\n",
+    "\n",
+    "Given the double occupancy, the charge vertex can then be obtained from\n",
+    "\n",
+    "\\begin{equation}\n",
+    "\\frac{T}{N}\\sum_{\\mathbf{q},i\\omega_n} \\frac{\\chi_0(\\mathbf{q},i\\omega_n)}{1+\\frac{U_{cn}}{2}\\chi_0(\\mathbf{q},i\\omega_n)}=n+2\\left< n_\\uparrow n_\\downarrow\\right>-n^2.\n",
+    "\\end{equation}\n",
+    "\n",
+    "Note that the sums over $\\mathbf{q}$ and $i\\omega_n$ can be interpreted as a trace."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-06-22T22:56:34.671597Z",
+     "iopub.status.busy": "2022-06-22T22:56:34.671237Z",
+     "iopub.status.idle": "2022-06-22T22:56:42.938541Z",
+     "shell.execute_reply": "2022-06-22T22:56:42.935497Z"
+    },
+    "scrolled": true
+   },
+   "outputs": [],
+   "source": [
+    "# Imports \n",
+    "from triqs.lattice import BravaisLattice, BrillouinZone\n",
+    "from triqs.gf import MeshBrZone, MeshImFreq, Gf, MeshProduct, inverse\n",
+    "from h5 import HDFArchive\n",
+    "from triqs.plot.mpl_interface import plt, oplot\n",
+    "plt.rcParams[\"figure.dpi\"] = 100 # make figures bigger\n",
+    "%matplotlib inline\n",
+    "import numpy as np\n",
+    "from scipy.optimize import fsolve, brentq\n",
+    "from math import cos, pi"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We reload the Lindhard susceptibility from the archive"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-06-22T22:56:42.951727Z",
+     "iopub.status.busy": "2022-06-22T22:56:42.950460Z",
+     "iopub.status.idle": "2022-06-22T22:57:11.616721Z",
+     "shell.execute_reply": "2022-06-22T22:57:11.615860Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Cannot open the HDF file tpsc.h5\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "HDF5-DIAG: Error detected in HDF5 (1.12.2) thread 0:\n",
+      "  #000: H5F.c line 620 in H5Fopen(): unable to open file\n",
+      "    major: File accessibility\n",
+      "    minor: Unable to open file\n",
+      "  #001: H5VLcallback.c line 3502 in H5VL_file_open(): failed to iterate over available VOL connector plugins\n",
+      "    major: Virtual Object Layer\n",
+      "    minor: Iteration failed\n",
+      "  #002: H5PLpath.c line 579 in H5PL__path_table_iterate(): can't iterate over plugins in plugin path '(null)'\n",
+      "    major: Plugin for dynamically loaded library\n",
+      "    minor: Iteration failed\n",
+      "  #003: H5PLpath.c line 620 in H5PL__path_table_iterate_process_path(): can't open directory: /usr/local/hdf5/lib/plugin\n",
+      "    major: Plugin for dynamically loaded library\n",
+      "    minor: Can't open directory or file\n",
+      "  #004: H5VLcallback.c line 3351 in H5VL__file_open(): open failed\n",
+      "    major: Virtual Object Layer\n",
+      "    minor: Can't open object\n",
+      "  #005: H5VLnative_file.c line 97 in H5VL__native_file_open(): unable to open file\n",
+      "    major: File accessibility\n",
+      "    minor: Unable to open file\n",
+      "  #006: H5Fint.c line 1835 in H5F_open(): unable to open file: name = 'tpsc.h5', tent_flags = 0\n",
+      "    major: File accessibility\n",
+      "    minor: Unable to open file\n",
+      "  #007: H5FD.c line 723 in H5FD_open(): open failed\n",
+      "    major: Virtual File Layer\n",
+      "    minor: Unable to initialize object\n",
+      "  #008: H5FDsec2.c line 355 in H5FD__sec2_open(): unable to open file: name = 'tpsc.h5', errno = 2, error message = 'No such file or directory', flags = 0, o_flags = 0\n",
+      "    major: File accessibility\n",
+      "    minor: Unable to open file\n"
+     ]
+    },
+    {
+     "ename": "RuntimeError",
+     "evalue": ".. Error occurred at Wed Jun 22 18:56:42 2022\n\n.. Error .. in calling C++ overload of constructor :\n.. (no C++ name)(std::string name, char mode) -> \n.. C++ error was : \nHDF5 : cannot openfile : tpsc.h5",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mRuntimeError\u001b[0m                              Traceback (most recent call last)",
+      "Input \u001b[0;32mIn [2]\u001b[0m, in \u001b[0;36m<cell line: 2>\u001b[0;34m()\u001b[0m\n\u001b[1;32m      1\u001b[0m \u001b[38;5;66;03m#reload chi0\u001b[39;00m\n\u001b[0;32m----> 2\u001b[0m \u001b[38;5;28;01mwith\u001b[39;00m \u001b[43mHDFArchive\u001b[49m\u001b[43m(\u001b[49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[38;5;124;43mtpsc.h5\u001b[39;49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[38;5;124;43m'\u001b[39;49m\u001b[38;5;124;43mr\u001b[39;49m\u001b[38;5;124;43m'\u001b[39;49m\u001b[43m)\u001b[49m \u001b[38;5;28;01mas\u001b[39;00m R:\n\u001b[1;32m      3\u001b[0m     chi0_qw \u001b[38;5;241m=\u001b[39m R[\u001b[38;5;124m'\u001b[39m\u001b[38;5;124mchi0_qw\u001b[39m\u001b[38;5;124m'\u001b[39m]\n",
+      "File \u001b[0;32m~/opt/triqs/lib/python3.9/site-packages/h5/archive.py:383\u001b[0m, in \u001b[0;36mHDFArchive.__init__\u001b[0;34m(self, descriptor, open_flag, key_as_string_only, reconstruct_python_object, init)\u001b[0m\n\u001b[1;32m    380\u001b[0m         \u001b[38;5;28;01mtry\u001b[39;00m: os\u001b[38;5;241m.\u001b[39mremove(os\u001b[38;5;241m.\u001b[39mpath\u001b[38;5;241m.\u001b[39mabspath(LocalFileName))\n\u001b[1;32m    381\u001b[0m         \u001b[38;5;28;01mexcept\u001b[39;00m \u001b[38;5;167;01mOSError\u001b[39;00m: \u001b[38;5;28;01mpass\u001b[39;00m\n\u001b[0;32m--> 383\u001b[0m     \u001b[38;5;28;43mself\u001b[39;49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43m_init_root\u001b[49m\u001b[43m(\u001b[49m\u001b[43mLocalFileName\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mopen_flag\u001b[49m\u001b[43m)\u001b[49m\n\u001b[1;32m    385\u001b[0m \u001b[38;5;28mself\u001b[39m\u001b[38;5;241m.\u001b[39moptions \u001b[38;5;241m=\u001b[39m {\u001b[38;5;124m'\u001b[39m\u001b[38;5;124mkey_as_string_only\u001b[39m\u001b[38;5;124m'\u001b[39m : key_as_string_only,\n\u001b[1;32m    386\u001b[0m                 \u001b[38;5;124m'\u001b[39m\u001b[38;5;124mdo_not_overwrite_entries\u001b[39m\u001b[38;5;124m'\u001b[39m : \u001b[38;5;28;01mFalse\u001b[39;00m,\n\u001b[1;32m    387\u001b[0m                 \u001b[38;5;124m'\u001b[39m\u001b[38;5;124mreconstruct_python_object\u001b[39m\u001b[38;5;124m'\u001b[39m: reconstruct_python_object,\n\u001b[1;32m    388\u001b[0m                 \u001b[38;5;124m'\u001b[39m\u001b[38;5;124mUseAlpsNotationForComplex\u001b[39m\u001b[38;5;124m'\u001b[39m  : \u001b[38;5;28;01mTrue\u001b[39;00m\n\u001b[1;32m    389\u001b[0m                 }\n\u001b[1;32m    390\u001b[0m HDFArchiveGroup\u001b[38;5;241m.\u001b[39m\u001b[38;5;21m__init__\u001b[39m(\u001b[38;5;28mself\u001b[39m,\u001b[38;5;28mself\u001b[39m,\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124m\"\u001b[39m)\n",
+      "File \u001b[0;32m~/opt/triqs/lib/python3.9/site-packages/h5/archive_basic_layer.py:46\u001b[0m, in \u001b[0;36mHDFArchiveGroupBasicLayer._init_root\u001b[0;34m(self, descriptor, open_flag)\u001b[0m\n\u001b[1;32m     44\u001b[0m \u001b[38;5;28;01massert\u001b[39;00m(\u001b[38;5;28misinstance\u001b[39m(descriptor, \u001b[38;5;28mstr\u001b[39m))\n\u001b[1;32m     45\u001b[0m \u001b[38;5;28;01mtry\u001b[39;00m :\n\u001b[0;32m---> 46\u001b[0m     fich \u001b[38;5;241m=\u001b[39m \u001b[43mh5\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mFile\u001b[49m\u001b[43m(\u001b[49m\u001b[43mdescriptor\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mopen_flag\u001b[49m\u001b[43m)\u001b[49m\n\u001b[1;32m     47\u001b[0m \u001b[38;5;28;01mexcept\u001b[39;00m :\n\u001b[1;32m     48\u001b[0m     \u001b[38;5;28mprint\u001b[39m(\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124mCannot open the HDF file \u001b[39m\u001b[38;5;132;01m%s\u001b[39;00m\u001b[38;5;124m\"\u001b[39m\u001b[38;5;241m%\u001b[39mdescriptor)\n",
+      "\u001b[0;31mRuntimeError\u001b[0m: .. Error occurred at Wed Jun 22 18:56:42 2022\n\n.. Error .. in calling C++ overload of constructor :\n.. (no C++ name)(std::string name, char mode) -> \n.. C++ error was : \nHDF5 : cannot openfile : tpsc.h5"
+     ]
+    }
+   ],
+   "source": [
+    "#reload chi0\n",
+    "with HDFArchive(\"tpsc.h5\", 'r') as R:\n",
+    "    chi0_qw = R['chi0_qw']"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Behaviour of $U_{sp}$ and $U_{ch}$\n",
+    "\n",
+    "The aim of this exercice is to study the behaviour of $U_{sp}$ and $U_{ch}$ \n",
+    "as we vary $U$. This will require that you solve the TPSC equations\n",
+    "described above. Ultimately you should try to reproduce the following figure\n",
+    "taken from  the __[paper](https://jp1.journaldephysique.org/articles/jp1/abs/1997/11/jp1v7p1309/jp1v7p1309.html)__\n",
+    "\n",
+    "<img src=\"./imgs/Fig2.png\" alt=\"Drawing\" style=\"width: 250px;\"/>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### <i class=\"fa fa-gear fa-x\" style=\"color: #186391\"></i> Exercise 1:\n",
+    "\n",
+    "Define a function `chi_rpa(chi0, U)` that\n",
+    "computes the following quantity:\n",
+    "\n",
+    "\\begin{equation}\n",
+    "  \\chi_{RPA}[\\chi_0, U] \\equiv \\frac{\\chi_0(\\mathbf{q}, i\\omega_n)}\n",
+    "    {1 - \\frac{U}{2} \\chi_0(\\mathbf{q}, i\\omega_n)}\n",
+    "\\end{equation}\n",
+    "\n",
+    "This function will be useful to obtain both the spin and the charge\n",
+    "susceptibilities. Indeed we have that\n",
+    "\n",
+    "\\begin{equation}\n",
+    " \\chi_{sp} = \\chi_{RPA}[\\chi_0 ,U_{sp}]\n",
+    " \\qquad \n",
+    " \\chi_{ch} = \\chi_{RPA}[\\chi_0,-U_{ch}]\n",
+    "\\end{equation}"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-06-22T22:57:11.621406Z",
+     "iopub.status.busy": "2022-06-22T22:57:11.620587Z",
+     "iopub.status.idle": "2022-06-22T22:57:11.624966Z",
+     "shell.execute_reply": "2022-06-22T22:57:11.624197Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "def chi_rpa(chi0, U):\n",
+    "    \"\"\"Compute chi_rpa from chi\"\"\"\n",
+    "    #return ..."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### <i class=\"fa fa-gear fa-x\" style=\"color: #186391\"></i> Exercise 2:\n",
+    "\n",
+    "You will now solve the TPSC equation for $U_{sp}$.\n",
+    "\n",
+    "\\begin{equation}\n",
+    "\\frac{T}{N}\\sum_{\\mathbf{q},i\\omega_n} \\chi_{sp}(\\mathbf{q},i\\omega_n) = n-2\\left< n_\\uparrow n_\\downarrow\\right> = n - 2\n",
+    "\\frac{U_{sp}}{U} \\left<n_\\uparrow\\right> \\left<n_\\downarrow\\right>\n",
+    "\\end{equation}\n",
+    "\n",
+    "We will focus on the unity density case $n=1$.\n",
+    "\n",
+    "* Convince yourself that this equation always has exactly one solution for $U_{sp}$.\n",
+    "* In what interval does $U_{sp}$ take its values?\n",
+    "\n",
+    "In order to solve the equation you can use the scipy function `brentq` that finds\n",
+    "the zero of a function in a given interval. Your task is to complete the code below\n",
+    "by:\n",
+    "\n",
+    "* Defining the function `Usp_root` whose zero is the solution of the TPSC\n",
+    "  equation above.\n",
+    "* Defining the interval $[a,b]$ where `brentq` has to look for zeroes\n",
+    "\n",
+    "In order to help you, we provide a function `trace_chi` that computes\n",
+    "the sum over momenta and Matsubara frequencies of a susceptibility.\n",
+    "You can check your code for $U=2$. For this value, you should get\n",
+    "$U_{sp} \\simeq 1.52$"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-06-22T22:57:11.629049Z",
+     "iopub.status.busy": "2022-06-22T22:57:11.628589Z",
+     "iopub.status.idle": "2022-06-22T22:57:11.650701Z",
+     "shell.execute_reply": "2022-06-22T22:57:11.649896Z"
+    }
+   },
+   "outputs": [
+    {
+     "ename": "NameError",
+     "evalue": "name 'a' is not defined",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mNameError\u001b[0m                                 Traceback (most recent call last)",
+      "Input \u001b[0;32mIn [4]\u001b[0m, in \u001b[0;36m<cell line: 15>\u001b[0;34m()\u001b[0m\n\u001b[1;32m     12\u001b[0m n \u001b[38;5;241m=\u001b[39m \u001b[38;5;241m1.0\u001b[39m\n\u001b[1;32m     13\u001b[0m \u001b[38;5;66;03m#a = ... \u001b[39;00m\n\u001b[1;32m     14\u001b[0m \u001b[38;5;66;03m#b = ...\u001b[39;00m\n\u001b[0;32m---> 15\u001b[0m Usp \u001b[38;5;241m=\u001b[39m brentq(Usp_root, \u001b[43ma\u001b[49m, b, args\u001b[38;5;241m=\u001b[39m(chi0_qw, n, U), xtol\u001b[38;5;241m=\u001b[39m\u001b[38;5;241m1e-2\u001b[39m)\n\u001b[1;32m     16\u001b[0m \u001b[38;5;28mprint\u001b[39m(Usp)\n",
+      "\u001b[0;31mNameError\u001b[0m: name 'a' is not defined"
+     ]
+    }
+   ],
+   "source": [
+    "def trace_chi(chi):\n",
+    "    \"\"\"Given chi_kw, it computes sum_k sum_\\nu chi(k,\\nu)\"\"\" \n",
+    "    kmesh, wmesh = chi.mesh.components\n",
+    "    trace = chi.data.sum() / len(kmesh) / wmesh.beta\n",
+    "    return trace.real\n",
+    "\n",
+    "def Usp_root(Usp, chi0, n, U):\n",
+    "    \"\"\"Sets the self-consistency for U_sp as the problem of finding roots\"\"\"\n",
+    "    #return ...\n",
+    "\n",
+    "U = 2.0\n",
+    "n = 1.0\n",
+    "#a = ... \n",
+    "#b = ...\n",
+    "Usp = brentq(Usp_root, a, b, args=(chi0_qw, n, U), xtol=1e-2)\n",
+    "print(Usp)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### <i class=\"fa fa-gear fa-x\" style=\"color: #186391\"></i> Exercise 3:\n",
+    "\n",
+    "You can now solve the TPSC equation for $U_{ch}$:\n",
+    "\n",
+    "\\begin{equation}\n",
+    "\\frac{T}{N}\\sum_{\\mathbf{q},i\\omega_n} \\chi_{ch}(\\mathbf{q},i\\omega_n)\n",
+    "=n+2\\left< n_\\uparrow n_\\downarrow\\right>-n^2\n",
+    "= n+2 \\frac{U_{sp}}{U} \\left<n_\\uparrow\\right> \\left<n_\\downarrow\\right>\n",
+    "- n^2\n",
+    "\\end{equation}\n",
+    "\n",
+    "For $U=2$, you should find $U_{ch} \\simeq 3.37$."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### <i class=\"fa fa-gear fa-x\" style=\"color: #186391\"></i> Exercise 4:\n",
+    "\n",
+    "Putting together the codes that you wrote above, you can now define\n",
+    "a function `solve_tpsc(chi0, U, n)` that solves the TPSC equations\n",
+    "for a given value of $U$ and $n$ and returns $U_{sp}$ and $U_{ch}$."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-06-22T22:57:11.654283Z",
+     "iopub.status.busy": "2022-06-22T22:57:11.653974Z",
+     "iopub.status.idle": "2022-06-22T22:57:11.670957Z",
+     "shell.execute_reply": "2022-06-22T22:57:11.670224Z"
+    }
+   },
+   "outputs": [
+    {
+     "ename": "NameError",
+     "evalue": "name 'chi0_qw' is not defined",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mNameError\u001b[0m                                 Traceback (most recent call last)",
+      "Input \u001b[0;32mIn [5]\u001b[0m, in \u001b[0;36m<cell line: 8>\u001b[0;34m()\u001b[0m\n\u001b[1;32m      1\u001b[0m \u001b[38;5;28;01mdef\u001b[39;00m \u001b[38;5;21msolve_tpsc\u001b[39m(chi0, U, n):\n\u001b[1;32m      2\u001b[0m     \u001b[38;5;66;03m#Uc = ...\u001b[39;00m\n\u001b[1;32m      3\u001b[0m     \u001b[38;5;66;03m#Usp = ... \u001b[39;00m\n\u001b[1;32m      4\u001b[0m     \u001b[38;5;66;03m#docc = ... \u001b[39;00m\n\u001b[1;32m      5\u001b[0m     \u001b[38;5;66;03m#Uch = ... \u001b[39;00m\n\u001b[1;32m      6\u001b[0m     \u001b[38;5;28;01mreturn\u001b[39;00m Usp, Uch, docc, Uc\n\u001b[0;32m----> 8\u001b[0m \u001b[38;5;28mprint\u001b[39m(solve_tpsc(\u001b[43mchi0_qw\u001b[49m, \u001b[38;5;241m2.\u001b[39m, \u001b[38;5;241m1.\u001b[39m))\n",
+      "\u001b[0;31mNameError\u001b[0m: name 'chi0_qw' is not defined"
+     ]
+    }
+   ],
+   "source": [
+    "def solve_tpsc(chi0, U, n):\n",
+    "    #Uc = ...\n",
+    "    #Usp = ... \n",
+    "    #docc = ... \n",
+    "    #Uch = ... \n",
+    "    return Usp, Uch, docc, Uc\n",
+    "\n",
+    "print(solve_tpsc(chi0_qw, 2., 1.))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### <i class=\"fa fa-gear fa-x\" style=\"color: #186391\"></i> Exercise 5:\n",
+    "\n",
+    "Scan different values of $U$ between 0.3 and 5 and make a plot\n",
+    "to see if it compares to the paper figure shown above. The density\n",
+    "is always $n=1$."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Note: weakness of RPA\n",
+    "\n",
+    "Given the above sum rules, note that in TPSC the following sum-rule, a consequence of the Pauli principle, is satisfied:\n",
+    "\n",
+    "\\begin{equation}\n",
+    "2\\frac{T}{N}\\sum_{\\mathbf{q},iq_n} \\left (\\frac{\\chi_0(\\mathbf{q},iq_n)}{1-\\frac{U_{sp}}{2}\\chi_0(\\mathbf{q},iq_n)}+\\frac{\\chi_0(\\mathbf{q},iq_n)}{1+\\frac{U_{ch}}{2}\\chi_0(\\mathbf{q},iq_n)}\\right)=2n-n^2.\n",
+    "\\end{equation}\n",
+    "\n",
+    "Note that the right-hand side is independent of interactions.\n",
+    "\n",
+    "In RPA the left hand side of the above equation takes the form\n",
+    "\n",
+    "\\begin{equation}\n",
+    "\\frac{T}{N}\\sum_{\\mathbf{q},iq_n} \\left (\\frac{\\chi_0(\\mathbf{q},iq_n)}{1-\\frac{U}{2}\\chi_0(\\mathbf{q},iq_n)}+\\frac{\\chi_0(\\mathbf{q},iq_n)}{1+\\frac{U}{2}\\chi_0(\\mathbf{q},iq_n)}\\right)\n",
+    "\\end{equation}\n",
+    "\n",
+    "Note that the bare $U$ enters in both denominators. \n",
+    "\n",
+    "In the solution, you will find a graph that display the violation of this sum rule by RPA.\n"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.9.13"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}

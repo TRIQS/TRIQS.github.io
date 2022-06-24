@@ -1,0 +1,369 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Lindhard susceptibility $\\chi_0$ for a non interacting electron gas\n",
+    "\n",
+    "\n",
+    "The Lindhard function is defined by the equation\n",
+    "\n",
+    "\\begin{equation}\n",
+    "  \\chi_0(\\mathbf{q}, i\\omega_n) = \n",
+    "    -2\\frac{1}{\\beta N}\\sum_{\\mathbf{k}, m} \n",
+    "    G_0(\\mathbf{k}, i\\nu_m)G_0(\\mathbf{k}+\\mathbf{q}, i\\nu_m + i\\omega_n) \n",
+    "\\end{equation}\n",
+    "\n",
+    "where $\\mathbf{q}$ and $\\mathbf{k}$ are momenta and $i\\omega_n$ and $i\\nu_m$ are Bosonic and Fermionic Matsubara frequencies, respectively, and N the number of $\\mathbf{k}$ points.\n",
+    "\n",
+    "Since the equation is a convolution in both momentum and frequency space the calculation can be done in fewer operations by Fourier transforming to imaginary time $\\tau$ and real space $\\mathbf{r}$ for the Green's function, using fast Fourier transforms (FFT) to compute\n",
+    "\n",
+    "$$\n",
+    "G_0(\\mathbf{r}, \\tau) = \n",
+    "  \\mathcal{F}_{\\{\\mathbf{k}, i\\nu_m\\} \\rightarrow \\{\\mathbf{r}, \\tau\\}} \n",
+    "  \\big\\{ G_0(\\mathbf{k}, i\\nu_n) \\big\\}.\n",
+    "$$\n",
+    "\n",
+    "In real space $\\mathbf{r}$ and imaginary time $\\tau$ the convolution for $\\chi_0$ is a simple product (since it corresponds to a simple bubble diagram with a particle-hole excitation)\n",
+    "\n",
+    "$$\n",
+    "\\chi_0(\\mathbf{r},\\tau) = 2 G_0(\\mathbf{r},\\tau)G_0(-\\mathbf{r},\\beta -\\tau)\n",
+    "$$\n",
+    "\n",
+    "and finally one goes back to momentum and Matsubara frequency by two more fast Fourier transforms\n",
+    "\n",
+    "$$ \n",
+    "  \\chi_0(\\mathbf{q},i\\omega_n) \\equiv \n",
+    "  \\mathcal{F}_{\\{\\mathbf{r},\\tau\\} \\rightarrow \\{\\mathbf{q}, i\\omega_n\\}} \n",
+    "  \\big\\{ \\chi_0(\\mathbf{r}, \\tau) \\big\\}\n",
+    "$$\n",
+    "\n",
+    "\n",
+    "The goal of this notebook is to compute $\\chi_0$ and study it, plot it. We will answer the following questions:\n",
+    "\n",
+    "- **How many operations are saved by using fast Fourier transforms rather than evaluating the convolutions directly?**\n",
+    "\n",
+    "- **At what momenta $\\mathbf{q}$ does the susceptibility $\\chi_0$ have a maxima at zero frequency?**\n",
+    "\n",
+    "- **How is the position of that maximum related to the Fermi surface?**\n",
+    "   "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-06-22T22:54:04.617963Z",
+     "iopub.status.busy": "2022-06-22T22:54:04.616767Z",
+     "iopub.status.idle": "2022-06-22T22:54:08.095763Z",
+     "shell.execute_reply": "2022-06-22T22:54:08.093256Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "# Imports \n",
+    "from triqs.lattice import BravaisLattice, BrillouinZone\n",
+    "from triqs.gf import MeshBrZone, MeshImFreq, Gf, MeshProduct\n",
+    "from h5 import HDFArchive\n",
+    "from triqs.plot.mpl_interface import plt, oplot\n",
+    "%matplotlib inline\n",
+    "import numpy as np\n",
+    "from math import cos, pi"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Computing $\\chi_0$ in C++"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "While it is possible to compute $\\chi_0$ in Python, it is relatively slow using a simple code using a double loop over $r$ and $\\tau$. So we use again the \"C++ magic\" shown in the introduction to multivariable Green functions.\n",
+    "\n",
+    "The function bubble below computes the Lindhard function performing the three steps described above. Don't go into all the details of the C++ code, but just try to get the general idea of what it is doing.\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-06-22T22:54:08.108533Z",
+     "iopub.status.busy": "2022-06-22T22:54:08.107297Z",
+     "iopub.status.idle": "2022-06-22T22:54:08.150402Z",
+     "shell.execute_reply": "2022-06-22T22:54:08.147953Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "%reload_ext cpp2py.magic"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "May take a few seconds to compile ..."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-06-22T22:54:08.162700Z",
+     "iopub.status.busy": "2022-06-22T22:54:08.161711Z",
+     "iopub.status.idle": "2022-06-22T22:55:54.808281Z",
+     "shell.execute_reply": "2022-06-22T22:55:54.805665Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "%%cpp2py -C triqs --cxxflags '-std=c++20'\n",
+    "#include <triqs/gfs.hpp>\n",
+    "using namespace triqs::gfs;\n",
+    "\n",
+    "// The type of a Green function : (k,omega) -> Complex number\n",
+    "using g_k_w_vt = gf_view<prod<brzone, imfreq>, scalar_valued>;\n",
+    "using g_r_t_t  = gf<prod<cyclat, imtime>, scalar_valued>;\n",
+    "\n",
+    "auto bubble(g_k_w_vt G0) {\n",
+    "    \n",
+    "    // Fourier Transformation of k, \\omega to obtain g(r,t)\n",
+    "    auto grt = make_gf_from_fourier<0,1>(G0);\n",
+    "    \n",
+    "    // The mesh of gtr is a cartesian product mt x mr. We decompose it.\n",
+    "    auto [mr, mt] = grt.mesh();\n",
+    "    \n",
+    "    // The inverse temperature from the mesh\n",
+    "    double beta = mt.domain().beta;\n",
+    "    \n",
+    "    // A new mesh for chi, with a bosonic statistics, but same size as mt.\n",
+    "    auto mtb = gf_mesh<imtime>{beta, Boson, mt.size()};\n",
+    "    \n",
+    "    // Build chi (r, tau) with this new mesh.\n",
+    "    auto chi0 = g_r_t_t{{mr, mtb}};\n",
+    "\n",
+    "    // we fill chi : chi(r, tau) = 2 * g(-r, beta - tau) * g(r, tau)\n",
+    "    for (auto const &r : mr)\n",
+    "        for (auto const &t : mtb)\n",
+    "            chi0[r, t] = 2*grt(-r, beta - t) * grt(r, t);\n",
+    "\n",
+    "    // Fourier transform back to k, \\omega space and return\n",
+    "    return make_gf_from_fourier<0,1>(chi0);\n",
+    "}"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Compute the Lindhard susceptibility $\\chi_0(\\mathbf{q}, i\\omega_n)$\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-06-22T22:55:54.817202Z",
+     "iopub.status.busy": "2022-06-22T22:55:54.816713Z",
+     "iopub.status.idle": "2022-06-22T22:55:55.507311Z",
+     "shell.execute_reply": "2022-06-22T22:55:55.506732Z"
+    },
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Cannot open the HDF file tpsc.h5\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "HDF5-DIAG: Error detected in HDF5 (1.12.2) thread 0:\n",
+      "  #000: H5F.c line 620 in H5Fopen(): unable to open file\n",
+      "    major: File accessibility\n",
+      "    minor: Unable to open file\n",
+      "  #001: H5VLcallback.c line 3502 in H5VL_file_open(): failed to iterate over available VOL connector plugins\n",
+      "    major: Virtual Object Layer\n",
+      "    minor: Iteration failed\n",
+      "  #002: H5PLpath.c line 579 in H5PL__path_table_iterate(): can't iterate over plugins in plugin path '(null)'\n",
+      "    major: Plugin for dynamically loaded library\n",
+      "    minor: Iteration failed\n",
+      "  #003: H5PLpath.c line 620 in H5PL__path_table_iterate_process_path(): can't open directory: /usr/local/hdf5/lib/plugin\n",
+      "    major: Plugin for dynamically loaded library\n",
+      "    minor: Can't open directory or file\n",
+      "  #004: H5VLcallback.c line 3351 in H5VL__file_open(): open failed\n",
+      "    major: Virtual Object Layer\n",
+      "    minor: Can't open object\n",
+      "  #005: H5VLnative_file.c line 97 in H5VL__native_file_open(): unable to open file\n",
+      "    major: File accessibility\n",
+      "    minor: Unable to open file\n",
+      "  #006: H5Fint.c line 1835 in H5F_open(): unable to open file: name = 'tpsc.h5', tent_flags = 0\n",
+      "    major: File accessibility\n",
+      "    minor: Unable to open file\n",
+      "  #007: H5FD.c line 723 in H5FD_open(): open failed\n",
+      "    major: Virtual File Layer\n",
+      "    minor: Unable to initialize object\n",
+      "  #008: H5FDsec2.c line 355 in H5FD__sec2_open(): unable to open file: name = 'tpsc.h5', errno = 2, error message = 'No such file or directory', flags = 0, o_flags = 0\n",
+      "    major: File accessibility\n",
+      "    minor: Unable to open file\n"
+     ]
+    },
+    {
+     "ename": "RuntimeError",
+     "evalue": ".. Error occurred at Wed Jun 22 18:55:54 2022\n\n.. Error .. in calling C++ overload of constructor :\n.. (no C++ name)(std::string name, char mode) -> \n.. C++ error was : \nHDF5 : cannot openfile : tpsc.h5",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mRuntimeError\u001b[0m                              Traceback (most recent call last)",
+      "Input \u001b[0;32mIn [4]\u001b[0m, in \u001b[0;36m<cell line: 2>\u001b[0;34m()\u001b[0m\n\u001b[1;32m      1\u001b[0m \u001b[38;5;66;03m# Reload the G0 from TPSC 1\u001b[39;00m\n\u001b[0;32m----> 2\u001b[0m \u001b[38;5;28;01mwith\u001b[39;00m \u001b[43mHDFArchive\u001b[49m\u001b[43m(\u001b[49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[38;5;124;43mtpsc.h5\u001b[39;49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[43m,\u001b[49m\u001b[38;5;124;43m'\u001b[39;49m\u001b[38;5;124;43mr\u001b[39;49m\u001b[38;5;124;43m'\u001b[39;49m\u001b[43m)\u001b[49m \u001b[38;5;28;01mas\u001b[39;00m R:\n\u001b[1;32m      3\u001b[0m     G0 \u001b[38;5;241m=\u001b[39m R[\u001b[38;5;124m'\u001b[39m\u001b[38;5;124mG0\u001b[39m\u001b[38;5;124m'\u001b[39m]\n\u001b[1;32m      5\u001b[0m chi0_qw \u001b[38;5;241m=\u001b[39m bubble(G0)\n",
+      "File \u001b[0;32m~/opt/triqs/lib/python3.9/site-packages/h5/archive.py:383\u001b[0m, in \u001b[0;36mHDFArchive.__init__\u001b[0;34m(self, descriptor, open_flag, key_as_string_only, reconstruct_python_object, init)\u001b[0m\n\u001b[1;32m    380\u001b[0m         \u001b[38;5;28;01mtry\u001b[39;00m: os\u001b[38;5;241m.\u001b[39mremove(os\u001b[38;5;241m.\u001b[39mpath\u001b[38;5;241m.\u001b[39mabspath(LocalFileName))\n\u001b[1;32m    381\u001b[0m         \u001b[38;5;28;01mexcept\u001b[39;00m \u001b[38;5;167;01mOSError\u001b[39;00m: \u001b[38;5;28;01mpass\u001b[39;00m\n\u001b[0;32m--> 383\u001b[0m     \u001b[38;5;28;43mself\u001b[39;49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43m_init_root\u001b[49m\u001b[43m(\u001b[49m\u001b[43mLocalFileName\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mopen_flag\u001b[49m\u001b[43m)\u001b[49m\n\u001b[1;32m    385\u001b[0m \u001b[38;5;28mself\u001b[39m\u001b[38;5;241m.\u001b[39moptions \u001b[38;5;241m=\u001b[39m {\u001b[38;5;124m'\u001b[39m\u001b[38;5;124mkey_as_string_only\u001b[39m\u001b[38;5;124m'\u001b[39m : key_as_string_only,\n\u001b[1;32m    386\u001b[0m                 \u001b[38;5;124m'\u001b[39m\u001b[38;5;124mdo_not_overwrite_entries\u001b[39m\u001b[38;5;124m'\u001b[39m : \u001b[38;5;28;01mFalse\u001b[39;00m,\n\u001b[1;32m    387\u001b[0m                 \u001b[38;5;124m'\u001b[39m\u001b[38;5;124mreconstruct_python_object\u001b[39m\u001b[38;5;124m'\u001b[39m: reconstruct_python_object,\n\u001b[1;32m    388\u001b[0m                 \u001b[38;5;124m'\u001b[39m\u001b[38;5;124mUseAlpsNotationForComplex\u001b[39m\u001b[38;5;124m'\u001b[39m  : \u001b[38;5;28;01mTrue\u001b[39;00m\n\u001b[1;32m    389\u001b[0m                 }\n\u001b[1;32m    390\u001b[0m HDFArchiveGroup\u001b[38;5;241m.\u001b[39m\u001b[38;5;21m__init__\u001b[39m(\u001b[38;5;28mself\u001b[39m,\u001b[38;5;28mself\u001b[39m,\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124m\"\u001b[39m)\n",
+      "File \u001b[0;32m~/opt/triqs/lib/python3.9/site-packages/h5/archive_basic_layer.py:46\u001b[0m, in \u001b[0;36mHDFArchiveGroupBasicLayer._init_root\u001b[0;34m(self, descriptor, open_flag)\u001b[0m\n\u001b[1;32m     44\u001b[0m \u001b[38;5;28;01massert\u001b[39;00m(\u001b[38;5;28misinstance\u001b[39m(descriptor, \u001b[38;5;28mstr\u001b[39m))\n\u001b[1;32m     45\u001b[0m \u001b[38;5;28;01mtry\u001b[39;00m :\n\u001b[0;32m---> 46\u001b[0m     fich \u001b[38;5;241m=\u001b[39m \u001b[43mh5\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mFile\u001b[49m\u001b[43m(\u001b[49m\u001b[43mdescriptor\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mopen_flag\u001b[49m\u001b[43m)\u001b[49m\n\u001b[1;32m     47\u001b[0m \u001b[38;5;28;01mexcept\u001b[39;00m :\n\u001b[1;32m     48\u001b[0m     \u001b[38;5;28mprint\u001b[39m(\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124mCannot open the HDF file \u001b[39m\u001b[38;5;132;01m%s\u001b[39;00m\u001b[38;5;124m\"\u001b[39m\u001b[38;5;241m%\u001b[39mdescriptor)\n",
+      "\u001b[0;31mRuntimeError\u001b[0m: .. Error occurred at Wed Jun 22 18:55:54 2022\n\n.. Error .. in calling C++ overload of constructor :\n.. (no C++ name)(std::string name, char mode) -> \n.. C++ error was : \nHDF5 : cannot openfile : tpsc.h5"
+     ]
+    }
+   ],
+   "source": [
+    "# Reload the G0 from TPSC 1\n",
+    "with HDFArchive(\"tpsc.h5\",'r') as R:\n",
+    "    G0 = R['G0']\n",
+    "\n",
+    "chi0_qw = bubble(G0)\n",
+    "\n",
+    "# Save it for later reuse\n",
+    "with HDFArchive(\"tpsc.h5\") as R:\n",
+    "    R['chi0_qw'] = chi0_qw"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Static Lindhard susceptibility $\\chi_0(\\mathbf{q}, \\omega=0)$\n",
+    "\n",
+    "The square lattice with nearest-neighbour hopping $t$ has a property called \"perfect nesting\", meaning that large parts of the Fermi surface are mapped on to each other by a single momentum transfer $\\mathbf{k}_{nesting}$, where $\\mathbf{k}_{nesting}$ is called the \"nesting vector\". \n",
+    "\n",
+    "Go back to the plot of $-\\frac{1}{\\pi} Im G_0(\\mathbf{k}, i\\omega_0)$ and determine this peculiar momentum vector.\n",
+    "\n",
+    "The \"perfect nesting\" greatly enhances the particle-hole susceptibility $\\chi_0$ of the system and the static Lindhard susceptibility $\\chi_0(\\mathbf{q}, \\omega=0)$ has a dominant peak at this momentum.\n",
+    "\n",
+    "This can be seen as follows. Using the expression for the Greens function and performing the sum over Matsubara frequencies, one finds that the susceptibility (Lindhard function at $\\omega=0$) takes the form\n",
+    "\n",
+    "\\begin{equation}\n",
+    "  \\chi_0(\\mathbf{q}, \\omega=0) = \n",
+    "    -2\\frac{1}{\\beta N}\\sum_{\\mathbf{k}, m} \n",
+    "    G_0(\\mathbf{k}, i\\nu_m)G_0(\\mathbf{k}+\\mathbf{q}, i\\nu_m)= -\\frac{2}{\\beta N}\\sum_{\\mathbf{k}}\\frac{f(\\epsilon(\\mathbf{k}))-f(\\epsilon(\\mathbf{k+q}))}{\\epsilon(\\mathbf{k})-\\epsilon(\\mathbf{k+q})}.\n",
+    "\\end{equation}\n",
+    "\n",
+    "The form appears natural if we just think of the structure of perturbation theory. At $\\mathbf{Q}=(\\pi,\\pi)$, the property of the cosine give that $\\epsilon(\\mathbf{k+Q})=-\\epsilon(\\mathbf{k})$. And since $f(-\\epsilon(\\mathbf{k}))=1-f(\\epsilon(\\mathbf{k}))$ we have\n",
+    "\n",
+    "\\begin{equation}\n",
+    "  \\chi_0(\\mathbf{q}=\\mathbf{Q}, \\omega=0) = \n",
+    "    -\\frac{2}{\\beta N}\\sum_{\\mathbf{k}}\\frac{\\tanh(\\beta\\epsilon(\\mathbf{k})/2)}{2\\epsilon(\\mathbf{k})}\n",
+    "\\end{equation}\n",
+    "which diverges as $T \\rightarrow 0$ (i.e. when $\\beta \\rightarrow \\infty$)."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Plot the susceptibility"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### <i class=\"fa fa-gear fa-x\" style=\"color: #186391\"></i> Exercise 1\n",
+    "\n",
+    "Using the code to plot the spectral function in the previous notebook, \n",
+    "make a color plot for the static susceptibility $\\chi_0(\\mathbf{q}, \\omega=0)$\n",
+    "on a grid $[0,2\\pi]^2$.\n",
+    "\n",
+    "NB : The solution will also provide you with a similar 3D plot."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### <i class=\"fa fa-gear fa-x\" style=\"color: #186391\"></i> Exercise 2:  Structure in Matsubara frequency $i\\omega_n$\n",
+    "\n",
+    "Plot the susceptibility $\\chi_0(\\mathbf{q}, i\\omega_n)$ for $\\mathbf{q}$ points from \n",
+    "$(0,\\pi)$ to $(\\pi,\\pi)$, vs $\\omega_n$.\n",
+    "\n",
+    "Hint : Use the partial evaluation technique shown in previous notebooks.\n",
+    "\n",
+    "Does the divergence manifest itself at every frequencies ?"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### <i class=\"fa fa-gear fa-x\" style=\"color: #186391\"></i> Exercice 3:  Static susceptibility $\\chi_0(\\mathbf{q}, \\omega=0)$ along high symmetry paths in the Brillouin zone\n",
+    "\n",
+    "Plot the static susceptibility $\\chi_0(\\mathbf{q}, \\omega=0)$ along the following path\n",
+    "in the Brillouin Zone: $\\Gamma \\rightarrow X \\rightarrow M \\rightarrow \\Gamma$\n",
+    "where $\\Gamma = (0,  0 , 0)$, $X = (\\pi, \\pi, 0)$ and  $M = (\\pi, 0,  0)$.\n",
+    "\n",
+    "What is the effect of the nesting of the Fermi surface ?"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.9.13"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
