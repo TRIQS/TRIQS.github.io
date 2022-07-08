@@ -499,7 +499,6 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../../documentation/cpp_api/triqs/mc_tools.html">triqs::mc_tools</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../../documentation/cpp_api/triqs/mc_tools.html#type-aliases">Type aliases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../documentation/cpp_api/triqs/mc_tools.html#classes">Classes</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="../../../documentation/cpp_api/triqs/mc_tools/random_generator.html">triqs::mc_tools::random_generator</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../documentation/cpp_api/triqs/mc_tools/move_set.html">triqs::mc_tools::move_set</a></li>
@@ -1546,32 +1545,222 @@ Here are a couple of simple examples showing the basic use of this class. Learn 
 <p>In this example, we show how to initialize the following Green’s functions:</p>
 <div class="math notranslate nohighlight">
 \[G(i\omega) = \frac{1}{i\omega -3}\]</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;triqs/gfs.hpp&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;triqs/mesh.hpp&gt;</span><span class="cp"></span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">triqs</span><span class="p">;</span><span class="w"></span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">triqs</span><span class="o">::</span><span class="nn">gfs</span><span class="p">;</span><span class="w"></span>
+<span class="k">using</span><span class="w"> </span><span class="n">nda</span><span class="o">::</span><span class="n">clef</span><span class="o">::</span><span class="n">placeholder</span><span class="p">;</span><span class="w"></span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1">// Create a Matsubara-frequency mesh</span>
+<span class="w">  </span><span class="kt">double</span><span class="w"> </span><span class="n">beta</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">   </span><span class="c1">// inverse temperature</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">n_iw</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span><span class="p">;</span><span class="w"> </span><span class="c1">// number of Matsubara frequencies</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">iw_mesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mesh</span><span class="o">::</span><span class="n">imfreq</span><span class="p">{</span><span class="n">beta</span><span class="p">,</span><span class="w"> </span><span class="n">Fermion</span><span class="p">,</span><span class="w"> </span><span class="n">n_iw</span><span class="p">};</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1">// Create and fill a 1x1 Matsubara Green function</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">g</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gf</span><span class="p">{</span><span class="n">iw_mesh</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">}};</span><span class="w"></span>
+<span class="w">  </span><span class="n">placeholder</span><span class="o">&lt;</span><span class="mi">0</span><span class="o">&gt;</span><span class="w"> </span><span class="n">iw_</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="n">g</span><span class="p">[</span><span class="n">iw_</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">iw_</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">3</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">g</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1">// An equivalent way to initialize</span>
+<span class="w">  </span><span class="n">g</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="n">w</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">g</span><span class="p">.</span><span class="n">mesh</span><span class="p">())</span><span class="w"> </span><span class="n">g</span><span class="p">[</span><span class="n">w</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">w</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">3</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">g</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1">//an incorrect way : throws exception as expected</span>
+<span class="w">  </span><span class="c1">//g(w) returns a const_view: () are to be used for interpolation, see bottom of the page</span>
+<span class="w">  </span><span class="c1">//for(auto const &amp; w : g.mesh())  g(w) = 1/(w-3);</span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="two-frequency-green-s-function-g-i-omega-i-nu">
 <h3>Two-frequency Green’s function <span class="math notranslate nohighlight">\(G(i\omega,i\nu)\)</span><a class="headerlink" href="#two-frequency-green-s-function-g-i-omega-i-nu" title="Permalink to this headline"></a></h3>
 <p>In this example, we show how to initialize the following Green’s functions:</p>
 <div class="math notranslate nohighlight">
 \[G(i\omega, i\nu) = \frac{1}{i\omega + i\nu -4}\]</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;triqs/gfs.hpp&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;triqs/mesh.hpp&gt;</span><span class="cp"></span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">triqs</span><span class="p">;</span><span class="w"></span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">triqs</span><span class="o">::</span><span class="nn">gfs</span><span class="p">;</span><span class="w"></span>
+<span class="k">using</span><span class="w"> </span><span class="n">nda</span><span class="o">::</span><span class="n">clef</span><span class="o">::</span><span class="n">placeholder</span><span class="p">;</span><span class="w"></span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1">// Create a Matsubara-frequency mesh</span>
+<span class="w">  </span><span class="kt">double</span><span class="w"> </span><span class="n">beta</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">   </span><span class="c1">// inverse temperature</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">n_iw</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span><span class="p">;</span><span class="w"> </span><span class="c1">// number of Matsubara frequencies</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">iw_mesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mesh</span><span class="o">::</span><span class="n">imfreq</span><span class="p">{</span><span class="n">beta</span><span class="p">,</span><span class="w"> </span><span class="n">Fermion</span><span class="p">,</span><span class="w"> </span><span class="n">n_iw</span><span class="p">};</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1">// Create and fill a 1x1 Matsubara Green function on the product mesh</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">g2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gf</span><span class="p">{</span><span class="n">iw_mesh</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">iw_mesh</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">}};</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1">//the shortest way to fill a gf</span>
+<span class="w">  </span><span class="n">placeholder</span><span class="o">&lt;</span><span class="mi">0</span><span class="o">&gt;</span><span class="w"> </span><span class="n">iw_</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="n">placeholder</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span><span class="w"> </span><span class="n">inu_</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="n">g2</span><span class="p">[</span><span class="n">iw_</span><span class="p">,</span><span class="w"> </span><span class="n">inu_</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">iw_</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">inu_</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">g2</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1">// An equivalent way to initialize</span>
+<span class="w">  </span><span class="n">g2</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="p">[</span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">nu</span><span class="p">]</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">g2</span><span class="p">.</span><span class="n">mesh</span><span class="p">())</span><span class="w"> </span><span class="n">g2</span><span class="p">[</span><span class="n">w</span><span class="p">,</span><span class="w"> </span><span class="n">nu</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="n">w</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">nu</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span><span class="w"></span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">g2</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="imaginary-time-green-s-functions-g-tau">
 <h2>Imaginary-time Green’s functions <span class="math notranslate nohighlight">\(G(\tau)\)</span><a class="headerlink" href="#imaginary-time-green-s-functions-g-tau" title="Permalink to this headline"></a></h2>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;triqs/gfs.hpp&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;triqs/mesh.hpp&gt;</span><span class="cp"></span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">triqs</span><span class="p">;</span><span class="w"></span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">triqs</span><span class="o">::</span><span class="nn">gfs</span><span class="p">;</span><span class="w"></span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="c1">// Create a imaginary-time mesh</span>
+<span class="w">  </span><span class="kt">double</span><span class="w"> </span><span class="n">beta</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">n_times</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="mi">101</span><span class="p">;</span><span class="w"> </span><span class="c1">// number of time-points</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">tau_mesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mesh</span><span class="o">::</span><span class="n">imtime</span><span class="p">{</span><span class="n">beta</span><span class="p">,</span><span class="w"> </span><span class="n">Fermion</span><span class="p">,</span><span class="w"> </span><span class="n">n_times</span><span class="p">};</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1">// Create a scalar-valued Green function g[tau] on the tau_mesh</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">g</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gf</span><span class="o">&lt;</span><span class="n">imtime</span><span class="p">,</span><span class="w"> </span><span class="n">scalar_valued</span><span class="o">&gt;</span><span class="p">{</span><span class="n">tau_mesh</span><span class="p">};</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="real-time-green-s-functions-g-t">
 <h2>Real-time Green’s functions <span class="math notranslate nohighlight">\(G(t)\)</span><a class="headerlink" href="#real-time-green-s-functions-g-t" title="Permalink to this headline"></a></h2>
 <p>Here we create a GF defined on the time interval from tmin to tmax.
 If we want the value of the GF at any time to be a scalar, we use:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;triqs/gfs.hpp&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;triqs/mesh.hpp&gt;</span><span class="cp"></span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">triqs</span><span class="p">;</span><span class="w"></span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">triqs</span><span class="o">::</span><span class="nn">gfs</span><span class="p">;</span><span class="w"></span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="c1">// Create a real-time mesh</span>
+<span class="w">  </span><span class="kt">double</span><span class="w"> </span><span class="n">tmin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">tmax</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="c1">// the time interval</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">n_times</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">101</span><span class="p">;</span><span class="w">          </span><span class="c1">// number of time-points</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">t_mesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mesh</span><span class="o">::</span><span class="n">retime</span><span class="p">{</span><span class="n">tmin</span><span class="p">,</span><span class="w"> </span><span class="n">tmax</span><span class="p">,</span><span class="w"> </span><span class="n">n_times</span><span class="p">};</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1">// Create a scalar-valued Green function on the t_mesh</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">g</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gf</span><span class="o">&lt;</span><span class="n">retime</span><span class="p">,</span><span class="w"> </span><span class="n">scalar_valued</span><span class="o">&gt;</span><span class="p">{</span><span class="n">t_mesh</span><span class="p">};</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
 <p>If we need a matrix of size n by m, we use:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;triqs/gfs.hpp&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;triqs/mesh.hpp&gt;</span><span class="cp"></span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">triqs</span><span class="p">;</span><span class="w"></span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">triqs</span><span class="o">::</span><span class="nn">gfs</span><span class="p">;</span><span class="w"></span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="c1">// Create a real-time mesh on interval [tmin, tmax]</span>
+<span class="w">  </span><span class="kt">double</span><span class="w"> </span><span class="n">tmin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">tmax</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">n_times</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">101</span><span class="p">;</span><span class="w"> </span><span class="c1">// number of time-points</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">t_mesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mesh</span><span class="o">::</span><span class="n">retime</span><span class="p">{</span><span class="n">tmin</span><span class="p">,</span><span class="w"> </span><span class="n">tmax</span><span class="p">,</span><span class="w"> </span><span class="n">n_times</span><span class="p">};</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1">// Create a scalar-valued Green function on the t_mesh</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">g</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gf</span><span class="o">&lt;</span><span class="n">retime</span><span class="p">,</span><span class="w"> </span><span class="n">scalar_valued</span><span class="o">&gt;</span><span class="p">{</span><span class="n">t_mesh</span><span class="p">};</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1">// Create a nxm matrix-valued Green function on the t_mesh</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">gm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gf</span><span class="o">&lt;</span><span class="n">retime</span><span class="p">,</span><span class="w"> </span><span class="n">matrix_valued</span><span class="o">&gt;</span><span class="p">{</span><span class="n">t_mesh</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">}};</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
 <p>Or a tensor!</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;triqs/gfs.hpp&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;triqs/mesh.hpp&gt;</span><span class="cp"></span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">triqs</span><span class="p">;</span><span class="w"></span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">triqs</span><span class="o">::</span><span class="nn">gfs</span><span class="p">;</span><span class="w"></span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="c1">// Number of time-points to be used</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">n_times</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">101</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1">// Create a real-time mesh on interval [tmin, tmax]</span>
+<span class="w">  </span><span class="kt">double</span><span class="w"> </span><span class="n">tmin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">tmax</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">t_mesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mesh</span><span class="o">::</span><span class="n">retime</span><span class="p">{</span><span class="n">tmin</span><span class="p">,</span><span class="w"> </span><span class="n">tmax</span><span class="p">,</span><span class="w"> </span><span class="n">n_times</span><span class="p">};</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1">// Create a imaginary-time mesh</span>
+<span class="w">  </span><span class="kt">double</span><span class="w"> </span><span class="n">beta</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">tau_mesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mesh</span><span class="o">::</span><span class="n">imtime</span><span class="p">{</span><span class="n">beta</span><span class="p">,</span><span class="w"> </span><span class="n">Fermion</span><span class="p">,</span><span class="w"> </span><span class="n">n_times</span><span class="p">};</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1">// Create Green function g[t,tau] on product-mesh with values of shape (2,2,2)</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">g</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gf</span><span class="o">&lt;</span><span class="n">prod</span><span class="o">&lt;</span><span class="n">retime</span><span class="p">,</span><span class="w"> </span><span class="n">imtime</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">tensor_valued</span><span class="o">&lt;</span><span class="mi">3</span><span class="o">&gt;&gt;</span><span class="p">{</span><span class="n">t_mesh</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">tau_mesh</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">}};</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
 <div class="section" id="creation-of-a-two-real-time-gf-g-t-t">
 <h3>Creation of a two real time GF <span class="math notranslate nohighlight">\(G(t,t')\)</span><a class="headerlink" href="#creation-of-a-two-real-time-gf-g-t-t" title="Permalink to this headline"></a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;triqs/gfs.hpp&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;triqs/mesh.hpp&gt;</span><span class="cp"></span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">triqs</span><span class="p">;</span><span class="w"></span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">triqs</span><span class="o">::</span><span class="nn">gfs</span><span class="p">;</span><span class="w"></span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="c1">// Create a real-time mesh on the interval [tmin, tmax]</span>
+<span class="w">  </span><span class="kt">double</span><span class="w"> </span><span class="n">tmin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">tmax</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">n_times</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">101</span><span class="p">;</span><span class="w"> </span><span class="c1">// number of time-points</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">t_mesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mesh</span><span class="o">::</span><span class="n">retime</span><span class="p">{</span><span class="n">tmin</span><span class="p">,</span><span class="w"> </span><span class="n">tmax</span><span class="p">,</span><span class="w"> </span><span class="n">n_times</span><span class="p">};</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1">// Create a scalar-valued Green function g[t1,t2] on the product-mesh and initialize</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">g</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gf</span><span class="o">&lt;</span><span class="n">prod</span><span class="o">&lt;</span><span class="n">retime</span><span class="p">,</span><span class="w"> </span><span class="n">retime</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">scalar_valued</span><span class="o">&gt;</span><span class="p">{</span><span class="n">t_mesh</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">t_mesh</span><span class="p">};</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="how-to-fill-a-gf-with-placeholders">
 <h3>How to fill a GF with placeholders<a class="headerlink" href="#how-to-fill-a-gf-with-placeholders" title="Permalink to this headline"></a></h3>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;triqs/gfs.hpp&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;triqs/mesh.hpp&gt;</span><span class="cp"></span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">triqs</span><span class="p">;</span><span class="w"></span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">triqs</span><span class="o">::</span><span class="nn">gfs</span><span class="p">;</span><span class="w"></span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="c1">// Create a real-time mesh on the interval [tmin, tmax]</span>
+<span class="w">  </span><span class="kt">double</span><span class="w"> </span><span class="n">tmin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">tmax</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">n_times</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">101</span><span class="p">;</span><span class="w"> </span><span class="c1">// number of time-points</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">t_mesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mesh</span><span class="o">::</span><span class="n">retime</span><span class="p">{</span><span class="n">tmin</span><span class="p">,</span><span class="w"> </span><span class="n">tmax</span><span class="p">,</span><span class="w"> </span><span class="n">n_times</span><span class="p">};</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1">// Create a scalar-valued Green function g[t1,t2] on the product-mesh and initialize</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">g</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gf</span><span class="o">&lt;</span><span class="n">prod</span><span class="o">&lt;</span><span class="n">retime</span><span class="p">,</span><span class="w"> </span><span class="n">retime</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">scalar_valued</span><span class="o">&gt;</span><span class="p">{</span><span class="n">t_mesh</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">t_mesh</span><span class="p">};</span><span class="w"></span>
+<span class="w">  </span><span class="n">nda</span><span class="o">::</span><span class="n">clef</span><span class="o">::</span><span class="n">placeholder</span><span class="o">&lt;</span><span class="mi">0</span><span class="o">&gt;</span><span class="w"> </span><span class="n">t1_</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="n">nda</span><span class="o">::</span><span class="n">clef</span><span class="o">::</span><span class="n">placeholder</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span><span class="w"> </span><span class="n">t2_</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="n">g</span><span class="p">[</span><span class="n">t1_</span><span class="p">,</span><span class="w"> </span><span class="n">t2_</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">t1_</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="how-to-interpolate-the-gf-value-at-a-point-of-the-domain">
 <h3>How to interpolate the GF value at a point of the domain<a class="headerlink" href="#how-to-interpolate-the-gf-value-at-a-point-of-the-domain" title="Permalink to this headline"></a></h3>
 <p>You simply have to call the GF with the coordinates of the point:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;triqs/gfs.hpp&gt;</span><span class="cp"></span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;triqs/mesh.hpp&gt;</span><span class="cp"></span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">triqs</span><span class="p">;</span><span class="w"></span>
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">triqs</span><span class="o">::</span><span class="nn">gfs</span><span class="p">;</span><span class="w"></span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">  </span><span class="c1">// Create a real-time mesh on the interval [tmin, tmax]</span>
+<span class="w">  </span><span class="kt">double</span><span class="w"> </span><span class="n">tmin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">tmax</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">n_times</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">101</span><span class="p">;</span><span class="w"> </span><span class="c1">// number of time-points</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">t_mesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mesh</span><span class="o">::</span><span class="n">retime</span><span class="p">{</span><span class="n">tmin</span><span class="p">,</span><span class="w"> </span><span class="n">tmax</span><span class="p">,</span><span class="w"> </span><span class="n">n_times</span><span class="p">};</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1">// Create a scalar-valued Green function g[t1,t2] on the product-mesh and initialize</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">g</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gf</span><span class="o">&lt;</span><span class="n">prod</span><span class="o">&lt;</span><span class="n">retime</span><span class="p">,</span><span class="w"> </span><span class="n">retime</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">scalar_valued</span><span class="o">&gt;</span><span class="p">{</span><span class="n">t_mesh</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">t_mesh</span><span class="p">};</span><span class="w"></span>
+<span class="w">  </span><span class="n">nda</span><span class="o">::</span><span class="n">clef</span><span class="o">::</span><span class="n">placeholder</span><span class="o">&lt;</span><span class="mi">0</span><span class="o">&gt;</span><span class="w"> </span><span class="n">t1_</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="n">nda</span><span class="o">::</span><span class="n">clef</span><span class="o">::</span><span class="n">placeholder</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;</span><span class="w"> </span><span class="n">t2_</span><span class="p">;</span><span class="w"></span>
+<span class="w">  </span><span class="n">g</span><span class="p">[</span><span class="n">t1_</span><span class="p">,</span><span class="w"> </span><span class="n">t2_</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">t1_</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1">// Interpolate to obtain value in the domain</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">g</span><span class="p">(</span><span class="mf">0.24</span><span class="p">,</span><span class="w"> </span><span class="mf">0.36</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
 <p>Learn more in the full reference, see <a class="reference internal" href="../../../documentation/manual/triqs/gfs/c%2B%2B/contents.html#greenfunctions"><span class="std std-ref">C++ documentation</span></a></p>
 </div>
 </div>
