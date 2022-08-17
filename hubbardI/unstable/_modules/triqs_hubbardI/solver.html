@@ -133,6 +133,7 @@
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">triqs.operators</span> <span class="kn">import</span> <span class="n">Operator</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">c_dag</span><span class="p">,</span> <span class="n">n</span>
+<span class="kn">import</span> <span class="nn">triqs.utility.mpi</span> <span class="k">as</span> <span class="nn">mpi</span>
 
 <div class="viewcode-block" id="Solver"><a class="viewcode-back" href="../../documentation.html#triqs_hubbardI.Solver">[docs]</a><span class="k">class</span> <span class="nc">Solver</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;Class providing initialization and solve function. Contains all relevant Greensfunctions and self energy.&quot;&quot;&quot;</span>
@@ -169,7 +170,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">gf_struct</span> <span class="o">=</span> <span class="n">fix_gf_struct_type</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">)</span>
-        
+
         <span class="n">g_w_list</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">g_iw_list</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">g_tau_list</span> <span class="o">=</span> <span class="p">[]</span>
@@ -181,36 +182,36 @@
             <span class="n">g_iw_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">GfImFreq</span><span class="p">(</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span><span class="p">,</span> <span class="n">n_points</span> <span class="o">=</span> <span class="n">n_iw</span><span class="p">,</span> <span class="n">target_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">block_size</span><span class="p">,</span> <span class="n">block_size</span><span class="p">)))</span>
             <span class="n">g_tau_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">GfImTime</span><span class="p">(</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span><span class="p">,</span> <span class="n">n_points</span> <span class="o">=</span> <span class="n">n_tau</span><span class="p">,</span> <span class="n">target_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">block_size</span><span class="p">,</span> <span class="n">block_size</span><span class="p">)))</span>
             <span class="n">g_l_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">GfLegendre</span><span class="p">(</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span><span class="p">,</span> <span class="n">n_points</span> <span class="o">=</span> <span class="n">n_l</span><span class="p">,</span> <span class="n">target_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">block_size</span><span class="p">,</span> <span class="n">block_size</span><span class="p">)))</span>
-            
+
         <span class="bp">self</span><span class="o">.</span><span class="n">G0_w</span> <span class="o">=</span> <span class="n">BlockGf</span><span class="p">(</span><span class="n">name_list</span> <span class="o">=</span> <span class="n">name_list</span><span class="p">,</span> <span class="n">block_list</span> <span class="o">=</span> <span class="n">g_w_list</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">G0_iw</span> <span class="o">=</span> <span class="n">BlockGf</span><span class="p">(</span><span class="n">name_list</span> <span class="o">=</span> <span class="n">name_list</span><span class="p">,</span> <span class="n">block_list</span> <span class="o">=</span> <span class="n">g_iw_list</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">G_tau</span> <span class="o">=</span> <span class="n">BlockGf</span><span class="p">(</span><span class="n">name_list</span> <span class="o">=</span> <span class="n">name_list</span><span class="p">,</span> <span class="n">block_list</span> <span class="o">=</span> <span class="n">g_tau_list</span><span class="p">)</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">G_tau</span> <span class="o">=</span> <span class="n">BlockGf</span><span class="p">(</span><span class="n">name_list</span> <span class="o">=</span> <span class="n">name_list</span><span class="p">,</span> <span class="n">block_list</span> <span class="o">=</span> <span class="n">g_tau_list</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">G_l</span> <span class="o">=</span> <span class="n">BlockGf</span><span class="p">(</span><span class="n">name_list</span> <span class="o">=</span> <span class="n">name_list</span><span class="p">,</span> <span class="n">block_list</span> <span class="o">=</span> <span class="n">g_l_list</span><span class="p">)</span>
-        
+
         <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_iw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">G0_iw</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_iw</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
-        
+
         <span class="bp">self</span><span class="o">.</span><span class="n">G_iw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">G0_iw</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">G_iw</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
-        
+
         <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">G0_w</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_w</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
-        
+
         <span class="bp">self</span><span class="o">.</span><span class="n">G_w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">G0_w</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">G_w</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
-        
+
         <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct</span> <span class="o">=</span> <span class="n">gf_struct</span>
-        
+
         <span class="bp">self</span><span class="o">.</span><span class="n">n_iw</span> <span class="o">=</span> <span class="n">n_iw</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_tau</span> <span class="o">=</span> <span class="n">n_tau</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_l</span> <span class="o">=</span> <span class="n">n_l</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span>
-        
+
         <span class="bp">self</span><span class="o">.</span><span class="n">n_w</span> <span class="o">=</span> <span class="n">n_w</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">w_min</span> <span class="o">=</span> <span class="n">w_min</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">w_max</span> <span class="o">=</span> <span class="n">w_max</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">idelta</span> <span class="o">=</span> <span class="n">idelta</span>
-        
+
         <span class="bp">self</span><span class="o">.</span><span class="n">fops</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">block_size</span> <span class="ow">in</span> <span class="n">gf_struct</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">block_size</span><span class="p">):</span>
@@ -219,7 +220,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">eal</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">block_size</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">eal</span><span class="p">[</span><span class="n">block</span><span class="p">]</span><span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">block_size</span><span class="p">,</span><span class="n">block_size</span><span class="p">))</span></div>
-        
+
 <div class="viewcode-block" id="Solver.solve"><a class="viewcode-back" href="../../documentation.html#triqs_hubbardI.Solver.solve">[docs]</a>    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">params_kw</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Solve the impurity problem: calculate G(iw) and Sigma(iw)</span>
@@ -229,7 +230,7 @@
 <span class="sd">        params_kw : dict {&#39;param&#39;:value} that is passed to the core solver.</span>
 <span class="sd">                    Only required parameter is</span>
 <span class="sd">                        * `h_int` (:ref:`Operator object &lt;triqslibs:operators&gt;`): the local Hamiltonian of the impurity problem to be solved,</span>
-<span class="sd">                    Other parameters are </span>
+<span class="sd">                    Other parameters are</span>
 <span class="sd">                        * `calc_gtau` (bool): calculate G(tau)</span>
 <span class="sd">                        * `calc_gw` (bool): calculate G(w) and Sigma(w)</span>
 <span class="sd">                        * `calc_gl` (bool): calculate G(legendre)</span>
@@ -237,15 +238,15 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        
-        
-  
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;TRIQS: HubbardI solver&#39;</span><span class="p">)</span>
+
+
         <span class="n">h_int</span> <span class="o">=</span> <span class="n">params_kw</span><span class="p">[</span><span class="s1">&#39;h_int&#39;</span><span class="p">]</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">calc_gtau</span> <span class="o">=</span> <span class="n">params_kw</span><span class="p">[</span><span class="s1">&#39;calc_gtau&#39;</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="n">calc_gtau</span> <span class="o">=</span> <span class="kc">False</span>
-        
+
         <span class="k">try</span><span class="p">:</span>
             <span class="n">calc_gw</span> <span class="o">=</span> <span class="n">params_kw</span><span class="p">[</span><span class="s1">&#39;calc_gw&#39;</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
@@ -260,41 +261,46 @@
             <span class="n">calc_dm</span> <span class="o">=</span> <span class="n">params_kw</span><span class="p">[</span><span class="s1">&#39;calc_dm&#39;</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="n">calc_dm</span> <span class="o">=</span> <span class="kc">False</span>
-            
+
         <span class="n">Delta_iw</span> <span class="o">=</span> <span class="mi">0</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">G0_iw</span>
         <span class="n">Delta_iw</span> <span class="o">&lt;&lt;</span> <span class="n">iOmega_n</span>
         <span class="n">Delta_iw</span> <span class="o">-=</span> <span class="n">inverse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G0_iw</span><span class="p">)</span>
 
-            
+
         <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">block_size</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct</span><span class="p">:</span>
             <span class="n">a</span> <span class="o">=</span> <span class="n">Delta_iw</span><span class="p">[</span><span class="n">block</span><span class="p">]</span><span class="o">.</span><span class="n">fit_tail</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">eal</span><span class="p">[</span><span class="n">block</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>               
-                
+            <span class="bp">self</span><span class="o">.</span><span class="n">eal</span><span class="p">[</span><span class="n">block</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
         <span class="n">G0_iw_F</span> <span class="o">=</span> <span class="mi">0</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">G_iw</span>
         <span class="k">if</span> <span class="n">calc_gw</span><span class="p">:</span>
             <span class="n">G0_w_F</span> <span class="o">=</span> <span class="mi">0</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">G_w</span>
-        
+
         <span class="n">G0_iw_F</span> <span class="o">&lt;&lt;</span> <span class="n">iOmega_n</span>
         <span class="k">if</span> <span class="n">calc_gw</span><span class="p">:</span>
             <span class="n">G0_w_F</span> <span class="o">&lt;&lt;</span> <span class="n">Omega</span>
-        
+
         <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">block_size</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct</span><span class="p">:</span>
             <span class="n">G0_iw_F</span><span class="p">[</span><span class="n">block</span><span class="p">]</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eal</span><span class="p">[</span><span class="n">block</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">calc_gw</span><span class="p">:</span>
                 <span class="n">G0_w_F</span><span class="p">[</span><span class="n">block</span><span class="p">]</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eal</span><span class="p">[</span><span class="n">block</span><span class="p">]</span>
-            
+
         <span class="n">G0_iw_F</span> <span class="o">=</span> <span class="n">inverse</span><span class="p">(</span><span class="n">G0_iw_F</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">calc_gw</span><span class="p">:</span>
             <span class="n">G0_w_F</span> <span class="o">=</span> <span class="n">inverse</span><span class="p">(</span><span class="n">G0_w_F</span><span class="p">)</span>
-        
+
         <span class="n">H_loc</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">*</span><span class="n">h_int</span>
         <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">block_size</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">block_size</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">block_size</span><span class="p">):</span>
                     <span class="n">H_loc</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eal</span><span class="p">[</span><span class="n">block</span><span class="p">][</span><span class="n">ii</span><span class="p">,</span><span class="n">jj</span><span class="p">]</span><span class="o">*</span><span class="n">c_dag</span><span class="p">(</span><span class="n">block</span><span class="p">,</span><span class="n">ii</span><span class="p">)</span><span class="o">*</span><span class="n">c</span><span class="p">(</span><span class="n">block</span><span class="p">,</span><span class="n">jj</span><span class="p">)</span>
 
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;The local Hamiltonian of the problem:&#39;</span><span class="p">)</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">H_loc</span><span class="p">)</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">ad</span> <span class="o">=</span> <span class="n">AtomDiag</span><span class="p">(</span><span class="n">H_loc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fops</span><span class="p">)</span>
-        
+
         <span class="bp">self</span><span class="o">.</span><span class="n">G_iw</span> <span class="o">=</span> <span class="n">atomic_g_iw</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ad</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_iw</span> <span class="p">)</span>
         <span class="k">if</span> <span class="n">calc_gw</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">G_w</span> <span class="o">=</span> <span class="n">atomic_g_w</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ad</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w_min</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">w_max</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_w</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">idelta</span><span class="p">)</span>
