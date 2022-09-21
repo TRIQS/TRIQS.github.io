@@ -1592,10 +1592,12 @@
 <span class="sd">            - X is anything such that X[BlockName] can be added/subtracted to a GFBloc for BlockName in selected_blocks.</span>
 <span class="sd">              e.g. X can be a BlockGf(with at least the selected_blocks), or a dictionnary Blockname -&gt; array</span>
 <span class="sd">              if the array has the same dimension as the GF blocks (for example to add a static Sigma).</span>
+<span class="sd">              Each block of X has to have the same shape as self.hopping or</span>
+<span class="sd">              epsilon_hat(self.hopping[i]).</span>
 
 <span class="sd">        - field: Any k independant object to be added to the GF</span>
 
-<span class="sd">        - epsilon_hat: a function of eps_k returning a matrix, the dimensions of Sigma</span>
+<span class="sd">        - epsilon_hat: a function of eps_k returning a matrix with the same matrix-dimensions as each block in Sigma</span>
 
 <span class="sd">        - selected_blocks: The calculation is done with the SAME t(k) for all blocks. If this list is not None</span>
 <span class="sd">          only the blocks in this list are calculated.</span>
@@ -1633,9 +1635,13 @@
 
         <span class="c1"># check input</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">orthogonal_basis</span><span class="p">,</span> <span class="s2">&quot;Local_G: must be orthogonal. non ortho cases not checked.&quot;</span>
+        <span class="c1"># check that each block has the same size</span>
         <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">g</span><span class="o">.</span><span class="n">target_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">g</span> <span class="ow">in</span> <span class="n">G</span><span class="p">])))</span> <span class="o">==</span> <span class="mi">1</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">bz_weights</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_kpts</span><span class="p">(),</span> <span class="s2">&quot;Internal Error&quot;</span>
         <span class="n">no</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">g</span><span class="o">.</span><span class="n">target_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">g</span> <span class="ow">in</span> <span class="n">G</span><span class="p">]))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># check that the target shape of each block matches self.hopping</span>
+        <span class="n">eps_hat</span> <span class="o">=</span> <span class="n">epsilon_hat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hopping</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="n">epsilon_hat</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">hopping</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="n">no</span><span class="p">,</span><span class="n">no</span><span class="p">)</span> <span class="o">==</span> <span class="n">eps_hat</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Target shape of each block in Sigma: </span><span class="si">{</span><span class="p">(</span><span class="n">no</span><span class="p">,</span><span class="n">no</span><span class="p">)</span><span class="si">}</span><span class="s2"> does not to match orbital dimension of the hopping matrix: </span><span class="si">{</span><span class="n">eps_hat</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
 
         <span class="c1"># Initialize</span>
         <span class="n">G</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
