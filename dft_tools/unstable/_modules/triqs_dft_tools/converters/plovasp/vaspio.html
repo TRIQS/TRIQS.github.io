@@ -486,84 +486,6 @@
 <span class="c1">#        self.proj_params, self.plo = self.temp_parser(projcar_filename=vasp_dir + &quot;PROJCAR&quot;, locproj_filename=vasp_dir + &quot;LOCPROJ&quot;)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">proj_params</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">plo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">locproj_parser</span><span class="p">(</span><span class="n">locproj_filename</span><span class="o">=</span><span class="n">vasp_dir</span> <span class="o">+</span> <span class="s2">&quot;LOCPROJ&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Plocar.temp_parser"><a class="viewcode-back" href="../../../../_python_api/triqs_dft_tools.converters.plovasp.vaspio.Plocar.temp_parser.html#triqs_dft_tools.converters.plovasp.vaspio.Plocar.temp_parser">[docs]</a>    <span class="k">def</span> <span class="nf">temp_parser</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">projcar_filename</span><span class="o">=</span><span class="s1">&#39;PROJCAR&#39;</span><span class="p">,</span> <span class="n">locproj_filename</span><span class="o">=</span><span class="s1">&#39;LOCPROJ&#39;</span><span class="p">):</span>
-        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Parses PROJCAR (and partially LOCPROJ) to get VASP projectors.</span>
-
-<span class="sd">        This is a prototype parser that should eventually be written in C for</span>
-<span class="sd">        better performance on large files.</span>
-
-<span class="sd">        Returns projector parameters (site/orbital indices etc.) and an array</span>
-<span class="sd">        with projectors.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">orb_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="s2">&quot;py&quot;</span><span class="p">,</span> <span class="s2">&quot;pz&quot;</span><span class="p">,</span> <span class="s2">&quot;px&quot;</span><span class="p">,</span> <span class="s2">&quot;dxy&quot;</span><span class="p">,</span> <span class="s2">&quot;dyz&quot;</span><span class="p">,</span> <span class="s2">&quot;dz2&quot;</span><span class="p">,</span> <span class="s2">&quot;dxz&quot;</span><span class="p">,</span> <span class="s2">&quot;dx2-y2&quot;</span><span class="p">,</span>
-                      <span class="s2">&quot;fz3&quot;</span><span class="p">,</span> <span class="s2">&quot;fxz2&quot;</span><span class="p">,</span> <span class="s2">&quot;fyz2&quot;</span><span class="p">,</span> <span class="s2">&quot;fz(x2-y2)&quot;</span><span class="p">,</span> <span class="s2">&quot;fxyz&quot;</span><span class="p">,</span> <span class="s2">&quot;fx(x2-3y2)&quot;</span><span class="p">,</span> <span class="s2">&quot;fy(3x2-y2)&quot;</span><span class="p">]</span>
-
-        <span class="k">def</span> <span class="nf">lm_to_l_m</span><span class="p">(</span><span class="n">lm</span><span class="p">):</span>
-            <span class="n">l</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">lm</span><span class="p">))</span>
-            <span class="n">m</span> <span class="o">=</span> <span class="n">lm</span> <span class="o">-</span> <span class="n">l</span><span class="o">*</span><span class="n">l</span>
-            <span class="k">return</span> <span class="n">l</span><span class="p">,</span> <span class="n">m</span>
-
-<span class="c1"># Read the first line of LOCPROJ to get the dimensions</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">locproj_filename</span><span class="p">,</span> <span class="s1">&#39;rt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">line</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
-            <span class="n">nproj</span><span class="p">,</span> <span class="n">nspin</span><span class="p">,</span> <span class="n">nk</span><span class="p">,</span> <span class="n">nband</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()))</span>
-
-        <span class="n">plo</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nproj</span><span class="p">,</span> <span class="n">nspin</span><span class="p">,</span> <span class="n">nk</span><span class="p">,</span> <span class="n">nband</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
-        <span class="n">proj_params</span> <span class="o">=</span> <span class="p">[{}</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nproj</span><span class="p">)]</span>
-
-        <span class="n">iproj_site</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">is_first_read</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">projcar_filename</span><span class="p">,</span> <span class="s1">&#39;rt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">search_for</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s2">&quot;^ *ISITE&quot;</span><span class="p">)</span>
-            <span class="k">while</span> <span class="n">line</span><span class="p">:</span>
-                <span class="n">isite</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">is_first_read</span><span class="p">:</span>
-                    <span class="k">for</span> <span class="n">il</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">):</span>
-                        <span class="n">ip_new</span> <span class="o">=</span> <span class="n">iproj_site</span> <span class="o">*</span> <span class="n">norb</span> <span class="o">+</span> <span class="n">il</span>
-                        <span class="n">ip_prev</span> <span class="o">=</span> <span class="p">(</span><span class="n">iproj_site</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">norb</span> <span class="o">+</span> <span class="n">il</span>
-                        <span class="n">proj_params</span><span class="p">[</span><span class="n">ip_new</span><span class="p">][</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">proj_params</span><span class="p">[</span><span class="n">ip_prev</span><span class="p">][</span><span class="s1">&#39;label&#39;</span><span class="p">]</span>
-                        <span class="n">proj_params</span><span class="p">[</span><span class="n">ip_new</span><span class="p">][</span><span class="s1">&#39;isite&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">isite</span>
-                        <span class="n">proj_params</span><span class="p">[</span><span class="n">ip_new</span><span class="p">][</span><span class="s1">&#39;l&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">proj_params</span><span class="p">[</span><span class="n">ip_prev</span><span class="p">][</span><span class="s1">&#39;l&#39;</span><span class="p">]</span>
-                        <span class="n">proj_params</span><span class="p">[</span><span class="n">ip_new</span><span class="p">][</span><span class="s1">&#39;m&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">proj_params</span><span class="p">[</span><span class="n">ip_prev</span><span class="p">][</span><span class="s1">&#39;m&#39;</span><span class="p">]</span>
-
-                <span class="k">for</span> <span class="n">ispin</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nspin</span><span class="p">):</span>
-                    <span class="k">for</span> <span class="n">ik</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nk</span><span class="p">):</span>
-<span class="c1"># Parse the orbital labels and convert them to l,m-indices</span>
-                        <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">search_for</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s2">&quot;^ *band&quot;</span><span class="p">)</span>
-                        <span class="k">if</span> <span class="n">is_first_read</span><span class="p">:</span>
-                            <span class="n">cpatt</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;lm= *([^\s]+)&quot;</span><span class="p">)</span>
-                            <span class="n">labels</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">cpatt</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
-                            <span class="n">norb</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
-                            <span class="k">for</span> <span class="n">il</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">labels</span><span class="p">):</span>
-                                <span class="n">lm</span> <span class="o">=</span> <span class="n">orb_labels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
-                                <span class="n">l</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">lm_to_l_m</span><span class="p">(</span><span class="n">lm</span><span class="p">)</span>
-
-<span class="c1"># For the first read &#39;iproj_site = 0&#39; and only orbital index &#39;il&#39; is used</span>
-                                <span class="n">proj_params</span><span class="p">[</span><span class="n">il</span><span class="p">][</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">label</span>
-                                <span class="n">proj_params</span><span class="p">[</span><span class="n">il</span><span class="p">][</span><span class="s1">&#39;isite&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">isite</span>
-                                <span class="n">proj_params</span><span class="p">[</span><span class="n">il</span><span class="p">][</span><span class="s1">&#39;l&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">l</span>
-                                <span class="n">proj_params</span><span class="p">[</span><span class="n">il</span><span class="p">][</span><span class="s1">&#39;m&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span>
-
-                            <span class="n">is_first_read</span> <span class="o">=</span> <span class="kc">False</span>
-
-<span class="c1"># Read the block of nk * ns * nband complex numbers</span>
-                        <span class="k">for</span> <span class="n">ib</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nband</span><span class="p">):</span>
-                            <span class="n">line</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
-                            <span class="n">rtmp</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">1</span><span class="p">:]))</span>
-                            <span class="k">for</span> <span class="n">il</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">):</span>
-                                <span class="n">ctmp</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">rtmp</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">il</span><span class="p">],</span> <span class="n">rtmp</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">il</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
-                                <span class="n">plo</span><span class="p">[</span><span class="n">iproj_site</span> <span class="o">*</span> <span class="n">norb</span> <span class="o">+</span> <span class="n">il</span><span class="p">,</span> <span class="n">ispin</span><span class="p">,</span> <span class="n">ik</span><span class="p">,</span> <span class="n">ib</span><span class="p">]</span> <span class="o">=</span> <span class="n">ctmp</span>
-
-<span class="c1"># End of site-block</span>
-                <span class="n">iproj_site</span> <span class="o">+=</span> <span class="mi">1</span>
-                <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">search_for</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s2">&quot;^ *ISITE&quot;</span><span class="p">)</span>
-
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Read parameters:&quot;</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">il</span><span class="p">,</span> <span class="n">par</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">proj_params</span><span class="p">):</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">il</span><span class="p">,</span> <span class="s2">&quot; -&gt; &quot;</span><span class="p">,</span> <span class="n">par</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">proj_params</span><span class="p">,</span> <span class="n">plo</span></div>
 
 <div class="viewcode-block" id="Plocar.locproj_parser"><a class="viewcode-back" href="../../../../_python_api/triqs_dft_tools.converters.plovasp.vaspio.Plocar.locproj_parser.html#triqs_dft_tools.converters.plovasp.vaspio.Plocar.locproj_parser">[docs]</a>    <span class="k">def</span> <span class="nf">locproj_parser</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">locproj_filename</span><span class="o">=</span><span class="s1">&#39;LOCPROJ&#39;</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
@@ -588,8 +510,12 @@
             <span class="n">line</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
             <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">sline</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">ncdij</span><span class="p">,</span> <span class="n">nk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nband</span><span class="p">,</span> <span class="n">nproj</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">sline</span><span class="p">[:</span><span class="mi">4</span><span class="p">]))</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">nspin</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncdij</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">2</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ncdij</span><span class="p">,</span> <span class="n">nk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nband</span><span class="p">,</span> <span class="n">nproj</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">sline</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">]))</span>
+            
+            <span class="c1"># VASP.6.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nspin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncdij</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncdij</span> <span class="o">&lt;</span> <span class="mi">4</span> <span class="k">else</span> <span class="mi">1</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ISPIN is </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nspin</span><span class="p">))</span>            
+            
             <span class="bp">self</span><span class="o">.</span><span class="n">nspin_band</span> <span class="o">=</span> <span class="mi">2</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncdij</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="mi">1</span>
 
             <span class="k">try</span><span class="p">:</span>
@@ -602,6 +528,14 @@
 
             <span class="n">iproj_site</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="n">is_first_read</span> <span class="o">=</span> <span class="kc">True</span>
+            
+            <span class="c1"># VASP.6.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncdij</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">nc_flag</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ncdij</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">nc_flag</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;NC FLAG : </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nc_flag</span><span class="p">))</span>
 
 <span class="c1"># First read the header block with orbital labels</span>
             <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">search_for</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s2">&quot;^ *ISITE&quot;</span><span class="p">)</span>
@@ -617,19 +551,25 @@
                 <span class="n">proj_params</span><span class="p">[</span><span class="n">ip</span><span class="p">][</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">label</span>
                 <span class="n">proj_params</span><span class="p">[</span><span class="n">ip</span><span class="p">][</span><span class="s1">&#39;isite&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">isite</span>
                 <span class="n">proj_params</span><span class="p">[</span><span class="n">ip</span><span class="p">][</span><span class="s1">&#39;l&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">l</span>
-                <span class="n">proj_params</span><span class="p">[</span><span class="n">ip</span><span class="p">][</span><span class="s1">&#39;m&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nc_flag</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">ip</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">proj_params</span><span class="p">[</span><span class="n">ip</span><span class="p">][</span><span class="s1">&#39;m&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">m</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">proj_params</span><span class="p">[</span><span class="n">ip</span><span class="p">][</span><span class="s1">&#39;m&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">m</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">proj_params</span><span class="p">[</span><span class="n">ip</span><span class="p">][</span><span class="s1">&#39;m&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span>
 
-                <span class="n">ip</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">ip</span> <span class="o">+=</span><span class="mi">1</span>
+                
                 <span class="n">line</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-
+            
             <span class="k">assert</span> <span class="n">ip</span> <span class="o">==</span> <span class="n">nproj</span><span class="p">,</span> <span class="s2">&quot;Number of projectors in the header is wrong in LOCPROJ&quot;</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">eigs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nband</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nspin_band</span><span class="p">))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">ferw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nband</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nspin_band</span><span class="p">))</span>
 
             <span class="n">patt</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;^orbital&quot;</span><span class="p">)</span>
-<span class="c1"># FIXME: fix spin indices for NCDIJ = 4 (non-collinear)</span>
-            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncdij</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;Non-collinear case is not implemented&quot;</span>
+
             <span class="k">for</span> <span class="n">ispin</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nspin</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">ik</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nk</span><span class="p">):</span>
                     <span class="k">for</span> <span class="n">ib</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nband</span><span class="p">):</span>
@@ -645,9 +585,9 @@
                             <span class="n">line</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
                             <span class="n">sline</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
                             <span class="n">ctmp</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">sline</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">sline</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
-                            <span class="n">plo</span><span class="p">[</span><span class="n">ip</span><span class="p">,</span> <span class="n">ispin</span><span class="p">,</span> <span class="n">ik</span><span class="p">,</span> <span class="n">ib</span><span class="p">]</span> <span class="o">=</span> <span class="n">ctmp</span>
+                            <span class="n">plo</span><span class="p">[</span><span class="n">ip</span><span class="p">,</span> <span class="n">ispin</span><span class="p">,</span> <span class="n">ik</span><span class="p">,</span> <span class="n">ib</span><span class="p">]</span> <span class="o">=</span> <span class="n">ctmp</span> 
 
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Read parameters:&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Read parameters: LOCPROJ&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">il</span><span class="p">,</span> <span class="n">par</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">proj_params</span><span class="p">):</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">il</span><span class="p">,</span> <span class="s2">&quot; -&gt; &quot;</span><span class="p">,</span> <span class="n">par</span><span class="p">)</span>
 
@@ -850,7 +790,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">kpts</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">sline</span><span class="p">[:</span><span class="mi">3</span><span class="p">]))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">kwghts</span><span class="p">[</span><span class="n">ik</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sline</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">kwghts</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kwghts</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kwghts</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nktot</span>
 
 <span class="c1"># Attempt to read tetrahedra</span>
 <span class="c1">#   Skip comment line (&quot;Tetrahedra&quot;)</span>
@@ -982,8 +922,7 @@
 
 <span class="c1"># First line: NION, NION, JOBPAR, NCDIJ</span>
         <span class="n">sline</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ncdij</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sline</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
-
+    
 <span class="c1"># Skip next 4 lines</span>
         <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
             <span class="n">sline</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>

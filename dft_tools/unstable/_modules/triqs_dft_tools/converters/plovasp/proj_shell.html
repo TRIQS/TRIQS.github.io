@@ -461,7 +461,11 @@
 <span class="sd">        to avoid superfluous matrix multiplications.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">nion</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nion</span>
-        <span class="n">nm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm2</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm1</span>
+        <span class="c1"># VASP.6.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nc_flag</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">nm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm2</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nm</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lm2</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm1</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="s1">&#39;tmatrices&#39;</span> <span class="ow">in</span> <span class="n">sh_pars</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">do_transform</span> <span class="o">=</span> <span class="kc">True</span>
@@ -479,21 +483,7 @@
             <span class="n">nr</span> <span class="o">=</span> <span class="n">nrow</span> <span class="o">//</span> <span class="n">nion</span>
             <span class="n">nsize</span> <span class="o">=</span> <span class="n">ncol</span> <span class="o">//</span> <span class="n">nm</span>
             <span class="k">assert</span> <span class="n">nsize</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="s2">&quot;Number of columns in TRANSFILE must be divisible by either 1, 2, or 4&quot;</span>
-<span class="c1">#</span>
-<span class="c1"># Determine the spin-dimension and whether the matrices are real or complex</span>
-<span class="c1">#</span>
-<span class="c1">#            if nsize == 1 or nsize == 2:</span>
-<span class="c1"># Matrices (either real or complex) are spin-independent</span>
-<span class="c1">#                nls_dim = nm</span>
-<span class="c1">#                if msize == 2:</span>
-<span class="c1">#                    is_complex = True</span>
-<span class="c1">#                else:</span>
-<span class="c1">#                    is_complex = False</span>
-<span class="c1">#            elif nsize = 4:</span>
-<span class="c1"># Matrices are complex and spin-dependent</span>
-<span class="c1">#                nls_dim = 2 * nm</span>
-<span class="c1">#                is_complex = True</span>
-<span class="c1">#</span>
+
             <span class="n">is_complex</span> <span class="o">=</span> <span class="n">nsize</span> <span class="o">&gt;</span> <span class="mi">1</span>
             <span class="n">ns_dim</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nsize</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
 
@@ -542,7 +532,7 @@
 <span class="c1"># If no transformation matrices are provided define a default one</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">do_transform</span> <span class="o">=</span> <span class="kc">False</span>
 
-        <span class="n">ns_dim</span> <span class="o">=</span> <span class="mi">2</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nc_flag</span> <span class="k">else</span> <span class="mi">1</span>
+        <span class="n">ns_dim</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="n">ndim</span> <span class="o">=</span> <span class="n">nm</span> <span class="o">*</span> <span class="n">ns_dim</span>
 
 <span class="c1"># We still need the matrices for the output</span>
@@ -565,16 +555,15 @@
 <span class="sd">        according to the shell parameters.</span>
 <span class="sd">        If necessary the projectors are transformed usin &#39;self.tmatrices&#39;.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">nc_flag</span> <span class="o">==</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;Non-collinear case is not implemented&quot;</span>
 
-<span class="c1">#        nion = len(self.ion_list)</span>
         <span class="n">nion</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nion</span>
-        <span class="n">nlm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm2</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm1</span>
-        <span class="n">_</span><span class="p">,</span> <span class="n">ns</span><span class="p">,</span> <span class="n">nk</span><span class="p">,</span> <span class="n">nb</span> <span class="o">=</span> <span class="n">proj_raw</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">nproj</span><span class="p">,</span> <span class="n">ns</span><span class="p">,</span> <span class="n">nk</span><span class="p">,</span> <span class="n">nb</span> <span class="o">=</span> <span class="n">proj_raw</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nc_flag</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">nlm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm2</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nlm</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lm2</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lm1</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">do_transform</span><span class="p">:</span>
-<span class="c1"># TODO: implement a non-collinear case</span>
-<span class="c1">#       for a non-collinear case &#39;ndim&#39; is &#39;ns * nm&#39;</span>
             <span class="n">ndim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tmatrices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">proj_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nion</span><span class="p">,</span> <span class="n">ns</span><span class="p">,</span> <span class="n">nk</span><span class="p">,</span> <span class="n">ndim</span><span class="p">,</span> <span class="n">nb</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">ik</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nk</span><span class="p">):</span>
@@ -582,8 +571,6 @@
                 <span class="k">for</span> <span class="n">io</span><span class="p">,</span> <span class="n">ion</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ion_list</span><span class="p">):</span>
                     <span class="n">proj_k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">ns</span><span class="p">,</span> <span class="n">nlm</span><span class="p">,</span> <span class="n">nb</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
                     <span class="n">qcoord</span> <span class="o">=</span> <span class="n">structure</span><span class="p">[</span><span class="s1">&#39;qcoords&#39;</span><span class="p">][</span><span class="n">ion</span><span class="p">]</span>
-<span class="c1">#                    kphase = np.exp(-2.0j * np.pi * np.dot(kp, qcoord))</span>
-<span class="c1">#                    kphase = 1.0</span>
                     <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nlm</span><span class="p">):</span>
 <span class="c1"># Here we search for the index of the projector with the given isite/l/m indices</span>
                         <span class="k">for</span> <span class="n">ip</span><span class="p">,</span> <span class="n">par</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">proj_params</span><span class="p">):</span>
@@ -603,13 +590,7 @@
                     <span class="k">for</span> <span class="n">ip</span><span class="p">,</span> <span class="n">par</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">proj_params</span><span class="p">):</span>
                         <span class="k">if</span> <span class="n">par</span><span class="p">[</span><span class="s1">&#39;isite&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">==</span> <span class="n">ion</span> <span class="ow">and</span> <span class="n">par</span><span class="p">[</span><span class="s1">&#39;l&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">lorb</span> <span class="ow">and</span> <span class="n">par</span><span class="p">[</span><span class="s1">&#39;m&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">m</span><span class="p">:</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">proj_arr</span><span class="p">[</span><span class="n">io</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="n">m</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">proj_raw</span><span class="p">[</span><span class="n">ip</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span>
-<span class="c1">#                            for ik in range(nk):</span>
-<span class="c1">#                                kp = kmesh[&#39;kpoints&#39;][ik]</span>
-<span class="c1">##                                kphase = np.exp(-2.0j * np.pi * np.dot(kp, qcoord))</span>
-<span class="c1">#                                kphase = 1.0</span>
-<span class="c1">#                                self.proj_arr[io, :, :, m, :] = proj_raw[ip, :, :, :] # * kphase</span>
                             <span class="k">break</span></div>
-
 
 <span class="c1">################################################################################</span>
 <span class="c1">#</span>
@@ -632,14 +613,22 @@
 
 <span class="c1"># Select projectors for a given energy window</span>
         <span class="n">ns_band</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ib_win</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="k">for</span> <span class="n">isp</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ns</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">ns</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">ik</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nk</span><span class="p">):</span>
 <span class="c1"># TODO: for non-collinear case something else should be done here</span>
-                <span class="n">is_b</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">isp</span><span class="p">,</span> <span class="n">ns_band</span><span class="p">)</span>
+                <span class="n">is_b</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ns_band</span><span class="p">)</span>
                 <span class="n">ib1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ib_win</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span> <span class="n">is_b</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
                 <span class="n">ib2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ib_win</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span> <span class="n">is_b</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
                 <span class="n">ib_win</span> <span class="o">=</span> <span class="n">ib2</span> <span class="o">-</span> <span class="n">ib1</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">proj_win</span><span class="p">[:,</span> <span class="n">isp</span><span class="p">,</span> <span class="n">ik</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:</span><span class="n">ib_win</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_arr</span><span class="p">[:,</span> <span class="n">isp</span><span class="p">,</span> <span class="n">ik</span><span class="p">,</span> <span class="p">:,</span> <span class="n">ib1</span><span class="p">:</span><span class="n">ib2</span><span class="p">]</span></div>
+                <span class="bp">self</span><span class="o">.</span><span class="n">proj_win</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">ik</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:</span><span class="n">ib_win</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_arr</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">ik</span><span class="p">,</span> <span class="p">:,</span> <span class="n">ib1</span><span class="p">:</span><span class="n">ib2</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">isp</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ns</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">ik</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nk</span><span class="p">):</span>
+                    <span class="n">is_b</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">isp</span><span class="p">,</span> <span class="n">ns_band</span><span class="p">)</span>
+                    <span class="n">ib1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ib_win</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span> <span class="n">is_b</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+                    <span class="n">ib2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ib_win</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span> <span class="n">is_b</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+                    <span class="n">ib_win</span> <span class="o">=</span> <span class="n">ib2</span> <span class="o">-</span> <span class="n">ib1</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">proj_win</span><span class="p">[:,</span> <span class="n">isp</span><span class="p">,</span> <span class="n">ik</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:</span><span class="n">ib_win</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_arr</span><span class="p">[:,</span> <span class="n">isp</span><span class="p">,</span> <span class="n">ik</span><span class="p">,</span> <span class="p">:,</span> <span class="n">ib1</span><span class="p">:</span><span class="n">ib2</span><span class="p">]</span></div>
 
 <span class="c1">################################################################################</span>
 <span class="c1">#</span>
@@ -668,15 +657,26 @@
         <span class="n">occnums</span> <span class="o">=</span> <span class="n">el_struct</span><span class="o">.</span><span class="n">ferw</span>
         <span class="n">ib1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ib_min</span>
         <span class="n">ib2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ib_max</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="c1"># VASP.6.</span>
+        <span class="n">count_nan</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Site diag : </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">site_diag</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">site_diag</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">isp</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ns</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">ik</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">occ</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">it</span><span class="o">.</span><span class="n">count</span><span class="p">(),</span> <span class="n">kweights</span><span class="p">,</span> <span class="n">occnums</span><span class="p">[</span><span class="n">isp</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]):</span>
                     <span class="k">for</span> <span class="n">io</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nion</span><span class="p">):</span>
                         <span class="n">proj_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_win</span><span class="p">[</span><span class="n">io</span><span class="p">,</span> <span class="n">isp</span><span class="p">,</span> <span class="n">ik</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
-                        <span class="n">occ_mats</span><span class="p">[</span><span class="n">isp</span><span class="p">,</span> <span class="n">io</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">proj_k</span> <span class="o">*</span> <span class="n">occ</span><span class="p">[</span><span class="n">ib1</span><span class="p">:</span><span class="n">ib2</span><span class="p">],</span>
-                                                     <span class="n">proj_k</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">weight</span>
-                        <span class="n">overlaps</span><span class="p">[</span><span class="n">isp</span><span class="p">,</span> <span class="n">io</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">proj_k</span><span class="p">,</span>
-                                                     <span class="n">proj_k</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">weight</span>
+                        <span class="c1"># VASP.6.</span>
+                        <span class="n">array_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">proj_k</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">array_sum</span><span class="p">)</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                            <span class="n">count_nan</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nc_flag</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                            <span class="n">occ_mats</span><span class="p">[</span><span class="n">isp</span><span class="p">,</span> <span class="n">io</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">+=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">proj_k</span> <span class="o">*</span> <span class="n">occ</span><span class="p">[</span><span class="n">ib1</span><span class="p">:</span><span class="n">ib2</span><span class="p">],</span> <span class="n">proj_k</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">weight</span>
+                            <span class="n">overlaps</span><span class="p">[</span><span class="n">isp</span><span class="p">,</span> <span class="n">io</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">proj_k</span><span class="p">,</span> <span class="n">proj_k</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">weight</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">occ_mats</span><span class="p">[</span><span class="n">isp</span><span class="p">,</span> <span class="n">io</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">proj_k</span> <span class="o">*</span> <span class="n">occ</span><span class="p">[</span><span class="n">ib1</span><span class="p">:</span><span class="n">ib2</span><span class="p">],</span> <span class="n">proj_k</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">weight</span>
+                            <span class="n">overlaps</span><span class="p">[</span><span class="n">isp</span><span class="p">,</span> <span class="n">io</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">proj_k</span><span class="p">,</span> <span class="n">proj_k</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">weight</span>
+            <span class="k">assert</span> <span class="n">count_nan</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;!!! WARNING !!!: There are </span><span class="si">%s</span><span class="s2">  NaN in your Projectors&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">count_nan</span><span class="p">)</span>
+
         <span class="k">else</span><span class="p">:</span>
             <span class="n">proj_k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">ndim</span><span class="p">,</span> <span class="n">nbtot</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">isp</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ns</span><span class="p">):</span>
@@ -685,13 +685,11 @@
                         <span class="n">i1</span> <span class="o">=</span> <span class="n">io</span> <span class="o">*</span> <span class="n">nlm</span>
                         <span class="n">i2</span> <span class="o">=</span> <span class="p">(</span><span class="n">io</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">nlm</span>
                         <span class="n">proj_k</span><span class="p">[</span><span class="n">i1</span><span class="p">:</span><span class="n">i2</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_win</span><span class="p">[</span><span class="n">io</span><span class="p">,</span> <span class="n">isp</span><span class="p">,</span> <span class="n">ik</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+                    <span class="c1"># TODO</span>
                     <span class="n">occ_mats</span><span class="p">[</span><span class="n">isp</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">proj_k</span> <span class="o">*</span> <span class="n">occ</span><span class="p">[</span><span class="n">ib1</span><span class="p">:</span><span class="n">ib2</span><span class="p">],</span>
                                                  <span class="n">proj_k</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">weight</span>
-                    <span class="n">overlaps</span><span class="p">[</span><span class="n">isp</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">proj_k</span><span class="p">,</span>
-                                                 <span class="n">proj_k</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">weight</span>
+                    <span class="n">overlaps</span><span class="p">[</span><span class="n">isp</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">proj_k</span><span class="p">,</span><span class="n">proj_k</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">weight</span>
 
-<span class="c1">#        if not symops is None:</span>
-<span class="c1">#            occ_mats = symmetrize_matrix_set(occ_mats, symops, ions, perm_map)</span>
 
         <span class="k">return</span> <span class="n">occ_mats</span><span class="p">,</span> <span class="n">overlaps</span></div>
 
@@ -721,11 +719,13 @@
                                           <span class="n">el_struct</span><span class="o">.</span><span class="n">eigvals</span><span class="p">[:,</span> <span class="n">ib1</span><span class="p">:</span><span class="n">ib2</span><span class="p">,</span> <span class="n">isp</span><span class="p">]):</span>
                 <span class="k">for</span> <span class="n">io</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nion</span><span class="p">):</span>
                     <span class="n">proj_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_win</span><span class="p">[</span><span class="n">io</span><span class="p">,</span> <span class="n">isp</span><span class="p">,</span> <span class="n">ik</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
-                    <span class="n">loc_ham</span><span class="p">[</span><span class="n">isp</span><span class="p">,</span> <span class="n">io</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">proj_k</span> <span class="o">*</span> <span class="p">(</span><span class="n">eigk</span> <span class="o">-</span> <span class="n">el_struct</span><span class="o">.</span><span class="n">efermi</span><span class="p">),</span>
-                                                 <span class="n">proj_k</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">*</span> <span class="n">weight</span>
-
-<span class="c1">#        if not symops is None:</span>
-<span class="c1">#            occ_mats = symmetrize_matrix_set(occ_mats, symops, ions, perm_map)</span>
+                    <span class="c1"># VASP.6.</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nc_flag</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                        <span class="n">loc_ham</span><span class="p">[</span><span class="n">isp</span><span class="p">,</span> <span class="n">io</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">proj_k</span> <span class="o">*</span> <span class="p">(</span><span class="n">eigk</span> <span class="o">-</span> <span class="n">el_struct</span><span class="o">.</span><span class="n">efermi</span><span class="p">),</span>
+                                                     <span class="n">proj_k</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">*</span> <span class="n">weight</span> <span class="o">*</span> <span class="mf">0.5</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">loc_ham</span><span class="p">[</span><span class="n">isp</span><span class="p">,</span> <span class="n">io</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">proj_k</span> <span class="o">*</span> <span class="p">(</span><span class="n">eigk</span> <span class="o">-</span> <span class="n">el_struct</span><span class="o">.</span><span class="n">efermi</span><span class="p">),</span>
+                                                     <span class="n">proj_k</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">*</span> <span class="n">weight</span>
 
         <span class="k">return</span> <span class="n">loc_ham</span></div>
 
