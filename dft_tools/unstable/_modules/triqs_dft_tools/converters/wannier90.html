@@ -408,7 +408,7 @@
 <div class="viewcode-block" id="Wannier90Converter.__init__"><a class="viewcode-back" href="../../../_python_api/triqs_dft_tools.converters.wannier90.Wannier90Converter.__init__.html#triqs_dft_tools.converters.wannier90.Wannier90Converter.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seedname</span><span class="p">,</span> <span class="n">hdf_filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dft_subgrp</span><span class="o">=</span><span class="s1">&#39;dft_input&#39;</span><span class="p">,</span>
                  <span class="n">symmcorr_subgrp</span><span class="o">=</span><span class="s1">&#39;dft_symmcorr_input&#39;</span><span class="p">,</span> <span class="n">misc_subgrp</span><span class="o">=</span><span class="s1">&#39;dft_misc_input&#39;</span><span class="p">,</span>
                  <span class="n">repacking</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">rot_mat_type</span><span class="o">=</span><span class="s1">&#39;hloc_diag&#39;</span><span class="p">,</span> <span class="n">bloch_basis</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">add_lambda</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">w90zero</span><span class="o">=</span><span class="mf">2e-6</span><span class="p">):</span>
+                 <span class="n">w90zero</span><span class="o">=</span><span class="mf">2e-6</span><span class="p">,</span> <span class="n">reorder_orbital_and_spin_vasp5</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialise the class.</span>
 
@@ -432,9 +432,15 @@
 <span class="sd">        bloch_basis : boolean, optional</span>
 <span class="sd">            Should the Hamiltonian be written in Bloch rather than Wannier basis?</span>
 <span class="sd">        add_lambda : list of floats, optional</span>
-<span class="sd">            add local spin-orbit term</span>
+<span class="sd">            Add local spin-orbit term</span>
 <span class="sd">        w90zero : float, optional</span>
-<span class="sd">            threshold on symmetry checks of Hamiltonian and rot_mat</span>
+<span class="sd">            Threshold on symmetry checks of Hamiltonian and rot_mat</span>
+<span class="sd">        reorder_orbital_and_spin_vasp5 : bool, optional</span>
+<span class="sd">            Is false for output from VASP 6 and Quantum Espresso</span>
+<span class="sd">            Reorder orbitals and spins from the VASP 5 convention of first all</span>
+<span class="sd">            orbitals with up and then all orbitals with down to the &quot;usual&quot;</span>
+<span class="sd">            convention of every up orbital immediately being followed by its</span>
+<span class="sd">            corresponding down orbital</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="s1">&#39;Wannier90Converter&#39;</span>
         <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">seedname</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">+</span> \
@@ -456,6 +462,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">rot_mat_type</span> <span class="o">=</span> <span class="n">rot_mat_type</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bloch_basis</span> <span class="o">=</span> <span class="n">bloch_basis</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">add_lambda</span> <span class="o">=</span> <span class="n">add_lambda</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reorder_orbital_and_spin_vasp5</span> <span class="o">=</span> <span class="n">reorder_orbital_and_spin_vasp5</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_lambda</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add_lambda</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;If specifying add_lambda, give three values.&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rot_mat_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;hloc_diag&#39;</span><span class="p">,</span> <span class="s1">&#39;wannier&#39;</span><span class="p">,</span> <span class="s1">&#39;none&#39;</span><span class="p">):</span>
@@ -537,8 +544,8 @@
             <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Overwriting required density with DFT result </span><span class="si">{:.5f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">density_required</span><span class="p">))</span>
             <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;and using the DFT Fermi energy </span><span class="si">{:.5f}</span><span class="s1"> eV</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fermi_energy</span><span class="p">))</span>
 
-        <span class="c1"># Switches from wannier90 order to triqs order</span>
-        <span class="k">if</span> <span class="n">SO</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_lambda</span><span class="p">:</span>
+        <span class="c1"># Switches from Vasp 5 + wannier90 order to triqs order</span>
+        <span class="k">if</span> <span class="n">SO</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_lambda</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">reorder_orbital_and_spin_vasp5</span><span class="p">:</span>
             <span class="n">wannier_hr</span><span class="p">,</span> <span class="n">u_total</span> <span class="o">=</span> <span class="n">reorder_orbital_and_spin</span><span class="p">(</span><span class="n">n_wannier</span><span class="p">,</span> <span class="n">wannier_hr</span><span class="p">,</span> <span class="n">u_total</span><span class="p">)</span>
 
         <span class="c1"># Finds R=0 index</span>
@@ -1279,10 +1286,10 @@
 
 <div class="viewcode-block" id="reorder_orbital_and_spin"><a class="viewcode-back" href="../../../_python_api/triqs_dft_tools.converters.wannier90.reorder_orbital_and_spin.html#triqs_dft_tools.converters.wannier90.reorder_orbital_and_spin">[docs]</a><span class="k">def</span> <span class="nf">reorder_orbital_and_spin</span><span class="p">(</span><span class="n">nwfs</span><span class="p">,</span> <span class="n">wannier_hr</span><span class="p">,</span> <span class="n">u_total</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Changes order from wannier90 (first all up spin wannier orbitals, then all</span>
-<span class="sd">    down spin) to triqs order (every up orbital is followed directly by the</span>
-<span class="sd">    corresponding down orbital). The order between orbital degrees of freedom</span>
-<span class="sd">    is not changed.</span>
+<span class="sd">    Changes order from VASP5 + wannier90 (first all up spin wannier orbitals,</span>
+<span class="sd">    then all down spin) to usual order (every up orbital is followed directly</span>
+<span class="sd">    by the corresponding down orbital). The order between orbital degrees of</span>
+<span class="sd">    freedom is not changed.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -1304,8 +1311,8 @@
 <div class="viewcode-block" id="generate_local_so_matrix_t2g"><a class="viewcode-back" href="../../../_python_api/triqs_dft_tools.converters.wannier90.generate_local_so_matrix_t2g.html#triqs_dft_tools.converters.wannier90.generate_local_so_matrix_t2g">[docs]</a><span class="k">def</span> <span class="nf">generate_local_so_matrix_t2g</span><span class="p">(</span><span class="n">add_lambda</span><span class="p">,</span> <span class="n">n_corr_shells</span><span class="p">,</span> <span class="n">nwfs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Adds local spin-orbit interaction term to the t2g subspace. Orbital order</span>
-<span class="sd">    is assumed to be the triqs order xz_up, xz_dn, yz_up, yz_dn, xy_up, xy_dn</span>
-<span class="sd">    as given after reordering the Wannier input.</span>
+<span class="sd">    is assumed to be the wannier90/triqs order xz_up, xz_dn, yz_up, yz_dn,</span>
+<span class="sd">    xy_up, xy_dn.</span>
 <span class="sd">    Parameters are defined as add_lambda = [lambda_x, lambda_y, lambda_z],</span>
 <span class="sd">    representative of the orbital coupling terms perpendicular to [x, y, z],</span>
 <span class="sd">    i.e., [d_yz, d_xz, d_xy], respectively.</span>
