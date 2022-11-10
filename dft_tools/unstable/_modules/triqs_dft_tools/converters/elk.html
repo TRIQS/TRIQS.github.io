@@ -513,9 +513,9 @@
 
         <span class="c1">#change dim for each shell</span>
         <span class="k">for</span> <span class="n">ish</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_shells</span><span class="p">):</span>
-          <span class="n">shells</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="s1">&#39;dim&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">shells</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="s1">&#39;dim&#39;</span><span class="p">]</span>
+          <span class="n">shells</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="s1">&#39;dim&#39;</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">2</span>
         <span class="k">for</span> <span class="n">ish</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_corr_shells</span><span class="p">):</span>
-          <span class="n">corr_shells</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="s1">&#39;dim&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">corr_shells</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="s1">&#39;dim&#39;</span><span class="p">]</span>
+          <span class="n">corr_shells</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="s1">&#39;dim&#39;</span><span class="p">]</span> <span class="o">*=</span> <span class="mi">2</span>
         <span class="k">for</span> <span class="n">ish</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_inequiv_shells</span><span class="p">):</span>
           <span class="n">dim_reps</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">dim_reps</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dim_reps</span><span class="p">[</span><span class="n">ish</span><span class="p">]))]</span>
         <span class="c1">#Make temporary array of original n_orbitals</span>
@@ -650,7 +650,7 @@
         <span class="p">[</span><span class="n">bz_weights</span><span class="p">,</span><span class="n">vkl</span><span class="p">]</span><span class="o">=</span><span class="n">read_Elk</span><span class="o">.</span><span class="n">read_kpoints</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="c1">#symmetry matrix</span>
         <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Reading GEOMETRY.OUT&quot;</span><span class="p">)</span>
-        <span class="c1">#read in atom posistions, the symmetry operators (in lattice coordinates) and lattice vectors</span>
+        <span class="c1">#read in atom positions, the symmetry operators (in lattice coordinates) and lattice vectors</span>
         <span class="p">[</span><span class="n">ns</span><span class="p">,</span> <span class="n">na</span><span class="p">,</span> <span class="n">atpos</span><span class="p">]</span><span class="o">=</span><span class="n">read_Elk</span><span class="o">.</span><span class="n">read_geometry</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="c1">#Read symmetry files</span>
         <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Reading SYMCRYS.OUT&quot;</span><span class="p">)</span>
@@ -697,10 +697,12 @@
         <span class="n">use_rotations</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="n">rot_mat</span> <span class="o">=</span> <span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">corr_shells</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="s1">&#39;dim&#39;</span><span class="p">],</span> <span class="n">numpy</span><span class="o">.</span><span class="n">complex_</span><span class="p">)</span> <span class="k">for</span> <span class="n">icrsh</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_corr_shells</span><span class="p">)]</span>
         <span class="k">for</span> <span class="n">icrsh</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_corr_shells</span><span class="p">):</span>
-          <span class="c1">#incrsh = corr_to_inequiv[icrsh]</span>
-          <span class="c1">#iatom = corr_shells[incrsh][&#39;atom&#39;]</span>
+          <span class="c1">#return inequivalent index  </span>
+          <span class="n">incrsh</span> <span class="o">=</span> <span class="n">corr_to_inequiv</span><span class="p">[</span><span class="n">icrsh</span><span class="p">]</span>
+          <span class="c1">#return first inequivalent corr_shell index</span>
+          <span class="n">jcrsh</span> <span class="o">=</span> <span class="n">inequiv_to_corr</span><span class="p">[</span><span class="n">incrsh</span><span class="p">]</span>
           <span class="c1">#want to rotate atom to first inequivalent atom in list</span>
-          <span class="n">iatom</span> <span class="o">=</span> <span class="mi">1</span>
+          <span class="n">iatom</span> <span class="o">=</span> <span class="n">corr_shells</span><span class="p">[</span><span class="n">jcrsh</span><span class="p">][</span><span class="s1">&#39;atom&#39;</span><span class="p">]</span>
           <span class="k">for</span> <span class="n">isym</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_symm</span><span class="p">):</span>
             <span class="n">jatom</span><span class="o">=</span><span class="n">perm</span><span class="p">[</span><span class="n">isym</span><span class="p">][</span><span class="n">corr_shells</span><span class="p">[</span><span class="n">icrsh</span><span class="p">][</span><span class="s1">&#39;atom&#39;</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
             <span class="c1">#determinant determines if crystal symmetry matrix has inversion symmetry (=-1)</span>
@@ -836,7 +838,7 @@
         <span class="c1">#put the energy eigenvalues arrays in TRIQS format</span>
         <span class="n">hopping</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sort_dft_eigvalues</span><span class="p">(</span><span class="n">n_spin_blocs</span><span class="p">,</span><span class="n">SO</span><span class="p">,</span><span class="n">n_k</span><span class="p">,</span><span class="n">n_orbitals</span><span class="p">,</span><span class="n">band_window</span><span class="p">,</span><span class="n">entmp</span><span class="p">,</span><span class="n">energy_unit</span><span class="p">)</span>
 
-        <span class="c1"># No partial projectors generate, set to 0:</span>
+        <span class="c1"># No partial projectors generated here, so set to 0:</span>
         <span class="n">n_parproj</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">])</span>
         <span class="n">proj_mat_all</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">])</span>
 
