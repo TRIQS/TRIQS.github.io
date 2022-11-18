@@ -1610,6 +1610,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="n">_hdf5_data_scheme_</span> <span class="o">=</span> <span class="s1">&#39;Gf&#39;</span>
+    <span class="n">__array_priority__</span> <span class="o">=</span> <span class="mi">10000</span> <span class="c1"># Makes sure the operations of this class are applied as priority</span>
 
 <div class="viewcode-block" id="Gf.__init__"><a class="viewcode-back" href="../../../documentation/python_api/triqs.gf.gf.Gf.__init__.html#triqs.gf.backwd_compat.gf_imfreq.Gf.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span> <span class="c1"># enforce keyword only policy </span>
         
@@ -1981,9 +1982,9 @@
         <span class="n">c</span> <span class="o">+=</span> <span class="n">y</span>
         <span class="k">return</span> <span class="n">c</span>
 
-    <span class="c1"># ---------- Multiplication</span>
+    <span class="c1"># ---------- Matrix Multiplication (@)</span>
 
-    <span class="k">def</span> <span class="fm">__imul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">arg</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__imatmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">arg</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">descriptor_base</span><span class="o">.</span><span class="n">is_lazy</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span> <span class="k">return</span> <span class="n">lazy_expressions</span><span class="o">.</span><span class="n">make_lazy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">*</span> <span class="n">arg</span>
         <span class="c1"># If arg is a Gf</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">Gf</span><span class="p">):</span>
@@ -1999,11 +2000,11 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">*=</span> <span class="n">arg</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;argument of in place multiplication must be rank 0 or 2&quot;</span><span class="p">)</span>
-            
+
             <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">assert</span> <span class="n">arg</span><span class="o">.</span><span class="n">target_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;argument of in place multiplication must have rank 0 if self does&quot;</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">*</span> <span class="n">arg</span><span class="o">.</span><span class="n">data</span>
-            
+
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Green&#39;s functions must be of rank 0 or 2 for multiplication&quot;</span><span class="p">)</span>
 
@@ -2032,7 +2033,7 @@
             <span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">beta</span><span class="o">-</span><span class="n">r</span><span class="o">.</span><span class="n">beta</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1.e-15</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">l</span><span class="p">)</span><span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="s2">&quot;Can not multiply two Gf with different mesh&quot;</span>
             <span class="k">return</span> <span class="n">meshes</span><span class="o">.</span><span class="n">MeshImTime</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="s1">&#39;Boson&#39;</span> <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">statistic</span> <span class="o">==</span> <span class="n">r</span><span class="o">.</span><span class="n">statistic</span> <span class="k">else</span> <span class="s1">&#39;Fermion&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">l</span><span class="p">))</span> 
 
-    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__matmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">Gf</span><span class="p">):</span>
             <span class="c1"># make a copy, but special treatment of the mesh in the Imtime case.</span>
             <span class="n">result_mesh</span> <span class="o">=</span> <span class="n">Gf</span><span class="o">.</span><span class="n">_combine_mesh_mul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mesh</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
@@ -2059,7 +2060,7 @@
             <span class="k">assert</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;Invalid operand type for Gf multiplication&quot;</span>
         <span class="k">return</span> <span class="n">c</span>
 
-    <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__rmatmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
         <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
             <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;Multiplication only supported for matrices&quot;</span>
@@ -2070,6 +2071,17 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">assert</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;Invalid operand type for Gf multiplication&quot;</span>
         <span class="k">return</span> <span class="n">c</span>
+
+    <span class="c1"># ---------- Multiplication (with *, for now it&#39;s equivalent to the matrix multiplication)</span>
+    <span class="k">def</span> <span class="fm">__imul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">arg</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__imatmul__</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__matmul__</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__rmatmul__</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
     <span class="c1"># ---------- Division</span>
     <span class="k">def</span> <span class="fm">__itruediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">arg</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[:]</span> <span class="o">/=</span> <span class="n">arg</span>
