@@ -791,7 +791,7 @@ div.rendered_html tbody tr:hover {
 <p>A nice example of two-particle response functions is the two-dimensional square lattice with nearest neighbour hopping <span class="math notranslate nohighlight">\(t\)</span>. Here we will use <code class="docutils literal notranslate"><span class="pre">TRIQS</span></code> and <code class="docutils literal notranslate"><span class="pre">TPRF</span></code> routines to compute the bare generalized susceptibility</p>
 <div class="math notranslate nohighlight">
 \[\chi_{0, abcd}(i \omega_n, \mathbf{k}) ,\]</div>
-<p>and the generalized susecptibility in the random phase approximation (RPA)</p>
+<p>and the generalized susceptibility in the random phase approximation (RPA)</p>
 <div class="math notranslate nohighlight">
 \[\chi^{(RPA)}_{abcd}(i\omega_n, \mathbf{k}) .\]</div>
 <p>In order to do this we first have to setup the tight binding Hamiltonian <span class="math notranslate nohighlight">\(H\)</span>, the single particle dispersion <span class="math notranslate nohighlight">\(\epsilon(\mathbf{k})\)</span>, and the single-particle Green’s function <span class="math notranslate nohighlight">\(G_0(i\omega_n, \mathbf{k})\)</span> of the system.</p>
@@ -841,15 +841,31 @@ Starting on 1 Nodes at : 2019-06-05 17:03:01.636154
 <p>The Fourier transform of the real space hopping to momentum space <span class="math notranslate nohighlight">\(\mathbf{k}\)</span> gives the momentum space dispersion <span class="math notranslate nohighlight">\(\epsilon(\mathbf{k})\)</span> and the alternative representation of <span class="math notranslate nohighlight">\(H\)</span> as</p>
 <div class="math notranslate nohighlight">
 \[H = \sum_{\mathbf{k}}
-\epsilon(\mathbf{k}) c^\dagger_{\sigma \mathbf{k}} c_{\sigma \mathbf{k}}\]</div>
-<p>In order to work with <span class="math notranslate nohighlight">\(\epsilon(\mathbf{k})\)</span> numerically we use a discretized representation with an equidistant mesh in <span class="math notranslate nohighlight">\(k_x\)</span> and <span class="math notranslate nohighlight">\(k_y\)</span> using the <code class="docutils literal notranslate"><span class="pre">TRIQS</span></code> mesh <code class="docutils literal notranslate"><span class="pre">MeshBrZone</span></code></p>
+\epsilon(\mathbf{k}) c^\dagger_{\sigma \mathbf{k}} c_{\sigma \mathbf{k}}.\]</div>
+<p>To visualize <span class="math notranslate nohighlight">\(\epsilon(\mathbf{k})\)</span>, we can plot it along the high-symmetry path <span class="math notranslate nohighlight">\(\Gamma - X - M - \Gamma\)</span> in the Brillouin zone. We use the helper function <code class="docutils literal notranslate"><span class="pre">k_space_path</span></code> to build the <span class="math notranslate nohighlight">\(\mathbf{k}\)</span>-space path and then compute the dispersion on that path using the <code class="docutils literal notranslate"><span class="pre">fourier</span></code> and<code class="docutils literal notranslate"><span class="pre">dispersion</span></code> methods of the <code class="docutils literal notranslate"><span class="pre">TBLattice</span></code> object:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">e_k</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">on_mesh_brillouin_zone</span><span class="p">(</span><span class="n">n_k</span> <span class="o">=</span> <span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">e_k</span><span class="p">)</span>
+<span></span><span class="n">G</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+<span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+<span class="n">n_pts</span> <span class="o">=</span> <span class="mi">100</span>
+
+<span class="n">paths</span> <span class="o">=</span> <span class="p">[(</span><span class="n">G</span><span class="p">,</span> <span class="n">X</span><span class="p">),</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">M</span><span class="p">),</span> <span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">G</span><span class="p">)]</span>
+
+<span class="kn">from</span> <span class="nn">triqs.lattice.utils</span> <span class="kn">import</span> <span class="n">k_space_path</span>
+<span class="n">k_vecs</span><span class="p">,</span> <span class="n">ks</span> <span class="o">=</span> <span class="n">k_space_path</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="n">n_pts</span><span class="p">)</span>
+<span class="n">e_mat</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">fourier</span><span class="p">(</span><span class="n">k_vecs</span><span class="p">)</span>
+<span class="n">e_val</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">dispersion</span><span class="p">(</span><span class="n">k_vecs</span><span class="p">)</span>
+<span class="n">eps_k</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;k&#39;</span><span class="p">:</span> <span class="n">ks</span><span class="p">,</span> <span class="s1">&#39;K&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(([</span><span class="mi">0</span><span class="p">],</span><span class="n">ks</span><span class="p">[</span><span class="n">n_pts</span><span class="o">-</span><span class="mi">1</span><span class="p">::</span><span class="n">n_pts</span><span class="p">])),</span> <span class="s1">&#39;eval&#39;</span><span class="p">:</span> <span class="n">e_val</span><span class="p">,</span> <span class="s1">&#39;emat&#39;</span> <span class="p">:</span> <span class="n">e_mat</span><span class="p">}</span>
+
+<span class="k">for</span> <span class="n">band</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">eps_k</span><span class="p">[</span><span class="s1">&#39;eval&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">eps_k</span><span class="p">[</span><span class="s1">&#39;k&#39;</span><span class="p">],</span> <span class="n">eps_k</span><span class="p">[</span><span class="s1">&#39;eval&#39;</span><span class="p">][:,</span><span class="n">band</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;C0&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">eps_k</span><span class="p">[</span><span class="s1">&#39;K&#39;</span><span class="p">],</span> <span class="p">[</span><span class="sa">r</span><span class="s1">&#39;$\Gamma$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$X$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$M$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$\Gamma$&#39;</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\epsilon(\mathbf</span><span class="si">{k}</span><span class="s1">)$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -857,73 +873,16 @@ Starting on 1 Nodes at : 2019-06-05 17:03:01.636154
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<div class="highlight"><pre>
-Green Function  with mesh Brillouin Zone Mesh with linear dimensions (32 32 1)
- -- units =
-[[0.19635,0,0]
- [0,0.19635,0]
- [0,0,6.28319]]
- -- periodization_matrix =
-[[32,0,0]
- [0,32,0]
- [0,0,1]]
- -- Domain: Brillouin Zone with dimension 2, reciprocal matrix
-[[6.28319,0,0]
- [0,6.28319,0]
- [0,0,6.28319]] and target_rank 2:
-
-</pre></div></div>
+<img alt="../_images/user_guide_Square_lattice_susceptibility_5_0.svg" src="../_images/user_guide_Square_lattice_susceptibility_5_0.svg" /></div>
 </div>
-<p>To visualize <span class="math notranslate nohighlight">\(\epsilon(\mathbf{k})\)</span> we can plot it along the high-symmetry path <span class="math notranslate nohighlight">\(\Gamma - X - M - \Gamma\)</span> in the Brillouin zone.</p>
-<p>To build the <span class="math notranslate nohighlight">\(\mathbf{k}\)</span>-space path we use the helper function <code class="docutils literal notranslate"><span class="pre">triqs_tprf.lattice_utils.k_space_path</span></code></p>
-<div class="nbinput nblast docutils container">
+<p>From this we can see that the bandwidth is <span class="math notranslate nohighlight">\(4t\)</span> (with <span class="math notranslate nohighlight">\(t=1\)</span>) and that we have a Van Hove singularity at the <span class="math notranslate nohighlight">\(M\)</span> point.To visualize the dispersion in the <span class="math notranslate nohighlight">\((k_x, k_y)\)</span> plane and the half-filled fermi surface where <span class="math notranslate nohighlight">\(\epsilon(\mathbf{k}) = 0\)</span> we interpolate <code class="docutils literal notranslate"><span class="pre">e_k</span></code> on a two-dimensional grid and use <code class="docutils literal notranslate"><span class="pre">matplotlib.pyplot.contour</span></code> to plot the zero contour.</p>
+<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">G</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span> <span class="o">*</span> <span class="mf">2.</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span>
-<span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span> <span class="o">*</span> <span class="mf">2.</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span>
-<span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span> <span class="o">*</span> <span class="mf">2.</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span>
-
-<span class="n">paths</span> <span class="o">=</span> <span class="p">[(</span><span class="n">G</span><span class="p">,</span> <span class="n">X</span><span class="p">),</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">M</span><span class="p">),</span> <span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">G</span><span class="p">)]</span>
-
-<span class="kn">from</span> <span class="nn">triqs_tprf.lattice_utils</span> <span class="kn">import</span> <span class="n">k_space_path</span>
-<span class="n">k_vecs</span><span class="p">,</span> <span class="n">k_plot</span><span class="p">,</span> <span class="n">K_plot</span> <span class="o">=</span> <span class="n">k_space_path</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span>
-<span class="n">kx</span><span class="p">,</span> <span class="n">ky</span><span class="p">,</span> <span class="n">kz</span> <span class="o">=</span> <span class="n">k_vecs</span><span class="o">.</span><span class="n">T</span>
-</pre></div>
-</div>
-</div>
-<p>and to evaluate <span class="math notranslate nohighlight">\(\epsilon(\mathbf{k})\)</span> on the path we use a lambda function and the call operator of <code class="docutils literal notranslate"><span class="pre">e_k([k_x,</span> <span class="pre">k_y,</span> <span class="pre">k_z])</span></code> which interpolates on the discretized mesh.</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">e_k_interp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span>
-    <span class="k">lambda</span> <span class="n">kx</span><span class="p">,</span> <span class="n">ky</span><span class="p">,</span> <span class="n">kz</span> <span class="p">:</span> <span class="n">e_k</span><span class="p">([</span><span class="n">kx</span><span class="p">,</span> <span class="n">ky</span><span class="p">,</span> <span class="n">kz</span><span class="p">])[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
-<span class="n">e_k_interp</span> <span class="o">=</span> <span class="n">e_k_interp</span><span class="p">(</span><span class="n">kx</span><span class="p">,</span> <span class="n">ky</span><span class="p">,</span> <span class="n">kz</span><span class="p">)</span>
-
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">k_plot</span><span class="p">,</span> <span class="n">e_k_interp</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">()</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">K_plot</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">()</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;$\Gamma$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$X$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$M$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$\Gamma$&#39;</span><span class="p">])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\epsilon(\mathbf</span><span class="si">{k}</span><span class="s1">)$&#39;</span><span class="p">);</span> <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/user_guide_Square_lattice_susceptibility_9_0.svg" src="../_images/user_guide_Square_lattice_susceptibility_9_0.svg" /></div>
-</div>
-<p>From this we can see that the bandwidth is <span class="math notranslate nohighlight">\(4t\)</span> (with <span class="math notranslate nohighlight">\(t=1\)</span>) and that we have a Van Hove singularity at the <span class="math notranslate nohighlight">\(M\)</span> point.</p>
-<p>To visualize the dispersion in the <span class="math notranslate nohighlight">\((k_x, k_y)\)</span> plane and the half-filled fermi surface where <span class="math notranslate nohighlight">\(\epsilon(\mathbf{k}) = 0\)</span> we interpolate <code class="docutils literal notranslate"><span class="pre">e_k</span></code> on a two-dimensional grid and use <code class="docutils literal notranslate"><span class="pre">matplotlib.pyplot.contour</span></code> to plot the zero contour.</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span> <span class="o">*</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+<span></span><span class="n">e_k</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">fourier</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">get_kmesh</span><span class="p">(</span><span class="n">n_k</span><span class="o">=</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+<span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span> <span class="o">*</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
 <span class="n">Kx</span><span class="p">,</span> <span class="n">Ky</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
 
 <span class="n">e_k_interp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="k">lambda</span> <span class="n">kx</span><span class="p">,</span> <span class="n">ky</span> <span class="p">:</span> <span class="n">e_k</span><span class="p">([</span><span class="n">kx</span><span class="p">,</span> <span class="n">ky</span><span class="p">,</span> <span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
@@ -943,7 +902,7 @@ Green Function  with mesh Brillouin Zone Mesh with linear dimensions (32 32 1)
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/user_guide_Square_lattice_susceptibility_12_0.svg" src="../_images/user_guide_Square_lattice_susceptibility_12_0.svg" /></div>
+<img alt="../_images/user_guide_Square_lattice_susceptibility_7_0.svg" src="../_images/user_guide_Square_lattice_susceptibility_7_0.svg" /></div>
 </div>
 <p>I.e. the Fermi surface has a diamond shape with perfect nesting of the fermi surface for the momentum transfer vectors <span class="math notranslate nohighlight">\(\mathbf{k}=\pm(\pi, \pi)\)</span> and <span class="math notranslate nohighlight">\(\mathbf{k}=\pm(\pi, -\pi)\)</span>.</p>
 </div>
@@ -964,14 +923,17 @@ Green Function  with mesh Brillouin Zone Mesh with linear dimensions (32 32 1)
  \frac{ f(\epsilon(\mathbf{k})) - f(\epsilon(\mathbf{k}+\mathbf{q})) }
       {i\omega_n + \epsilon(\mathbf{k} + \mathbf{q}) - \epsilon(\mathbf{k}) }\]</div>
 <p>where <span class="math notranslate nohighlight">\(f(\cdot)\)</span> is the Fermi distribution function.</p>
-<p>For reference this formula is implemented in <code class="docutils literal notranslate"><span class="pre">TPRF</span></code>, for details on the generalization to multiorbital and accidentally degenerate dispersion see the documentation for <code class="docutils literal notranslate"><span class="pre">lindhard_chi00_wk</span></code>.</p>
+<p>For reference this formula is implemented in <code class="docutils literal notranslate"><span class="pre">TPRF</span></code>, for details on the generalization to multiorbital and accidentally degenerate dispersion see the documentation for <code class="docutils literal notranslate"><span class="pre">lindhard_chi00</span></code>.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">lindhard_chi00_wk</span>
-<span class="n">chi00_wk_analytic</span> <span class="o">=</span> <span class="n">lindhard_chi00_wk</span><span class="p">(</span><span class="n">e_k</span><span class="o">=</span><span class="n">e_k</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">nw</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span></span><span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">lindhard_chi00</span>
+<span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">MeshImFreq</span><span class="p">,</span> <span class="n">Idx</span>
+
+<span class="n">wmesh_lind</span> <span class="o">=</span> <span class="n">MeshImFreq</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">S</span><span class="o">=</span><span class="s1">&#39;Boson&#39;</span><span class="p">,</span> <span class="n">n_max</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">chi00_wk_analytic</span> <span class="o">=</span> <span class="n">lindhard_chi00</span><span class="p">(</span><span class="n">e_k</span><span class="o">=</span><span class="n">e_k</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="n">wmesh_lind</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -985,12 +947,11 @@ Green Function  with mesh Brillouin Zone Mesh with linear dimensions (32 32 1)
 \[G(i\omega_n, \mathbf{k})  =
 \Big[ i\omega_n + \mu - \epsilon(\mathbf{k}) \Big]^{-1}\]</div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">MeshImFreq</span><span class="p">,</span> <span class="n">Idx</span>
-<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">lattice_dyson_g0_wk</span>
+<span></span><span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">lattice_dyson_g0_wk</span>
 
 <span class="n">wmesh</span> <span class="o">=</span> <span class="n">MeshImFreq</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">S</span><span class="o">=</span><span class="s1">&#39;Fermion&#39;</span><span class="p">,</span> <span class="n">n_max</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
 <span class="n">g0_wk</span> <span class="o">=</span> <span class="n">lattice_dyson_g0_wk</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">e_k</span><span class="o">=</span><span class="n">e_k</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="n">wmesh</span><span class="p">)</span>
@@ -999,7 +960,7 @@ Green Function  with mesh Brillouin Zone Mesh with linear dimensions (32 32 1)
 </div>
 <p>And then perform the bubble product using the dedictated function</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1039,7 +1000,7 @@ Approx. Memory Utilization: 0.01 GB
 <div class="math notranslate nohighlight">
 \[\chi_{S_z, S_z} = \text{Tr}[ S_z \, \chi \, S_z ]\]</div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1055,7 +1016,7 @@ Approx. Memory Utilization: 0.01 GB
 </div>
 <p>To look at the structure of <span class="math notranslate nohighlight">\(\chi_0\)</span> we can plot it along the high symmetry path in the Brillouin zone (using the call operator of a triqs Green’s function on <code class="docutils literal notranslate"><span class="pre">MeshBrZone</span></code>).</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1071,29 +1032,27 @@ Approx. Memory Utilization: 0.01 GB
 </pre></div>
 </div>
 </div>
-<p>Whit some additional plot helper functions we can now look at the spin-spin response</p>
+<p>With some additional plot helper functions we can now look at the spin-spin response</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="k">def</span> <span class="nf">plot_chi_1D</span><span class="p">(</span><span class="n">chi</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
     <span class="n">chi_SzSz</span> <span class="o">=</span> <span class="n">chi_SzSz_contraction</span><span class="p">(</span><span class="n">chi</span><span class="p">)</span>
-    <span class="n">chi_interp</span> <span class="o">=</span> <span class="n">interpolate_chi</span><span class="p">(</span><span class="n">chi_SzSz</span><span class="p">,</span> <span class="n">k_vecs</span><span class="p">)</span>
+    <span class="n">chi_interp</span> <span class="o">=</span> <span class="n">interpolate_chi</span><span class="p">(</span><span class="n">chi_SzSz</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">k_vecs</span><span class="p">)</span>
 
-    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">k_plot</span><span class="p">,</span> <span class="n">chi_interp</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">chi_interp</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">)</span>
 
     <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">()</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">K_plot</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">([</span><span class="n">K_plot</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">K_plot</span><span class="o">.</span><span class="n">max</span><span class="p">()])</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">axes</span><span class="p">()</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;$\Gamma$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$X$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$M$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$\Gamma$&#39;</span><span class="p">])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">ticks</span><span class="o">=</span><span class="n">eps_k</span><span class="p">[</span><span class="s1">&#39;K&#39;</span><span class="p">],</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="sa">r</span><span class="s1">&#39;$\Gamma$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$X$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$M$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$\Gamma$&#39;</span><span class="p">])</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Spin-response $\chi_{S_z S_z}(\mathbf</span><span class="si">{q}</span><span class="s1">, \omega=0)$&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1105,10 +1064,10 @@ Approx. Memory Utilization: 0.01 GB
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/user_guide_Square_lattice_susceptibility_26_0.svg" src="../_images/user_guide_Square_lattice_susceptibility_26_0.svg" /></div>
+<img alt="../_images/user_guide_Square_lattice_susceptibility_21_0.svg" src="../_images/user_guide_Square_lattice_susceptibility_21_0.svg" /></div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1133,7 +1092,7 @@ Approx. Memory Utilization: 0.01 GB
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1147,7 +1106,7 @@ Approx. Memory Utilization: 0.01 GB
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/user_guide_Square_lattice_susceptibility_28_0.svg" src="../_images/user_guide_Square_lattice_susceptibility_28_0.svg" /></div>
+<img alt="../_images/user_guide_Square_lattice_susceptibility_23_0.svg" src="../_images/user_guide_Square_lattice_susceptibility_23_0.svg" /></div>
 </div>
 </div>
 <div class="section" id="Random-phase-approximation-(RPA)">
@@ -1159,10 +1118,11 @@ Approx. Memory Utilization: 0.01 GB
 <p>The locality and frequency independence simplifies the BSE which formally is solved as</p>
 <div class="math notranslate nohighlight">
 \[\chi = [ 1 - \chi_0 V ]^{-1} \, \chi_0\]</div>
-<p>in <code class="docutils literal notranslate"><span class="pre">TPRF</span></code> there is the dedicated routine for RPA (<code class="docutils literal notranslate"><span class="pre">triqs_tprf.lattice.solve_rpa_PH</span></code>) that can treat the general multiorbital case.</p>
-<p>For generality we take the nessecary steps to obtain the four index tensor <span class="math notranslate nohighlight">\(V\)</span> from the operator expression of the Hubbard interaction.</p>
+<p>.</p>
+<p>In <code class="docutils literal notranslate"><span class="pre">TPRF</span></code>, there is the dedicated routine for RPA (<code class="docutils literal notranslate"><span class="pre">triqs_tprf.lattice.solve_rpa_PH</span></code>) that can treat the general multiorbital case.</p>
+<p>For generality, we take the nessecary steps to obtain the four index tensor <span class="math notranslate nohighlight">\(V\)</span> from the operator expression of the Hubbard interaction.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1170,6 +1130,7 @@ Approx. Memory Utilization: 0.01 GB
 <span class="n">H_int</span> <span class="o">=</span> <span class="n">n</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">fundamental_operators</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">c</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
 
+<span class="c1"># pyed is an additional requirement</span>
 <span class="kn">from</span> <span class="nn">pyed.OperatorUtils</span> <span class="kn">import</span> <span class="n">quartic_tensor_from_operator</span>
 <span class="kn">from</span> <span class="nn">pyed.OperatorUtils</span> <span class="kn">import</span> <span class="n">quartic_permutation_symmetrize</span>
 <span class="n">V_int_abcd</span> <span class="o">=</span> <span class="n">quartic_tensor_from_operator</span><span class="p">(</span><span class="n">H_int</span><span class="p">,</span> <span class="n">fundamental_operators</span><span class="p">)</span>
@@ -1184,7 +1145,7 @@ Approx. Memory Utilization: 0.01 GB
 </div>
 <p>Now we can tune the interaction strength and compute the corresponding RPA generalized susceptibility.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1199,7 +1160,7 @@ Approx. Memory Utilization: 0.01 GB
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1216,11 +1177,11 @@ Approx. Memory Utilization: 0.01 GB
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/user_guide_Square_lattice_susceptibility_33_0.svg" src="../_images/user_guide_Square_lattice_susceptibility_33_0.svg" /></div>
+<img alt="../_images/user_guide_Square_lattice_susceptibility_28_0.svg" src="../_images/user_guide_Square_lattice_susceptibility_28_0.svg" /></div>
 </div>
 <p>We see that the system has an instability at the <span class="math notranslate nohighlight">\(M\)</span> point</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1243,7 +1204,7 @@ Approx. Memory Utilization: 0.01 GB
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/user_guide_Square_lattice_susceptibility_35_0.svg" src="../_images/user_guide_Square_lattice_susceptibility_35_0.svg" /></div>
+<img alt="../_images/user_guide_Square_lattice_susceptibility_30_0.svg" src="../_images/user_guide_Square_lattice_susceptibility_30_0.svg" /></div>
 </div>
 </div>
 </div>

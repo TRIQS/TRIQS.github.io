@@ -30,7 +30,7 @@
     "\n",
     "$$\\chi_{0, abcd}(i \\omega_n, \\mathbf{k}) ,$$ \n",
     "\n",
-    "and the generalized susecptibility in the random phase approximation (RPA) \n",
+    "and the generalized susceptibility in the random phase approximation (RPA) \n",
     "\n",
     "$$\\chi^{(RPA)}_{abcd}(i\\omega_n, \\mathbf{k}) .$$\n",
     "\n",
@@ -97,79 +97,15 @@
     "\n",
     "$$\n",
     "H = \\sum_{\\mathbf{k}} \n",
-    "\\epsilon(\\mathbf{k}) c^\\dagger_{\\sigma \\mathbf{k}} c_{\\sigma \\mathbf{k}}\n",
+    "\\epsilon(\\mathbf{k}) c^\\dagger_{\\sigma \\mathbf{k}} c_{\\sigma \\mathbf{k}}.\n",
     "$$\n",
     "\n",
-    "In order to work with $\\epsilon(\\mathbf{k})$ numerically we use a discretized representation with an equidistant mesh in $k_x$ and $k_y$ using the `TRIQS` mesh `MeshBrZone`"
+    "To visualize $\\epsilon(\\mathbf{k})$, we can plot it along the high-symmetry path $\\Gamma - X - M - \\Gamma$ in the Brillouin zone. We use the helper function `k_space_path` to build the $\\mathbf{k}$-space path and then compute the dispersion on that path using the `fourier` and`dispersion` methods of the `TBLattice` object:"
    ]
   },
   {
    "cell_type": "code",
    "execution_count": 3,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Green Function  with mesh Brillouin Zone Mesh with linear dimensions (32 32 1)\n",
-      " -- units = \n",
-      "[[0.19635,0,0]\n",
-      " [0,0.19635,0]\n",
-      " [0,0,6.28319]]\n",
-      " -- periodization_matrix = \n",
-      "[[32,0,0]\n",
-      " [0,32,0]\n",
-      " [0,0,1]]\n",
-      " -- Domain: Brillouin Zone with dimension 2, reciprocal matrix \n",
-      "[[6.28319,0,0]\n",
-      " [0,6.28319,0]\n",
-      " [0,0,6.28319]] and target_rank 2: \n",
-      "\n"
-     ]
-    }
-   ],
-   "source": [
-    "e_k = H.on_mesh_brillouin_zone(n_k = (32, 32, 1))\n",
-    "print(e_k)"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "To visualize $\\epsilon(\\mathbf{k})$ we can plot it along the high-symmetry path $\\Gamma - X - M - \\Gamma$ in the Brillouin zone.\n",
-    "\n",
-    "To build the $\\mathbf{k}$-space path we use the helper function `triqs_tprf.lattice_utils.k_space_path`"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 4,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "G = np.array([0.0, 0.0, 0.0]) * 2.*np.pi\n",
-    "X = np.array([0.5, 0.5, 0.0]) * 2.*np.pi\n",
-    "M = np.array([0.5, 0.0, 0.0]) * 2.*np.pi\n",
-    "\n",
-    "paths = [(G, X), (X, M), (M, G)]\n",
-    "\n",
-    "from triqs_tprf.lattice_utils import k_space_path\n",
-    "k_vecs, k_plot, K_plot = k_space_path(paths)\n",
-    "kx, ky, kz = k_vecs.T"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
-    "and to evaluate $\\epsilon(\\mathbf{k})$ on the path we use a lambda function and the call operator of `e_k([k_x, k_y, k_z])` which interpolates on the discretized mesh."
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 5,
    "metadata": {},
    "outputs": [
     {
@@ -802,33 +738,37 @@
     }
    ],
    "source": [
-    "e_k_interp = np.vectorize(\n",
-    "    lambda kx, ky, kz : e_k([kx, ky, kz])[0, 0].real)    \n",
-    "e_k_interp = e_k_interp(kx, ky, kz)\n",
+    "G = np.array([0.0, 0.0, 0.0])\n",
+    "X = np.array([0.5, 0.5, 0.0])\n",
+    "M = np.array([0.5, 0.0, 0.0])\n",
+    "n_pts = 100\n",
     "\n",
-    "plt.plot(k_plot, e_k_interp, '-')\n",
-    "plt.axes().set_xticks(K_plot)\n",
-    "plt.axes().set_xticklabels([r'$\\Gamma$',r'$X$',r'$M$',r'$\\Gamma$'])\n",
-    "plt.ylabel(r'$\\epsilon(\\mathbf{k})$'); plt.grid()"
+    "paths = [(G, X), (X, M), (M, G)]\n",
+    "\n",
+    "from triqs.lattice.utils import k_space_path\n",
+    "k_vecs, ks = k_space_path(paths, num=n_pts)\n",
+    "e_mat = H.fourier(k_vecs)\n",
+    "e_val = H.dispersion(k_vecs)\n",
+    "eps_k = {'k': ks, 'K': np.concatenate(([0],ks[n_pts-1::n_pts])), 'eval': e_val, 'emat' : e_mat}\n",
+    "\n",
+    "for band in range(eps_k['eval'].shape[1]):\n",
+    "    plt.plot(eps_k['k'], eps_k['eval'][:,band].real, '-', color='C0')\n",
+    "plt.xticks(eps_k['K'], [r'$\\Gamma$',r'$X$',r'$M$',r'$\\Gamma$'])\n",
+    "plt.ylabel(r'$\\epsilon(\\mathbf{k})$')\n",
+    "plt.grid(True)"
    ]
   },
   {
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "From this we can see that the bandwidth is $4t$ (with $t=1$) and that we have a Van Hove singularity at the $M$ point."
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "metadata": {},
-   "source": [
+    "From this we can see that the bandwidth is $4t$ (with $t=1$) and that we have a Van Hove singularity at the $M$ point.",
     "To visualize the dispersion in the $(k_x, k_y)$ plane and the half-filled fermi surface where $\\epsilon(\\mathbf{k}) = 0$ we interpolate `e_k` on a two-dimensional grid and use `matplotlib.pyplot.contour` to plot the zero contour."
    ]
   },
   {
    "cell_type": "code",
-   "execution_count": 6,
+   "execution_count": 4,
    "metadata": {},
    "outputs": [
     {
@@ -1479,6 +1419,7 @@
     }
    ],
    "source": [
+    "e_k = H.fourier(H.get_kmesh(n_k=(32, 32, 1)))\n",
     "k = np.linspace(-0.5, 0.5, num=200) * 2. * np.pi\n",
     "Kx, Ky = np.meshgrid(k, k)\n",
     "\n",
@@ -1533,17 +1474,20 @@
     "\n",
     "where $f(\\cdot)$ is the Fermi distribution function. \n",
     "\n",
-    "For reference this formula is implemented in `TPRF`, for details on the generalization to multiorbital and accidentally degenerate dispersion see the documentation for `lindhard_chi00_wk`."
+    "For reference this formula is implemented in `TPRF`, for details on the generalization to multiorbital and accidentally degenerate dispersion see the documentation for `lindhard_chi00`."
    ]
   },
   {
    "cell_type": "code",
-   "execution_count": 7,
+   "execution_count": 5,
    "metadata": {},
    "outputs": [],
    "source": [
-    "from triqs_tprf.lattice import lindhard_chi00_wk\n",
-    "chi00_wk_analytic = lindhard_chi00_wk(e_k=e_k, beta=5.0, mu=0., nw=1)"
+    "from triqs_tprf.lattice import lindhard_chi00\n",
+    "from triqs.gf import MeshImFreq, Idx\n",
+    "\n",
+    "wmesh_lind = MeshImFreq(beta=5.0, S='Boson', n_max=1)\n",
+    "chi00_wk_analytic = lindhard_chi00(e_k=e_k, mesh=wmesh_lind, mu=0.)"
    ]
   },
   {
@@ -1568,11 +1512,10 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 8,
+   "execution_count": 6,
    "metadata": {},
    "outputs": [],
    "source": [
-    "from triqs.gf import MeshImFreq, Idx\n",
     "from triqs_tprf.lattice import lattice_dyson_g0_wk\n",
     "\n",
     "wmesh = MeshImFreq(beta=5.0, S='Fermion', n_max=30)\n",
@@ -1588,7 +1531,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 9,
+   "execution_count": 7,
    "metadata": {
     "scrolled": true
    },
@@ -1637,7 +1580,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 10,
+   "execution_count": 8,
    "metadata": {},
    "outputs": [],
    "source": [
@@ -1659,7 +1602,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 11,
+   "execution_count": 9,
    "metadata": {},
    "outputs": [],
    "source": [
@@ -1678,32 +1621,30 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "Whit some additional plot helper functions we can now look at the spin-spin response"
+    "With some additional plot helper functions we can now look at the spin-spin response"
    ]
   },
   {
    "cell_type": "code",
-   "execution_count": 12,
+   "execution_count": 10,
    "metadata": {},
    "outputs": [],
    "source": [
     "def plot_chi_1D(chi, label=None):\n",
     "\n",
     "    chi_SzSz = chi_SzSz_contraction(chi)\n",
-    "    chi_interp = interpolate_chi(chi_SzSz, k_vecs)\n",
+    "    chi_interp = interpolate_chi(chi_SzSz, 2*np.pi*k_vecs)\n",
     "\n",
-    "    plt.plot(k_plot, chi_interp.real, label=label)\n",
+    "    plt.plot(ks, chi_interp.real, label=label)\n",
     "    \n",
     "    plt.grid()\n",
-    "    plt.axes().set_xticks(K_plot)\n",
-    "    plt.xlim([K_plot.min(), K_plot.max()])\n",
-    "    plt.axes().set_xticklabels([r'$\\Gamma$',r'$X$',r'$M$',r'$\\Gamma$'])    \n",
+    "    plt.xticks(ticks=eps_k['K'], labels=[r'$\\Gamma$',r'$X$',r'$M$',r'$\\Gamma$'])\n",
     "    plt.title(r'Spin-response $\\chi_{S_z S_z}(\\mathbf{q}, \\omega=0)$')"
    ]
   },
   {
    "cell_type": "code",
-   "execution_count": 13,
+   "execution_count": 11,
    "metadata": {},
    "outputs": [
     {
@@ -2737,7 +2678,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 14,
+   "execution_count": 12,
    "metadata": {},
    "outputs": [],
    "source": [
@@ -2762,7 +2703,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 15,
+   "execution_count": 13,
    "metadata": {},
    "outputs": [
     {
@@ -3757,16 +3698,16 @@
     "\n",
     "The locality and frequency independence simplifies the BSE which formally is solved as\n",
     "\n",
-    "$$ \\chi = [ 1 - \\chi_0 V ]^{-1} \\, \\chi_0 $$\n",
+    "$$ \\chi = [ 1 - \\chi_0 V ]^{-1} \\, \\chi_0 $$.\n",
     "\n",
-    "in `TPRF` there is the dedicated routine for RPA (`triqs_tprf.lattice.solve_rpa_PH`) that can treat the general multiorbital case.\n",
+    "In `TPRF`, there is the dedicated routine for RPA (`triqs_tprf.lattice.solve_rpa_PH`) that can treat the general multiorbital case.\n",
     "\n",
-    "For generality we take the nessecary steps to obtain the four index tensor $V$ from the operator expression of the Hubbard interaction."
+    "For generality, we take the nessecary steps to obtain the four index tensor $V$ from the operator expression of the Hubbard interaction."
    ]
   },
   {
    "cell_type": "code",
-   "execution_count": 16,
+   "execution_count": 14,
    "metadata": {},
    "outputs": [],
    "source": [
@@ -3774,6 +3715,7 @@
     "H_int = n(0, 0) * n(0, 1)\n",
     "fundamental_operators = [c(0, 0), c(0, 1)]\n",
     "\n",
+    "# pyed is an additional requirement\n",
     "from pyed.OperatorUtils import quartic_tensor_from_operator\n",
     "from pyed.OperatorUtils import quartic_permutation_symmetrize\n",
     "V_int_abcd = quartic_tensor_from_operator(H_int, fundamental_operators)\n",
@@ -3794,7 +3736,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 17,
+   "execution_count": 15,
    "metadata": {},
    "outputs": [],
    "source": [
@@ -3809,7 +3751,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 18,
+   "execution_count": 16,
    "metadata": {},
    "outputs": [
     {
@@ -5237,7 +5179,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 19,
+   "execution_count": 17,
    "metadata": {},
    "outputs": [
     {
