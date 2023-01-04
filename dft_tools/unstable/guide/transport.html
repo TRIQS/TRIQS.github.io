@@ -158,8 +158,8 @@
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Transport calculations</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#formalism">Formalism</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#wien2k-optics-package">Wien2k optics package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#using-the-transport-code">Using the transport code</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#example">Example</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#references">References</a></li>
 </ul>
 </li>
@@ -407,6 +407,9 @@ is given <a class="reference internal" href="../basicnotions/first.html#ac"><spa
 it is crucial to perform the analytic continuation in such a way that the real-frequency self energy
 is accurate around the Fermi energy as low-energy features strongly influence the final results.</p>
 </div>
+<p>Below will describe the prerequisites from the different DFT codes.</p>
+<div class="section" id="prequisites-from-wien2k">
+<h3>Prequisites from Wien2k<a class="headerlink" href="#prequisites-from-wien2k" title="Permalink to this headline"></a></h3>
 <dl class="docutils">
 <dt>Besides the self energy the Wien2k files read by the transport converter (<code class="xref py py-meth docutils literal notranslate"><span class="pre">convert_transport_input</span></code>) are:</dt><dd><ul class="simple">
 <li><code class="file docutils literal notranslate"><span class="pre">.struct</span></code>: The lattice constants specified in the struct file are used to calculate the unit cell volume.</li>
@@ -418,9 +421,21 @@ window for each k-point. How to use the optics package is described below.</li>
 </ul>
 </dd>
 </dl>
+<p>These Wien2k files are read and the relevant information is stored in the hdf5 archive by using the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs_dft_tools.converters.wien2k</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">triqs_dft_tools.sumk_dft_tools</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">Converter</span> <span class="o">=</span> <span class="n">Wien2kConverter</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;case&#39;</span><span class="p">,</span> <span class="n">repacking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">Converter</span><span class="o">.</span><span class="n">convert_transport_input</span><span class="p">()</span>
+
+<span class="n">SK</span> <span class="o">=</span> <span class="n">SumkDFTTools</span><span class="p">(</span><span class="n">hdf_file</span><span class="o">=</span><span class="s1">&#39;case.h5&#39;</span><span class="p">,</span> <span class="n">use_dft_blocks</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The converter <code class="xref py py-meth docutils literal notranslate"><span class="pre">convert_transport_input</span></code>
+reads the required data of the Wien2k output and stores it in the <cite>dft_transp_input</cite> subgroup of your hdf file.</p>
 </div>
 <div class="section" id="wien2k-optics-package">
-<h2>Wien2k optics package<a class="headerlink" href="#wien2k-optics-package" title="Permalink to this headline"></a></h2>
+<h3>Wien2k optics package<a class="headerlink" href="#wien2k-optics-package" title="Permalink to this headline"></a></h3>
 <dl class="docutils">
 <dt>The basics steps to calculate the matrix elements of the momentum operator with the Wien2k optics package are:</dt><dd><ol class="arabic simple">
 <li>Perform a standard Wien2k calculation for your material.</li>
@@ -438,21 +453,35 @@ of those two windows. However, keep in mind that the optics energy window has to
 You can read off the Fermi energy from the <code class="file docutils literal notranslate"><span class="pre">case.scf2</span></code> file. Please do not set the optional parameter NBvalMAX in <code class="file docutils literal notranslate"><span class="pre">case.inop</span></code>.
 Furthermore it is necessary to set line 6 to “ON” and put a “1” in the following line to enable the printing of the matrix elements to <code class="file docutils literal notranslate"><span class="pre">case.pmat</span></code>.</p>
 </div>
-<div class="section" id="using-the-transport-code">
-<h2>Using the transport code<a class="headerlink" href="#using-the-transport-code" title="Permalink to this headline"></a></h2>
-<p>First we have to read the Wien2k files and store the relevant information in the hdf5 archive:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs_dft_tools.converters.wien2k</span> <span class="kn">import</span> <span class="o">*</span>
+<div class="section" id="prequisites-from-elk">
+<h3>Prequisites from Elk<a class="headerlink" href="#prequisites-from-elk" title="Permalink to this headline"></a></h3>
+<dl class="docutils">
+<dt>The Elk transport converter (<code class="xref py py-meth docutils literal notranslate"><span class="pre">convert_transport_input</span></code>) reads in the following files:</dt><dd><ul class="simple">
+<li><cite>LATTICE.OUT</cite>: Real and reciprocal lattice structure and cell volumes.</li>
+<li><cite>SYMCRYS.OUT</cite>: Crystal symmetries.</li>
+<li><cite>PMAT.OUT</cite>: Fortran binary containing the velocity matrix elements.</li>
+<li><code class="file docutils literal notranslate"><span class="pre">.h5</span></code>: The hdf5 archive has to be present and should contain the dft_input subgroup. Otherwise <code class="xref py py-meth docutils literal notranslate"><span class="pre">convert_dft_input</span></code> needs to be called before <code class="xref py py-meth docutils literal notranslate"><span class="pre">convert_transport_input</span></code>. It is recommended to call <code class="xref py py-meth docutils literal notranslate"><span class="pre">convert_dft_input</span></code> before <code class="xref py py-meth docutils literal notranslate"><span class="pre">convert_transport_input</span></code>.</li>
+</ul>
+</dd>
+</dl>
+<p>Except for <cite>PMAT.OUT</cite>, the other files are standard outputs from Elk’s groundstate calculation and are used in <code class="xref py py-meth docutils literal notranslate"><span class="pre">convert_dft_input</span></code>. The <cite>PMAT.OUT</cite> file on the otherhand is generated by Elk by running <strong>task 120</strong>, see <a class="footnote-reference" href="#userguide2" id="id4">[4]</a>. Note that unlike in the Wien2k transport converter, the Elk transport converter uses the correlated band window stored in the <cite>dft_misc_input</cite> (which originates from running <code class="xref py py-meth docutils literal notranslate"><span class="pre">convert_dft_input</span></code>).</p>
+<p>These Elk files are then read and the relevant information is stored in the hdf5 archive by using the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs_dft_tools.converters.elk</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">triqs_dft_tools.sumk_dft_tools</span> <span class="kn">import</span> <span class="o">*</span>
 
-<span class="n">Converter</span> <span class="o">=</span> <span class="n">Wien2kConverter</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;case&#39;</span><span class="p">,</span> <span class="n">repacking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">Converter</span> <span class="o">=</span> <span class="n">ElkConverter</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;case&#39;</span><span class="p">,</span> <span class="n">repacking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">Converter</span><span class="o">.</span><span class="n">convert_transport_input</span><span class="p">()</span>
 
 <span class="n">SK</span> <span class="o">=</span> <span class="n">SumkDFTTools</span><span class="p">(</span><span class="n">hdf_file</span><span class="o">=</span><span class="s1">&#39;case.h5&#39;</span><span class="p">,</span> <span class="n">use_dft_blocks</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The converter <code class="xref py py-meth docutils literal notranslate"><span class="pre">convert_transport_input</span></code>
-reads the required data of the Wien2k output and stores it in the <cite>dft_transp_input</cite> subgroup of your hdf file.
-Additionally we need to read and set the self energy, the chemical potential and the double counting:</p>
+reads the required data of the Elk output and stores it in the <cite>dft_transp_input</cite> subgroup of your hdf file.</p>
+</div>
+</div>
+<div class="section" id="using-the-transport-code">
+<h2>Using the transport code<a class="headerlink" href="#using-the-transport-code" title="Permalink to this headline"></a></h2>
+<p>Once we have converted the transport data from the DFT codes (see above), we also need to read and set the self energy, the chemical potential and the double counting:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="s1">&#39;case.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
     <span class="n">SK</span><span class="o">.</span><span class="n">set_Sigma</span><span class="p">([</span><span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dmft_output&#39;</span><span class="p">][</span><span class="s1">&#39;Sigma_w&#39;</span><span class="p">]])</span>
     <span class="n">chemical_potential</span><span class="p">,</span><span class="n">dc_imp</span><span class="p">,</span><span class="n">dc_energ</span> <span class="o">=</span> <span class="n">SK</span><span class="o">.</span><span class="n">load</span><span class="p">([</span><span class="s1">&#39;chemical_potential&#39;</span><span class="p">,</span><span class="s1">&#39;dc_imp&#39;</span><span class="p">,</span><span class="s1">&#39;dc_energ&#39;</span><span class="p">])</span>
@@ -466,16 +495,16 @@ Additionally we need to read and set the self energy, the chemical potential and
 </pre></div>
 </div>
 <p>Here the transport distribution is calculated in <span class="math notranslate nohighlight">\(xx\)</span> direction for the frequencies <span class="math notranslate nohighlight">\(\Omega=0.0\)</span> and <span class="math notranslate nohighlight">\(0.1\)</span>.
-To use the previously obtained self energy we set with_Sigma to True and the broadening to <span class="math notranslate nohighlight">\(0.0\)</span>.
+To use the previously obtained self energy we set <cite>with_Sigma</cite> to <strong>True</strong> and the broadening to <span class="math notranslate nohighlight">\(0.0\)</span>.
 As we also want to calculate the Seebeck coefficient and the thermal conductivity we have to include <span class="math notranslate nohighlight">\(\Omega=0.0\)</span> in the mesh.
 Note that the current version of the code repines the <span class="math notranslate nohighlight">\(\Omega\)</span> values to the closest values on the self energy mesh.
 For complete description of the input parameters see the <code class="xref py py-meth docutils literal notranslate"><span class="pre">transport_distribution</span> <span class="pre">reference</span></code>.</p>
 <p>The resulting transport distribution is not automatically saved, but this can be easily achieved with:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">SK</span><span class="o">.</span><span class="n">save</span><span class="p">([</span><span class="s1">&#39;Gamma_w&#39;</span><span class="p">,</span><span class="s1">&#39;Om_meshr&#39;</span><span class="p">,</span><span class="s1">&#39;omega&#39;</span><span class="p">,</span><span class="s1">&#39;directions&#39;</span><span class="p">])</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">SK</span><span class="o">.</span><span class="n">save</span><span class="p">([</span><span class="s1">&#39;Gamma_w&#39;</span><span class="p">,</span><span class="s1">&#39;Om_mesh&#39;</span><span class="p">,</span><span class="s1">&#39;omega&#39;</span><span class="p">,</span><span class="s1">&#39;directions&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>You can retrieve it from the archive by:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">SK</span><span class="o">.</span><span class="n">Gamma_w</span><span class="p">,</span> <span class="n">SK</span><span class="o">.</span><span class="n">Om_meshr</span><span class="p">,</span> <span class="n">SK</span><span class="o">.</span><span class="n">omega</span><span class="p">,</span> <span class="n">SK</span><span class="o">.</span><span class="n">directions</span> <span class="o">=</span> <span class="n">SK</span><span class="o">.</span><span class="n">load</span><span class="p">([</span><span class="s1">&#39;Gamma_w&#39;</span><span class="p">,</span><span class="s1">&#39;Om_meshr&#39;</span><span class="p">,</span><span class="s1">&#39;omega&#39;</span><span class="p">,</span><span class="s1">&#39;directions&#39;</span><span class="p">])</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">SK</span><span class="o">.</span><span class="n">Gamma_w</span><span class="p">,</span> <span class="n">SK</span><span class="o">.</span><span class="n">Om_mesh</span><span class="p">,</span> <span class="n">SK</span><span class="o">.</span><span class="n">omega</span><span class="p">,</span> <span class="n">SK</span><span class="o">.</span><span class="n">directions</span> <span class="o">=</span> <span class="n">SK</span><span class="o">.</span><span class="n">load</span><span class="p">([</span><span class="s1">&#39;Gamma_w&#39;</span><span class="p">,</span><span class="s1">&#39;Om_mesh&#39;</span><span class="p">,</span><span class="s1">&#39;omega&#39;</span><span class="p">,</span><span class="s1">&#39;directions&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>Finally the optical conductivity <span class="math notranslate nohighlight">\(\sigma(\Omega)\)</span>, the Seebeck coefficient <span class="math notranslate nohighlight">\(S\)</span> and the thermal conductivity <span class="math notranslate nohighlight">\(\kappa^{\text{el}}\)</span> can be obtained with:</p>
@@ -484,6 +513,33 @@ For complete description of the input parameters see the <code class="xref py py
 </pre></div>
 </div>
 <p>It is strongly advised to check convergence in the number of k-points!</p>
+</div>
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline"></a></h2>
+<p>Here we present an example calculation of the DFT optical conductivity of SrVO3 comparing the results from the Elk and Wien2k inputs. The DFT codes used 4495 k-points in the
+irreducible Brillouin zone with Wanner projectors generated within a correlated energy window of [-8, 7.5] eV. We assume that the required DFT files have been read and saved by the TRIQS
+interface routines as discussed previously. Below is an example script to generate the conductivities:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sumk_dft_tools</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+
+<span class="n">SK</span> <span class="o">=</span> <span class="n">SumkDFTTools</span><span class="p">(</span><span class="n">hdf_file</span><span class="o">=</span><span class="n">filename</span><span class="o">+</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span> <span class="n">use_dft_blocks</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1">#Generate numpy mesh for omega values</span>
+<span class="n">om_mesh</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">5.0</span><span class="p">,</span><span class="mi">51</span><span class="p">))</span>
+
+<span class="c1">#Generate and save the transport distribution</span>
+<span class="n">SK</span><span class="o">.</span><span class="n">transport_distribution</span><span class="p">(</span><span class="n">directions</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;xx&#39;</span><span class="p">],</span> <span class="n">Om_mesh</span><span class="o">=</span><span class="n">om_mesh</span><span class="p">,</span> <span class="n">energy_window</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mf">8.0</span><span class="p">,</span> <span class="mf">7.5</span><span class="p">],</span> <span class="n">with_Sigma</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">broadening</span><span class="o">=-</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">n_om</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">SK</span><span class="o">.</span><span class="n">save</span><span class="p">([</span><span class="s1">&#39;Gamma_w&#39;</span><span class="p">,</span><span class="s1">&#39;Om_mesh&#39;</span><span class="p">,</span><span class="s1">&#39;omega&#39;</span><span class="p">,</span><span class="s1">&#39;directions&#39;</span><span class="p">])</span>
+
+<span class="c1">#Generate and save conductivities</span>
+<span class="n">SK</span><span class="o">.</span><span class="n">conductivity_and_seebeck</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+<span class="n">SK</span><span class="o">.</span><span class="n">save</span><span class="p">([</span><span class="s1">&#39;seebeck&#39;</span><span class="p">,</span><span class="s1">&#39;optic_cond&#39;</span><span class="p">,</span><span class="s1">&#39;kappa&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>The optic_cond variable can be loaded by using <code class="xref py py-meth docutils literal notranslate"><span class="pre">SK.load()</span></code> and then plotted to generate the following figure.</p>
+<a class="reference internal image-reference" href="../_images/opt_comp.png"><img alt="../_images/opt_comp.png" class="align-center" src="../_images/opt_comp.png" style="width: 700px;" /></a>
+<p>Note that the differences between the conductivities arise from the differences in the velocities generated in the DFT codes. The DMFT optical conductivity can easily be calculated by adjusting
+the above example script by setting <cite>with_Sigma</cite> to <strong>True</strong>. In this case however, the SK object will need the DMFT self-energy on the real frequency axis.</p>
 </div>
 <div class="section" id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this headline"></a></h2>
@@ -503,6 +559,12 @@ For complete description of the input parameters see the <code class="xref py py
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
 <tr><td class="label"><a class="fn-backref" href="#id3">[3]</a></td><td><a class="reference external" href="http://www.wien2k.at/reg_user/textbooks/usersguide.pdf" rel="noopener noreferrer" target="_blank">P. Blaha, K. Schwarz, G. K. H. Madsen, D. Kvasnicka, J. Luitz, ISBN 3-9501031-1-2</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="userguide2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4">[4]</a></td><td><a class="reference external" href="https://elk.sourceforge.io/elk.pdf" rel="noopener noreferrer" target="_blank">J. K. Dewhurst, S. Sharma, L. Nordstrom, F. Cricchio, O. Granas, and E. K. U. Gross, The Elk Code Manual</a></td></tr>
 </tbody>
 </table>
 </div>

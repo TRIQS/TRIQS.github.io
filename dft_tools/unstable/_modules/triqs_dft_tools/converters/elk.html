@@ -154,8 +154,8 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../guide/transport.html">Transport calculations</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../guide/transport.html#formalism">Formalism</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../guide/transport.html#prerequisites">Prerequisites</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../guide/transport.html#wien2k-optics-package">Wien2k optics package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../guide/transport.html#using-the-transport-code">Using the transport code</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../guide/transport.html#example">Example</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../guide/transport.html#references">References</a></li>
 </ul>
 </li>
@@ -656,7 +656,7 @@
         <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Reading SYMCRYS.OUT&quot;</span><span class="p">)</span>
         <span class="p">[</span><span class="n">n_symm</span><span class="p">,</span><span class="n">spinmat</span><span class="p">,</span><span class="n">symmat</span><span class="p">,</span><span class="n">tr</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_Elk</span><span class="o">.</span><span class="n">readsym</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Reading LATTICE.OUT&quot;</span><span class="p">)</span>
-        <span class="p">[</span><span class="n">amat</span><span class="p">,</span><span class="n">amatinv</span><span class="p">,</span><span class="n">bmat</span><span class="p">,</span><span class="n">bmatinv</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_Elk</span><span class="o">.</span><span class="n">readlat</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="p">[</span><span class="n">amat</span><span class="p">,</span><span class="n">amatinv</span><span class="p">,</span><span class="n">bmat</span><span class="p">,</span><span class="n">bmatinv</span><span class="p">,</span><span class="n">cell_vol</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_Elk</span><span class="o">.</span><span class="n">readlat</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="c1">#calculating atom permutations</span>
         <span class="n">perm</span> <span class="o">=</span> <span class="n">Elk_tools</span><span class="o">.</span><span class="n">gen_perm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">n_symm</span><span class="p">,</span><span class="n">ns</span><span class="p">,</span><span class="n">na</span><span class="p">,</span><span class="n">n_atoms</span><span class="p">,</span><span class="n">symmat</span><span class="p">,</span><span class="n">tr</span><span class="p">,</span><span class="n">atpos</span><span class="p">)</span>
         <span class="c1">#determine the cartesian lattice symmetries and the spin axis rotations</span>
@@ -734,8 +734,11 @@
            <span class="c1">#remove &quot;spatom&quot;</span>
            <span class="k">del</span> <span class="n">shells</span><span class="p">[</span><span class="n">ish</span><span class="p">][</span><span class="s1">&#39;spatom&#39;</span><span class="p">]</span>
         <span class="n">n_orbits</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">orbits</span><span class="p">)</span>
-
         <span class="c1">#Note that the T numpy array is defined for all shells.</span>
+
+        <span class="c1">#new variable: dft_code - this determines which DFT code the inputs come from.</span>
+        <span class="c1">#used for certain routines within dft_tools if treating the inputs differently is required.</span>
+        <span class="n">dft_code</span> <span class="o">=</span> <span class="s1">&#39;elk&#39;</span>
 
         <span class="c1"># Save it to the HDF:</span>
         <span class="n">ar</span> <span class="o">=</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf_file</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span>
@@ -746,7 +749,7 @@
         <span class="n">things_to_save</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;energy_unit&#39;</span><span class="p">,</span> <span class="s1">&#39;n_k&#39;</span><span class="p">,</span> <span class="s1">&#39;k_dep_projection&#39;</span><span class="p">,</span> <span class="s1">&#39;SP&#39;</span><span class="p">,</span> <span class="s1">&#39;SO&#39;</span><span class="p">,</span> <span class="s1">&#39;charge_below&#39;</span><span class="p">,</span> <span class="s1">&#39;density_required&#39;</span><span class="p">,</span>
                           <span class="s1">&#39;symm_op&#39;</span><span class="p">,</span> <span class="s1">&#39;n_shells&#39;</span><span class="p">,</span> <span class="s1">&#39;shells&#39;</span><span class="p">,</span> <span class="s1">&#39;n_corr_shells&#39;</span><span class="p">,</span> <span class="s1">&#39;corr_shells&#39;</span><span class="p">,</span> <span class="s1">&#39;use_rotations&#39;</span><span class="p">,</span> <span class="s1">&#39;rot_mat&#39;</span><span class="p">,</span>
                           <span class="s1">&#39;rot_mat_time_inv&#39;</span><span class="p">,</span> <span class="s1">&#39;n_reps&#39;</span><span class="p">,</span> <span class="s1">&#39;dim_reps&#39;</span><span class="p">,</span> <span class="s1">&#39;T&#39;</span><span class="p">,</span> <span class="s1">&#39;n_orbitals&#39;</span><span class="p">,</span> <span class="s1">&#39;proj_mat&#39;</span><span class="p">,</span> <span class="s1">&#39;bz_weights&#39;</span><span class="p">,</span> <span class="s1">&#39;hopping&#39;</span><span class="p">,</span>
-                          <span class="s1">&#39;n_inequiv_shells&#39;</span><span class="p">,</span> <span class="s1">&#39;corr_to_inequiv&#39;</span><span class="p">,</span> <span class="s1">&#39;inequiv_to_corr&#39;</span><span class="p">]</span>
+                          <span class="s1">&#39;n_inequiv_shells&#39;</span><span class="p">,</span> <span class="s1">&#39;corr_to_inequiv&#39;</span><span class="p">,</span> <span class="s1">&#39;inequiv_to_corr&#39;</span><span class="p">,</span> <span class="s1">&#39;dft_code&#39;</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">things_to_save</span><span class="p">:</span>
             <span class="n">ar</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dft_subgrp</span><span class="p">][</span><span class="n">it</span><span class="p">]</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()[</span><span class="n">it</span><span class="p">]</span>
         <span class="k">del</span> <span class="n">ar</span>
@@ -991,8 +994,115 @@
         <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">things_to_save</span><span class="p">:</span>
             <span class="n">ar</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bc_subgrp</span><span class="p">][</span><span class="n">it</span><span class="p">]</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()[</span><span class="n">it</span><span class="p">]</span>
         <span class="k">del</span> <span class="n">ar</span>
-        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Converted the band character data&#39;</span><span class="p">)</span></div></div>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Converted the band character data&#39;</span><span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="ElkConverter.convert_transport_input"><a class="viewcode-back" href="../../../_python_api/triqs_dft_tools.converters.elk.ElkConverter.convert_transport_input.html#triqs_dft_tools.converters.elk.ElkConverter.convert_transport_input">[docs]</a>    <span class="k">def</span> <span class="nf">convert_transport_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reads the necessary information for transport calculations on:</span>
+
+<span class="sd">        - the optical band window and the velocity matrix elements from :file:`case.pmat`</span>
+
+<span class="sd">        and stores the data in the hdf5 archive.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">()):</span>
+            <span class="k">return</span>
+
+        <span class="c1"># get needed data from hdf file</span>
+        <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dft_subgrp</span> <span class="ow">in</span> <span class="n">ar</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;convert_transport_input: No </span><span class="si">%s</span><span class="s2"> subgroup in hdf file found! Call convert_dft_input first.&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">dft_subgrp</span><span class="p">)</span>
+            <span class="n">things_to_read</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;SP&#39;</span><span class="p">,</span> <span class="s1">&#39;SO&#39;</span><span class="p">,</span><span class="s1">&#39;n_k&#39;</span><span class="p">,</span><span class="s1">&#39;n_orbitals&#39;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">things_to_read</span><span class="p">:</span>
+               <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">it</span><span class="p">):</span>
+                  <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">it</span><span class="p">,</span> <span class="n">ar</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dft_subgrp</span><span class="p">][</span><span class="n">it</span><span class="p">])</span>
+            <span class="c1">#from misc info</span>
+            <span class="n">things_to_read</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;band_window&#39;</span><span class="p">,</span><span class="s1">&#39;vkl&#39;</span><span class="p">,</span><span class="s1">&#39;nstsv&#39;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">things_to_read</span><span class="p">:</span>
+               <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">it</span><span class="p">):</span>
+                  <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">it</span><span class="p">,</span> <span class="n">ar</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">misc_subgrp</span><span class="p">][</span><span class="n">it</span><span class="p">])</span>
+
+        <span class="c1">#unlike in WIEN2k, Elk writes the velocities (momentum) matrix elements for all bands.</span>
+        <span class="c1">#Therefore, we can use the indices in the n_orbitals array to extract the desired elements.</span>
+        <span class="c1">#However, the PMAT.OUT file is in Fortran-binary, so the file is read in by python wrappers</span>
+        <span class="c1">#around the reading fortran code.</span>
+
+        <span class="c1"># Read relevant data from PMAT.OUT binary file</span>
+        <span class="c1">###########################################</span>
+        <span class="c1"># band_window_optics: same as Elk converter&#39;s band_window, but rearranged to be compatible</span>
+        <span class="c1">#                     for the transport calculations.</span>
+        <span class="c1"># velocities_k: velocity (momentum) matrix elements between all bands in band_window_optics</span>
+        <span class="c1">#               and each k-point.</span>
+
+        <span class="c1">#load fortran wrapper module</span>
+        <span class="kn">import</span> <span class="nn">triqs_dft_tools.converters.elktools.elkwrappers.getpmatelk</span> <span class="k">as</span> <span class="nn">et</span>
+        <span class="c1">#elk velocities for all bands</span>
+        <span class="n">pmat</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">nstsv</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nstsv</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span><span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+
+        <span class="n">n_spin_blocks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SP</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">SO</span>
+        <span class="c1">#TRIQS&#39; velocities array used in its transport routines</span>
+        <span class="n">velocities_k</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">isp</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_spin_blocks</span><span class="p">)]</span>
+        <span class="c1">#TRIQS&#39; band_window array used in its transport routines</span>
+        <span class="n">band_window_optics</span> <span class="o">=</span> <span class="p">[]</span>
+
+
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Reading PMAT.OUT&quot;</span><span class="p">)</span>
+        <span class="c1">#read velocities for each k-point</span>
+        <span class="k">for</span> <span class="n">ik</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_k</span><span class="p">):</span>
+          <span class="c1">#need to use a fortran array for wrapper</span>
+          <span class="n">f_vkl</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asfortranarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vkl</span><span class="p">[</span><span class="n">ik</span><span class="p">,:])</span>
+          <span class="c1">#read the ik velocity using the wrapper</span>
+          <span class="n">pmat</span><span class="p">[:,:,:]</span><span class="o">=</span><span class="n">et</span><span class="o">.</span><span class="n">getpmatelk</span><span class="p">(</span><span class="n">ik</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nstsv</span><span class="p">,</span><span class="n">f_vkl</span><span class="p">)</span>
+          <span class="c1">#loop over spin</span>
+          <span class="k">for</span> <span class="n">isp</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_spin_blocks</span><span class="p">):</span>
+            <span class="c1">#no. correlated bands at ik</span>
+            <span class="n">nu1</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">band_window</span><span class="p">[</span><span class="n">isp</span><span class="p">][</span><span class="n">ik</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span>
+            <span class="n">nu2</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">band_window</span><span class="p">[</span><span class="n">isp</span><span class="p">][</span><span class="n">ik</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span>
+            <span class="n">n_bands</span><span class="o">=</span><span class="n">nu2</span><span class="o">-</span><span class="n">nu1</span><span class="o">+</span><span class="mi">1</span>
+            <span class="c1">#put into velocity array (code similar to that in wien.py.</span>
+            <span class="k">if</span> <span class="n">n_bands</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">velocity_xyz</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">velocity_xyz</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">n_bands</span><span class="p">,</span> <span class="n">n_bands</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+            <span class="c1">#CHECK these lines</span>
+            <span class="n">velocity_xyz</span><span class="p">[:,:,:]</span><span class="o">=</span><span class="n">pmat</span><span class="p">[</span><span class="n">nu1</span><span class="p">:</span><span class="n">nu2</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">nu1</span><span class="p">:</span><span class="n">nu2</span><span class="o">+</span><span class="mi">1</span><span class="p">,:]</span>
+            <span class="n">velocities_k</span><span class="p">[</span><span class="n">isp</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">velocity_xyz</span><span class="p">)</span>
+
+        <span class="c1">#rearrange Elk&#39;s band_window array into band_window_optics array format</span>
+        <span class="k">for</span> <span class="n">isp</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_spin_blocks</span><span class="p">):</span>
+          <span class="n">band_window_optics_isp</span> <span class="o">=</span> <span class="p">[]</span>
+          <span class="k">for</span> <span class="n">ik</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_k</span><span class="p">):</span>
+            <span class="n">nu1</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">band_window</span><span class="p">[</span><span class="n">isp</span><span class="p">][</span><span class="n">ik</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">nu2</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">band_window</span><span class="p">[</span><span class="n">isp</span><span class="p">][</span><span class="n">ik</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">band_window_optics_isp</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">nu1</span><span class="p">,</span> <span class="n">nu2</span><span class="p">))</span>
+            <span class="n">n_bands</span><span class="o">=</span><span class="n">nu2</span><span class="o">-</span><span class="n">nu1</span><span class="o">+</span><span class="mi">1</span>
+          <span class="n">band_window_optics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">band_window_optics_isp</span><span class="p">))</span>
+
+        <span class="c1">#read in the cell volume from LATTICE.OUT</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Reading LATTICE.OUT&quot;</span><span class="p">)</span>
+        <span class="p">[</span><span class="n">amat</span><span class="p">,</span><span class="n">amatinv</span><span class="p">,</span><span class="n">bmat</span><span class="p">,</span><span class="n">bmatinv</span><span class="p">,</span><span class="n">cell_vol</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_Elk</span><span class="o">.</span><span class="n">readlat</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="c1">#read in the crystal symmetries</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Reading SYMCRYS.OUT&quot;</span><span class="p">)</span>
+        <span class="p">[</span><span class="n">n_symmetries</span><span class="p">,</span><span class="n">spinmat</span><span class="p">,</span><span class="n">rot_symmetries</span><span class="p">,</span><span class="n">tr</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_Elk</span><span class="o">.</span><span class="n">readsym</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+
+        <span class="c1"># Put data to HDF5 file</span>
+        <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf_file</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transp_subgrp</span> <span class="ow">in</span> <span class="n">ar</span><span class="p">):</span>
+                <span class="n">ar</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transp_subgrp</span><span class="p">)</span>
+            <span class="c1"># The subgroup containing the data. If it does not exist, it is</span>
+            <span class="c1"># created. If it exists, the data is overwritten!!!</span>
+            <span class="n">things_to_save</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;band_window_optics&#39;</span><span class="p">,</span> <span class="s1">&#39;velocities_k&#39;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">things_to_save</span><span class="p">:</span>
+                <span class="n">ar</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">transp_subgrp</span><span class="p">][</span><span class="n">it</span><span class="p">]</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()[</span><span class="n">it</span><span class="p">]</span>
+            <span class="n">things_to_save_misc</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;n_symmetries&#39;</span><span class="p">,</span> <span class="s1">&#39;rot_symmetries&#39;</span><span class="p">,</span><span class="s1">&#39;cell_vol&#39;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">things_to_save_misc</span><span class="p">:</span>
+              <span class="n">ar</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">misc_subgrp</span><span class="p">][</span><span class="n">it</span><span class="p">]</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()[</span><span class="n">it</span><span class="p">]</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Reading complete!&quot;</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>
