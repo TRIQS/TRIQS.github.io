@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Perturbation order histograms &mdash; TRIQS Hybridization Expansion Solver  documentation</title>
+  <title>High Frequency Moments of the Green’s Functions and Self-energy &mdash; TRIQS Hybridization Expansion Solver  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
       <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
@@ -20,8 +20,8 @@
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="The Anderson impurity model" href="aim.html" />
-    <link rel="prev" title="Dynamical spin-spin susceptibility \(\chi_{S_z S_z}(\tau)\)" href="dynamic_susceptibility_notebook.html" /> 
+    <link rel="next" title="triqs_cthyb.multiplet_tools" href="../_ref/triqs_cthyb.multiplet_tools.html" />
+    <link rel="prev" title="Convergence test of CTHYB solver parameters" href="cthyb_convergence_tests.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -91,7 +91,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2 current"><a class="reference internal" href="../documentation.html#user-guide">User guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../documentation.html#user-guide">User guide</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="settingparameters.html">Setting the parameters</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="settingparameters.html#step-1-construct-the-solver-instance">Step 1 - construct the solver instance</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="settingparameters.html#examples">Examples</a></li>
@@ -128,13 +128,13 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="dynamic_susceptibility_notebook.html">Dynamical spin-spin susceptibility <span class="math notranslate nohighlight">\(\chi_{S_z S_z}(\tau)\)</span></a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Perturbation order histograms</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#Plotting-perturbation-order-histograms">Plotting perturbation order histograms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="perturbation_order_notebook.html">Perturbation order histograms</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="perturbation_order_notebook.html#Plotting-perturbation-order-histograms">Plotting perturbation order histograms</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../documentation.html#tutorials">Tutorials</a><ul>
+<li class="toctree-l2 current"><a class="reference internal" href="../documentation.html#tutorials">Tutorials</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="aim.html">The Anderson impurity model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="slater_five_band.html">Multiorbital impurity model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="cthyb_convergence_tests.html">Convergence test of CTHYB solver parameters</a><ul>
@@ -147,9 +147,9 @@
 <li class="toctree-l4"><a class="reference internal" href="cthyb_convergence_tests.html#6.-n_tau">6. n_tau</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="high_freq_moments.html">High Frequency Moments of the Green’s Functions and Self-energy</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="high_freq_moments.html#Derivation">Derivation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="high_freq_moments.html#Implentation-in-TRIQS/cthyb">Implentation in TRIQS/cthyb</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">High Frequency Moments of the Green’s Functions and Self-energy</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Derivation">Derivation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Implentation-in-TRIQS/cthyb">Implentation in TRIQS/cthyb</a></li>
 </ul>
 </li>
 </ul>
@@ -293,9 +293,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="../documentation.html">Documentation</a> &raquo;</li>
-      <li>Perturbation order histograms</li>
+      <li>High Frequency Moments of the Green’s Functions and Self-energy</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/guide/perturbation_order_notebook.ipynb.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/guide/high_freq_moments.ipynb.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -573,49 +573,103 @@ div.rendered_html tbody tr:hover {
     text-align: unset;
 }
 </style>
-<div class="section" id="Perturbation-order-histograms">
-<h1>Perturbation order histograms<a class="headerlink" href="#Perturbation-order-histograms" title="Permalink to this headline"></a></h1>
-<p>To analyze the behaviour of the Markov chain in CTHYB the perturbation order histograms are a central tool. This is a simple example showing how to sample and plot these histograms.</p>
-<p>As an example we solve the one-orbital Anderson impurity at inverse temperature <span class="math notranslate nohighlight">\(\beta\)</span>, embedded in a flat (Wilson) bath with non-interacting Green’s function <span class="math notranslate nohighlight">\(G^{-1}_{0,\sigma} (i\omega_n) = i \omega_n - \epsilon_f - V^2 \Gamma_\sigma(i \omega_n)\)</span>, and local interaction <span class="math notranslate nohighlight">\(H_\mathrm{int} = U n_\uparrow n_\downarrow\)</span>, where <span class="math notranslate nohighlight">\(U\)</span> is the Hubbard interaction, <span class="math notranslate nohighlight">\(\epsilon_f\)</span> is the local energy. The bath <span class="math notranslate nohighlight">\(\Gamma\)</span>, and the bath has bandwidth <span class="math notranslate nohighlight">\(D\)</span> and hybridization
-<span class="math notranslate nohighlight">\(V\)</span>.</p>
+<div class="section" id="High-Frequency-Moments-of-the-Green’s-Functions-and-Self-energy">
+<h1>High Frequency Moments of the Green’s Functions and Self-energy<a class="headerlink" href="#High-Frequency-Moments-of-the-Green’s-Functions-and-Self-energy" title="Permalink to this headline"></a></h1>
+<p>We present here the derivation of the high-frequency moments of the Green’s function and self-energy, as well as show case how these high frequency moments can be computed and utilized within <a class="reference external" href="https://triqs.github.io/cthyb/latest/" rel="noopener noreferrer" target="_blank">TRIQS/cthyb</a>.</p>
+<div class="section" id="Derivation">
+<h2>Derivation<a class="headerlink" href="#Derivation" title="Permalink to this headline"></a></h2>
+<p>The following derivation follows closely <a class="reference external" href="https://journals.aps.org/rmp/abstract/10.1103/RevModPhys.83.349" rel="noopener noreferrer" target="_blank">Rev.&nbsp;Mod. Phys 83, 349 (2011)</a> and <a class="reference external" href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.84.073104" rel="noopener noreferrer" target="_blank">Phys. Rev.&nbsp;B 84, 073104 (2011)</a>.</p>
+<p>The high-frequency expansion of the Green’s function takes the following form</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{G}(i\omega_{n}) = \frac{1}{i\omega_{n}}\mathbf{G}_{0} + \frac{1}{(i\omega_{n})^{2}}\mathbf{G}_{1} + \frac{1}{(i\omega_{n})^{3}}\mathbf{G}_{2} + \cdots \ ,\]</div>
+<p>where the coefficients are related to time derivatives of the Green’s function:</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{G}_{0} = -(G(0) + G(\beta)) = \delta_{ab}\]</div>
+<div class="math notranslate nohighlight">
+\[\mathbf{G}_{1} = \partial_{\tau}G(0) + \partial_{\tau}G(\beta) = -\langle \{[H, d_{a}], d_{b}^{\dagger} \} \rangle\]</div>
+<div class="math notranslate nohighlight">
+\[\mathbf{G}_{2} = -\big (\partial^{2}_{\tau}G(0) + \partial^{2}_{\tau}G(\beta) \big ) = \langle \{[H, d_{a}], [d_{b}^{\dagger},H] \} \rangle \ ,\]</div>
+<p>where <span class="math notranslate nohighlight">\(H\)</span> is the Hamiltonian of the system. For the purpose of this cthyb tutorial we assume <span class="math notranslate nohighlight">\(H\)</span> to be the general Anderson impurity hamiltonian,</p>
+<div class="math notranslate nohighlight">
+\[H = \sum_{k,\alpha} \varepsilon_{k\alpha}c^{\dagger}_{k\alpha}c_{k\alpha} + \sum_{k\alpha b} \big ( V_{k}^{\alpha b} c^{\dagger}_{k\alpha}d_{b} + \mathrm{h.c.}\big ) + \sum_{ab}E_{ab}d^{\dagger}_{a}d_{b} + \frac{1}{2}\sum_{abcd}U_{abcd}d^{\dagger}_{a}d^{\dagger}_{b}d_{d}d_{c} \ .\]</div>
+<p>In DMFT the coefficients for the Weiss field <span class="math notranslate nohighlight">\(\mathbf{G}_{0}\)</span> can be obtained from the same expressions as the Green’s function with the hamiltonian replaced with only the non-interacting part.</p>
+<p>To derive the analogous coefficients for the self-energy, we start with the Dyson equation,</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{\Sigma} = \Big ((\mathbf{G}_{0} )^{-1} - \mathbf{G}^{-1} \Big ) \ .\]</div>
+<p>Using the high-frequency expression for the Green’s function and Weiss field we obtain,</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{\Sigma} = \frac{1}{\frac{1}{i\omega_{n}} + \frac{1}{(i\omega_{n})^{2}}(\mathbf{G}_{0})_{1} + \frac{1}{(i\omega_{n})^{3}} (\mathbf{G}_{0})_{2}}-\frac{1}{\frac{1}{i\omega_{n}} + \frac{1}{(i\omega_{n})^{2}}\mathbf{G}_{1} + \frac{1}{(i\omega_{n})^{3}} \mathbf{G}_{2}} \ .\]</div>
+<p>Expanding this expression for large <span class="math notranslate nohighlight">\(i\omega_{n}\)</span> and simplifying yields,</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{\Sigma} = \Big (\mathbf{G}_{1} - (\mathbf{G}_{0})_{1} \Big ) + \frac{1}{i\omega_{n}} \Big (\mathbf{G}_{2} - (\mathbf{G}_{0})_{2} +((\mathbf{G}_{0})_{1})^{2} - \mathbf{G}_{1}^{2} \Big) + \mathbf{O}\Big ( (i\omega_{n})^{-2}\Big )\]</div>
+<p>We now identify the leading terms,</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{\Sigma}_{\infty} \equiv \mathbf{G}_{1} - (\mathbf{G}_{0})_{1}\]</div>
+<div class="math notranslate nohighlight">
+\[\mathbf{\Sigma}_{1} \equiv \mathbf{G}_{2} - (\mathbf{G}_{0})_{2} +((\mathbf{G}_{0})_{1})^{2} - \mathbf{G}_{1}^{2}\]</div>
+<p>Note, that <span class="math notranslate nohighlight">\((\mathbf{G}_{0})_{1}\)</span> are just the crystal field levels inside of the impurity problem <span class="math notranslate nohighlight">\(\mathbf{E}\)</span>. We can simplify these expressions by plugging in their definitions from above,</p>
+<div class="math notranslate nohighlight">
+\[\Sigma_{\infty}^{ab} = -\langle \{[H, d_{a}], d_{b}^{\dagger} \} \rangle + \langle \{[H-H_{\mathrm{int}}, d_{a}], d_{b}^{\dagger} \} \rangle  = - \langle \{[H_{\mathrm{int}}, d_{a}], d_{b}^{\dagger} \} \rangle\]</div>
+<div class="math notranslate nohighlight">
+\[\Sigma_{1}^{ab} = \langle \{ [H_{\mathrm{int}}, [H_{\mathrm{int}}, d_{a} ]], d_{b}^\dagger \} \rangle - (\Sigma_{\infty}^{ab} )^{2}\]</div>
+</div>
+<div class="section" id="Implentation-in-TRIQS/cthyb">
+<h2>Implentation in TRIQS/cthyb<a class="headerlink" href="#Implentation-in-TRIQS/cthyb" title="Permalink to this headline"></a></h2>
+<p>The leading two moments of <span class="math notranslate nohighlight">\(\mathbf{G}\)</span> and of <span class="math notranslate nohighlight">\(\mathbf{\Sigma}\)</span> are automatically calculated and stored as members of the TRIQS/cthyb solver when <code class="docutils literal notranslate"><span class="pre">measure_density_matrix</span> <span class="pre">=</span> <span class="pre">True</span></code>. The moments for the Green’s function and self-energy are stored as <code class="docutils literal notranslate"><span class="pre">Solver.G_moments</span></code> and <code class="docutils literal notranslate"><span class="pre">Solver.Sigma_moments</span></code>, with the matching block structure of the <code class="docutils literal notranslate"><span class="pre">Gf</span></code> objects. Additionally, the Hartree shift <span class="math notranslate nohighlight">\(\mathbf{\Sigma}^\infty\)</span> is stored as <code class="docutils literal notranslate"><span class="pre">Solver.Sigma_Hartree</span></code>.</p>
+<p>The moments of the Green’s function are used in the Fourier transform of <span class="math notranslate nohighlight">\(G(\tau)\)</span> to <span class="math notranslate nohighlight">\(G(i\omega_{n})\)</span> in the solver post-processing automatically if available. The moments of the self-energy are used in the tail fitting routine, where the first two <code class="docutils literal notranslate"><span class="pre">known_moments</span></code> now correspond to the calculated first and second moments of the self-energy.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">triqs.operators</span> <span class="kn">import</span> <span class="n">n</span>
-<span class="kn">from</span> <span class="nn">h5</span> <span class="kn">import</span> <span class="n">HDFArchive</span>
-<span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">inverse</span><span class="p">,</span> <span class="n">iOmega_n</span><span class="p">,</span> <span class="n">Wilson</span>
-
+<span></span><span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">triqs.operators</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">triqs_cthyb</span> <span class="kn">import</span> <span class="n">Solver</span>
+<span class="kn">import</span> <span class="nn">triqs.utility.mpi</span> <span class="k">as</span> <span class="nn">mpi</span>
 
-<span class="n">U</span><span class="p">,</span> <span class="n">e_f</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">beta</span> <span class="o">=</span> <span class="mf">2.</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">20.</span>
-<span class="n">Sz</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;down&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="p">)</span>
-
-<span class="n">S</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span>
-    <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span> <span class="n">gf_struct</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;up&#39;</span><span class="p">,[</span><span class="mi">0</span><span class="p">]),</span> <span class="p">(</span><span class="s1">&#39;down&#39;</span><span class="p">,[</span><span class="mi">0</span><span class="p">])],</span>
-    <span class="n">n_tau</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">n_iw</span><span class="o">=</span><span class="mi">50</span><span class="p">,)</span>
-
-<span class="n">S</span><span class="o">.</span><span class="n">G0_iw</span> <span class="o">&lt;&lt;</span> <span class="n">inverse</span><span class="p">(</span><span class="n">iOmega_n</span> <span class="o">-</span> <span class="n">e_f</span> <span class="o">-</span> <span class="n">V</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Wilson</span><span class="p">(</span><span class="n">D</span><span class="p">))</span>
-
-<span class="n">S</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span>
-    <span class="n">h_int</span><span class="o">=</span><span class="n">U</span><span class="o">*</span><span class="n">n</span><span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="n">n</span><span class="p">(</span><span class="s1">&#39;down&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>
-    <span class="n">n_cycles</span><span class="o">=</span><span class="mi">100000</span><span class="p">,</span>
-    <span class="n">length_cycle</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
-    <span class="n">n_warmup_cycles</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-    <span class="n">measure_G_tau</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">measure_pert_order</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="p">)</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">triqs.plot.mpl_interface</span> <span class="kn">import</span> <span class="n">plt</span><span class="p">,</span><span class="n">oplot</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Warning: could not identify MPI environment!
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Starting on 1 Nodes at : 2019-06-05 17:20:04.584678
+Starting serial run at: 2023-02-02 09:38:30.738159
 </pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">D</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">U</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">4.0</span>
+
+<span class="n">ef</span><span class="p">,</span> <span class="n">beta</span> <span class="o">=</span> <span class="o">-</span><span class="n">U</span><span class="o">/</span><span class="mf">2.0</span><span class="p">,</span> <span class="mi">50</span>
+<span class="n">H</span> <span class="o">=</span> <span class="n">U</span><span class="o">*</span><span class="n">n</span><span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="n">n</span><span class="p">(</span><span class="s1">&#39;down&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">S</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span> <span class="n">gf_struct</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;down&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)])</span>
+
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">g0</span> <span class="ow">in</span> <span class="n">S</span><span class="o">.</span><span class="n">G0_iw</span><span class="p">:</span> <span class="n">g0</span> <span class="o">&lt;&lt;</span> <span class="n">inverse</span><span class="p">(</span><span class="n">iOmega_n</span> <span class="o">-</span> <span class="n">ef</span> <span class="o">-</span> <span class="n">V</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">Wilson</span><span class="p">(</span><span class="n">D</span><span class="p">))</span>
+
+<span class="n">S</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">h_int</span> <span class="o">=</span> <span class="n">H</span><span class="p">,</span>
+                <span class="n">n_cycles</span> <span class="o">=</span><span class="mi">500000</span><span class="p">,</span>
+                <span class="n">length_cycle</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+                <span class="n">n_warmup_cycles</span> <span class="o">=</span> <span class="mi">100000</span><span class="p">,</span>
+                <span class="n">measure_density_matrix</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="c1"># moments will be calculated automatically</span>
+                <span class="n">use_norm_as_weight</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="p">)</span>
+</pre></div>
+</div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
@@ -628,60 +682,80 @@ Starting on 1 Nodes at : 2019-06-05 17:20:04.584678
  ╩ ╩╚═╩╚═╝╚╚═╝  └─┘ ┴ ┴ ┴ ┴ └─┘
 
 The local Hamiltonian of the problem:
-(-1,0)*c_dag(&#39;down&#39;,0)*c(&#39;down&#39;,0) + (-1,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0) + (2,0)*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0)
+-2*c_dag(&#39;down&#39;,0)*c(&#39;down&#39;,0) + -2*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0) + 4*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0)
 Using autopartition algorithm to partition the local Hilbert space
 Found 4 subspaces.
 
 Warming up ...
+09:38:33   0% ETA 00:00:15 cycle 661 of 100000
+09:38:35  12% ETA 00:00:14 cycle 12541 of 100000
+09:38:38  30% ETA 00:00:10 cycle 30560 of 100000
+09:38:41  52% ETA 00:00:07 cycle 52654 of 100000
+09:38:45  75% ETA 00:00:03 cycle 75715 of 100000
+
+
 
 Accumulating ...
-17:20:04   0% ETA 00:00:14 cycle 667 of 100000
-17:20:06  14% ETA 00:00:12 cycle 14816 of 100000
-17:20:09  31% ETA 00:00:10 cycle 31517 of 100000
-17:20:12  51% ETA 00:00:07 cycle 51752 of 100000
-17:20:16  78% ETA 00:00:03 cycle 78933 of 100000
+09:38:48   0% ETA 00:01:09 cycle 723 of 500000
+09:38:50   3% ETA 00:01:08 cycle 15022 of 500000
+09:38:53   6% ETA 00:01:05 cycle 32974 of 500000
+09:38:56  11% ETA 00:01:02 cycle 55408 of 500000
+09:39:00  16% ETA 00:00:58 cycle 83197 of 500000
+09:39:05  23% ETA 00:00:54 cycle 117863 of 500000
+09:39:11  32% ETA 00:00:48 cycle 160877 of 500000
+09:39:19  43% ETA 00:00:40 cycle 215435 of 500000
+09:39:29  56% ETA 00:00:31 cycle 281909 of 500000
+09:39:41  71% ETA 00:00:21 cycle 355564 of 500000
+09:39:56  91% ETA 00:00:06 cycle 455301 of 500000
 
 
 [Rank 0] Collect results: Waiting for all mpi-threads to finish accumulating...
 [Rank 0] Timings for all measures:
-Measure                   | seconds
-Average sign              | 0.0121935
-Perturbation order        | 0.017634
-Perturbation order (down) | 0.0144553
-Perturbation order (up)   | 0.011125
-Total measure time        | 0.0554078
+Measure                                    | seconds
+Auto-correlation time                      | 0.144108
+Average order                              | 0.0375342
+Average sign                               | 0.0416869
+Density Matrix for local static observable | 0.732204
+G_tau measure                              | 0.0985052
+Total measure time                         | 1.05404
 [Rank 0] Acceptance rate for all moves:
-Move set Insert two operators: 0.056355
-  Move  Insert Delta_up: 0.0565787
-  Move  Insert Delta_down: 0.0561309
-Move set Remove two operators: 0.0564614
-  Move  Remove Delta_up: 0.0566373
-  Move  Remove Delta_down: 0.0562848
-Move  Shift one operator: 0.758509
-[Rank 0] Warmup lasted: 0.0125826 seconds [00:00:00]
-[Rank 0] Simulation lasted: 14.9179 seconds [00:00:14]
-[Rank 0] Number of measures: 100000
-Total number of measures: 100000
-Average sign: (1,0)
+Move set Insert two operators: 0.0448675
+  Move  Insert Delta_up: 0.044915
+  Move  Insert Delta_down: 0.0448199
+Move set Remove two operators: 0.0448576
+  Move  Remove Delta_up: 0.04491
+  Move  Remove Delta_down: 0.0448052
+Move set Insert four operators: 0.00347959
+  Move  Insert Delta_up_up: 0.00269973
+  Move  Insert Delta_up_down: 0.00431061
+  Move  Insert Delta_down_up: 0.00423298
+  Move  Insert Delta_down_down: 0.002676
+Move set Remove four operators: 0.00348254
+  Move  Remove Delta_up_up: 0.00270066
+  Move  Remove Delta_up_down: 0.00431291
+  Move  Remove Delta_down_up: 0.00424282
+  Move  Remove Delta_down_down: 0.0026742
+Move  Shift one operator: 0.0350781
+[Rank 0] Warmup lasted: 15.3982 seconds [00:00:15]
+[Rank 0] Simulation lasted: 74.6982 seconds [00:01:14]
+[Rank 0] Number of measures: 500000
+Total number of measures: 500000
+Average sign: 1
+Average order: 1.2027
+Auto-correlation time: 0.358059
 </pre></div></div>
 </div>
-<div class="section" id="Plotting-perturbation-order-histograms">
-<h2>Plotting perturbation order histograms<a class="headerlink" href="#Plotting-perturbation-order-histograms" title="Permalink to this headline"></a></h2>
-<p>The measured histograms are available as the member properties <code class="docutils literal notranslate"><span class="pre">S.perturbation_order</span></code> and <code class="docutils literal notranslate"><span class="pre">S.perturbation_order_total</span></code> of the cthyb solver.</p>
-<p>For an ergodic Markov chain with sufficient number of warmup sweeps, the perturbation order distribution should be approximately Gaussian (or Possonian for low average orders).</p>
+<p>Now, we can compare the high-frequency expansion of the self-energy to the real and imaginary parts of the self-energy obtained from the Dyson equation using the sampled Green’s function and input Weiss field. Let us first have a look at the calculated moments and then plot the real part, corresponding to the overall Hartree shift, and the imaginary part of the measured self-energy together with the high-frequency expansion obtained from the moments:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">triqs.plot.mpl_interface</span> <span class="kn">import</span> <span class="n">oplot</span><span class="p">,</span> <span class="n">oplotr</span><span class="p">,</span> <span class="n">plt</span>
-
-<span class="n">oplot</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">perturbation_order_total</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;total&#39;</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">S</span><span class="o">.</span><span class="n">perturbation_order</span><span class="p">:</span>
-    <span class="n">oplot</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">perturbation_order</span><span class="p">[</span><span class="n">b</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;block </span><span class="si">{:s}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
-
-<span class="n">plt</span><span class="o">.</span><span class="n">semilogy</span><span class="p">([],</span> <span class="p">[])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">40</span><span class="p">]);</span>
+<span></span><span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">moment</span> <span class="ow">in</span> <span class="n">S</span><span class="o">.</span><span class="n">Sigma_moments</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-------&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">block</span><span class="si">}</span><span class="s1">:&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">moment</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;𝚺_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">= </span><span class="si">{</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="si">:</span><span class="s1">1.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -689,10 +763,110 @@ Average sign: (1,0)
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/guide_perturbation_order_notebook_4_0.svg" src="../_images/guide_perturbation_order_notebook_4_0.svg" /></div>
+<div class="highlight"><pre>
+-------
+up:
+𝚺_0= 2.0033
+𝚺_1= 4.0000
+-------
+down:
+𝚺_0= 1.9967
+𝚺_1= 4.0000
+</pre></div></div>
 </div>
-<p>The total average perturbation order is important information to determine the <code class="docutils literal notranslate"><span class="pre">length_cycle</span></code> parameter that controls the number of attempted moves between measurements. To ensure low correlation between measurements the <code class="docutils literal notranslate"><span class="pre">length_cycle</span></code> should be high enough that the attempted moves can significanty change the configuration.</p>
-<p>Autor: H. U.R. Strand (2019)</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">moment</span> <span class="ow">in</span> <span class="n">S</span><span class="o">.</span><span class="n">G_moments</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-------&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">block</span><span class="si">}</span><span class="s1">:&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">moment</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Gimp_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">= </span><span class="si">{</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="si">:</span><span class="s1">1.4f</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+-------
+up:
+Gimp_0= 0.0000
+Gimp_1= 1.0000
+Gimp_2= 0.0033
+-------
+down:
+Gimp_0= 0.0000
+Gimp_1= 1.0000
+Gimp_2= -0.0033
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+
+<span class="c1"># prepare highfreq expansion for plotting on grid</span>
+<span class="n">iwn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">complex</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">S</span><span class="o">.</span><span class="n">Sigma_iw</span><span class="o">.</span><span class="n">mesh</span><span class="p">])</span>
+<span class="n">high_freq</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Sigma_moments</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">S</span><span class="o">.</span><span class="n">Sigma_moments</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">iwn</span>
+
+<span class="c1"># plot Re component</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">oplot</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Sigma_iw</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;CTHYB&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">iwn</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="n">high_freq</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;$\Sigma_{\infty} + \Sigma_</span><span class="si">{1}</span><span class="s1">/i\omega_</span><span class="si">{n}</span><span class="s1">$&#39;</span><span class="p">)</span>
+
+<span class="c1"># plot Im component</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">oplot</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Sigma_iw</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;CTHYB&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">iwn</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="n">high_freq</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;$\Sigma_{\infty} + \Sigma_</span><span class="si">{1}</span><span class="s1">/i\omega_</span><span class="si">{n}</span><span class="s1">$&#39;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">();</span> <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$i\omega_</span><span class="si">{n}</span><span class="s1">$&#39;</span><span class="p">);</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$i\omega_</span><span class="si">{n}</span><span class="s1">$&#39;</span><span class="p">);</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Re$\Sigma(i\omega_</span><span class="si">{n}</span><span class="s1">)$ (eV)&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Im$\Sigma(i\omega_</span><span class="si">{n}</span><span class="s1">)$ (eV)&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">);</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">);</span> <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">wspace</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/guide_high_freq_moments_7_0.png" src="../_images/guide_high_freq_moments_7_0.png" />
+</div>
+</div>
+<p>Additionally, we can verify the relationship between the first moment of the Green’s function and first moment of the self-energy,</p>
+<div class="math notranslate nohighlight">
+\[\mathbf{\Sigma}_{\infty} = \mathbf{G}_{1} - (\mathbf{G}_{0})_{1}\]</div>
+<div class="math notranslate nohighlight">
+\[\mathbf{\Sigma}_{\infty} = \mathbf{G}_{1} - \mathbf{E},\]</div>
+<p>where <span class="math notranslate nohighlight">\(\mathbf{E}\)</span> are the local impurity levels.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">E</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="p">:</span> <span class="n">coef</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">coef</span> <span class="ow">in</span> <span class="n">S</span><span class="o">.</span><span class="n">h_loc0</span><span class="p">}</span>
+<span class="nb">print</span><span class="p">((</span><span class="n">S</span><span class="o">.</span><span class="n">Sigma_moments</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span> <span class="n">S</span><span class="o">.</span><span class="n">G_moments</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">E</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">])[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+-2.3092638912203256e-14
+</pre></div></div>
+</div>
+<p>Hence, the above equation holds exactly up to machine precision!</p>
 </div>
 </div>
 
@@ -700,8 +874,8 @@ Average sign: (1,0)
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="dynamic_susceptibility_notebook.html" class="btn btn-neutral float-left" title="Dynamical spin-spin susceptibility \(\chi_{S_z S_z}(\tau)\)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="aim.html" class="btn btn-neutral float-right" title="The Anderson impurity model" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="cthyb_convergence_tests.html" class="btn btn-neutral float-left" title="Convergence test of CTHYB solver parameters" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../_ref/triqs_cthyb.multiplet_tools.html" class="btn btn-neutral float-right" title="triqs_cthyb.multiplet_tools" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
