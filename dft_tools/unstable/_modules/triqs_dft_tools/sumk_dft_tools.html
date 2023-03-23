@@ -687,10 +687,11 @@
 
         <span class="n">things_to_read</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;n_parproj&#39;</span><span class="p">,</span> <span class="s1">&#39;proj_mat_all&#39;</span><span class="p">,</span>
                           <span class="s1">&#39;rot_mat_all&#39;</span><span class="p">,</span> <span class="s1">&#39;rot_mat_all_time_inv&#39;</span><span class="p">]</span>
-        <span class="n">value_read</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_input_from_hdf</span><span class="p">(</span>
+        <span class="n">subgroup_present</span><span class="p">,</span> <span class="n">values_not_read</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_input_from_hdf</span><span class="p">(</span>
             <span class="n">subgrp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parproj_data</span><span class="p">,</span> <span class="n">things_to_read</span><span class="o">=</span><span class="n">things_to_read</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">value_read</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">value_read</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values_not_read</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;ERROR: One or more necessary SumK input properties have not been found in the given h5 archive:&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">values_not_read</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">symm_op</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">symmpar</span> <span class="o">=</span> <span class="n">Symmetry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf_file</span><span class="p">,</span> <span class="n">subgroup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">symmpar_data</span><span class="p">)</span>
 
@@ -835,15 +836,17 @@
 
         <span class="k">if</span> <span class="p">(</span><span class="n">pdos</span><span class="p">):</span>
           <span class="n">things_to_read</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;maxlm&#39;</span><span class="p">,</span> <span class="s1">&#39;bc&#39;</span><span class="p">]</span>
-          <span class="n">value_read</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_input_from_hdf</span><span class="p">(</span>
-            <span class="n">subgrp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bc_data</span><span class="p">,</span> <span class="n">things_to_read</span><span class="o">=</span><span class="n">things_to_read</span><span class="p">)</span>
-          <span class="k">if</span> <span class="ow">not</span> <span class="n">value_read</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">value_read</span>
+          <span class="n">subgroup_present</span><span class="p">,</span> <span class="n">values_not_read</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_input_from_hdf</span><span class="p">(</span>
+              <span class="n">subgrp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bc_data</span><span class="p">,</span> <span class="n">things_to_read</span><span class="o">=</span><span class="n">things_to_read</span><span class="p">)</span>
+          <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values_not_read</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;ERROR: One or more necessary SumK input properties have not been found in the given h5 archive:&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">values_not_read</span><span class="p">)</span>
           <span class="n">things_to_read</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;n_atoms&#39;</span><span class="p">]</span>
-          <span class="n">value_read</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_input_from_hdf</span><span class="p">(</span>
-            <span class="n">subgrp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">symmcorr_data</span><span class="p">,</span> <span class="n">things_to_read</span><span class="o">=</span><span class="n">things_to_read</span><span class="p">)</span>
-          <span class="k">if</span> <span class="ow">not</span> <span class="n">value_read</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">value_read</span>
+          <span class="n">subgroup_present</span><span class="p">,</span> <span class="n">values_not_read</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_input_from_hdf</span><span class="p">(</span>
+              <span class="n">subgrp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">symmcorr_data</span><span class="p">,</span> <span class="n">things_to_read</span><span class="o">=</span><span class="n">things_to_read</span><span class="p">)</span>
+          <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values_not_read</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;ERROR: One or more necessary SumK input properties have not been found in the given h5 archive:&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">values_not_read</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">mesh</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">with_Sigma</span><span class="p">:</span>
             <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">MeshReFreq</span><span class="p">),</span> <span class="s2">&quot;mesh must be given if self.mesh is a MeshImFreq&quot;</span>
@@ -1004,10 +1007,11 @@
         <span class="c1">#read in the energy contour energies and projectors</span>
         <span class="n">things_to_read</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;n_k&#39;</span><span class="p">,</span><span class="s1">&#39;bmat&#39;</span><span class="p">,</span><span class="s1">&#39;symlat&#39;</span><span class="p">,</span><span class="s1">&#39;n_symm&#39;</span><span class="p">,</span><span class="s1">&#39;vkl&#39;</span><span class="p">,</span>
                           <span class="s1">&#39;n_orbitals&#39;</span><span class="p">,</span> <span class="s1">&#39;proj_mat&#39;</span><span class="p">,</span> <span class="s1">&#39;hopping&#39;</span><span class="p">]</span>
-        <span class="n">value_read</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_input_from_hdf</span><span class="p">(</span>
+        <span class="n">subgroup_present</span><span class="p">,</span> <span class="n">values_not_read</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_input_from_hdf</span><span class="p">(</span>
           <span class="n">subgrp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fs_data</span><span class="p">,</span> <span class="n">things_to_read</span><span class="o">=</span><span class="n">things_to_read</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">value_read</span><span class="p">:</span>
-          <span class="k">return</span> <span class="n">value_read</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values_not_read</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;ERROR: One or more necessary SumK input properties have not been found in the given h5 archive:&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">values_not_read</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">with_Sigma</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">or</span> <span class="n">mesh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">MeshReFreq</span><span class="p">),</span> <span class="s2">&quot;SumkDFT.mesh must be real if with_Sigma is True or mesh is not given&quot;</span>
@@ -1173,16 +1177,18 @@
 
         <span class="n">things_to_read</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;n_k&#39;</span><span class="p">,</span> <span class="s1">&#39;n_orbitals&#39;</span><span class="p">,</span> <span class="s1">&#39;proj_mat&#39;</span><span class="p">,</span>
                           <span class="s1">&#39;hopping&#39;</span><span class="p">,</span> <span class="s1">&#39;n_parproj&#39;</span><span class="p">,</span> <span class="s1">&#39;proj_mat_all&#39;</span><span class="p">]</span>
-        <span class="n">value_read</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_input_from_hdf</span><span class="p">(</span>
+        <span class="n">subgroup_present</span><span class="p">,</span> <span class="n">values_not_read</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_input_from_hdf</span><span class="p">(</span>
             <span class="n">subgrp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bands_data</span><span class="p">,</span> <span class="n">things_to_read</span><span class="o">=</span><span class="n">things_to_read</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">value_read</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">value_read</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values_not_read</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;ERROR: One or more necessary SumK input properties have not been found in the given h5 archive:&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">values_not_read</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">ishell</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">things_to_read</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;rot_mat_all&#39;</span><span class="p">,</span> <span class="s1">&#39;rot_mat_all_time_inv&#39;</span><span class="p">]</span>
-            <span class="n">value_read</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_input_from_hdf</span><span class="p">(</span>
+            <span class="n">subgroup_present</span><span class="p">,</span> <span class="n">values_not_read</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_input_from_hdf</span><span class="p">(</span>
                 <span class="n">subgrp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parproj_data</span><span class="p">,</span> <span class="n">things_to_read</span><span class="o">=</span><span class="n">things_to_read</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">value_read</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">value_read</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values_not_read</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s1">&#39;ERROR: One or more necessary SumK input properties have not been found in the given h5 archive:&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">values_not_read</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">mu</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">mu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chemical_potential</span>
@@ -1312,10 +1318,11 @@
 
         <span class="n">things_to_read</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;dens_mat_below&#39;</span><span class="p">,</span> <span class="s1">&#39;n_parproj&#39;</span><span class="p">,</span>
                           <span class="s1">&#39;proj_mat_all&#39;</span><span class="p">,</span> <span class="s1">&#39;rot_mat_all&#39;</span><span class="p">,</span> <span class="s1">&#39;rot_mat_all_time_inv&#39;</span><span class="p">]</span>
-        <span class="n">value_read</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_input_from_hdf</span><span class="p">(</span>
+        <span class="n">subgroup_present</span><span class="p">,</span> <span class="n">values_not_read</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_input_from_hdf</span><span class="p">(</span>
             <span class="n">subgrp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parproj_data</span><span class="p">,</span> <span class="n">things_to_read</span><span class="o">=</span><span class="n">things_to_read</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">value_read</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">value_read</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values_not_read</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;ERROR: One or more necessary SumK input properties have not been found in the given h5 archive:&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">values_not_read</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">symm_op</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">symmpar</span> <span class="o">=</span> <span class="n">Symmetry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf_file</span><span class="p">,</span> <span class="n">subgroup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">symmpar_data</span><span class="p">)</span>
 
