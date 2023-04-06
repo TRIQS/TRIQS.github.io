@@ -60,6 +60,7 @@
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/hartree_fock.utils.html">hartree_fock.utils</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../_autosummary/hartree_fock.utils.compute_DC_from_density.html">hartree_fock.utils.compute_DC_from_density</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../_autosummary/hartree_fock.utils.fermi.html">hartree_fock.utils.fermi</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../_autosummary/hartree_fock.utils.flatten.html">hartree_fock.utils.flatten</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../_autosummary/hartree_fock.utils.logo.html">hartree_fock.utils.logo</a></li>
@@ -192,7 +193,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">git_hash</span> <span class="o">=</span> <span class="s2">&quot;@PROJECT_GIT_HASH@&quot;</span></div>
 
-<div class="viewcode-block" id="LatticeSolver.solve"><a class="viewcode-back" href="../../_autosummary/hartree_fock.lattice.LatticeSolver.solve.html#hartree_fock.lattice.LatticeSolver.solve">[docs]</a>    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h_int</span><span class="p">,</span> <span class="n">N_target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">with_fock</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">one_shot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="LatticeSolver.solve"><a class="viewcode-back" href="../../_autosummary/hartree_fock.lattice.LatticeSolver.solve.html#hartree_fock.lattice.LatticeSolver.solve">[docs]</a>    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h_int</span><span class="p">,</span> <span class="n">N_target</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">with_fock</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">one_shot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;broyden1&#39;</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Solve for the Hartree Fock self energy using a root finder method.</span>
 <span class="sd">        The self energy is stored in the ``Sigma_HF`` object of the LatticeSolver instance.</span>
 <span class="sd">        If a fixed target density ``N_target`` is given, then the chemical potential is calculated</span>
@@ -215,6 +216,10 @@
 
 <span class="sd">        one_shot : optional, bool</span>
 <span class="sd">            True if the calcualtion is just one shot and not self consistent. Default is False</span>
+
+<span class="sd">        method : optional, string</span>
+<span class="sd">            method for root finder. Only used if one_shot=False, see scipy.optimize.root</span>
+<span class="sd">            for options. Default : &#39;broyden1&#39;</span>
 
 <span class="sd">        tol: optional, float</span>
 <span class="sd">            Convergence tolerance to pass to root finder</span>
@@ -283,9 +288,9 @@
 
         <span class="k">else</span><span class="p">:</span>  <span class="c1"># self consistent Hartree-Fock</span>
             <span class="k">if</span> <span class="n">tol</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">root_finder</span> <span class="o">=</span> <span class="n">root</span><span class="p">(</span><span class="n">target_function</span><span class="p">,</span> <span class="n">flatten</span><span class="p">(</span><span class="n">Sigma_HF_init</span><span class="p">),</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;broyden1&#39;</span><span class="p">)</span>
+                <span class="n">root_finder</span> <span class="o">=</span> <span class="n">root</span><span class="p">(</span><span class="n">target_function</span><span class="p">,</span> <span class="n">flatten</span><span class="p">(</span><span class="n">Sigma_HF_init</span><span class="p">),</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">root_finder</span> <span class="o">=</span> <span class="n">root</span><span class="p">(</span><span class="n">target_function</span><span class="p">,</span> <span class="n">flatten</span><span class="p">(</span><span class="n">Sigma_HF_init</span><span class="p">),</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;broyden1&#39;</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
+                <span class="n">root_finder</span> <span class="o">=</span> <span class="n">root</span><span class="p">(</span><span class="n">target_function</span><span class="p">,</span> <span class="n">flatten</span><span class="p">(</span><span class="n">Sigma_HF_init</span><span class="p">),</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">root_finder</span><span class="p">[</span><span class="s1">&#39;success&#39;</span><span class="p">]:</span>
                 <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Self Consistent Hartree-Fock converged successfully&#39;</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_HF</span> <span class="o">=</span> <span class="n">unflatten</span><span class="p">(</span><span class="n">root_finder</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">force_real</span><span class="p">)</span>

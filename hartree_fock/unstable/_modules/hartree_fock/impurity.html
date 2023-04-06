@@ -60,6 +60,7 @@
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/hartree_fock.utils.html">hartree_fock.utils</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../_autosummary/hartree_fock.utils.compute_DC_from_density.html">hartree_fock.utils.compute_DC_from_density</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../_autosummary/hartree_fock.utils.fermi.html">hartree_fock.utils.fermi</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../_autosummary/hartree_fock.utils.flatten.html">hartree_fock.utils.flatten</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../_autosummary/hartree_fock.utils.logo.html">hartree_fock.utils.logo</a></li>
@@ -135,19 +136,23 @@
 <span class="c1"># You may obtain a copy of the License at</span>
 <span class="c1">#     https:#www.gnu.org/licenses/gpl-3.0.txt</span>
 <span class="c1">#</span>
-<span class="c1"># Authors: Jonathan Karp, Alexander Hampel, Nils Wentzell, Hugo U. R. Strand, Olivier Parcollet</span>
+<span class="c1"># Authors: Jonathan Karp, Alexander Hampel, Alberto Carta, Nils Wentzell, Hugo U. R. Strand, Olivier Parcollet</span>
 
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">contextlib</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">root</span>
 <span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">import</span> <span class="nn">triqs.utility.mpi</span> <span class="k">as</span> <span class="nn">mpi</span>
 <span class="kn">from</span> <span class="nn">h5.formats</span> <span class="kn">import</span> <span class="n">register_class</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">logo</span><span class="p">,</span> <span class="n">flatten</span><span class="p">,</span> <span class="n">unflatten</span><span class="p">,</span> <span class="n">compute_DC_from_density</span>
 
 
 <div class="viewcode-block" id="ImpuritySolver"><a class="viewcode-back" href="../../_autosummary/hartree_fock.impurity.ImpuritySolver.html#hartree_fock.impurity.ImpuritySolver">[docs]</a><span class="k">class</span> <span class="nc">ImpuritySolver</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 
-    <span class="sd">&quot;&quot;&quot; Hartree-Fock Impurity solver.</span>
+    <span class="sd">&quot;&quot;&quot; Hartree-Fock Impurity solver. The solver provides a constant sigma which rigidly shifts the local orbital levels</span>
+<span class="sd">        The solver is always initialized without double counting and it is left to the user to provide the relevant dc values</span>
+<span class="sd">        before calling the solve() method.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -160,6 +165,12 @@
 
 <span class="sd">    beta : float</span>
 <span class="sd">        inverse temperature</span>
+<span class="sd">    </span>
+<span class="sd">    dc_U : float</span>
+<span class="sd">        Hubbard U parameter used in the double counting computation</span>
+<span class="sd">    </span>
+<span class="sd">    dc_J : float</span>
+<span class="sd">        J parameter used in the double counting computation</span>
 
 <span class="sd">    n_iw: integer, optional.</span>
 <span class="sd">        Number of matsubara frequencies in the Matsubara Green&#39;s function. Default is 1025.</span>
@@ -172,18 +183,36 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="ImpuritySolver.__init__"><a class="viewcode-back" href="../../_autosummary/hartree_fock.impurity.ImpuritySolver.__init__.html#hartree_fock.impurity.ImpuritySolver.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gf_struct</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">n_iw</span><span class="o">=</span><span class="mi">1025</span><span class="p">,</span> <span class="n">symmetries</span><span class="o">=</span><span class="p">[],</span> <span class="n">force_real</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="ImpuritySolver.__init__"><a class="viewcode-back" href="../../_autosummary/hartree_fock.impurity.ImpuritySolver.__init__.html#hartree_fock.impurity.ImpuritySolver.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gf_struct</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">dc</span><span class="o">=</span><span class="kc">False</span> <span class="p">,</span> <span class="n">dc_U</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">dc_J</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">dc_type</span><span class="o">=</span><span class="s1">&#39;cFLL&#39;</span><span class="p">,</span> <span class="n">n_iw</span><span class="o">=</span><span class="mi">1025</span><span class="p">,</span> <span class="n">symmetries</span><span class="o">=</span><span class="p">[],</span>  <span class="n">force_real</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct</span> <span class="o">=</span> <span class="n">gf_struct</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_orb</span> <span class="o">=</span> <span class="n">gf_struct</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_iw</span> <span class="o">=</span> <span class="n">n_iw</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">symmetries</span> <span class="o">=</span> <span class="n">symmetries</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">force_real</span> <span class="o">=</span> <span class="n">force_real</span>
+        
+        <span class="c1">#defaults for DC relevant values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dc</span> <span class="o">=</span> <span class="n">dc</span>          <span class="c1"># whether to compute dc value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dc_type</span> <span class="o">=</span> <span class="n">dc_type</span>   <span class="c1"># method used for dc_calculation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dc_U</span> <span class="o">=</span> <span class="n">dc_U</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dc_J</span> <span class="o">=</span> <span class="n">dc_J</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dc_factor</span> <span class="o">=</span> <span class="mf">1.0</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">dc_fixed_occ</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dc_fixed_value</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Here Sigma_HF gets initialized to numerical zeros</span>
+        <span class="c1"># If you want to change this guess, use the method</span>
+        <span class="c1"># reinitialize_sigma before calling the solve() method</span>
         <span class="k">if</span> <span class="n">force_real</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_HF</span> <span class="o">=</span> <span class="p">{</span><span class="n">bl</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">bl_size</span><span class="p">,</span> <span class="n">bl_size</span><span class="p">))</span> <span class="k">for</span> <span class="n">bl</span><span class="p">,</span> <span class="n">bl_size</span> <span class="ow">in</span> <span class="n">gf_struct</span><span class="p">}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_DC</span> <span class="o">=</span> <span class="p">{</span><span class="n">bl</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">bl_size</span><span class="p">,</span> <span class="n">bl_size</span><span class="p">))</span> <span class="k">for</span> <span class="n">bl</span><span class="p">,</span> <span class="n">bl_size</span> <span class="ow">in</span> <span class="n">gf_struct</span><span class="p">}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_int</span> <span class="o">=</span> <span class="p">{</span><span class="n">bl</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">bl_size</span><span class="p">,</span> <span class="n">bl_size</span><span class="p">))</span> <span class="k">for</span> <span class="n">bl</span><span class="p">,</span> <span class="n">bl_size</span> <span class="ow">in</span> <span class="n">gf_struct</span><span class="p">}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_HF</span> <span class="o">=</span> <span class="p">{</span><span class="n">bl</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">bl_size</span><span class="p">,</span> <span class="n">bl_size</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span> <span class="k">for</span> <span class="n">bl</span><span class="p">,</span> <span class="n">bl_size</span> <span class="ow">in</span> <span class="n">gf_struct</span><span class="p">}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_DC</span> <span class="o">=</span> <span class="p">{</span><span class="n">bl</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">bl_size</span><span class="p">,</span> <span class="n">bl_size</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span> <span class="k">for</span> <span class="n">bl</span><span class="p">,</span> <span class="n">bl_size</span> <span class="ow">in</span> <span class="n">gf_struct</span><span class="p">}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_int</span> <span class="o">=</span> <span class="p">{</span><span class="n">bl</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">bl_size</span><span class="p">,</span> <span class="n">bl_size</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span> <span class="k">for</span> <span class="n">bl</span><span class="p">,</span> <span class="n">bl_size</span> <span class="ow">in</span> <span class="n">gf_struct</span><span class="p">}</span>
 
         <span class="n">name_list</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">block_list</span> <span class="o">=</span> <span class="p">[]</span>
@@ -194,7 +223,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">G_iw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">G0_iw</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">git_hash</span> <span class="o">=</span> <span class="s2">&quot;@PROJECT_GIT_HASH@&quot;</span></div>
 
-<div class="viewcode-block" id="ImpuritySolver.solve"><a class="viewcode-back" href="../../_autosummary/hartree_fock.impurity.ImpuritySolver.solve.html#hartree_fock.impurity.ImpuritySolver.solve">[docs]</a>    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h_int</span><span class="p">,</span> <span class="n">with_fock</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">one_shot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="ImpuritySolver.solve"><a class="viewcode-back" href="../../_autosummary/hartree_fock.impurity.ImpuritySolver.solve.html#hartree_fock.impurity.ImpuritySolver.solve">[docs]</a>    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h_int</span><span class="p">,</span> <span class="n">with_fock</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">one_shot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;krylov&#39;</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Solve for the Hartree Fock self energy using a root finder method.</span>
 <span class="sd">        The self energy is stored in the ``Sigma_HF`` object of the ImpuritySolver instance.</span>
 <span class="sd">        The Green&#39;s function is stored in the ``G_iw`` object of the ImpuritySolver instance.</span>
@@ -211,6 +240,14 @@
 <span class="sd">        one_shot : optional, bool</span>
 <span class="sd">            True if the calcualtion is just one shot and not self consistent. Default is False</span>
 
+<span class="sd">        method : optional, string</span>
+<span class="sd">            method for root finder. Only used if one_shot=False, see scipy.optimize.root</span>
+<span class="sd">            for options. Default : krylov</span>
+
+<span class="sd">        tol : optional, float</span>
+<span class="sd">            tolerance for root finder if one_shot=False. default 1e-5</span>
+
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">last_solve_params</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">locals</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="s1">&#39;self&#39;</span><span class="p">}</span>
         <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">logo</span><span class="p">())</span>
@@ -218,17 +255,35 @@
         <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;beta = </span><span class="si">%.4f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">)</span>
         <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;h_int =&#39;</span><span class="p">,</span> <span class="n">h_int</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">one_shot</span><span class="p">:</span>
-            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;mode: one shot&#39;</span><span class="p">)</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;HARTREE SOLVER: starting solver in one-shot mode&#39;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;mode: self-consistent&#39;</span><span class="p">)</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;HARTREE SOLVER: starting solver in self-consistent mode&#39;</span><span class="p">)</span>
         <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Including Fock terms:&#39;</span><span class="p">,</span> <span class="n">with_fock</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">Sigma_HF_flat</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">compute_sigma_hartree</span><span class="p">(</span><span class="n">Sigma_HF_flat</span><span class="p">,</span> <span class="n">return_everything</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot; Inner function dedicated to computing</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+
+<span class="sd">            Sigma_HF_flat : list</span>
+<span class="sd">                Flattened out sigma as computed with the flatten() function in the utils,</span>
+<span class="sd">                this choice is to interface with the root finding routines in scipy</span>
+
+<span class="sd">            return_everything : optional, bool, default=True</span>
+<span class="sd">                If True, the function returns a tuple of unflattened Sigma_HF, Sigma_int, Sigma_DC </span>
+<span class="sd">                if False, the function returns the flattened difference between the input and computed sigma</span>
+
+<span class="sd">            &quot;&quot;&quot;</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">force_real</span><span class="p">:</span>
                 <span class="n">Sigma_HF</span> <span class="o">=</span> <span class="p">{</span><span class="n">bl</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">bl_size</span><span class="p">,</span> <span class="n">bl_size</span><span class="p">))</span> <span class="k">for</span> <span class="n">bl</span><span class="p">,</span> <span class="n">bl_size</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct</span><span class="p">}</span>
+                <span class="n">Sigma_DC</span> <span class="o">=</span> <span class="p">{</span><span class="n">bl</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">bl_size</span><span class="p">,</span> <span class="n">bl_size</span><span class="p">))</span> <span class="k">for</span> <span class="n">bl</span><span class="p">,</span> <span class="n">bl_size</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct</span><span class="p">}</span>
+                <span class="n">Sigma_int</span> <span class="o">=</span> <span class="p">{</span><span class="n">bl</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">bl_size</span><span class="p">,</span> <span class="n">bl_size</span><span class="p">))</span> <span class="k">for</span> <span class="n">bl</span><span class="p">,</span> <span class="n">bl_size</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct</span><span class="p">}</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">Sigma_HF</span> <span class="o">=</span> <span class="p">{</span><span class="n">bl</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">bl_size</span><span class="p">,</span> <span class="n">bl_size</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span> <span class="k">for</span> <span class="n">bl</span><span class="p">,</span> <span class="n">bl_size</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct</span><span class="p">}</span>
+                <span class="n">Sigma_DC</span> <span class="o">=</span> <span class="p">{</span><span class="n">bl</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">bl_size</span><span class="p">,</span> <span class="n">bl_size</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span> <span class="k">for</span> <span class="n">bl</span><span class="p">,</span> <span class="n">bl_size</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct</span><span class="p">}</span>
+                <span class="n">Sigma_int</span> <span class="o">=</span> <span class="p">{</span><span class="n">bl</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">bl_size</span><span class="p">,</span> <span class="n">bl_size</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span> <span class="k">for</span> <span class="n">bl</span><span class="p">,</span> <span class="n">bl_size</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct</span><span class="p">}</span>
 
             <span class="n">G_iw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">G0_iw</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="n">G_dens</span> <span class="o">=</span> <span class="p">{}</span>
@@ -241,7 +296,46 @@
                     <span class="k">if</span> <span class="n">max_imag</span> <span class="o">&gt;</span> <span class="mf">1e-10</span><span class="p">:</span>
                         <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Warning! Discarding imaginary part of density matrix. Largest imaginary part: </span><span class="si">%f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">max_imag</span><span class="p">)</span>
                     <span class="n">G_dens</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span> <span class="o">=</span> <span class="n">G_dens</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span><span class="o">.</span><span class="n">real</span>
+            
+            <span class="k">for</span> <span class="n">bl</span><span class="p">,</span> <span class="n">G0_bl</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">G0_iw</span><span class="p">:</span>
+                <span class="c1">#add DC</span>
+                <span class="n">n_tot</span> <span class="o">=</span> <span class="n">G_iw</span><span class="o">.</span><span class="n">total_density</span><span class="p">()</span><span class="o">.</span><span class="n">real</span>
+                <span class="n">n_up</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">n_tot</span>
+                <span class="n">n_down</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">n_tot</span>
+                <span class="n">n_spin</span> <span class="o">=</span> <span class="n">G_iw</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span><span class="o">.</span><span class="n">total_density</span><span class="p">()</span><span class="o">.</span><span class="n">real</span>
 
+
+                <span class="c1"># no dc gets handled as a zero dc_factor</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">dc</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dc_fixed_value</span> <span class="o">=</span> <span class="mf">0.0</span>
+                
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dc_fixed_occ</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">HARTREE SOLVER: modifying occupations in DC calculation with given dc_fixed_occ = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dc_fixed_occ</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">n_tot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dc_fixed_occ</span>
+                    <span class="n">n_up</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">n_tot</span>
+                    <span class="n">n_down</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">n_tot</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dc_fixed_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">HARTREE SOLVER: computing DC for block </span><span class="si">{</span><span class="n">bl</span><span class="si">}</span><span class="s2"> with following parameters&quot;</span><span class="p">)</span>
+                    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;dc_U = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dc_U</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> &quot;</span><span class="p">)</span>
+                    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;dc_J = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dc_J</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                    
+                    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;HARTREE SOLVER: Calling DC calculation:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dc_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;sFLL&#39;</span><span class="p">,</span> <span class="s1">&#39;sAMF&#39;</span><span class="p">]:</span>
+                        <span class="n">DC_val</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">compute_DC_from_density</span><span class="p">(</span><span class="n">n_tot</span><span class="p">,</span> <span class="n">U</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dc_U</span><span class="p">,</span> <span class="n">J</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dc_J</span><span class="p">,</span> <span class="n">n_orbitals</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_orb</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dc_type</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">DC_val</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">compute_DC_from_density</span><span class="p">(</span><span class="n">n_tot</span><span class="p">,</span> <span class="n">U</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dc_U</span><span class="p">,</span> <span class="n">J</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dc_J</span><span class="p">,</span>
+                                                            <span class="n">n_orbitals</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_orb</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dc_type</span><span class="p">,</span> <span class="n">N_spin</span><span class="o">=</span><span class="n">n_spin</span><span class="p">)</span>
+                    <span class="n">Sigma_DC</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span> <span class="o">=</span> <span class="n">DC_val</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">G_dens</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+                    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">HARTREE SOLVER: multiplying DC by a factor </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dc_factor</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">Sigma_DC</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dc_factor</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">HARTREE SOLVER: fixing dc to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dc_fixed_value</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">Sigma_DC</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dc_fixed_value</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">G_dens</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="c1"># this assumes that hint is created with off_diag true, i.e. one up and one down block</span>
+            <span class="c1"># maybe change to the way it is done in TPRF</span>
             <span class="k">for</span> <span class="n">term</span><span class="p">,</span> <span class="n">coef</span> <span class="ow">in</span> <span class="n">h_int</span><span class="p">:</span>
                 <span class="n">bl1</span><span class="p">,</span> <span class="n">u1</span> <span class="o">=</span> <span class="n">term</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
                 <span class="n">bl2</span><span class="p">,</span> <span class="n">u2</span> <span class="o">=</span> <span class="n">term</span><span class="p">[</span><span class="mi">3</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
@@ -249,44 +343,100 @@
                 <span class="n">bl4</span><span class="p">,</span> <span class="n">u4</span> <span class="o">=</span> <span class="n">term</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
 
                 <span class="k">assert</span><span class="p">(</span><span class="n">bl1</span> <span class="o">==</span> <span class="n">bl2</span> <span class="ow">and</span> <span class="n">bl3</span> <span class="o">==</span> <span class="n">bl4</span><span class="p">)</span>
-
-                <span class="n">Sigma_HF</span><span class="p">[</span><span class="n">bl1</span><span class="p">][</span><span class="n">u2</span><span class="p">,</span> <span class="n">u1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">coef</span> <span class="o">*</span> <span class="n">G_dens</span><span class="p">[</span><span class="n">bl3</span><span class="p">][</span><span class="n">u4</span><span class="p">,</span> <span class="n">u3</span><span class="p">]</span>
-                <span class="n">Sigma_HF</span><span class="p">[</span><span class="n">bl3</span><span class="p">][</span><span class="n">u4</span><span class="p">,</span> <span class="n">u3</span><span class="p">]</span> <span class="o">+=</span> <span class="n">coef</span> <span class="o">*</span> <span class="n">G_dens</span><span class="p">[</span><span class="n">bl1</span><span class="p">][</span><span class="n">u2</span><span class="p">,</span> <span class="n">u1</span><span class="p">]</span>
+                <span class="n">Sigma_int</span><span class="p">[</span><span class="n">bl1</span><span class="p">][</span><span class="n">u2</span><span class="p">,</span> <span class="n">u1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">coef</span> <span class="o">*</span> <span class="n">G_dens</span><span class="p">[</span><span class="n">bl3</span><span class="p">][</span><span class="n">u4</span><span class="p">,</span> <span class="n">u3</span><span class="p">]</span> 
+                <span class="n">Sigma_int</span><span class="p">[</span><span class="n">bl3</span><span class="p">][</span><span class="n">u4</span><span class="p">,</span> <span class="n">u3</span><span class="p">]</span> <span class="o">+=</span> <span class="n">coef</span> <span class="o">*</span> <span class="n">G_dens</span><span class="p">[</span><span class="n">bl1</span><span class="p">][</span><span class="n">u2</span><span class="p">,</span> <span class="n">u1</span><span class="p">]</span>
 
                 <span class="k">if</span> <span class="n">bl1</span> <span class="o">==</span> <span class="n">bl3</span> <span class="ow">and</span> <span class="n">with_fock</span><span class="p">:</span>
-                    <span class="n">Sigma_HF</span><span class="p">[</span><span class="n">bl1</span><span class="p">][</span><span class="n">u4</span><span class="p">,</span> <span class="n">u1</span><span class="p">]</span> <span class="o">-=</span> <span class="n">coef</span> <span class="o">*</span> <span class="n">G_dens</span><span class="p">[</span><span class="n">bl3</span><span class="p">][</span><span class="n">u2</span><span class="p">,</span> <span class="n">u3</span><span class="p">]</span>
-                    <span class="n">Sigma_HF</span><span class="p">[</span><span class="n">bl3</span><span class="p">][</span><span class="n">u2</span><span class="p">,</span> <span class="n">u3</span><span class="p">]</span> <span class="o">-=</span> <span class="n">coef</span> <span class="o">*</span> <span class="n">G_dens</span><span class="p">[</span><span class="n">bl1</span><span class="p">][</span><span class="n">u4</span><span class="p">,</span> <span class="n">u1</span><span class="p">]</span>
+                    <span class="n">Sigma_int</span><span class="p">[</span><span class="n">bl1</span><span class="p">][</span><span class="n">u4</span><span class="p">,</span> <span class="n">u1</span><span class="p">]</span> <span class="o">-=</span> <span class="n">coef</span> <span class="o">*</span> <span class="n">G_dens</span><span class="p">[</span><span class="n">bl3</span><span class="p">][</span><span class="n">u2</span><span class="p">,</span> <span class="n">u3</span><span class="p">]</span>
+                    <span class="n">Sigma_int</span><span class="p">[</span><span class="n">bl3</span><span class="p">][</span><span class="n">u2</span><span class="p">,</span> <span class="n">u3</span><span class="p">]</span> <span class="o">-=</span> <span class="n">coef</span> <span class="o">*</span> <span class="n">G_dens</span><span class="p">[</span><span class="n">bl1</span><span class="p">][</span><span class="n">u4</span><span class="p">,</span> <span class="n">u1</span><span class="p">]</span>
 
             <span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">symmetries</span><span class="p">:</span>
-                <span class="n">Sigma_HF</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">Sigma_HF</span><span class="p">)</span>
+                <span class="n">Sigma_int</span> <span class="o">=</span> <span class="n">function</span><span class="p">(</span><span class="n">Sigma_int</span><span class="p">)</span>
+           
+            <span class="c1">#subtract double counting component from interaction to get total sigma</span>
+            <span class="k">for</span> <span class="n">bl</span><span class="p">,</span> <span class="n">G0_bl</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">G0_iw</span><span class="p">:</span>
+                <span class="n">Sigma_HF</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span> <span class="o">=</span> <span class="n">Sigma_int</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span><span class="o">-</span><span class="n">Sigma_DC</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span>
+                
+                <span class="c1"># As a last resort check, whatever the solver does when J=0  should be </span>
+                <span class="c1"># reduceable to the Dudarev formula, this is left here as a sanity </span>
+                <span class="c1"># check one may perform should the implementation change</span>
 
-            <span class="k">if</span> <span class="n">one_shot</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">Sigma_HF</span>
-            <span class="k">return</span> <span class="n">Sigma_HF_flat</span> <span class="o">-</span> <span class="n">flatten</span><span class="p">(</span><span class="n">Sigma_HF</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">force_real</span><span class="p">)</span>
+                <span class="c1">#Sigma_HF[bl] = self.U *(0.5 * np.eye(G_dens[bl].shape[0]) - G_dens[bl])</span>
+
+            <span class="k">if</span> <span class="n">return_everything</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Sigma_HF</span><span class="p">,</span> <span class="n">Sigma_int</span><span class="p">,</span> <span class="n">Sigma_DC</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Sigma_HF_flat</span> <span class="o">-</span> <span class="n">flatten</span><span class="p">(</span><span class="n">Sigma_HF</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">force_real</span><span class="p">)</span>
+        
+        <span class="k">def</span> <span class="nf">report_results</span><span class="p">(</span><span class="n">Sigma_HF</span><span class="p">,</span> <span class="n">G_dens</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">printoptions</span><span class="p">(</span><span class="n">suppress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+              <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">bl</span> <span class="ow">in</span> <span class="n">Sigma_HF</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                  <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;HARTREE SOLVER: Sigma_HF[</span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s1">]:&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+                  <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">bl</span><span class="p">)</span>
+              <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">bl</span> <span class="ow">in</span> <span class="n">G_dens</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                  <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Final G_dens[</span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s1">]:&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+                  <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">bl</span><span class="p">)</span>
+
+
+        <span class="c1">#initialize sigma to the stored value in the class</span>
 
         <span class="n">Sigma_HF_init</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_HF</span>
-
+        
         <span class="k">if</span> <span class="n">one_shot</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_HF</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">Sigma_HF_init</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">printoptions</span><span class="p">(</span><span class="n">suppress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+              <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">bl</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_HF</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;HARTREE SOLVER: Sigma_HF before iterating[</span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s1">]:&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">bl</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_HF</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_DC</span> <span class="o">=</span> <span class="n">compute_sigma_hartree</span><span class="p">(</span><span class="n">flatten</span><span class="p">(</span><span class="n">Sigma_HF_init</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">force_real</span><span class="p">),</span> <span class="n">return_everything</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_HF</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma_HF</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_int</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma_int</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_DC</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma_DC</span><span class="p">)</span>
+            
             <span class="k">for</span> <span class="n">bl</span><span class="p">,</span> <span class="n">G0_bl</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">G0_iw</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">G_iw</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">inverse</span><span class="p">(</span><span class="n">inverse</span><span class="p">(</span><span class="n">G0_bl</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_HF</span><span class="p">[</span><span class="n">bl</span><span class="p">])</span>
+            <span class="n">G_dens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">G_iw</span><span class="o">.</span><span class="n">density</span><span class="p">()</span>
+
+            <span class="n">report_results</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma_HF</span><span class="p">,</span> <span class="n">G_dens</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>  <span class="c1"># self consistent Hartree-Fock</span>
-            <span class="n">root_finder</span> <span class="o">=</span> <span class="n">root</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">flatten</span><span class="p">(</span><span class="n">Sigma_HF_init</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">force_real</span><span class="p">),</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;broyden1&#39;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">root_finder</span><span class="p">[</span><span class="s1">&#39;success&#39;</span><span class="p">]:</span>
-                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Self Consistent Hartree-Fock converged successfully&#39;</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_HF</span> <span class="o">=</span> <span class="n">unflatten</span><span class="p">(</span><span class="n">root_finder</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">force_real</span><span class="p">)</span>
-                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Calculated self energy:&#39;</span><span class="p">)</span>
-                <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">printoptions</span><span class="p">(</span><span class="n">suppress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
-                    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">bl</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_HF</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Sigma_HF[</span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s1">]:&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
-                        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">bl</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">bl</span><span class="p">,</span> <span class="n">G0_bl</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">G0_iw</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">G_iw</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">inverse</span><span class="p">(</span><span class="n">inverse</span><span class="p">(</span><span class="n">G0_bl</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_HF</span><span class="p">[</span><span class="n">bl</span><span class="p">])</span>
 
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Hartree-Fock solver did not converge successfully.&#39;</span><span class="p">)</span>
-                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">root_finder</span><span class="p">[</span><span class="s1">&#39;message&#39;</span><span class="p">])</span></div>
+            <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">printoptions</span><span class="p">(</span><span class="n">suppress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+              <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">bl</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_HF</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;HARTREE SOLVER: Sigma_HF before iterating[</span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s1">]:&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">bl</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+                <span class="c1">#remove printing calls from self-consistent sigma search</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">devnull</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outnull</span><span class="p">,</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">redirect_stdout</span><span class="p">(</span><span class="n">outnull</span><span class="p">):</span>
+                    <span class="n">root_finder</span> <span class="o">=</span> <span class="n">root</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">compute_sigma_hartree</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">return_everything</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+                                                <span class="n">flatten</span><span class="p">(</span><span class="n">Sigma_HF_init</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">force_real</span><span class="p">),</span>
+                                                <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
+                                                <span class="n">tol</span><span class="o">=</span><span class="n">tol</span>
+                                        <span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">root_finder</span><span class="p">[</span><span class="s1">&#39;success&#39;</span><span class="p">]:</span>
+                    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Self Consistent Hartree-Fock converged successfully, performing final iteration&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Hartree-Fock solver did not converge successfully. Feeding last iteration as guess&#39;</span><span class="p">)</span>
+                    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">root_finder</span><span class="p">[</span><span class="s1">&#39;message&#39;</span><span class="p">])</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_HF</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_DC</span> <span class="o">=</span> <span class="n">compute_sigma_hartree</span><span class="p">(</span><span class="n">root_finder</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">],</span> <span class="n">return_everything</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_HF</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma_HF</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_int</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma_int</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_DC</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma_DC</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">bl</span><span class="p">,</span> <span class="n">G0_bl</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">G0_iw</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">G_iw</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">inverse</span><span class="p">(</span><span class="n">inverse</span><span class="p">(</span><span class="n">G0_bl</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_HF</span><span class="p">[</span><span class="n">bl</span><span class="p">])</span>
+            <span class="n">G_dens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">G_iw</span><span class="o">.</span><span class="n">density</span><span class="p">()</span>
+            
+            <span class="n">report_results</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma_HF</span><span class="p">,</span> <span class="n">G_dens</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="ImpuritySolver.interaction_energy"><a class="viewcode-back" href="../../_autosummary/hartree_fock.impurity.ImpuritySolver.interaction_energy.html#hartree_fock.impurity.ImpuritySolver.interaction_energy">[docs]</a>    <span class="k">def</span> <span class="nf">interaction_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Calculate the interaction energy</span>
@@ -294,8 +444,42 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">E</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">bl</span><span class="p">,</span> <span class="n">gbl</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">G_iw</span><span class="p">:</span>
-            <span class="n">E</span> <span class="o">+=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma_HF</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">gbl</span><span class="o">.</span><span class="n">density</span><span class="p">()))</span>
+            <span class="n">E</span> <span class="o">+=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma_int</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">gbl</span><span class="o">.</span><span class="n">density</span><span class="p">()</span><span class="o">.</span><span class="n">real</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">E</span></div>
+    
+<div class="viewcode-block" id="ImpuritySolver.DC_energy"><a class="viewcode-back" href="../../_autosummary/hartree_fock.impurity.ImpuritySolver.DC_energy.html#hartree_fock.impurity.ImpuritySolver.DC_energy">[docs]</a>    <span class="k">def</span> <span class="nf">DC_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Calculate the DC energy</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">E</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">bl</span><span class="p">,</span> <span class="n">gbl</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">G_iw</span><span class="p">:</span>
+            <span class="n">E</span> <span class="o">+=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma_DC</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">gbl</span><span class="o">.</span><span class="n">density</span><span class="p">()</span><span class="o">.</span><span class="n">real</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">E</span></div>
+    
+<div class="viewcode-block" id="ImpuritySolver.reinitialize_sigma"><a class="viewcode-back" href="../../_autosummary/hartree_fock.impurity.ImpuritySolver.reinitialize_sigma.html#hartree_fock.impurity.ImpuritySolver.reinitialize_sigma">[docs]</a>    <span class="k">def</span> <span class="nf">reinitialize_sigma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Sigma_guess</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Changes in place the sigma with the average over frequencies of a given Gf object.</span>
+<span class="sd">            Used to update the initial guess, must be called before the solve() method</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            Sigma_guess : GfImFreq or GfReFreq object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># super ugly, needs changing</span>
+        <span class="k">for</span> <span class="n">bl</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_HF</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">force_real</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_HF</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">Sigma_guess</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_HF</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">Sigma_guess</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">printoptions</span><span class="p">(</span><span class="n">suppress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+          <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">bl</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma_HF</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+              <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;HARTREE SOLVER: Updated guess for Sigma_HF[</span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s1">]:&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+              <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">bl</span><span class="p">)</span></div>
+
+
+
+    
+
 
     <span class="k">def</span> <span class="nf">__reduce_to_dict__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">git_hash</span><span class="p">))</span>

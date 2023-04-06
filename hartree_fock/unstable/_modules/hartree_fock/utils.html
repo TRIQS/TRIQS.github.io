@@ -60,6 +60,7 @@
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="../../_autosummary/hartree_fock.utils.html">hartree_fock.utils</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../_autosummary/hartree_fock.utils.compute_DC_from_density.html">hartree_fock.utils.compute_DC_from_density</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../_autosummary/hartree_fock.utils.fermi.html">hartree_fock.utils.fermi</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../_autosummary/hartree_fock.utils.flatten.html">hartree_fock.utils.flatten</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../_autosummary/hartree_fock.utils.logo.html">hartree_fock.utils.logo</a></li>
@@ -138,6 +139,7 @@
 <span class="c1"># Authors: Jonathan Karp, Alexander Hampel, Nils Wentzell, Hugo U. R. Strand, Olivier Parcollet</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">triqs.utility.mpi</span> <span class="k">as</span> <span class="nn">mpi</span>
 
 
 <div class="viewcode-block" id="flatten"><a class="viewcode-back" href="../../_autosummary/hartree_fock.utils.flatten.html#hartree_fock.utils.flatten">[docs]</a><span class="k">def</span> <span class="nf">flatten</span><span class="p">(</span><span class="n">Sigma_HF</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -210,6 +212,90 @@
 <span class="s2">TRIQS: Hartree-Fock solver</span>
 <span class="s2">&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">logo</span></div>
+
+<div class="viewcode-block" id="compute_DC_from_density"><a class="viewcode-back" href="../../_autosummary/hartree_fock.utils.compute_DC_from_density.html#hartree_fock.utils.compute_DC_from_density">[docs]</a><span class="k">def</span> <span class="nf">compute_DC_from_density</span><span class="p">(</span><span class="n">N_tot</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">J</span><span class="p">,</span> <span class="n">N_spin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="n">n_orbitals</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>  <span class="n">method</span><span class="o">=</span><span class="s1">&#39;sFLL&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes the double counting correction using various methods.</span>
+<span class="sd">    For FLL and AMF DC the notations and equations from doi.org/10.1038/s41598-018-27731-4</span>
+<span class="sd">    are used, whereas for the Held DC the definitions from doi.org/10.1080/00018730701619647 are used.</span>
+
+<span class="sd">    TODO: this is a copy of triqs_dft_tools.util.compute_DC_from_density to remove dependency on dfttools</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    N_tot : float </span>
+<span class="sd">        Total density of the impurity</span>
+<span class="sd">    N_spin : float , default = None</span>
+<span class="sd">        Spin density, defaults to N_tot*0.5 if not specified</span>
+<span class="sd">    U : float </span>
+<span class="sd">        U value</span>
+<span class="sd">    J : float </span>
+<span class="sd">        J value</span>
+<span class="sd">    n_orbitals : int, default = 5</span>
+<span class="sd">        Total number of orbitals</span>
+<span class="sd">    method : string, default = &#39;cFLL&#39; </span>
+<span class="sd">        possibilities:</span>
+<span class="sd">        -    cFLL: DC potential from Ryee for spin unpolarized DFT: (DOI: 10.1038/s41598-018-27731-4)</span>
+<span class="sd">        -    sFLL: same as above for spin polarized DFT</span>
+<span class="sd">        -    cAMF: around mean field</span>
+<span class="sd">        -    sAMF: spin polarized around mean field</span>
+<span class="sd">        -    cHeld: unpolarized Held&#39;s formula as reported in (DOI: 10.1103/PhysRevResearch.2.03308)</span>
+<span class="sd">        -    sHeld: NOT IMPLEMENTED</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    List of floats:</span>
+<span class="sd">        -   DC_val: double counting potential</span>
+<span class="sd">        -   E_val: double counting energy</span>
+
+
+<span class="sd">    todo: </span>
+<span class="sd">        - See whether to move this to TRIQS directly instead of dft_tools</span>
+<span class="sd">        - allow as input full density matrix to allow orbital dependent DC</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">N_spin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">N_spin2</span> <span class="o">=</span> <span class="n">N_tot</span><span class="o">-</span><span class="n">N_spin</span>
+        <span class="n">Mag</span> <span class="o">=</span> <span class="n">N_spin</span> <span class="o">-</span> <span class="n">N_spin2</span>
+    <span class="n">L_orbit</span> <span class="o">=</span> <span class="p">(</span><span class="n">n_orbitals</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;cFLL&#39;</span><span class="p">:</span>
+        <span class="n">E_val</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">U</span> <span class="o">*</span> <span class="n">N_tot</span> <span class="o">*</span> <span class="p">(</span><span class="n">N_tot</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">J</span> <span class="o">*</span> <span class="n">N_tot</span> <span class="o">*</span> <span class="p">(</span><span class="n">N_tot</span><span class="o">*</span><span class="mf">0.5</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">DC_val</span> <span class="o">=</span> <span class="n">U</span> <span class="o">*</span> <span class="p">(</span><span class="n">N_tot</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)</span> <span class="o">-</span> <span class="n">J</span> <span class="o">*</span> <span class="p">(</span><span class="n">N_tot</span><span class="o">*</span><span class="mf">0.5</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;sFLL&#39;</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">N_spin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Spin density not given&quot;</span>
+        <span class="n">E_val</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">U</span> <span class="o">*</span> <span class="n">N_tot</span> <span class="o">*</span> <span class="p">(</span><span class="n">N_tot</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">J</span> <span class="o">*</span> <span class="n">N_tot</span> <span class="o">*</span> <span class="p">(</span><span class="n">N_tot</span><span class="o">*</span><span class="mf">0.5</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="n">J</span> <span class="o">*</span> <span class="n">Mag</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">DC_val</span> <span class="o">=</span> <span class="n">U</span> <span class="o">*</span> <span class="p">(</span><span class="n">N_tot</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)</span> <span class="o">-</span> <span class="n">J</span> <span class="o">*</span> <span class="p">(</span><span class="n">N_spin</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;cAMF&#39;</span><span class="p">:</span>
+        <span class="n">E_val</span> <span class="o">=</span> <span class="o">+</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">U</span> <span class="o">*</span> <span class="n">N_tot</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">E_val</span> <span class="o">-=</span> <span class="mf">0.25</span><span class="o">*</span><span class="p">(</span><span class="n">U</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">L_orbit</span><span class="o">*</span><span class="n">J</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">L_orbit</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">N_tot</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">DC_val</span> <span class="o">=</span> <span class="n">U</span> <span class="o">*</span> <span class="n">N_tot</span> <span class="o">-</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">U</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">L_orbit</span><span class="o">*</span><span class="n">J</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">L_orbit</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">N_tot</span>
+
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;sAMF&#39;</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">N_spin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Spin density not given&quot;</span>
+        <span class="n">E_val</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">U</span> <span class="o">*</span> <span class="n">N_tot</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">E_val</span> <span class="o">-=</span> <span class="mf">0.25</span><span class="o">*</span><span class="p">(</span><span class="n">U</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">L_orbit</span><span class="o">*</span><span class="n">J</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">L_orbit</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">N_tot</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">E_val</span> <span class="o">-=</span> <span class="mf">0.25</span><span class="o">*</span><span class="p">(</span><span class="n">U</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">L_orbit</span><span class="o">*</span><span class="n">J</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">L_orbit</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">Mag</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">DC_val</span> <span class="o">=</span> <span class="n">U</span> <span class="o">*</span> <span class="n">N_tot</span> <span class="o">-</span> <span class="p">(</span><span class="n">U</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">L_orbit</span><span class="o">*</span><span class="n">J</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">L_orbit</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">N_spin</span>
+
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;cHeld&#39;</span><span class="p">:</span>
+        <span class="c1"># Valid for a Kanamori-type Hamiltonian where U&#39;=U-2J</span>
+        <span class="n">U_mean</span> <span class="o">=</span> <span class="p">(</span><span class="n">U</span> <span class="o">+</span> <span class="p">(</span><span class="n">n_orbitals</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">U</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">J</span><span class="p">)</span><span class="o">+</span><span class="p">(</span><span class="n">n_orbitals</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">U</span><span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="n">J</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">n_orbitals</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">E_val</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">U_mean</span> <span class="o">*</span> <span class="n">N_tot</span> <span class="o">*</span> <span class="p">(</span><span class="n">N_tot</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">DC_val</span> <span class="o">=</span> <span class="n">U_mean</span> <span class="o">*</span> <span class="p">(</span><span class="n">N_tot</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;sHeld&#39;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Method sHeld not yet implemented&quot;</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DC type </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2"> not supported&quot;</span><span class="p">)</span>
+
+    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DC potential computed using the </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2"> method, V_DC = </span><span class="si">{</span><span class="n">DC_val</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> eV&quot;</span><span class="p">)</span>
+    <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;E_DC using the </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2"> method, E_DC = </span><span class="si">{</span><span class="n">E_val</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> eV&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s1">&#39;Held&#39;</span> <span class="ow">in</span> <span class="n">method</span><span class="p">:</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Held method for </span><span class="si">{</span><span class="n">n_orbitals</span><span class="si">}</span><span class="s2"> orbitals, computed U_mean=</span><span class="si">{</span><span class="n">U_mean</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> eV&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">DC_val</span><span class="p">,</span> <span class="n">E_val</span></div>
 
 </pre></div>
 
