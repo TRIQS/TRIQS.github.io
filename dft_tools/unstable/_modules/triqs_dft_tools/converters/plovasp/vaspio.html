@@ -383,9 +383,11 @@
 <span class="sd">      - EIGENVAL</span>
 <span class="sd">      - DOSCAR</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">re</span>
-<span class="c1">#import plocar_io.c_plocar_io as c_plocar_io</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;plovasp.vaspio&#39;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="read_lines"><a class="viewcode-back" href="../../../../_python_api/triqs_dft_tools.converters.plovasp.vaspio.read_lines.html#triqs_dft_tools.converters.plovasp.vaspio.read_lines">[docs]</a><span class="k">def</span> <span class="nf">read_lines</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
@@ -429,12 +431,13 @@
             <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="ne">StopIteration</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">eigenval</span><span class="o">.</span><span class="n">eigs</span> <span class="o">=</span> <span class="kc">None</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">eigenval</span><span class="o">.</span><span class="n">ferw</span> <span class="o">=</span> <span class="kc">None</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;!!! WARNING !!!: Error reading from EIGENVAL, trying LOCPROJ&quot;</span><span class="p">)</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Error reading from EIGENVAL, trying LOCPROJ...&quot;</span><span class="p">)</span>
+
             <span class="k">try</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">doscar</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">vasp_dir</span><span class="p">)</span>
             <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="ne">StopIteration</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">efermi_required</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;!!! WARNING !!!: Error reading from Efermi from DOSCAR, trying LOCPROJ&quot;</span><span class="p">)</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Error reading Efermi from DOSCAR, trying LOCPROJ...&quot;</span><span class="p">)</span>
                     <span class="k">try</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">plocar</span><span class="o">.</span><span class="n">efermi</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">doscar</span><span class="o">.</span><span class="n">efermi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plocar</span><span class="o">.</span><span class="n">efermi</span>
@@ -442,7 +445,7 @@
                         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Efermi cannot be read from DOSCAR or LOCPROJ&quot;</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
 <span class="c1"># TODO: This a hack. Find out a way to determine ncdij without DOSCAR</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;!!! WARNING !!!: Error reading from DOSCAR, taking Efermi from config&quot;</span><span class="p">)</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Error reading Efermi from DOSCAR, taking from config&quot;</span><span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">doscar</span><span class="o">.</span><span class="n">ncdij</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plocar</span><span class="o">.</span><span class="n">nspin</span></div></div>
 
 <span class="c1">################################################################################</span>
@@ -514,14 +517,14 @@
             
             <span class="c1"># VASP.6.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">nspin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncdij</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncdij</span> <span class="o">&lt;</span> <span class="mi">4</span> <span class="k">else</span> <span class="mi">1</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ISPIN is </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nspin</span><span class="p">))</span>            
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;ISPIN is </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nspin</span><span class="p">))</span>
             
             <span class="bp">self</span><span class="o">.</span><span class="n">nspin_band</span> <span class="o">=</span> <span class="mi">2</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ncdij</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="mi">1</span>
 
             <span class="k">try</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">efermi</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sline</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
             <span class="k">except</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;!!! WARNING !!!: Error reading E-Fermi from LOCPROJ, trying DOSCAR&quot;</span><span class="p">)</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Error reading Efermi from LOCPROJ, trying DOSCAR...&quot;</span><span class="p">)</span>
 
             <span class="n">plo</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nproj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nspin</span><span class="p">,</span> <span class="n">nk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nband</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
             <span class="n">proj_params</span> <span class="o">=</span> <span class="p">[{}</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nproj</span><span class="p">)]</span>
@@ -535,7 +538,8 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">ncdij</span> <span class="o">=</span> <span class="mi">1</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">nc_flag</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;NC FLAG : </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nc_flag</span><span class="p">))</span>
+
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;NC FLAG : </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nc_flag</span><span class="p">))</span>
 
 <span class="c1"># First read the header block with orbital labels</span>
             <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">search_for</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s2">&quot;^ *ISITE&quot;</span><span class="p">)</span>

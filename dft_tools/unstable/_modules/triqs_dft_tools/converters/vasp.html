@@ -481,7 +481,7 @@
 
         <span class="n">f_gen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_data</span><span class="p">(</span><span class="n">fh</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">header</span><span class="p">,</span> <span class="n">f_gen</span></div>
+        <span class="k">return</span> <span class="n">header</span><span class="p">,</span> <span class="n">f_gen</span><span class="p">,</span> <span class="n">fh</span></div>
 
 <div class="viewcode-block" id="VaspConverter.convert_dft_input"><a class="viewcode-back" href="../../../_python_api/triqs_dft_tools.converters.vasp.VaspConverter.convert_dft_input.html#triqs_dft_tools.converters.vasp.VaspConverter.convert_dft_input">[docs]</a>    <span class="k">def</span> <span class="nf">convert_dft_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -498,7 +498,7 @@
         <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Reading input from </span><span class="si">%s</span><span class="s2">...&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">ctrl_file</span><span class="p">)</span>
 
         <span class="c1"># R is a generator : each R.Next() will return the next number in the file</span>
-        <span class="n">jheader</span><span class="p">,</span> <span class="n">rf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_header_and_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ctrl_file</span><span class="p">)</span>
+        <span class="n">jheader</span><span class="p">,</span> <span class="n">rf</span><span class="p">,</span> <span class="n">fh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_header_and_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ctrl_file</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">jheader</span><span class="p">)</span>
         <span class="n">ctrl_head</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">jheader</span><span class="p">)</span>
 
@@ -531,6 +531,8 @@
         <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
             <span class="k">raise</span> <span class="s2">&quot;VaspConverter: error reading </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">ctrl_file</span>
 
+        <span class="n">fh</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
 <span class="c1">#        if nc_flag:</span>
 <span class="c1"># VASP.6.</span>
         <span class="k">if</span> <span class="n">SO</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
@@ -545,7 +547,7 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">ig</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ng</span><span class="p">):</span>
                 <span class="n">gr_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">basename</span> <span class="o">+</span> <span class="s1">&#39;.pg</span><span class="si">%i</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">ig</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-                <span class="n">jheader</span><span class="p">,</span> <span class="n">rf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_header_and_data</span><span class="p">(</span><span class="n">gr_file</span><span class="p">)</span>
+                <span class="n">jheader</span><span class="p">,</span> <span class="n">rf</span><span class="p">,</span> <span class="n">fh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_header_and_data</span><span class="p">(</span><span class="n">gr_file</span><span class="p">)</span>
                 <span class="n">gr_head</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">jheader</span><span class="p">)</span>
 
 
@@ -576,16 +578,16 @@
                         <span class="n">pars</span><span class="p">[</span><span class="s1">&#39;l&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sh</span><span class="p">[</span><span class="s1">&#39;lorb&#39;</span><span class="p">]</span>
                         <span class="c1">#pars[&#39;corr&#39;] = sh[&#39;corr&#39;]</span>
                         <span class="n">pars</span><span class="p">[</span><span class="s1">&#39;dim&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sh</span><span class="p">[</span><span class="s1">&#39;ndim&#39;</span><span class="p">]</span>
-                        <span class="c1">#pars[&#39;ion_list&#39;] = sh[&#39;ion_list&#39;]</span>
                         <span class="n">pars</span><span class="p">[</span><span class="s1">&#39;SO&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">SO</span>
 <span class="c1"># TODO: check what &#39;irep&#39; entry does (it seems to be very specific to dmftproj)</span>
                         <span class="n">pars</span><span class="p">[</span><span class="s1">&#39;irep&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
                         <span class="n">shells</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span>
-                        <span class="n">shion_to_shell</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
                         <span class="n">shorbs_to_globalorbs</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">last_dimension</span><span class="p">,</span>
-                                                 <span class="n">last_dimension</span><span class="o">+</span><span class="n">sh</span><span class="p">[</span><span class="s1">&#39;ndim&#39;</span><span class="p">]])</span>
-                        <span class="n">last_dimension</span> <span class="o">=</span> <span class="n">last_dimension</span><span class="o">+</span><span class="n">sh</span><span class="p">[</span><span class="s1">&#39;ndim&#39;</span><span class="p">]</span>
+                                                 <span class="n">last_dimension</span> <span class="o">+</span> <span class="n">sh</span><span class="p">[</span><span class="s1">&#39;ndim&#39;</span><span class="p">]])</span>
+                        <span class="n">last_dimension</span> <span class="o">=</span> <span class="n">last_dimension</span> <span class="o">+</span> <span class="n">sh</span><span class="p">[</span><span class="s1">&#39;ndim&#39;</span><span class="p">]</span>
                         <span class="k">if</span> <span class="n">sh</span><span class="p">[</span><span class="s1">&#39;corr&#39;</span><span class="p">]:</span>
+                            <span class="n">shion_to_shell</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">icsh</span><span class="p">)</span>
+                            <span class="n">icsh</span> <span class="o">+=</span> <span class="mi">1</span>
                             <span class="n">corr_shells</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span>
 
 
@@ -599,8 +601,7 @@
 <span class="c1">#        to define equivalence classes of sites.</span>
             <span class="n">n_inequiv_shells</span><span class="p">,</span> <span class="n">corr_to_inequiv</span><span class="p">,</span> <span class="n">inequiv_to_corr</span> <span class="o">=</span> <span class="n">ConverterTools</span><span class="o">.</span><span class="n">det_shell_equivalence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">corr_shells</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  No. of inequivalent shells:&quot;</span><span class="p">,</span> <span class="n">n_inequiv_shells</span><span class="p">)</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  No. of inequivalent shells: </span><span class="si">{</span><span class="n">n_inequiv_shells</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
 <span class="c1"># NB!: these rotation matrices are specific to Wien2K! Set to identity in VASP</span>
             <span class="n">use_rotations</span> <span class="o">=</span> <span class="mi">1</span>
@@ -623,10 +624,6 @@
 <span class="c1"># TODO: at the moment put T-matrices to identities</span>
                 <span class="n">T</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">lmax</span><span class="p">,</span> <span class="nb">complex</span><span class="p">))</span>
 
-<span class="c1">#            if nc_flag:</span>
-<span class="c1">## TODO: implement the noncollinear part</span>
-<span class="c1">#                raise NotImplementedError(&quot;Noncollinear calculations are not implemented&quot;)</span>
-<span class="c1">#            else:</span>
             <span class="n">hopping</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">n_k</span><span class="p">,</span> <span class="n">n_spin_blocs</span><span class="p">,</span> <span class="n">nb_max</span><span class="p">,</span> <span class="n">nb_max</span><span class="p">],</span> <span class="nb">complex</span><span class="p">)</span>
             <span class="n">f_weights</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">n_k</span><span class="p">,</span> <span class="n">n_spin_blocs</span><span class="p">,</span> <span class="n">nb_max</span><span class="p">],</span> <span class="nb">complex</span><span class="p">)</span>
             <span class="n">band_window</span> <span class="o">=</span> <span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_k</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span> <span class="k">for</span> <span class="n">isp</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_spin_blocs</span><span class="p">)]</span>
@@ -667,8 +664,6 @@
                 <span class="n">rf_hk</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
 <span class="c1"># Projectors</span>
-<span class="c1">#            print n_orbitals</span>
-<span class="c1">#            print [crsh[&#39;dim&#39;] for crsh in corr_shells]</span>
             <span class="n">proj_mat_csc</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">n_k</span><span class="p">,</span> <span class="n">n_spin_blocs</span><span class="p">,</span> <span class="nb">sum</span><span class="p">([</span><span class="n">sh</span><span class="p">[</span><span class="s1">&#39;dim&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">sh</span> <span class="ow">in</span> <span class="n">shells</span><span class="p">]),</span> <span class="n">numpy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">n_orbitals</span><span class="p">)],</span> <span class="nb">complex</span><span class="p">)</span>
 
 <span class="c1"># TODO: implement reading from more than one projector group</span>
@@ -721,14 +716,12 @@
             <span class="c1">#corr_shell.pop(&#39;ion_list&#39;)</span>
             <span class="n">things_to_set</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;n_shells&#39;</span><span class="p">,</span><span class="s1">&#39;shells&#39;</span><span class="p">,</span><span class="s1">&#39;n_corr_shells&#39;</span><span class="p">,</span><span class="s1">&#39;corr_shells&#39;</span><span class="p">,</span><span class="s1">&#39;n_spin_blocs&#39;</span><span class="p">,</span><span class="s1">&#39;n_orbitals&#39;</span><span class="p">,</span><span class="s1">&#39;n_k&#39;</span><span class="p">,</span><span class="s1">&#39;SO&#39;</span><span class="p">,</span><span class="s1">&#39;SP&#39;</span><span class="p">,</span><span class="s1">&#39;energy_unit&#39;</span><span class="p">]</span>
             <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">things_to_set</span><span class="p">:</span>
-<span class="c1">#                print &quot;%s:&quot;%(it), locals()[it]</span>
                 <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">it</span><span class="p">,</span><span class="nb">locals</span><span class="p">()[</span><span class="n">it</span><span class="p">])</span>
 
         <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
            <span class="k">raise</span> <span class="s2">&quot;VaspConverter: error reading </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">gr_file</span>
 
-        <span class="n">rf</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-
+        <span class="n">fh</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
         <span class="n">proj_or_hk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_or_hk</span>
 
