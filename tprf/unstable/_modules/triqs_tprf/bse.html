@@ -548,7 +548,9 @@
 <span class="c1"># ----------------------------------------------------------------------</span>
 
 <span class="kn">from</span> <span class="nn">triqs_tprf.logo</span> <span class="kn">import</span> <span class="n">tprf_banner</span>
+
 <span class="kn">from</span> <span class="nn">triqs_tprf.linalg</span> <span class="kn">import</span> <span class="n">inverse_PH</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.chi_from_gg2</span> <span class="kn">import</span> <span class="n">chi0_from_gg2_PH</span><span class="p">,</span> <span class="n">chi_from_gg2_PH</span>
 
 <span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">fourier_wk_to_wr</span>
 <span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">chi0r_from_gr_PH</span>
@@ -559,7 +561,44 @@
 <span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">chiq_sum_nu_from_chi0q_and_gamma_PH</span>
 <span class="kn">from</span> <span class="nn">triqs_tprf.lattice_utils</span> <span class="kn">import</span> <span class="n">imtime_bubble_chi0_wk</span><span class="p">,</span> <span class="n">add_fake_bosonic_mesh</span>
 
-<span class="c1"># ----------------------------------------------------------------------</span>
+
+<span class="k">def</span> <span class="nf">impurity_irreducible_vertex_Gamma</span><span class="p">(</span><span class="n">g_w</span><span class="p">,</span> <span class="n">g2_wnn</span><span class="p">):</span>
+
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Compute the impurity reducible vertex function </span>
+<span class="sd">    :math:`F_{abcd}(\omega, \nu, \nu&#39;)`.</span>
+
+<span class="sd">    Computes:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       F_{abcd}(\omega, \nu, \nu&#39;) =  [\chi^{(0)}]^{-1} (\chi - \chi^{(0)} ) [\chi^{(0)}]^{-1} </span>
+
+<span class="sd">    where the inverses are taken in the particle-hole channel pairing</span>
+<span class="sd">    of fermionic frequencies :math:`\nu` and :math:`\nu&#39;` and orbital</span>
+<span class="sd">    indices.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    g_w : Single particle Green&#39;s function</span>
+<span class="sd">          :math:`G_{ab}(\nu)`</span>
+<span class="sd">    g2_wnn : Two-particle Green&#39;s function</span>
+<span class="sd">             :math:`G^{(2)}_{abcd}(\omega, \nu, \nu&#39;)`</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    F_wnn : Particle-hole reducible vertex function </span>
+<span class="sd">            :math:`F_{abcd}(\omega, \nu, \nu&#39;)`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">chi_wnn</span> <span class="o">=</span> <span class="n">chi_from_gg2_PH</span><span class="p">(</span><span class="n">g_w</span><span class="p">,</span> <span class="n">g2_wnn</span><span class="p">)</span>
+    <span class="n">chi0_wnn</span> <span class="o">=</span> <span class="n">chi0_from_gg2_PH</span><span class="p">(</span><span class="n">g_w</span><span class="p">,</span> <span class="n">g2_wnn</span><span class="p">)</span>
+
+    <span class="n">Gamma_wnn</span> <span class="o">=</span> <span class="n">inverse_PH</span><span class="p">(</span><span class="n">chi0_wnn</span><span class="p">)</span> <span class="o">-</span> <span class="n">inverse_PH</span><span class="p">(</span><span class="n">chi_wnn</span><span class="p">)</span>    
+    
+    <span class="k">return</span> <span class="n">Gamma_wnn</span>
+
+
 <div class="viewcode-block" id="solve_local_bse"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.bse.solve_local_bse">[docs]</a><span class="k">def</span> <span class="nf">solve_local_bse</span><span class="p">(</span><span class="n">chi0_wnn</span><span class="p">,</span> <span class="n">chi_wnn</span><span class="p">):</span>
 
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Solve the Bethe-Salpeter equation for the local vertex function </span>
@@ -592,7 +631,7 @@
     <span class="n">gamma_wnn</span> <span class="o">=</span> <span class="n">inverse_PH</span><span class="p">(</span><span class="n">chi0_wnn</span><span class="p">)</span> <span class="o">-</span> <span class="n">inverse_PH</span><span class="p">(</span><span class="n">chi_wnn</span><span class="p">)</span>    
     <span class="k">return</span> <span class="n">gamma_wnn</span></div>
 
-<span class="c1"># ----------------------------------------------------------------------</span>
+
 <span class="k">def</span> <span class="nf">fixed_fermionic_window_python_wnk</span><span class="p">(</span><span class="n">chi_wnk</span><span class="p">,</span> <span class="n">nwf</span><span class="p">):</span>
 
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Helper routine to reduce the number of fermionic Matsubara </span>
@@ -629,7 +668,7 @@
 
     <span class="k">return</span> <span class="n">chi_wnk_out</span>
 
-<span class="c1"># ----------------------------------------------------------------------</span>
+
 <div class="viewcode-block" id="get_chi0_wnk"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.bse.get_chi0_wnk">[docs]</a><span class="k">def</span> <span class="nf">get_chi0_wnk</span><span class="p">(</span><span class="n">g_wk</span><span class="p">,</span> <span class="n">nw</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">nwf</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Compute the generalized bare lattice susceptibility </span>
 <span class="sd">    :math:`\chi^{0}_{\bar{a}b\bar{c}d}(i\omega_n, i\nu_n, \mathbf{k})` from the single-particle</span>
@@ -727,7 +766,7 @@
     
     <span class="k">return</span> <span class="n">chi0_wnk</span>    </div>
 
-<span class="c1"># ----------------------------------------------------------------------</span>
+
 <div class="viewcode-block" id="get_chi0_nk_at_specific_w"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.bse.get_chi0_nk_at_specific_w">[docs]</a><span class="k">def</span> <span class="nf">get_chi0_nk_at_specific_w</span><span class="p">(</span><span class="n">g_wk</span><span class="p">,</span> <span class="n">nw_index</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">nwf</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Compute the generalized bare lattice susceptibility </span>
 <span class="sd">    :math:`\chi^{0}_{\bar{a}b\bar{c}d}(i\omega_{n=\mathrm{nw\_index}}, i\nu_n, \mathbf{k})` from the single-particle</span>
@@ -784,7 +823,7 @@
 
     <span class="k">return</span> <span class="n">chi0_nk</span>    </div>
         
-<span class="c1"># ----------------------------------------------------------------------</span>
+
 <div class="viewcode-block" id="solve_lattice_bse"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.bse.solve_lattice_bse">[docs]</a><span class="k">def</span> <span class="nf">solve_lattice_bse</span><span class="p">(</span><span class="n">g_wk</span><span class="p">,</span> <span class="n">gamma_wnn</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Compute the generalized lattice susceptibility </span>
 <span class="sd">    :math:`\chi_{\bar{a}b\bar{c}d}(\mathbf{k}, \omega_n)` using the Bethe-Salpeter </span>
@@ -883,7 +922,7 @@
 
     <span class="k">return</span> <span class="n">chi_kw</span><span class="p">,</span> <span class="n">chi0_kw</span></div>
 
-<span class="c1"># ----------------------------------------------------------------------</span>
+
 <div class="viewcode-block" id="solve_lattice_bse_at_specific_w"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.bse.solve_lattice_bse_at_specific_w">[docs]</a><span class="k">def</span> <span class="nf">solve_lattice_bse_at_specific_w</span><span class="p">(</span><span class="n">g_wk</span><span class="p">,</span> <span class="n">gamma_wnn</span><span class="p">,</span> <span class="n">nw_index</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Compute the generalized lattice susceptibility </span>
 <span class="sd">    :math:`\chi_{\bar{a}b\bar{c}d}(i\omega_{n=\mathrm{nw\_index}}, \mathbf{k})` using the Bethe-Salpeter </span>
@@ -990,7 +1029,7 @@
 
     <span class="k">return</span> <span class="n">chi_k</span><span class="p">,</span> <span class="n">chi0_k</span></div>
  
-<span class="c1"># ----------------------------------------------------------------------</span>
+
 <span class="k">def</span> <span class="nf">solve_lattice_bse_depr</span><span class="p">(</span><span class="n">g_wk</span><span class="p">,</span> <span class="n">gamma_wnn</span><span class="p">,</span> <span class="n">tail_corr_nwf</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
 
     <span class="n">fmesh_huge</span><span class="p">,</span> <span class="n">kmesh</span> <span class="o">=</span> <span class="n">g_wk</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">components</span>
@@ -1020,7 +1059,7 @@
     
     <span class="k">return</span> <span class="n">chi_kw</span>
     
-<span class="c1"># ----------------------------------------------------------------------</span>
+
 <span class="k">def</span> <span class="nf">solve_lattice_bse_e_k_sigma_w</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">e_k</span><span class="p">,</span> <span class="n">sigma_w</span><span class="p">,</span> <span class="n">gamma_wnn</span><span class="p">,</span> <span class="n">tail_corr_nwf</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
 
     <span class="n">kmesh</span> <span class="o">=</span> <span class="n">e_k</span><span class="o">.</span><span class="n">mesh</span>
