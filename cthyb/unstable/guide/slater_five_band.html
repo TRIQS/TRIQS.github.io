@@ -41,7 +41,7 @@
             TRIQS Hybridization Expansion Solver
           </a>
               <div class="version">
-                3.1.0
+                3.2.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -424,6 +424,24 @@ impurity with a fully-rotationally invariant interaction:</p>
 <p>This script generates an HDF5 archive file called <code class="file docutils literal notranslate"><span class="pre">slater_five_band.h5</span></code>.
 This file contains the Green’s function in imaginary time and in imaginary
 frequencies found by the solver. Let us plot the Green’s function:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">triqs.gf.gf_fnt</span> <span class="kn">import</span> <span class="n">rebinning_tau</span>
+<span class="kn">from</span> <span class="nn">h5</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">triqs.plot.mpl_interface</span> <span class="kn">import</span> <span class="n">oplot</span>
+
+<span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="s1">&#39;slater_five_band.h5&#39;</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+    <span class="c1"># Calculate orbital- and spin-averaged Green&#39;s function</span>
+    <span class="n">G_tau</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;G_tau-1&#39;</span><span class="p">]</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">G_tau</span><span class="p">[</span><span class="s1">&#39;up_0&#39;</span><span class="p">]</span>
+    <span class="c1"># This gives a complex valued gf (required by rebinning_tau)</span>
+    <span class="n">g_tau_ave</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">g</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="n">g</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">G_tau</span><span class="p">:</span> <span class="n">g_tau_ave</span> <span class="o">+=</span> <span class="n">g</span>
+    <span class="n">g_tau_ave</span> <span class="o">=</span> <span class="n">g_tau_ave</span><span class="o">/</span><span class="mf">10.</span>
+    <span class="n">g_tau_rebin</span> <span class="o">=</span> <span class="n">rebinning_tau</span><span class="p">(</span><span class="n">g_tau_ave</span><span class="p">,</span><span class="mi">1000</span><span class="p">)</span>
+    <span class="n">g_tau_rebin</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;$G_{\rm ave}$&#39;</span>
+    <span class="n">oplot</span><span class="p">(</span><span class="n">g_tau_rebin</span><span class="p">,</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;G_avg&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 <div class="figure align-default">
 <a class="plot-directive reference internal image-reference" href="../_images/slater_five_band_plot.png"><img alt="../_images/slater_five_band_plot.png" class="plot-directive" src="../_images/slater_five_band_plot.png" style="width: 358.4px; height: 268.79999999999995px;" /></a>
 </div>
