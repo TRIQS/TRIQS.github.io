@@ -73,7 +73,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../basicnotions/first.html">What you should know</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../basicnotions/first.html#what-is-dfttools">What is <strong class="program">DFTTools</strong>?</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../basicnotions/first.html#understand-the-philosophy-of-dfttools">Understand the philosophy of <strong class="program">DFTTools</strong></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../basicnotions/first.html#learn-how-to-use-triqs-and-the-cthyb-solver">Learn how to use <span class="xref std std-ref">TRIQS</span> (and the <span class="xref std std-ref">CTHYB</span> solver)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../basicnotions/first.html#learn-how-to-use-triqs-library-and-the-cthyb-solver">Learn how to use TRIQS library (and the CTHYB solver)</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../basicnotions/first.html#analytic-continuation">Analytic Continuation</a></li>
 </ul>
 </li>
@@ -284,9 +284,9 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../tutorials.html#complex-example-nio">Complex example: NiO</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../tutorials/nio_csc.html">DFT and projections</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../tutorials/nio_csc.html#dmft">DMFT</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../tutorials/nio_csc.html#charge-self-consistent-dmft">Charge self-consistent DMFT</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tutorials/nio_csc_vasp/nio_csc.html">DFT and projections</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tutorials/nio_csc_vasp/nio_csc.html#dmft">DMFT</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tutorials/nio_csc_vasp/nio_csc.html#charge-self-consistent-dmft">Charge self-consistent DMFT</a></li>
 </ul>
 </li>
 </ul>
@@ -502,26 +502,34 @@ and proceeds with the next iteration. PLOVasp interface provides a shell-script 
      <span class="n">omitted</span> <span class="n">the</span> <span class="n">default</span> <span class="n">name</span> <span class="s1">&#39;csc_dmft.py&#39;</span> <span class="ow">is</span> <span class="n">used</span><span class="o">.</span>
 </pre></div>
 </div>
-<p>which takes care of the process management. The user must, however, specify a path to VASP code and provide the DMFT Python-script. See for an example <a class="reference internal" href="../tutorials/nio_csc.html#nio-csc"><span class="std std-ref">NiO CSC tutorial</span></a>.</p>
+<p>which takes care of the process management. The user must, however, specify a path to VASP code and provide the DMFT Python-script. See for an example <a class="reference internal" href="../tutorials/nio_csc_vasp/nio_csc.html#nio-csc"><span class="std std-ref">NiO CSC tutorial</span></a>.</p>
 <p>The user-provided script is almost the same as for Wien2k charge self-consistent
 calculations with the main difference that its functionality (apart from the
 lines importing other modules) should be placed inside a function <cite>dmft_cycle()</cite>
-which will be called every DMFT cycle.</p>
+which will be called every DMFT cycle and returns both the correlation energy and the SumK object.</p>
 <p>VASP has a special INCAR <cite>ICHARG=5</cite> mode, that has to be switched on to make VASP wait for the <cite>vasp.lock</cite> file, and read the updated charge density after each step. One should add the following lines to the <cite>INCAR</cite> file:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ICHARG</span> <span class="o">=</span> <span class="mi">5</span>
 <span class="n">NELM</span> <span class="o">=</span> <span class="mi">1000</span>
 <span class="n">NELMIN</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="n">IMIX</span><span class="o">=</span><span class="mi">1</span>
+<span class="n">BMIX</span><span class="o">=</span><span class="mf">0.5</span>
+<span class="n">AMIX</span><span class="o">=</span><span class="mf">0.02</span>
 </pre></div>
 </div>
 <p>Technically, VASP runs with <cite>ICHARG=5</cite> in a SCF mode, and adding the DMFT
 changes to the DFT density in each step, so that the full DFT+DMFT charge
 density is constructed in every step. This is only done in VASP because only the
-changes to the DFT density are read by VASP not the full DFT+DMFT density.
-Moreover, one should always start with a converged <cite>WAVECAR</cite> file, or make sure,
+changes to the DFT density are read by VASP not the full DFT+DMFT density. Here,
+we also adjust the mixing, since iterations become quickly unstable for insulating
+or charge ordered solutions. Also note, that in each DAV step you still have to
+calculate the projectors, recalculate the chemical potential, and update the
+GAMMA file. See the <a class="reference internal" href="../_python_api/triqs_dft_tools.converters.plovasp.sc_dmft.html#module-triqs_dft_tools.converters.plovasp.sc_dmft" title="triqs_dft_tools.converters.plovasp.sc_dmft"><code class="xref py py-meth docutils literal notranslate"><span class="pre">triqs_dft_tools.converters.plovasp.sc_dmft()</span></code></a> script for details.</p>
+<p>Moreover, one should always start with a converged <cite>WAVECAR</cite> file, or make sure,
 that the KS states are well converged before the first projectors are created!
 To understand the difference please make sure to read <a class="reference external" href="https://www.vasp.at/wiki/index.php/ISTART" rel="noopener noreferrer" target="_blank">ISTART flag VASP wiki</a>. Furthermore, the flags <cite>NELM</cite> and
 <cite>NELMIN</cite> ensure that VASP does not terminate after the default number of
 iterations of 60.</p>
+<p>For more detailed and fine grained methods to run Vasp in CSC also on clusters see the methods implemented in <a class="reference external" href="https://triqs.github.io/solid_dmft/_ref/dft_managers.html" rel="noopener noreferrer" target="_blank">solid dmft</a>.</p>
 </div>
 <div class="section" id="elk">
 <h2>Elk<a class="headerlink" href="#elk" title="Permalink to this heading"></a></h2>
