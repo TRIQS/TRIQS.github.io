@@ -78,8 +78,9 @@
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="#run-Pade">run Pade</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#run-MaxEnt">run MaxEnt</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="#self-energy-comparison">self-energy comparison</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#run-MaxEnt">run MaxEnt</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#plot-results-of-continuation">plot results of continuation</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#\Sigma-comparison-to-Pade"><span class="math notranslate nohighlight">\(\Sigma\)</span> comparison to Pade</a></li>
 </ul>
 </li>
 </ul>
@@ -102,10 +103,10 @@
 <li class="toctree-l5"><a class="reference internal" href="GW_tutorial.html#MaxEnt">MaxEnt</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="GW_tutorial.html#Comparison">Comparison</a></li>
+<li class="toctree-l4"><a class="reference internal" href="GW_tutorial.html#Comparison:-Pade,-Nevanlinna,-Pade,-and-Maxent">Comparison: Pade, Nevanlinna, Pade, and Maxent</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="hubbard_square_non_int.html">Matrix valued continuation: 2 orbital non interacting 2D Hubbard model</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hubbard_square_non_int.html">Matrix valued continuation &amp; Hardy optimization</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="hubbard_square_non_int.html#Setup-simple-two-orbital-2D-Hubbard-model-on-square-lattice">Setup simple two orbital 2D Hubbard model on square lattice</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="hubbard_square_non_int.html#plot-dispersion-along-high-symmetry-lines">plot dispersion along high-symmetry lines</a></li>
 </ul>
@@ -122,6 +123,7 @@
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="hubbard_square_non_int.html#Final-plot-for-comparison">Final plot for comparison</a></li>
+<li class="toctree-l4"><a class="reference internal" href="hubbard_square_non_int.html#Hardy-optimization">Hardy optimization</a></li>
 </ul>
 </li>
 </ul>
@@ -215,9 +217,10 @@
 <p>and</p>
 <div class="math notranslate nohighlight">
 \[h_{\rm coup} = \sum_{i=1}^{N} \sum_{\sigma} V_i (c^\dagger_{\sigma,i} c_{\sigma,0} + c^\dagger_{\sigma,0} c_{\sigma,i})\]</div>
-<p>by solving with exact diagonalization. Then we can construct an impurity Green’s function and self-energy, which can be continued using Nevanlinna.</p>
+<p>by solving it with exact diagonalization. Then we can construct an impurity Green’s function and self-energy via their spectral representation on both imaginary and real frequency axis. The imaginary axis result can be continued using Nevanlinna and compared to the real frequency result.</p>
+<p>First we import necessary modules:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">os</span>
@@ -244,11 +247,12 @@
 </div>
 <div class="section" id="SIAM-system-parameters">
 <h2>SIAM system parameters<a class="headerlink" href="#SIAM-system-parameters" title="Permalink to this heading"></a></h2>
+<p>we define the SIAM as follows:</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">beta</span> <span class="o">=</span> <span class="mf">40.</span>             <span class="c1"># Inverse temperature</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">beta</span> <span class="o">=</span> <span class="mf">40.</span>          <span class="c1"># Inverse temperature</span>
 <span class="n">mu</span> <span class="o">=</span> <span class="mf">1.</span>             <span class="c1"># Chemical potential</span>
 <span class="n">U</span> <span class="o">=</span> <span class="mf">2.</span>              <span class="c1"># On-site density-density interaction</span>
 <span class="n">E</span> <span class="o">=</span> <span class="p">[</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span> <span class="p">]</span>    <span class="c1"># Bath-site energies</span>
@@ -319,7 +323,7 @@
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Greens Function G_dn with mesh Real Freq Mesh of size 1501, omega_min: -11, omega_max: 11 and target_shape (1, 1):
+Greens Function G_dn with mesh Real Freq Mesh with w_min = -11, w_max = 11, n_w = 1501 and target_shape (1, 1):
 </pre></div></div>
 </div>
 </div>
@@ -339,46 +343,11 @@ Greens Function G_dn with mesh Real Freq Mesh of size 1501, omega_min: -11, omeg
 </pre></div>
 </div>
 </div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">_comm</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">):</span> <span class="k">return</span> <span class="n">A</span><span class="o">*</span><span class="n">B</span> <span class="o">-</span> <span class="n">B</span><span class="o">*</span><span class="n">A</span>
-<span class="k">def</span> <span class="nf">_anticomm</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">):</span> <span class="k">return</span> <span class="n">A</span><span class="o">*</span><span class="n">B</span> <span class="o">+</span> <span class="n">B</span><span class="o">*</span><span class="n">A</span>
-</pre></div>
-</div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">density_matrix</span> <span class="o">=</span> <span class="n">atomic_density_matrix</span><span class="p">(</span><span class="n">ad_tot</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">op_HF</span> <span class="o">=</span> <span class="o">-</span><span class="n">_anticomm</span><span class="p">(</span><span class="n">_comm</span><span class="p">(</span><span class="n">h_int</span><span class="p">,</span> <span class="n">c</span><span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)),</span> <span class="n">c_dag</span><span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
-<span class="n">S_HF</span> <span class="o">=</span> <span class="n">trace_rho_op</span><span class="p">(</span><span class="n">density_matrix</span><span class="p">,</span> <span class="n">op_HF</span><span class="p">,</span> <span class="n">ad_tot</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">S_HF</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-1.18747783911986
-</pre></div></div>
-</div>
 </div>
 <div class="section" id="Calculate-and-plot-the-single-particle-Green-function-and-self-energy">
 <h2>Calculate and plot the single-particle Green function and self-energy<a class="headerlink" href="#Calculate-and-plot-the-single-particle-Green-function-and-self-energy" title="Permalink to this heading"></a></h2>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">G_iw_tot</span> <span class="o">=</span> <span class="n">atomic_g_iw</span><span class="p">(</span><span class="n">ad_tot</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">gf_struct_tot</span><span class="p">,</span> <span class="n">n_iw</span><span class="p">)</span>
@@ -407,11 +376,11 @@ Greens Function G_dn with mesh Real Freq Mesh of size 1501, omega_min: -11, omeg
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_SIAM_discrete_12_0.png" src="../_images/tutorials_SIAM_discrete_12_0.png" />
+<img alt="../_images/tutorials_SIAM_discrete_9_0.png" src="../_images/tutorials_SIAM_discrete_9_0.png" />
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">S_iw</span> <span class="o">=</span> <span class="n">G0_iw</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -437,22 +406,38 @@ Greens Function G_dn with mesh Real Freq Mesh of size 1501, omega_min: -11, omeg
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_SIAM_discrete_13_0.png" src="../_images/tutorials_SIAM_discrete_13_0.png" />
+<img alt="../_images/tutorials_SIAM_discrete_10_0.png" src="../_images/tutorials_SIAM_discrete_10_0.png" />
 </div>
 </div>
 <div class="section" id="Running-the-Nevanlinna-analytic-continuation">
 <h3>Running the Nevanlinna analytic continuation<a class="headerlink" href="#Running-the-Nevanlinna-analytic-continuation" title="Permalink to this heading"></a></h3>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs_Nevanlinna</span> <span class="kn">import</span> <span class="n">Solver</span>
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Warning: could not identify MPI environment!
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Starting serial run at: 2023-07-19 16:10:02.858691
+</pre></div></div>
+</div>
 <p>first we setup the Nevanlinna solver for diagonal Green’s functions (matrix values Green’s functions can be continued using the “CARATHEODORY” kernel. See tutorial XYZ. Now we want to continue both the impurity Green’s function and the self-energy from the Matsubara axis to the real frequency axis:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">6</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">squeeze</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -478,15 +463,15 @@ Greens Function G_dn with mesh Real Freq Mesh of size 1501, omega_min: -11, omeg
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_SIAM_discrete_17_0.png" src="../_images/tutorials_SIAM_discrete_17_0.png" />
+<img alt="../_images/tutorials_SIAM_discrete_14_0.png" src="../_images/tutorials_SIAM_discrete_14_0.png" />
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># setup Nevanlinna kernel solver</span>
-<span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="n">kernel</span><span class="o">=</span><span class="s2">&quot;kernels::NEVANLINNA&quot;</span><span class="p">)</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;NEVANLINNA&#39;</span><span class="p">)</span>
 
 <span class="c1"># solve</span>
 <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">G_iw</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">])</span>
@@ -505,7 +490,7 @@ This is Nevanlinna analytical continuation. All off-diagonal elements will be ig
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">squeeze</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -527,7 +512,7 @@ This is Nevanlinna analytical continuation. All off-diagonal elements will be ig
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_SIAM_discrete_19_0.png" src="../_images/tutorials_SIAM_discrete_19_0.png" />
+<img alt="../_images/tutorials_SIAM_discrete_16_0.png" src="../_images/tutorials_SIAM_discrete_16_0.png" />
 </div>
 </div>
 </div>
@@ -536,12 +521,13 @@ This is Nevanlinna analytical continuation. All off-diagonal elements will be ig
 <h2>Continuing the self-energy<a class="headerlink" href="#Continuing-the-self-energy" title="Permalink to this heading"></a></h2>
 <p>The self-energy can be continued without any prior treatment in the same as a Green’s function:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># setup Nevanlinna kernel solver</span>
-<span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="n">kernel</span><span class="o">=</span><span class="s2">&quot;kernels::NEVANLINNA&quot;</span><span class="p">)</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="n">kernel</span><span class="o">=</span><span class="s1">&#39;NEVANLINNA&#39;</span><span class="p">)</span>
 
+<span class="c1"># removing the Hartree shift not necessary in Nevanlinna</span>
 <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">S_iw</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">])</span>
 
 <span class="n">S_w_nvla</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">w_mesh</span><span class="p">,</span> <span class="n">eta</span><span class="p">)</span>
@@ -558,28 +544,7 @@ This is Nevanlinna analytical continuation. All off-diagonal elements will be ig
 </div>
 <p>Alternative method: remove Hartree shift before analytic continuation.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># setup Nevanlinna kernel solver</span>
-<span class="n">solver_hf</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="n">kernel</span><span class="o">=</span><span class="s2">&quot;kernels::NEVANLINNA&quot;</span><span class="p">)</span>
-
-<span class="n">solver_hf</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">S_iw</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">S_HF</span><span class="p">)</span>
-
-<span class="n">S_w_nvla_const</span> <span class="o">=</span> <span class="n">solver_hf</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">w_mesh</span><span class="p">,</span> <span class="n">eta</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-This is Nevanlinna analytical continuation. All off-diagonal elements will be ignored.
-</pre></div></div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">squeeze</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -597,53 +562,29 @@ This is Nevanlinna analytical continuation. All off-diagonal elements will be ig
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-The history saving thread hit an unexpected error (OperationalError(&#39;database is locked&#39;)).History will not be written to the database.
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_SIAM_discrete_25_1.png" src="../_images/tutorials_SIAM_discrete_25_1.png" />
+<img alt="../_images/tutorials_SIAM_discrete_21_0.png" src="../_images/tutorials_SIAM_discrete_21_0.png" />
 </div>
 </div>
 <div class="section" id="Comparison-to-Pade-&amp;-MaxEnt">
 <h3>Comparison to Pade &amp; MaxEnt<a class="headerlink" href="#Comparison-to-Pade-&-MaxEnt" title="Permalink to this heading"></a></h3>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs_maxent</span> <span class="kn">import</span> <span class="o">*</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Warning: could not identify MPI environment!
-</pre></div></div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-Starting serial run at: 2023-03-10 17:16:31.270390
-</pre></div></div>
-</div>
 </div>
 </div>
 <div class="section" id="run-Pade">
 <h2>run Pade<a class="headerlink" href="#run-Pade" title="Permalink to this heading"></a></h2>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">G_w_pade</span> <span class="o">=</span> <span class="n">G0_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -655,7 +596,7 @@ Starting serial run at: 2023-03-10 17:16:31.270390
 <div class="section" id="run-MaxEnt">
 <h2>run MaxEnt<a class="headerlink" href="#run-MaxEnt" title="Permalink to this heading"></a></h2>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">G_tau</span> <span class="o">=</span> <span class="n">make_gf_from_fourier</span><span class="p">(</span><span class="n">G_iw</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">])</span>
@@ -666,7 +607,7 @@ Starting serial run at: 2023-03-10 17:16:31.270390
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tm</span> <span class="o">=</span> <span class="n">TauMaxEnt</span><span class="p">(</span><span class="n">cost_function</span><span class="o">=</span><span class="s1">&#39;bryan&#39;</span><span class="p">,</span> <span class="n">probability</span><span class="o">=</span><span class="s1">&#39;normal&#39;</span><span class="p">)</span>
@@ -683,7 +624,7 @@ Starting serial run at: 2023-03-10 17:16:31.270390
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-2023-03-10 17:16:37.845471
+2023-07-19 16:10:28.480252
 MaxEnt run
 TRIQS application maxent
 Copyright(C) 2018 Gernot J. Kraberger
@@ -693,62 +634,65 @@ This program comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistributeit under certain conditions; see file LICENSE.
 Please cite this code and the appropriate original papers (see documentation).
 
-Minimal chi2: 47.739068840265034
+Minimal chi2: 48.296279744358564
 scaling alpha by a factor 4801 (number of data points)
-alpha[ 0] =   9.60200000e+04, chi2 =   3.88646802e+04, n_iter=      39
-alpha[ 1] =   5.05079943e+04, chi2 =   1.98072999e+04, n_iter=      19
-alpha[ 2] =   2.65679805e+04, chi2 =   9.96443120e+03, n_iter=      20
-alpha[ 3] =   1.39751657e+04, chi2 =   4.88972124e+03, n_iter=      23
-alpha[ 4] =   7.35115173e+03, chi2 =   2.39947319e+03, n_iter=      25
-alpha[ 5] =   3.86681868e+03, chi2 =   1.23972365e+03, n_iter=      27
-alpha[ 6] =   2.03400600e+03, chi2 =   7.11784861e+02, n_iter=      32
-alpha[ 7] =   1.06991839e+03, chi2 =   4.50863110e+02, n_iter=      40
-alpha[ 8] =   5.62793499e+02, chi2 =   2.94213936e+02, n_iter=      51
-alpha[ 9] =   2.96038022e+02, chi2 =   1.94297282e+02, n_iter=      63
-alpha[10] =   1.55720545e+02, chi2 =   1.39735202e+02, n_iter=      70
-alpha[11] =   8.19113975e+01, chi2 =   1.11043305e+02, n_iter=      84
-alpha[12] =   4.30866528e+01, chi2 =   9.62578732e+01, n_iter=     109
-alpha[13] =   2.26642409e+01, chi2 =   8.87566961e+01, n_iter=     133
-alpha[14] =   1.19217387e+01, chi2 =   8.48951134e+01, n_iter=     183
-alpha[15] =   6.27101762e+00, chi2 =   8.26207013e+01, n_iter=     261
-alpha[16] =   3.29865155e+00, chi2 =   8.11883013e+01, n_iter=     365
-alpha[17] =   1.73514137e+00, chi2 =   8.03884211e+01, n_iter=     475
-alpha[18] =   9.12711000e-01, chi2 =   7.99541888e+01, n_iter=     600
-alpha[19] =   4.80100000e-01, chi2 =   7.97097187e+01, n_iter=     748
-MaxEnt loop finished in 0:02:33.144567
+alpha[ 0] =   9.60200000e+04, chi2 =   3.88573505e+04, n_iter=      40
+alpha[ 1] =   5.05079943e+04, chi2 =   1.98027549e+04, n_iter=      17
+alpha[ 2] =   2.65679805e+04, chi2 =   9.96341256e+03, n_iter=      18
+alpha[ 3] =   1.39751657e+04, chi2 =   4.89046815e+03, n_iter=      24
+alpha[ 4] =   7.35115173e+03, chi2 =   2.40113193e+03, n_iter=      27
+alpha[ 5] =   3.86681868e+03, chi2 =   1.24173724e+03, n_iter=      28
+alpha[ 6] =   2.03400600e+03, chi2 =   7.13263797e+02, n_iter=      30
+alpha[ 7] =   1.06991839e+03, chi2 =   4.51247957e+02, n_iter=      41
+alpha[ 8] =   5.62793499e+02, chi2 =   2.95015296e+02, n_iter=      55
+alpha[ 9] =   2.96038022e+02, chi2 =   1.95051695e+02, n_iter=      59
+alpha[10] =   1.55720545e+02, chi2 =   1.40423030e+02, n_iter=      69
+alpha[11] =   8.19113975e+01, chi2 =   1.11683057e+02, n_iter=      84
+alpha[12] =   4.30866528e+01, chi2 =   9.68692193e+01, n_iter=     108
+alpha[13] =   2.26642409e+01, chi2 =   8.93634804e+01, n_iter=     132
+alpha[14] =   1.19217387e+01, chi2 =   8.55377018e+01, n_iter=     182
+alpha[15] =   6.27101762e+00, chi2 =   8.33634810e+01, n_iter=     259
+alpha[16] =   3.29865155e+00, chi2 =   8.19865396e+01, n_iter=     356
+alpha[17] =   1.73514137e+00, chi2 =   8.12078468e+01, n_iter=     473
+alpha[18] =   9.12711000e-01, chi2 =   8.07965385e+01, n_iter=     603
+alpha[19] =   4.80100000e-01, chi2 =   8.05776533e+01, n_iter=     750
+MaxEnt loop finished in 0:01:01.850617
 (&#39;LineFit: &#39;, 10)
 </pre></div></div>
 </div>
+</div>
+<div class="section" id="plot-results-of-continuation">
+<h2>plot results of continuation<a class="headerlink" href="#plot-results-of-continuation" title="Permalink to this heading"></a></h2>
 <p>let’s plot all results in comparison. The Nevanlinna, Pade, and MaxEnt results are each shifted by a small amount on the x-axis to visualize better the agreement in the first plot:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span><span class="mi">6</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">squeeze</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span><span class="mi">6</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">squeeze</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">ax</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.03</span><span class="p">)</span>
 
-<span class="n">w_mesh_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">w_mesh</span><span class="o">.</span><span class="n">omega_min</span><span class="p">,</span> <span class="n">w_mesh</span><span class="o">.</span><span class="n">omega_max</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">w_mesh</span><span class="p">))</span>
+<span class="n">w_mesh_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">w_mesh</span><span class="o">.</span><span class="n">w_min</span><span class="p">,</span> <span class="n">w_mesh</span><span class="o">.</span><span class="n">w_max</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">w_mesh</span><span class="p">))</span>
 
+<span class="c1"># prepare Maxent data on finder mesh</span>
 <span class="n">G_w_maxent</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">omega</span><span class="p">),</span> <span class="n">result</span><span class="o">.</span><span class="n">analyzer_results</span><span class="p">[</span><span class="s1">&#39;BryanAnalyzer&#39;</span><span class="p">][</span><span class="s1">&#39;A_out&#39;</span><span class="p">])</span>
 
+<span class="c1"># we plot each result slighlty shifted on the x-axis for better visibility</span>
+<span class="c1"># 1 Im G</span>
 <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="p">,</span> <span class="o">-</span><span class="n">G_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;C6&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;ED&#39;</span><span class="p">)</span>
-
 <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="o">+</span><span class="mf">0.3</span><span class="p">,</span> <span class="o">-</span><span class="n">G_w_nvla</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Nevanlinna&#39;</span><span class="p">)</span>
-
 <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="o">+</span><span class="mf">0.6</span><span class="p">,</span> <span class="o">-</span><span class="n">G_w_pade</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Pade&#39;</span><span class="p">)</span>
-
 <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="o">+</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">G_w_maxent</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;MaxEnt&#39;</span><span class="p">)</span>
 
+<span class="c1"># 2 abs difference of G</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">G_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span> <span class="o">-</span> <span class="n">G_w_nvla</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Nevanlinna&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">G_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span> <span class="o">-</span> <span class="n">G_w_pade</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Pade&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">G_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span> <span class="o">-</span> <span class="n">G_w_maxent</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;MaxEnt&#39;</span><span class="p">)</span>
+
+<span class="c1"># decorations</span>
 <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Im G$_</span><span class="si">{imp}</span><span class="s1"> (\omega)$&#39;</span><span class="p">)</span>
 <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
 <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">G_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span> <span class="o">-</span> <span class="n">G_w_nvla</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Nevanlinna&#39;</span><span class="p">)</span>
-
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">G_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span> <span class="o">-</span> <span class="n">G_w_pade</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Pade&#39;</span><span class="p">)</span>
-
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">G_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span> <span class="o">-</span> <span class="n">G_w_maxent</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;MaxEnt&#39;</span><span class="p">)</span>
 
 <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;  |Im $ G_</span><span class="si">{imp}</span><span class="s1"> (\omega)$ - G$_</span><span class="si">{imp}</span><span class="s1">^</span><span class="si">{ED}</span><span class="s1"> (\omega) |$&#39;</span><span class="p">)</span>
 <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">window</span><span class="p">)</span>
@@ -762,13 +706,14 @@ MaxEnt loop finished in 0:02:33.144567
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_SIAM_discrete_34_0.png" src="../_images/tutorials_SIAM_discrete_34_0.png" />
+<img alt="../_images/tutorials_SIAM_discrete_31_0.png" src="../_images/tutorials_SIAM_discrete_31_0.png" />
 </div>
 </div>
-<div class="section" id="self-energy-comparison">
-<h3>self-energy comparison<a class="headerlink" href="#self-energy-comparison" title="Permalink to this heading"></a></h3>
+<div class="section" id="\Sigma-comparison-to-Pade">
+<h3><span class="math notranslate nohighlight">\(\Sigma\)</span> comparison to Pade<a class="headerlink" href="#\Sigma-comparison-to-Pade" title="Permalink to this heading"></a></h3>
+<p>Before we compare all results we also continue the self-energy via Pade approximants:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">S_w_pade</span> <span class="o">=</span> <span class="n">G0_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -776,61 +721,37 @@ MaxEnt loop finished in 0:02:33.144567
 </pre></div>
 </div>
 </div>
-<p>Again, we can also remove the Hartree shift prior running Pade:</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">S_w_pade_const</span> <span class="o">=</span> <span class="n">G0_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-<span class="n">S_w_pade_const</span><span class="o">.</span><span class="n">set_from_pade</span><span class="p">(</span><span class="n">S_iw</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">]</span><span class="o">-</span> <span class="n">S_HF</span><span class="p">,</span> <span class="n">n_points</span><span class="o">=</span><span class="n">n_iw</span><span class="p">,</span> <span class="n">freq_offset</span><span class="o">=</span><span class="n">eta</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span><span class="mi">9</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">squeeze</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span><span class="mi">9</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">squeeze</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">ax</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.03</span><span class="p">)</span>
 
-<span class="n">w_mesh_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">w_mesh</span><span class="o">.</span><span class="n">omega_min</span><span class="p">,</span> <span class="n">w_mesh</span><span class="o">.</span><span class="n">omega_max</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">w_mesh</span><span class="p">))</span>
+<span class="n">w_mesh_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">w_mesh</span><span class="o">.</span><span class="n">w_min</span><span class="p">,</span> <span class="n">w_mesh</span><span class="o">.</span><span class="n">w_max</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">w_mesh</span><span class="p">))</span>
 
-
+<span class="c1"># we plot each result slighlty shifted on the x-axis for better visibility</span>
+<span class="c1"># 1 Re Sigma</span>
 <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="p">,</span> <span class="n">S_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span> <span class="o">-</span> <span class="n">S_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">](</span><span class="mf">0.0</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;C6&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;ED&#39;</span><span class="p">)</span>
-
 <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="o">+</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">S_w_pade</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span> <span class="o">-</span> <span class="n">S_w_pade</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">](</span><span class="mf">0.0</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Pade&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="o">+</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">S_w_nvla</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span> <span class="o">-</span> <span class="n">S_w_nvla</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">](</span><span class="mf">0.0</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Nevanlinna&#39;</span><span class="p">)</span>
 
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="o">+</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">S_w_nvla_const</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span> <span class="o">-</span> <span class="n">S_w_nvla_const</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">](</span><span class="mf">0.0</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;nevan (rm Hartree shift)&#39;</span><span class="p">)</span>
+<span class="c1"># 2 Im Sigma</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="p">,</span> <span class="o">-</span><span class="n">S_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;C6&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;ED&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="o">+</span><span class="mf">0.3</span><span class="p">,</span> <span class="o">-</span><span class="n">S_w_pade</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Pade&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="o">+</span><span class="mf">0.6</span><span class="p">,</span> <span class="o">-</span><span class="n">S_w_nvla</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Nevanlinna&#39;</span><span class="p">)</span>
 
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="o">+</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">S_w_nvla</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span> <span class="o">-</span> <span class="n">S_w_nvla</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">](</span><span class="mf">0.0</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Nevanlinna&#39;</span><span class="p">)</span>
+<span class="c1"># 3 abs difference</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">S_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span> <span class="o">-</span> <span class="n">S_w_pade</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Pade&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">S_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span> <span class="o">-</span> <span class="n">S_w_nvla</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Nevanlinna&#39;</span><span class="p">)</span>
 
-
+<span class="c1"># decorations</span>
 <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Re $\Sigma_</span><span class="si">{imp}</span><span class="s1"> (\omega)$&#39;</span><span class="p">)</span>
 <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-
-
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="p">,</span> <span class="o">-</span><span class="n">S_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;C6&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;ED&#39;</span><span class="p">)</span>
-
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="o">+</span><span class="mf">0.3</span><span class="p">,</span> <span class="o">-</span><span class="n">S_w_pade</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Pade&#39;</span><span class="p">)</span>
-
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="o">+</span><span class="mf">0.6</span><span class="p">,</span> <span class="o">-</span><span class="n">S_w_nvla_const</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Nevanlinna (rm Hartree shift)&#39;</span><span class="p">)</span>
-
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="o">+</span><span class="mf">0.9</span><span class="p">,</span> <span class="o">-</span><span class="n">S_w_nvla</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Nevanlinna&#39;</span><span class="p">)</span>
-
 
 <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Im $\Sigma_</span><span class="si">{imp}</span><span class="s1"> (\omega)$&#39;</span><span class="p">)</span>
 <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">window</span><span class="p">)</span>
-<span class="c1"># ax[1].legend()</span>
-
-
-<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">S_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span> <span class="o">-</span> <span class="n">S_w_pade</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Pade&#39;</span><span class="p">)</span>
-
-<span class="c1"># ax[2].semilogy(w_mesh_arr, np.abs(S_w[&#39;up&#39;][0,0].data.imag - S_w_pade_const[0,0].data.imag), label=&#39;Pade (rm Hartree)&#39;)</span>
-
-<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">S_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span> <span class="o">-</span> <span class="n">S_w_nvla</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Nevanlinna&#39;</span><span class="p">)</span>
-
-<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">S_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span> <span class="o">-</span> <span class="n">S_w_nvla_const</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">),</span> <span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Nevanlinna const&#39;</span><span class="p">)</span>
 
 <span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;  |Im $ \Sigma_</span><span class="si">{imp}</span><span class="s1"> (\omega)$ - $\Sigma_</span><span class="si">{imp}</span><span class="s1">^</span><span class="si">{ED}</span><span class="s1"> (\omega) |$&#39;</span><span class="p">)</span>
 <span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">window</span><span class="p">)</span>
@@ -845,66 +766,7 @@ MaxEnt loop finished in 0:02:33.144567
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorials_SIAM_discrete_39_0.png" src="../_images/tutorials_SIAM_discrete_39_0.png" />
-</div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span><span class="mi">9</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">squeeze</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">ax</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.03</span><span class="p">)</span>
-
-<span class="n">w_mesh_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">w_mesh</span><span class="o">.</span><span class="n">omega_min</span><span class="p">,</span> <span class="n">w_mesh</span><span class="o">.</span><span class="n">omega_max</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">w_mesh</span><span class="p">))</span>
-
-
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="p">,</span> <span class="n">S_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span> <span class="o">-</span> <span class="n">S_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">](</span><span class="mf">0.0</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;C6&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;ED&#39;</span><span class="p">)</span>
-
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="p">,</span> <span class="n">S_w_pade</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span> <span class="o">-</span> <span class="n">S_w_pade</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">](</span><span class="mf">0.0</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Pade&#39;</span><span class="p">)</span>
-
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="p">,</span> <span class="n">S_w_nvla</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span> <span class="o">-</span> <span class="n">S_w_nvla</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">](</span><span class="mf">0.0</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="s1">&#39;--&#39;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Nevanlinna&#39;</span><span class="p">)</span>
-
-
-
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Re $\Sigma_</span><span class="si">{imp}</span><span class="s1"> (\omega)$&#39;</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-
-
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="p">,</span> <span class="o">-</span><span class="n">S_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;C6&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;ED&#39;</span><span class="p">)</span>
-
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="p">,</span> <span class="o">-</span><span class="n">S_w_pade</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Pade&#39;</span><span class="p">)</span>
-
-<span class="c1"># ax[1].plot(w_mesh_arr, -S_w_pade_const[0,0].data.imag,label=&#39;Pade (rm Hartree shift)&#39;)</span>
-
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="p">,</span> <span class="o">-</span><span class="n">S_w_nvla</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="s1">&#39;--&#39;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Nevanlinna&#39;</span><span class="p">)</span>
-
-
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Im $\Sigma_</span><span class="si">{imp}</span><span class="s1"> (\omega)$&#39;</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">window</span><span class="p">)</span>
-<span class="c1"># ax[1].legend()</span>
-
-
-<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">S_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span> <span class="o">-</span> <span class="n">S_w_pade</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Pade&#39;</span><span class="p">)</span>
-
-<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">S_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span> <span class="o">-</span> <span class="n">S_w_pade_const</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Pade (rm Hartree)&#39;</span><span class="p">)</span>
-
-<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">w_mesh_arr</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">S_w</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span> <span class="o">-</span> <span class="n">S_w_nvla</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">imag</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Nevanlinna&#39;</span><span class="p">)</span>
-
-<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;  |Im $ \Sigma_</span><span class="si">{imp}</span><span class="s1"> (\omega)$ - $\Sigma_</span><span class="si">{imp}</span><span class="s1">^</span><span class="si">{ED}</span><span class="s1"> (\omega) |$&#39;</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">window</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mf">1e-15</span><span class="p">,</span><span class="mf">1e-0</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/tutorials_SIAM_discrete_40_0.png" src="../_images/tutorials_SIAM_discrete_40_0.png" />
+<img alt="../_images/tutorials_SIAM_discrete_35_0.png" src="../_images/tutorials_SIAM_discrete_35_0.png" />
 </div>
 </div>
 </div>
