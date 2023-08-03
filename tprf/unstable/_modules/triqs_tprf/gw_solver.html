@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>triqs_tprf.ParameterCollection &mdash; TPRF - Two-Particle Response Function tool box for TRIQS  documentation</title>
+  <title>triqs_tprf.gw_solver &mdash; TPRF - Two-Particle Response Function tool box for TRIQS  documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/plot_directive.css" type="text/css" />
@@ -646,7 +646,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
-      <li class="breadcrumb-item active">triqs_tprf.ParameterCollection</li>
+      <li class="breadcrumb-item active">triqs_tprf.gw_solver</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -655,16 +655,13 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for triqs_tprf.ParameterCollection</h1><div class="highlight"><pre>
-<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
-
-<span class="c1">################################################################################</span>
+  <h1>Source code for triqs_tprf.gw_solver</h1><div class="highlight"><pre>
+<span></span><span class="c1">################################################################################</span>
 <span class="c1">#</span>
 <span class="c1"># TPRF: Two-Particle Response Function (TPRF) Toolbox for TRIQS</span>
 <span class="c1">#</span>
-<span class="c1"># Copyright (C) 2017 by Hugo U.R. Strand</span>
-<span class="c1"># Copyright (C) 2019 by S.Käser </span>
-<span class="c1"># Author: H. U.R. Strand, S. Käser</span>
+<span class="c1"># Copyright (C) 2023 by Hugo U.R. Strand</span>
+<span class="c1"># Author: H. U.R. Strand</span>
 <span class="c1">#</span>
 <span class="c1"># TPRF is free software: you can redistribute it and/or modify it under the</span>
 <span class="c1"># terms of the GNU General Public License as published by the Free Software</span>
@@ -681,286 +678,459 @@
 <span class="c1">#</span>
 <span class="c1">################################################################################</span>
 
-<span class="kn">import</span> <span class="nn">inspect</span>
-<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="c1"># ----------------------------------------------------------------------</span>
-<div class="viewcode-block" id="ParameterCollection"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.ParameterCollection.ParameterCollection">[docs]</a><span class="k">class</span> <span class="nc">ParameterCollection</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="kn">from</span> <span class="nn">h5.formats</span> <span class="kn">import</span> <span class="n">register_class</span> 
+<span class="kn">import</span> <span class="nn">triqs.utility.mpi</span> <span class="k">as</span> <span class="nn">mpi</span>
 
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Helper class for handing collections of parameters.</span>
+<span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">Gf</span><span class="p">,</span> <span class="n">MeshProduct</span><span class="p">,</span> <span class="n">Idx</span><span class="p">,</span> <span class="n">MeshImFreq</span>
+<span class="kn">from</span> <span class="nn">triqs.gf.gf_factories</span> <span class="kn">import</span> <span class="n">make_gf_from_fourier</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">lattice_dyson_g0_wk</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">lattice_dyson_g_wk</span>
 
-<span class="sd">    kwargs : dict</span>
-<span class="sd">        Key-word argument list of parameters.</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">rho_k_from_g_wk</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">gw_dynamic_sigma</span><span class="p">,</span> <span class="n">hartree_sigma</span><span class="p">,</span> <span class="n">fock_sigma</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">dynamical_screened_interaction_W</span>
 
-<span class="sd">    Examples</span>
-<span class="sd">    --------</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> \
+    <span class="n">dynamical_screened_interaction_W_from_generalized_susceptibility</span> \
+    <span class="k">as</span> <span class="n">generalized_susceptibility</span>
 
-<span class="sd">    A ``ParameterCollection`` has any number of attributes, accessible with the</span>
-<span class="sd">    dot operator.</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">split_into_dynamic_wk_and_constant_k</span>
 
-<span class="sd">    &gt;&gt;&gt; p = ParameterCollection(beta=10., U=1.0, t=1.0)</span>
-<span class="sd">    &gt;&gt;&gt; print p</span>
-<span class="sd">    U = 1.0</span>
-<span class="sd">    beta = 10.0</span>
-<span class="sd">    t = 1.0</span>
-<span class="sd">    &gt;&gt;&gt; print p.beta</span>
-<span class="sd">    10.0</span>
-<span class="sd">    &gt;&gt;&gt; p.W = 1.2</span>
-<span class="sd">    &gt;&gt;&gt; print p</span>
-<span class="sd">    U = 1.0</span>
-<span class="sd">    W = 1.2</span>
-<span class="sd">    beta = 10.0</span>
-<span class="sd">    t = 1.0</span>
-<span class="sd">    </span>
-<span class="sd">    and can be stored and loaded to/from TRIQS hdf archives.</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">fourier_wk_to_wr</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">fourier_wr_to_tr</span>
 
-<span class="sd">    &gt;&gt;&gt; from h5 import HDFArchive</span>
-<span class="sd">    &gt;&gt;&gt; with HDFArchive(&#39;data.h5&#39;, &#39;w&#39;) as arch: arch[&#39;p&#39;] = p</span>
-<span class="sd">    &gt;&gt;&gt; with HDFArchive(&#39;data.h5&#39;, &#39;r&#39;) as arch: p_ref = arch[&#39;p&#39;]</span>
-<span class="sd">    &gt;&gt;&gt; print p_ref</span>
-<span class="sd">    U = 1.0</span>
-<span class="sd">    beta = 10.0</span>
-<span class="sd">    t = 1.0</span>
-<span class="sd">    </span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">chi_wr_from_chi_wk</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">chi_tr_from_chi_wr</span>
+
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">fourier_tr_to_wr</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">fourier_wr_to_wk</span>
+
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice_utils</span> <span class="kn">import</span> <span class="n">imtime_bubble_chi0_wk</span>
+
+<span class="kn">from</span> <span class="nn">triqs_tprf.ParameterCollection</span> <span class="kn">import</span> <span class="n">ParameterCollection</span>
+
+<span class="kn">from</span> <span class="nn">triqs_tprf.ase_timing</span> <span class="kn">import</span> <span class="n">Timer</span><span class="p">,</span> <span class="n">timer</span>
+
+
+<span class="kn">from</span> <span class="nn">triqs.gf.meshes</span> <span class="kn">import</span> <span class="n">MeshDLRImFreq</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">dlr_on_imfreq</span>
+<span class="kn">from</span> <span class="nn">triqs.gf.gf_factories</span> <span class="kn">import</span> <span class="n">make_gf_dlr</span>
+
+
+<div class="viewcode-block" id="GWSolver"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.gw_solver.GWSolver">[docs]</a><span class="k">class</span> <span class="nc">GWSolver</span><span class="p">():</span>
+
     
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e_k</span><span class="p">,</span> <span class="n">V_k</span><span class="p">,</span> <span class="n">wmesh</span><span class="p">,</span>
+                 <span class="n">mu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">g_wk</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">N_fix</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">N_tol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
+                 <span class="n">mu_bracket</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timer</span> <span class="o">=</span> <span class="n">Timer</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logo</span><span class="p">())</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;beta </span><span class="si">{</span><span class="n">wmesh</span><span class="o">.</span><span class="n">beta</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;N_w </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">wmesh</span><span class="p">)</span><span class="si">:</span><span class="s1">6d</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;N_k </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">e_k</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span><span class="si">:</span><span class="s1">6d</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">e_k</span> <span class="o">=</span> <span class="n">e_k</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">V_k</span> <span class="o">=</span> <span class="n">V_k</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">V_r</span> <span class="o">=</span> <span class="n">make_gf_from_fourier</span><span class="p">(</span><span class="n">V_k</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wmesh</span> <span class="o">=</span> <span class="n">wmesh</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N_fix</span> <span class="o">=</span> <span class="n">N_fix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N_tol</span> <span class="o">=</span> <span class="n">N_tol</span>
 
-    <span class="k">def</span> <span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">=</span> <span class="n">mu</span> <span class="k">if</span> <span class="n">mu</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">0.0</span>
+        
+        <span class="k">if</span> <span class="n">mu_bracket</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mu_bracket</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">e_k</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">e_k</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">max</span><span class="p">()])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mu_bracket</span> <span class="o">=</span> <span class="n">mu_bracket</span>
 
-<div class="viewcode-block" id="ParameterCollection.alter"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.ParameterCollection.ParameterCollection.alter">[docs]</a>    <span class="k">def</span> <span class="nf">alter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Change or add attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">g0_wk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dyson_equation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="n">e_k</span><span class="p">,</span> <span class="n">wmesh</span><span class="o">=</span><span class="n">wmesh</span><span class="p">,</span> <span class="n">N_fix</span><span class="o">=</span><span class="n">N_fix</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">g_wk</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">g_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">g0_wk</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">g_wk</span> <span class="o">=</span> <span class="n">g_wk</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">g0_wk</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma_wk</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="mf">0.</span>
 
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        p : ``ParameterCollection``</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">p</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">p</span> </div>
 
-<div class="viewcode-block" id="ParameterCollection.copy"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.ParameterCollection.ParameterCollection.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Shallow copy</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">p</span> <span class="o">=</span> <span class="n">ParameterCollection</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">())</span>
-        <span class="k">return</span> <span class="n">p</span></div>
+    <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;calc_real_space&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">calc_real_space</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;--&gt; GWSolver.calc_real_space&#39;</span><span class="p">)</span>
+        
+        <span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">fourier_wk_to_wr</span>
+        <span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">chi_wr_from_chi_wk</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">g0_wr</span> <span class="o">=</span> <span class="n">fourier_wk_to_wr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g0_wk</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">g_wr</span> <span class="o">=</span> <span class="n">fourier_wk_to_wr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g_wk</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma_wr</span> <span class="o">=</span> <span class="n">fourier_wk_to_wr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma_wk</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">P_wr</span> <span class="o">=</span> <span class="n">chi_wr_from_chi_wk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P_wk</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">W_wr</span> <span class="o">=</span> <span class="n">chi_wr_from_chi_wk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">W_wk</span><span class="p">)</span>
+
+        <span class="n">V_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">W_wk</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">bmesh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">W_wk</span><span class="o">.</span><span class="n">mesh</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">V_wk</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">bmesh</span><span class="p">:</span>
+            <span class="n">V_wk</span><span class="p">[</span><span class="n">w</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">V_k</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">V_wk</span> <span class="o">=</span> <span class="n">V_wk</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">V_wr</span> <span class="o">=</span> <span class="n">chi_wr_from_chi_wk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">V_wk</span><span class="p">)</span>
+        
+
+    <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;calc_real_freq&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">calc_real_freq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fmesh</span><span class="p">,</span> <span class="n">fbmesh</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">opts</span><span class="o">=</span><span class="nb">dict</span><span class="p">()):</span>
+
+        <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;--&gt; GWSolver.calc_real_freq&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">g0_fk</span> <span class="o">=</span> <span class="n">pade_analytical_continuation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g0_wk</span><span class="p">,</span> <span class="n">fmesh</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">g_fk</span> <span class="o">=</span> <span class="n">pade_analytical_continuation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g_wk</span><span class="p">,</span> <span class="n">fmesh</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma_fk</span> <span class="o">=</span> <span class="n">pade_analytical_continuation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma_wk</span><span class="p">,</span> <span class="n">fmesh</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span>
+
+        <span class="n">gw_rf</span> <span class="o">=</span> <span class="n">ParameterCollection</span><span class="p">(</span>
+            <span class="n">mu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span>
+            <span class="n">mu0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu0</span><span class="p">,</span>
+            <span class="n">e_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="p">,</span>
+            <span class="n">V_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">V_k</span><span class="p">,</span>
+            <span class="n">g0_fk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">g0_fk</span><span class="p">,</span>
+            <span class="n">g_fk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">g_fk</span><span class="p">,</span>
+            <span class="n">sigma_hartree_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma_hartree_k</span><span class="p">,</span>
+            <span class="n">sigma_fock_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma_fock_k</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">fbmesh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fbmesh</span> <span class="o">=</span> <span class="n">fmesh</span>
+        
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;P_wk&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">P_fk</span> <span class="o">=</span> <span class="n">pade_analytical_continuation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P_wk</span><span class="p">,</span> <span class="n">fbmesh</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span>
+            <span class="n">gw_rf</span><span class="o">.</span><span class="n">P_fk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">P_fk</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;W_wk&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">W_fk</span> <span class="o">=</span> <span class="n">pade_analytical_continuation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">W_wk</span><span class="p">,</span> <span class="n">fbmesh</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span>
+            <span class="n">gw_rf</span><span class="o">.</span><span class="n">W_fk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">W_fk</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;chi_wk&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">chi_fk</span> <span class="o">=</span> <span class="n">pade_analytical_continuation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chi_wk</span><span class="p">,</span> <span class="n">fbmesh</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span>
+            <span class="n">gw_rf</span><span class="o">.</span><span class="n">chi_fk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi_fk</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;W_dyn_wk&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">W_dyn_fk</span> <span class="o">=</span> <span class="n">pade_analytical_continuation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">W_dyn_wk</span><span class="p">,</span> <span class="n">fbmesh</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span>
+            <span class="n">gw_rf</span><span class="o">.</span><span class="n">W_dyn_fk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">W_dyn_fk</span>
+
+        <span class="k">return</span> <span class="n">gw_rf</span>
+
+
+    <span class="k">def</span> <span class="nf">calc_rho_loc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rho_r</span><span class="p">):</span>
+        <span class="n">rho_loc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rho_r</span><span class="p">[</span><span class="n">Idx</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">rho_loc</span>
+
+    
+    <span class="k">def</span> <span class="nf">calc_total_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rho_loc</span><span class="p">):</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">rho_loc</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">N</span>
+    
+    
+    <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;Density matrix rho_k&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">calc_rho_k</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g_wk</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">rho_k_from_g_wk</span><span class="p">(</span><span class="n">g_wk</span><span class="p">)</span>
+            
+
+    <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;Density matrix rho_r&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">calc_rho_r</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g_wk</span><span class="p">):</span>
+        <span class="n">rho_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_rho_k</span><span class="p">(</span><span class="n">g_wk</span><span class="p">)</span>
+        <span class="n">rho_r</span> <span class="o">=</span> <span class="n">make_gf_from_fourier</span><span class="p">(</span><span class="n">rho_k</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">rho_r</span>
+
+    
+    <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;Hartree Sigma_H&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">hartree_sigma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">V_k</span><span class="p">,</span> <span class="n">rho_r</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">make_gf_from_fourier</span><span class="p">(</span><span class="n">hartree_sigma</span><span class="p">(</span><span class="n">V_k</span><span class="p">,</span> <span class="n">rho_r</span><span class="p">))</span>
+
+    
+    <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;Fock Sigma_F&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">fock_sigma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">V_r</span><span class="p">,</span> <span class="n">rho_r</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">make_gf_from_fourier</span><span class="p">(</span><span class="n">fock_sigma</span><span class="p">(</span><span class="n">V_r</span><span class="p">,</span> <span class="n">rho_r</span><span class="p">))</span>
+    
+        
+    <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;GW Sigma_dyn&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">gw_dynamic_sigma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W_dyn_wk</span><span class="p">,</span> <span class="n">g_wk</span><span class="p">):</span>
+ 
+        <span class="n">g_wr</span> <span class="o">=</span> <span class="n">fourier_wk_to_wr</span><span class="p">(</span><span class="n">g_wk</span><span class="p">)</span>
+        <span class="n">g_tr</span> <span class="o">=</span> <span class="n">fourier_wr_to_tr</span><span class="p">(</span><span class="n">g_wr</span><span class="p">)</span>
+        <span class="k">del</span> <span class="n">g_wr</span>
+
+        <span class="n">W_dyn_wr</span> <span class="o">=</span> <span class="n">chi_wr_from_chi_wk</span><span class="p">(</span><span class="n">W_dyn_wk</span><span class="p">)</span>
+        <span class="n">W_dyn_tr</span> <span class="o">=</span> <span class="n">chi_tr_from_chi_wr</span><span class="p">(</span><span class="n">W_dyn_wr</span><span class="p">)</span>
+        <span class="k">del</span> <span class="n">W_dyn_wr</span>
+
+        <span class="n">sigma_dyn_tr</span> <span class="o">=</span> <span class="n">gw_dynamic_sigma</span><span class="p">(</span><span class="n">W_dyn_tr</span><span class="p">,</span> <span class="n">g_tr</span><span class="p">)</span>
+        <span class="k">del</span> <span class="n">g_tr</span>
+        <span class="k">del</span> <span class="n">W_dyn_tr</span>
+
+        <span class="n">sigma_dyn_wr</span> <span class="o">=</span> <span class="n">fourier_tr_to_wr</span><span class="p">(</span><span class="n">sigma_dyn_tr</span><span class="p">)</span>
+        <span class="k">del</span> <span class="n">sigma_dyn_tr</span>
+        <span class="n">sigma_dyn_wk</span> <span class="o">=</span> <span class="n">fourier_wr_to_wk</span><span class="p">(</span><span class="n">sigma_dyn_wr</span><span class="p">)</span>
+        <span class="k">del</span> <span class="n">sigma_dyn_wr</span>
+
+        <span class="k">return</span> <span class="n">sigma_dyn_wk</span>
+
+
+    <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;Polarization P_wk&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">polarization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g_wk</span><span class="p">):</span>
+        <span class="n">P_wk</span> <span class="o">=</span> <span class="o">-</span><span class="n">imtime_bubble_chi0_wk</span><span class="p">(</span>
+            <span class="n">g_wk</span><span class="p">,</span> <span class="n">nw</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wmesh</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">P_wk</span>
+
+
+    <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;Interaction W_wk&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">screened_interaction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P_wk</span><span class="p">,</span> <span class="n">V_k</span><span class="p">,</span> <span class="n">spinless</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">spinless</span><span class="p">:</span>
+            <span class="n">W_wk</span> <span class="o">=</span> <span class="n">dynamical_screened_interaction_W</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">P_wk</span><span class="p">,</span> <span class="n">V_k</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">W_wk</span> <span class="o">=</span> <span class="n">dynamical_screened_interaction_W</span><span class="p">(</span><span class="n">P_wk</span><span class="p">,</span> <span class="n">V_k</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">W_wk</span>
+
+    
+    <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;Susceptibiltiy chi_wk&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">susceptibiltiy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">P_wk</span><span class="p">,</span> <span class="n">W_wk</span><span class="p">):</span>
+        <span class="n">chi_wk</span> <span class="o">=</span> <span class="n">generalized_susceptibility</span><span class="p">(</span><span class="n">W_wk</span><span class="p">,</span> <span class="n">P_wk</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">chi_wk</span>
+    
+    
+    <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;Split W_dyn_k, W_stat_wk&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">dynamic_and_static_interaction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W_wk</span><span class="p">):</span>
+        <span class="n">W_dyn_wk</span><span class="p">,</span> <span class="n">W_stat_k</span> <span class="o">=</span> <span class="n">split_into_dynamic_wk_and_constant_k</span><span class="p">(</span><span class="n">W_wk</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">W_dyn_wk</span><span class="p">,</span> <span class="n">W_stat_k</span>
+    
+
+    <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;Dyson equation&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">dyson_equation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">e_k</span><span class="p">,</span> <span class="n">sigma_wk</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wmesh</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">N_fix</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">N_fix</span><span class="p">:</span>
+            <span class="n">g_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dyson_equation_dispatch</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">e_k</span><span class="p">,</span> <span class="n">sigma_wk</span><span class="o">=</span><span class="n">sigma_wk</span><span class="p">,</span> <span class="n">wmesh</span><span class="o">=</span><span class="n">wmesh</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># -- Seek chemical potential</span>
+
+            <span class="k">def</span> <span class="nf">target_function</span><span class="p">(</span><span class="n">mu</span><span class="p">):</span>
+                <span class="n">g_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dyson_equation_dispatch</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">e_k</span><span class="p">,</span> <span class="n">sigma_wk</span><span class="o">=</span><span class="n">sigma_wk</span><span class="p">,</span> <span class="n">wmesh</span><span class="o">=</span><span class="n">wmesh</span><span class="p">)</span>
+                <span class="n">rho_r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_rho_r</span><span class="p">(</span><span class="n">g_wk</span><span class="p">)</span>
+                <span class="n">rho_loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_rho_loc</span><span class="p">(</span><span class="n">rho_r</span><span class="p">)</span>
+                <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_total_density</span><span class="p">(</span><span class="n">rho_loc</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">N</span> <span class="o">-</span> <span class="n">N_fix</span>
+
+            <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">root_scalar</span>
+
+            <span class="n">sol</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span><span class="n">target_function</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;brentq&#39;</span><span class="p">,</span> <span class="n">bracket</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mu_bracket</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">N_tol</span><span class="p">)</span>
+            <span class="n">mu</span> <span class="o">=</span> <span class="n">sol</span><span class="o">.</span><span class="n">root</span>
+            <span class="n">g_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dyson_equation_dispatch</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">e_k</span><span class="p">,</span> <span class="n">sigma_wk</span><span class="o">=</span><span class="n">sigma_wk</span><span class="p">,</span> <span class="n">wmesh</span><span class="o">=</span><span class="n">wmesh</span><span class="p">)</span>
+            
+        <span class="k">return</span> <span class="n">g_wk</span><span class="p">,</span> <span class="n">mu</span>
+
+
+    <span class="k">def</span> <span class="nf">_dyson_equation_dispatch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">e_k</span><span class="p">,</span> <span class="n">sigma_wk</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wmesh</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">sigma_wk</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">g_wk</span> <span class="o">=</span> <span class="n">lattice_dyson_g_wk</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">e_k</span><span class="p">,</span> <span class="n">sigma_wk</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">sigma_wk</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">wmesh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">g_wk</span> <span class="o">=</span> <span class="n">lattice_dyson_g0_wk</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">e_k</span><span class="o">=</span><span class="n">e_k</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="n">wmesh</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+        <span class="k">return</span> <span class="n">g_wk</span>
+        
+    
+    <span class="k">def</span> <span class="nf">solve_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                   <span class="n">hartree</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fock</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">gw</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                   <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">spinless</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;--&gt; GWSolver.solve_iter&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;spinless </span><span class="si">{</span><span class="n">spinless</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; Hartree </span><span class="si">{</span><span class="n">hartree</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;    Fock </span><span class="si">{</span><span class="n">fock</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;      GW </span><span class="si">{</span><span class="n">gw</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span>
+        
+        <span class="n">e_k</span><span class="p">,</span> <span class="n">V_k</span><span class="p">,</span> <span class="n">V_r</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">N_fix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">V_k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">V_r</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">N_fix</span>
+
+        <span class="n">g_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">g_wk</span>
+        
+        <span class="n">sigma_wk</span> <span class="o">=</span> <span class="n">g_wk</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">sigma_wk</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="mf">0.</span>
+
+        <span class="n">N_old</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+        <span class="n">g_wk_old</span> <span class="o">=</span> <span class="n">g_wk</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">g_wk_old</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="nb">iter</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxiter</span><span class="p">):</span>
+            
+            <span class="n">sigma_wk</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="mf">0.</span>
+
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--&gt; rho_r&#39;</span><span class="p">)</span>
+            <span class="n">rho_r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_rho_r</span><span class="p">(</span><span class="n">g_wk</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">hartree</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--&gt; Sigma Hartree&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sigma_hartree_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hartree_sigma</span><span class="p">(</span><span class="n">V_k</span><span class="p">,</span> <span class="n">rho_r</span><span class="p">)</span>
+                <span class="n">sigma_wk</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma_hartree_k</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">fock</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--&gt; Sigma Fock&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sigma_fock_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fock_sigma</span><span class="p">(</span><span class="n">V_r</span><span class="p">,</span> <span class="n">rho_r</span><span class="p">)</span>
+                <span class="n">sigma_wk</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma_fock_k</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">gw</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--&gt; Polarization&#39;</span><span class="p">)</span>
+                <span class="n">P_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">polarization</span><span class="p">(</span><span class="n">g_wk</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--&gt; Screened interaction&#39;</span><span class="p">)</span>
+                <span class="n">W_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">screened_interaction</span><span class="p">(</span><span class="n">P_wk</span><span class="p">,</span> <span class="n">V_k</span><span class="p">,</span> <span class="n">spinless</span><span class="o">=</span><span class="n">spinless</span><span class="p">)</span>
+                    
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--&gt; Screened interaction split in static and dynamic&#39;</span><span class="p">)</span>
+                <span class="n">W_dyn_wk</span> <span class="o">=</span> <span class="n">W_wk</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">W_dyn_wk</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                    <span class="n">W_dyn_wk</span><span class="p">[</span><span class="n">w</span><span class="p">,:]</span> <span class="o">-=</span> <span class="n">V_k</span>
+
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--&gt; Sigma GW dynamic&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sigma_dyn_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gw_dynamic_sigma</span><span class="p">(</span><span class="n">W_dyn_wk</span><span class="p">,</span> <span class="n">g_wk</span><span class="p">)</span>
+                <span class="n">sigma_wk</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma_dyn_wk</span><span class="o">.</span><span class="n">data</span>
+
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--&gt; Dyson equation&#39;</span><span class="p">)</span>
+            <span class="n">g_wk</span><span class="p">,</span> <span class="n">mu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dyson_equation</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">e_k</span><span class="p">,</span> <span class="n">sigma_wk</span><span class="o">=</span><span class="n">sigma_wk</span><span class="p">,</span> <span class="n">N_fix</span><span class="o">=</span><span class="n">N_fix</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--&gt; done.&#39;</span><span class="p">)</span>
+
+            <span class="n">diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">g_wk</span><span class="o">.</span><span class="n">data</span> <span class="o">-</span> <span class="n">g_wk_old</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+            <span class="n">g_wk_old</span> <span class="o">=</span> <span class="n">g_wk</span>
+
+            <span class="k">if</span> <span class="nb">iter</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;GW: iter </span><span class="si">{</span><span class="nb">iter</span><span class="si">:</span><span class="s1">5d</span><span class="si">}</span><span class="s1"> max(abs(dg)) </span><span class="si">{</span><span class="n">diff</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                
+            <span class="k">if</span> <span class="n">diff</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+                <span class="k">break</span>
+
+        <span class="n">rho_r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_rho_r</span><span class="p">(</span><span class="n">g_wk</span><span class="p">)</span>
+        <span class="n">rho_loc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_rho_loc</span><span class="p">(</span><span class="n">rho_r</span><span class="p">)</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_total_density</span><span class="p">(</span><span class="n">rho_loc</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">rho_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_rho_k</span><span class="p">(</span><span class="n">g_wk</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rho_r</span> <span class="o">=</span> <span class="n">rho_r</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rho_loc</span> <span class="o">=</span> <span class="n">rho_loc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">N</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">=</span> <span class="n">mu</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">g_wk</span> <span class="o">=</span> <span class="n">g_wk</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma_wk</span> <span class="o">=</span> <span class="n">sigma_wk</span>
+
+        <span class="k">if</span> <span class="n">gw</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">W_wk</span> <span class="o">=</span> <span class="n">W_wk</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">W_dyn_wk</span> <span class="o">=</span> <span class="n">W_dyn_wk</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">P_wk</span> <span class="o">=</span> <span class="n">P_wk</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">chi_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">susceptibiltiy</span><span class="p">(</span><span class="n">P_wk</span><span class="p">,</span> <span class="n">W_wk</span><span class="p">)</span>
+            
+        <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">write</span><span class="p">()</span>
+
+
+    <span class="k">def</span> <span class="nf">get_local_density_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rho_loc</span>
+
+    <span class="k">def</span> <span class="nf">get_total_density</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span>
+
 
     <span class="k">def</span> <span class="nf">__reduce_to_dict__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;timer&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span>
 
-    <span class="k">def</span> <span class="nf">_clean_bools</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Fix for bug in Triqs that cast bool to numpy.bool_ </span>
-<span class="sd">        here we cast all numpy.bools_ to plain python bools &quot;&quot;&quot;</span>
-        
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
-            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">()[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-
-<div class="viewcode-block" id="ParameterCollection.convert_keys_from_string_to_python"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.ParameterCollection.ParameterCollection.convert_keys_from_string_to_python">[docs]</a>    <span class="k">def</span> <span class="nf">convert_keys_from_string_to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dict_key</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; h5.HDFArchive incorrectly mangles tuple keys to string</span>
-<span class="sd">        running this on the affected dict tries to revert this by running eval</span>
-<span class="sd">        on the string representation. UGLY FIX... &quot;&quot;&quot;</span>
-
-        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">()[</span><span class="n">dict_key</span><span class="p">]</span>
-        <span class="n">d_fix</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
-            <span class="n">d_fix</span><span class="p">[</span><span class="nb">eval</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span> <span class="o">=</span> <span class="n">value</span>            
-        <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">()[</span><span class="n">dict_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">d_fix</span></div>
     
-    <span class="k">def</span> <span class="nf">grab_attribs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">keys</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
-            <span class="n">val</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">()[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
-
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">__factory_from_dict__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
-        <span class="n">ret</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">()</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s1">&#39;e_k&#39;</span><span class="p">],</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;V_k&#39;</span><span class="p">],</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;wmesh&#39;</span><span class="p">])</span>
         <span class="n">ret</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
-        <span class="n">ret</span><span class="o">.</span><span class="n">_clean_bools</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">ret</span>
 
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">out</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-        <span class="n">keys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span> <span class="c1"># sort keys</span>
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
-            <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="n">ParameterCollection</span><span class="p">:</span>
-                <span class="n">pc_list</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
-                <span class="n">pc_txt</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span> <span class="n">key</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">row</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">pc_list</span> <span class="p">])</span>
-                <span class="n">out</span> <span class="o">+=</span> <span class="n">pc_txt</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">str_value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">logo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s1">&#39;UTF&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">encoding</span><span class="p">:</span>
+            <span class="n">logo</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">╔╦╗╦═╗╦╔═╗ ╔═╗  </span>
+<span class="s2"> ║ ╠╦╝║║═╬╗╚═╗  </span>
+<span class="s2"> ╩ ╩╚═╩╚═╝╚╚═╝  GW</span>
+<span class="s2">TRIQS: GW solver</span>
+<span class="s2">&quot;&quot;&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logo</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2"> _____ ___ ___ ___  ___</span>
+<span class="s2">|_   _| _ \_ _/ _ \/ __| </span>
+<span class="s2">  | | |   /| | (_) \__ \ </span>
+<span class="s2">  |_| |_|_\___\__\_\___/  GW</span>
 
-                <span class="c1"># Cut things that take more than five rows</span>
-                <span class="n">str_value_lines</span> <span class="o">=</span> <span class="n">str_value</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
-                <span class="n">max_lines</span> <span class="o">=</span> <span class="mi">10</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">str_value_lines</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_lines</span><span class="p">:</span>
-                    <span class="n">str_value</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">str_value_lines</span><span class="p">[:</span><span class="n">max_lines</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;...&#39;</span><span class="p">])</span>
-                
-                <span class="n">out</span> <span class="o">+=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">key</span><span class="p">,</span> <span class="s1">&#39; = &#39;</span><span class="p">,</span> <span class="n">str_value</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
-        <span class="k">return</span> <span class="n">out</span>
-
-    <span class="fm">__repr__</span> <span class="o">=</span> <span class="fm">__str__</span>
-
-    <span class="k">def</span> <span class="nf">get_my_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">ans</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">frame</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_back</span>
-        <span class="n">tmp</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">f_globals</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">f_locals</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
-        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">tmp</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">):</span>
-                <span class="k">if</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">hash</span><span class="p">(</span><span class="n">var</span><span class="p">):</span>
-                    <span class="n">ans</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">ans</span></div>
+<span class="s2">    TRIQS: GW solver</span>
+<span class="s2">&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">logo</span></div>
 
 
 <span class="c1"># -- Register ParameterCollection in Triqs formats</span>
+<span class="n">register_class</span><span class="p">(</span><span class="n">GWSolver</span><span class="p">)</span>
 
-<span class="kn">from</span> <span class="nn">h5.formats</span> <span class="kn">import</span> <span class="n">register_class</span> 
-<span class="n">register_class</span><span class="p">(</span><span class="n">ParameterCollection</span><span class="p">)</span>
-
-<span class="c1"># ----------------------------------------------------------------------</span>
-<div class="viewcode-block" id="ParameterCollections"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.ParameterCollection.ParameterCollections">[docs]</a><span class="k">class</span> <span class="nc">ParameterCollections</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot; Helper class for handing a series of collections of parameters.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-
-<span class="sd">    objects : list</span>
-<span class="sd">        List of ``ParameterCollection`` instances.</span>
-
-<span class="sd">    Examples</span>
-<span class="sd">    --------</span>
-
-<span class="sd">    The ``ParameterCollections`` class makes it easy to get vectors of </span>
-<span class="sd">    parameters from a list of ``ParameterCollection`` objects.</span>
-
-<span class="sd">    &gt;&gt;&gt; p1 = ParameterCollection(beta=10., U=1.0, t=1.0)</span>
-<span class="sd">    &gt;&gt;&gt; p2 = ParameterCollection(beta=5., U=2.0, t=1.337)</span>
-<span class="sd">    &gt;&gt;&gt; ps = ParameterCollections(objects=[p1, p2])</span>
-<span class="sd">    &gt;&gt;&gt; print ps.beta</span>
-<span class="sd">    [10.  5.]</span>
-<span class="sd">    &gt;&gt;&gt; print ps.U</span>
-<span class="sd">    [1. 2.]</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">objects</span><span class="o">=</span><span class="p">[]):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">objects</span> <span class="o">=</span> <span class="n">objects</span>
+<span class="k">def</span> <span class="nf">gf_tensor_to_matrix</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+    
+    <span class="n">N</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">target_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">g</span><span class="o">.</span><span class="n">target_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> 
+    <span class="n">M</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">target_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">g</span><span class="o">.</span><span class="n">target_shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> 
+    <span class="n">g_mat</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">g</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="p">[</span><span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="p">])</span>
+    
+    <span class="n">g_mat</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">g_mat</span>
 
-    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">gf_matrix_to_tensor</span><span class="p">(</span><span class="n">g_mat</span><span class="p">,</span> <span class="n">target_shape</span><span class="p">):</span>
+    
+    <span class="n">g</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">g_mat</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="n">target_shape</span><span class="p">)</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">g_mat</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">target_shape</span><span class="p">)</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">g_mat</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">g</span>
+
+
+<span class="k">def</span> <span class="nf">pade_analytical_continuation</span><span class="p">(</span>
+    <span class="n">g_wk</span><span class="p">,</span> <span class="n">fmesh</span><span class="p">,</span> <span class="n">n_points</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">freq_offset</span><span class="o">=</span><span class="mf">0.05</span><span class="p">):</span>
+    
+    <span class="n">wmesh</span> <span class="o">=</span> <span class="n">g_wk</span><span class="o">.</span><span class="n">mesh</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">kmesh</span> <span class="o">=</span> <span class="n">g_wk</span><span class="o">.</span><span class="n">mesh</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">g_fk</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">MeshProduct</span><span class="p">(</span><span class="n">fmesh</span><span class="p">,</span> <span class="n">kmesh</span><span class="p">),</span> <span class="n">target_shape</span><span class="o">=</span><span class="n">g_wk</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kmesh</span><span class="p">:</span>
+        <span class="n">g_f</span> <span class="o">=</span> <span class="n">g_fk</span><span class="p">[:,</span> <span class="n">k</span><span class="p">]</span>
+        <span class="n">g_w</span> <span class="o">=</span> <span class="n">g_wk</span><span class="p">[:,</span> <span class="n">k</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">g_wk</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">g_w</span> <span class="o">=</span> <span class="n">gf_tensor_to_matrix</span><span class="p">(</span><span class="n">g_w</span><span class="p">)</span>
+            <span class="n">g_f</span> <span class="o">=</span> <span class="n">gf_tensor_to_matrix</span><span class="p">(</span><span class="n">g_f</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">g_w</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span> <span class="o">==</span> <span class="n">MeshDLRImFreq</span><span class="p">:</span>
+            <span class="n">g_c</span> <span class="o">=</span> <span class="n">make_gf_dlr</span><span class="p">(</span><span class="n">g_w</span><span class="p">)</span>
+            <span class="n">small_mesh</span> <span class="o">=</span> <span class="n">MeshImFreq</span><span class="p">(</span><span class="n">g_w</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="n">g_w</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">statistic</span><span class="p">,</span> <span class="n">n_points</span><span class="p">)</span>
+            <span class="n">g_w</span> <span class="o">=</span> <span class="n">dlr_on_imfreq</span><span class="p">(</span><span class="n">g_c</span><span class="p">,</span> <span class="n">small_mesh</span><span class="p">)</span>
+            
+        <span class="n">g_f</span><span class="o">.</span><span class="n">set_from_pade</span><span class="p">(</span><span class="n">g_w</span><span class="p">,</span> <span class="n">n_points</span><span class="o">=</span><span class="n">n_points</span><span class="p">,</span> <span class="n">freq_offset</span><span class="o">=</span><span class="n">freq_offset</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">g_wk</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">g_f</span> <span class="o">=</span> <span class="n">gf_matrix_to_tensor</span><span class="p">(</span><span class="n">g_f</span><span class="p">,</span> <span class="n">g_wk</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span>
+            <span class="n">g_fk</span><span class="p">[:,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">g_f</span>
         
-    <span class="k">def</span> <span class="nf">sort_on</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
-        <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getattr_from_objects</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
-        <span class="n">sidx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_sorted_order</span><span class="p">(</span><span class="n">sidx</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">set_sorted_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sorted_idx</span><span class="p">):</span>
-        <span class="n">sidx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sorted_idx</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">objects</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">objects</span><span class="p">)[</span><span class="n">sidx</span><span class="p">])</span>
-
-    <span class="k">def</span> <span class="nf">getattr_from_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">getattr</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">objects</span> <span class="p">])</span>
-    
-    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getattr_from_objects</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">__reduce_to_dict__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>
-
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">__factory_from_dict__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
-        <span class="n">ret</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s1">&#39;objects&#39;</span><span class="p">])</span>
-        <span class="k">return</span> <span class="n">ret</span>    
-
-    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="fm">__iter__</span><span class="p">()</span>
-
-    <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="fm">__next__</span><span class="p">()</span>
-
-    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">objects</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">out</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
-            <span class="n">out</span> <span class="o">+=</span> <span class="n">p</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
-            <span class="n">out</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
-        <span class="k">return</span> <span class="n">out</span>
-
-    <span class="fm">__repr__</span> <span class="o">=</span> <span class="fm">__str__</span></div>
-
-<span class="c1"># ----------------------------------------------------------------------</span>
-<span class="c1"># -- Register ParameterCollection in Triqs formats</span>
-
-<span class="kn">from</span> <span class="nn">h5.formats</span> <span class="kn">import</span> <span class="n">register_class</span> 
-<span class="n">register_class</span><span class="p">(</span><span class="n">ParameterCollections</span><span class="p">)</span>
-
-<span class="c1"># ----------------------------------------------------------------------</span>
-
-<div class="viewcode-block" id="parameter_scan"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.ParameterCollection.parameter_scan">[docs]</a><span class="k">def</span> <span class="nf">parameter_scan</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return ParameterCollections with copies of ParameterCollection for different parameters</span>
-
-<span class="sd">    Uses a given ParameterCollection as a template to create copies of it with one or more</span>
-<span class="sd">    parameters changing. Stores all of these copies in a ParameterCollections for easy access.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    p : ParameterCollection,</span>
-<span class="sd">        The ParameterCollection that shall be used as a template for all the others</span>
-<span class="sd">    **kwargs : Sequence,</span>
-<span class="sd">               The keyword gives the parameter name and the Sequence the values that shall</span>
-<span class="sd">               be scanned through.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    ParameterCollections</span>
-
-<span class="sd">    Examples</span>
-<span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; p = ParameterCollection(beta=10., U=1.0, t=1.0)</span>
-<span class="sd">    &gt;&gt;&gt; ps = parameter_scan(p, U=[1.0, 1.5, 2.0])</span>
-<span class="sd">    &gt;&gt;&gt; print ps[0]</span>
-<span class="sd">    U = 1.0</span>
-<span class="sd">    beta = 10.0</span>
-<span class="sd">    t = 1.0</span>
-<span class="sd">    &gt;&gt;&gt; print ps[1]</span>
-<span class="sd">    U = 1.5</span>
-<span class="sd">    beta = 10.0</span>
-<span class="sd">    t = 1.0</span>
-<span class="sd">    &gt;&gt;&gt; print ps[2]</span>
-<span class="sd">    U = 2.0</span>
-<span class="sd">    beta = 10.0</span>
-<span class="sd">    t = 1.0</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">parameter_values</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">parameter_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">key</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="n">value</span><span class="p">))</span>
-    
-    <span class="n">ps</span> <span class="o">=</span> <span class="p">[]</span>
-    
-    <span class="k">for</span> <span class="n">parameter_value</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">parameter_values</span><span class="p">):</span>
-        <span class="n">ps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">alter</span><span class="p">(</span><span class="o">**</span><span class="nb">dict</span><span class="p">(</span><span class="n">parameter_value</span><span class="p">)))</span>
-
-    <span class="k">return</span> <span class="n">ParameterCollections</span><span class="p">(</span><span class="n">ps</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">g_fk</span>
 </pre></div>
 
            </div>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>triqs_tprf.ParameterCollection &mdash; TPRF - Two-Particle Response Function tool box for TRIQS  documentation</title>
+  <title>triqs_tprf.lattice_utils &mdash; TPRF - Two-Particle Response Function tool box for TRIQS  documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/plot_directive.css" type="text/css" />
@@ -646,7 +646,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
-      <li class="breadcrumb-item active">triqs_tprf.ParameterCollection</li>
+      <li class="breadcrumb-item active">triqs_tprf.lattice_utils</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -655,16 +655,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for triqs_tprf.ParameterCollection</h1><div class="highlight"><pre>
+  <h1>Source code for triqs_tprf.lattice_utils</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
 
 <span class="c1">################################################################################</span>
 <span class="c1">#</span>
 <span class="c1"># TPRF: Two-Particle Response Function (TPRF) Toolbox for TRIQS</span>
 <span class="c1">#</span>
-<span class="c1"># Copyright (C) 2017 by Hugo U.R. Strand</span>
-<span class="c1"># Copyright (C) 2019 by S.Käser </span>
-<span class="c1"># Author: H. U.R. Strand, S. Käser</span>
+<span class="c1"># Copyright (C) 2018 by The Simons Foundation</span>
+<span class="c1"># Copyright (C) 2020, S. Käser</span>
+<span class="c1"># Authors: H. U.R. Strand, S. Käser </span>
 <span class="c1">#</span>
 <span class="c1"># TPRF is free software: you can redistribute it and/or modify it under the</span>
 <span class="c1"># terms of the GNU General Public License as published by the Free Software</span>
@@ -681,286 +681,503 @@
 <span class="c1">#</span>
 <span class="c1">################################################################################</span>
 
-<span class="kn">import</span> <span class="nn">inspect</span>
 <span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">multiprocessing</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="c1"># ----------------------------------------------------------------------</span>
-<div class="viewcode-block" id="ParameterCollection"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.ParameterCollection.ParameterCollection">[docs]</a><span class="k">class</span> <span class="nc">ParameterCollection</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Helper class for handing collections of parameters.</span>
+<span class="kn">import</span> <span class="nn">triqs.utility.mpi</span> <span class="k">as</span> <span class="nn">mpi</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
+<span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">Gf</span>
+<span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">Idx</span>
+<span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">MeshImFreq</span>
+<span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">MeshProduct</span>
+<span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">MeshBrZone</span>
 
-<span class="sd">    kwargs : dict</span>
-<span class="sd">        Key-word argument list of parameters.</span>
-
-<span class="sd">    Examples</span>
-<span class="sd">    --------</span>
-
-<span class="sd">    A ``ParameterCollection`` has any number of attributes, accessible with the</span>
-<span class="sd">    dot operator.</span>
-
-<span class="sd">    &gt;&gt;&gt; p = ParameterCollection(beta=10., U=1.0, t=1.0)</span>
-<span class="sd">    &gt;&gt;&gt; print p</span>
-<span class="sd">    U = 1.0</span>
-<span class="sd">    beta = 10.0</span>
-<span class="sd">    t = 1.0</span>
-<span class="sd">    &gt;&gt;&gt; print p.beta</span>
-<span class="sd">    10.0</span>
-<span class="sd">    &gt;&gt;&gt; p.W = 1.2</span>
-<span class="sd">    &gt;&gt;&gt; print p</span>
-<span class="sd">    U = 1.0</span>
-<span class="sd">    W = 1.2</span>
-<span class="sd">    beta = 10.0</span>
-<span class="sd">    t = 1.0</span>
-<span class="sd">    </span>
-<span class="sd">    and can be stored and loaded to/from TRIQS hdf archives.</span>
-
-<span class="sd">    &gt;&gt;&gt; from h5 import HDFArchive</span>
-<span class="sd">    &gt;&gt;&gt; with HDFArchive(&#39;data.h5&#39;, &#39;w&#39;) as arch: arch[&#39;p&#39;] = p</span>
-<span class="sd">    &gt;&gt;&gt; with HDFArchive(&#39;data.h5&#39;, &#39;r&#39;) as arch: p_ref = arch[&#39;p&#39;]</span>
-<span class="sd">    &gt;&gt;&gt; print p_ref</span>
-<span class="sd">    U = 1.0</span>
-<span class="sd">    beta = 10.0</span>
-<span class="sd">    t = 1.0</span>
-<span class="sd">    </span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
-
-    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-
-    <span class="k">def</span> <span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>
-
-<div class="viewcode-block" id="ParameterCollection.alter"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.ParameterCollection.ParameterCollection.alter">[docs]</a>    <span class="k">def</span> <span class="nf">alter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Change or add attributes</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        p : ``ParameterCollection``</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">p</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">p</span> </div>
-
-<div class="viewcode-block" id="ParameterCollection.copy"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.ParameterCollection.ParameterCollection.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Shallow copy</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">p</span> <span class="o">=</span> <span class="n">ParameterCollection</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">())</span>
-        <span class="k">return</span> <span class="n">p</span></div>
-
-    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-
-    <span class="k">def</span> <span class="nf">__reduce_to_dict__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>
-
-    <span class="k">def</span> <span class="nf">_clean_bools</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Fix for bug in Triqs that cast bool to numpy.bool_ </span>
-<span class="sd">        here we cast all numpy.bools_ to plain python bools &quot;&quot;&quot;</span>
-        
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
-            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">()[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-
-<div class="viewcode-block" id="ParameterCollection.convert_keys_from_string_to_python"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.ParameterCollection.ParameterCollection.convert_keys_from_string_to_python">[docs]</a>    <span class="k">def</span> <span class="nf">convert_keys_from_string_to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dict_key</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; h5.HDFArchive incorrectly mangles tuple keys to string</span>
-<span class="sd">        running this on the affected dict tries to revert this by running eval</span>
-<span class="sd">        on the string representation. UGLY FIX... &quot;&quot;&quot;</span>
-
-        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">()[</span><span class="n">dict_key</span><span class="p">]</span>
-        <span class="n">d_fix</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
-            <span class="n">d_fix</span><span class="p">[</span><span class="nb">eval</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span> <span class="o">=</span> <span class="n">value</span>            
-        <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">()[</span><span class="n">dict_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">d_fix</span></div>
-    
-    <span class="k">def</span> <span class="nf">grab_attribs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">keys</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
-            <span class="n">val</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dict</span><span class="p">()[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
-
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">__factory_from_dict__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
-        <span class="n">ret</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">()</span>
-        <span class="n">ret</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
-        <span class="n">ret</span><span class="o">.</span><span class="n">_clean_bools</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">ret</span>
-
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">out</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-        <span class="n">keys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span> <span class="c1"># sort keys</span>
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
-            <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="n">ParameterCollection</span><span class="p">:</span>
-                <span class="n">pc_list</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
-                <span class="n">pc_txt</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span> <span class="n">key</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">row</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">pc_list</span> <span class="p">])</span>
-                <span class="n">out</span> <span class="o">+=</span> <span class="n">pc_txt</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">str_value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-
-                <span class="c1"># Cut things that take more than five rows</span>
-                <span class="n">str_value_lines</span> <span class="o">=</span> <span class="n">str_value</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
-                <span class="n">max_lines</span> <span class="o">=</span> <span class="mi">10</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">str_value_lines</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_lines</span><span class="p">:</span>
-                    <span class="n">str_value</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">str_value_lines</span><span class="p">[:</span><span class="n">max_lines</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;...&#39;</span><span class="p">])</span>
-                
-                <span class="n">out</span> <span class="o">+=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">key</span><span class="p">,</span> <span class="s1">&#39; = &#39;</span><span class="p">,</span> <span class="n">str_value</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
-        <span class="k">return</span> <span class="n">out</span>
-
-    <span class="fm">__repr__</span> <span class="o">=</span> <span class="fm">__str__</span>
-
-    <span class="k">def</span> <span class="nf">get_my_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">ans</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">frame</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_back</span>
-        <span class="n">tmp</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">f_globals</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">f_locals</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
-        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">tmp</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">):</span>
-                <span class="k">if</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">hash</span><span class="p">(</span><span class="n">var</span><span class="p">):</span>
-                    <span class="n">ans</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">ans</span></div>
-
-
-<span class="c1"># -- Register ParameterCollection in Triqs formats</span>
-
-<span class="kn">from</span> <span class="nn">h5.formats</span> <span class="kn">import</span> <span class="n">register_class</span> 
-<span class="n">register_class</span><span class="p">(</span><span class="n">ParameterCollection</span><span class="p">)</span>
-
-<span class="c1"># ----------------------------------------------------------------------</span>
-<div class="viewcode-block" id="ParameterCollections"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.ParameterCollection.ParameterCollections">[docs]</a><span class="k">class</span> <span class="nc">ParameterCollections</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot; Helper class for handing a series of collections of parameters.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-
-<span class="sd">    objects : list</span>
-<span class="sd">        List of ``ParameterCollection`` instances.</span>
-
-<span class="sd">    Examples</span>
-<span class="sd">    --------</span>
-
-<span class="sd">    The ``ParameterCollections`` class makes it easy to get vectors of </span>
-<span class="sd">    parameters from a list of ``ParameterCollection`` objects.</span>
-
-<span class="sd">    &gt;&gt;&gt; p1 = ParameterCollection(beta=10., U=1.0, t=1.0)</span>
-<span class="sd">    &gt;&gt;&gt; p2 = ParameterCollection(beta=5., U=2.0, t=1.337)</span>
-<span class="sd">    &gt;&gt;&gt; ps = ParameterCollections(objects=[p1, p2])</span>
-<span class="sd">    &gt;&gt;&gt; print ps.beta</span>
-<span class="sd">    [10.  5.]</span>
-<span class="sd">    &gt;&gt;&gt; print ps.U</span>
-<span class="sd">    [1. 2.]</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">objects</span><span class="o">=</span><span class="p">[]):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">objects</span> <span class="o">=</span> <span class="n">objects</span>
-
-    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
-        
-    <span class="k">def</span> <span class="nf">sort_on</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
-        <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getattr_from_objects</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
-        <span class="n">sidx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_sorted_order</span><span class="p">(</span><span class="n">sidx</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">set_sorted_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sorted_idx</span><span class="p">):</span>
-        <span class="n">sidx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sorted_idx</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">objects</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">objects</span><span class="p">)[</span><span class="n">sidx</span><span class="p">])</span>
-
-    <span class="k">def</span> <span class="nf">getattr_from_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">getattr</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">objects</span> <span class="p">])</span>
-    
-    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">getattr_from_objects</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">__reduce_to_dict__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>
-
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">__factory_from_dict__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
-        <span class="n">ret</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s1">&#39;objects&#39;</span><span class="p">])</span>
-        <span class="k">return</span> <span class="n">ret</span>    
-
-    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="fm">__iter__</span><span class="p">()</span>
-
-    <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="fm">__next__</span><span class="p">()</span>
-
-    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">objects</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">out</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
-            <span class="n">out</span> <span class="o">+=</span> <span class="n">p</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
-            <span class="n">out</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
-        <span class="k">return</span> <span class="n">out</span>
-
-    <span class="fm">__repr__</span> <span class="o">=</span> <span class="fm">__str__</span></div>
-
-<span class="c1"># ----------------------------------------------------------------------</span>
-<span class="c1"># -- Register ParameterCollection in Triqs formats</span>
-
-<span class="kn">from</span> <span class="nn">h5.formats</span> <span class="kn">import</span> <span class="n">register_class</span> 
-<span class="n">register_class</span><span class="p">(</span><span class="n">ParameterCollections</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">triqs.lattice</span> <span class="kn">import</span> <span class="n">BrillouinZone</span>
 
 <span class="c1"># ----------------------------------------------------------------------</span>
 
-<div class="viewcode-block" id="parameter_scan"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.ParameterCollection.parameter_scan">[docs]</a><span class="k">def</span> <span class="nf">parameter_scan</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return ParameterCollections with copies of ParameterCollection for different parameters</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.logo</span> <span class="kn">import</span> <span class="n">tprf_banner</span>
 
-<span class="sd">    Uses a given ParameterCollection as a template to create copies of it with one or more</span>
-<span class="sd">    parameters changing. Stores all of these copies in a ParameterCollections for easy access.</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">lattice_dyson_g0_wk</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">lattice_dyson_g_wk</span>
+
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">fourier_wk_to_wr</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">fourier_wr_to_tr</span>
+
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">chi0_tr_from_grt_PH</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">chi0_wr_from_grt_PH</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">chi0_w0r_from_grt_PH</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">chi_wr_from_chi_tr</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">chi_w0r_from_chi_tr</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">chi_wk_from_chi_wr</span>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+<span class="k">def</span> <span class="nf">add_fake_bosonic_mesh</span><span class="p">(</span><span class="n">gf</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Put a one value bosonic mesh as the first mesh argument of a </span>
+<span class="sd">    Green&#39;s function object.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    p : ParameterCollection,</span>
-<span class="sd">        The ParameterCollection that shall be used as a template for all the others</span>
-<span class="sd">    **kwargs : Sequence,</span>
-<span class="sd">               The keyword gives the parameter name and the Sequence the values that shall</span>
-<span class="sd">               be scanned through.</span>
+<span class="sd">    gf : Gf,</span>
+<span class="sd">         Green&#39;s function on some arbitrary mesh. If &#39;beta&#39; is not given</span>
+<span class="sd">         one mesh needs to be a &#39;MeshImFreq&#39; to obtain a beta&#39;</span>
+<span class="sd">    beta : float, optional</span>
+<span class="sd">           The inverse temperature used for the fake bosonic mesh.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    ParameterCollections</span>
-
-<span class="sd">    Examples</span>
-<span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; p = ParameterCollection(beta=10., U=1.0, t=1.0)</span>
-<span class="sd">    &gt;&gt;&gt; ps = parameter_scan(p, U=[1.0, 1.5, 2.0])</span>
-<span class="sd">    &gt;&gt;&gt; print ps[0]</span>
-<span class="sd">    U = 1.0</span>
-<span class="sd">    beta = 10.0</span>
-<span class="sd">    t = 1.0</span>
-<span class="sd">    &gt;&gt;&gt; print ps[1]</span>
-<span class="sd">    U = 1.5</span>
-<span class="sd">    beta = 10.0</span>
-<span class="sd">    t = 1.0</span>
-<span class="sd">    &gt;&gt;&gt; print ps[2]</span>
-<span class="sd">    U = 2.0</span>
-<span class="sd">    beta = 10.0</span>
-<span class="sd">    t = 1.0</span>
+<span class="sd">    gf_w : Gf,</span>
+<span class="sd">           Green&#39;s function with an additional one value bosonic mesh</span>
+<span class="sd">           on its first position.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">parameter_values</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">mesh</span> <span class="o">=</span> <span class="n">gf</span><span class="o">.</span><span class="n">mesh</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">MeshProduct</span><span class="p">):</span>
+        <span class="n">meshes</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">components</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">meshes</span> <span class="o">=</span> <span class="p">(</span><span class="n">mesh</span><span class="p">,)</span>
 
-    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">parameter_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">key</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="n">value</span><span class="p">))</span>
-    
-    <span class="n">ps</span> <span class="o">=</span> <span class="p">[]</span>
-    
-    <span class="k">for</span> <span class="n">parameter_value</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">parameter_values</span><span class="p">):</span>
-        <span class="n">ps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">alter</span><span class="p">(</span><span class="o">**</span><span class="nb">dict</span><span class="p">(</span><span class="n">parameter_value</span><span class="p">)))</span>
+    <span class="c1"># If beta is not given access it from a &#39;MeshImFreq&#39; of the &#39;Gf&#39;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">beta</span><span class="p">:</span>
+        <span class="n">betas</span> <span class="o">=</span> <span class="p">[</span><span class="n">mesh</span><span class="o">.</span><span class="n">beta</span> <span class="k">for</span> <span class="n">mesh</span> <span class="ow">in</span> <span class="n">meshes</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="s2">&quot;beta&quot;</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">betas</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;No &#39;beta&#39; was given and the Green&#39;s function does not contain&quot;</span>
+            <span class="s2">&quot; a &#39;MeshImFreq&#39;&quot;</span><span class="p">)</span>
+        <span class="n">beta</span> <span class="o">=</span> <span class="n">betas</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-    <span class="k">return</span> <span class="n">ParameterCollections</span><span class="p">(</span><span class="n">ps</span><span class="p">)</span></div>
+    <span class="n">wmesh</span> <span class="o">=</span> <span class="n">MeshImFreq</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="s1">&#39;Boson&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">mesh</span> <span class="o">=</span> <span class="p">(</span><span class="n">wmesh</span><span class="p">,)</span> <span class="o">+</span> <span class="n">meshes</span>
+    <span class="n">mesh</span> <span class="o">=</span> <span class="n">MeshProduct</span><span class="p">(</span><span class="o">*</span><span class="n">mesh</span><span class="p">)</span>
+
+    <span class="n">gf_w</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="n">gf</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span>
+    <span class="n">gf_w</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">gf</span><span class="o">.</span><span class="n">data</span>
+
+    <span class="k">return</span> <span class="n">gf_w</span>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+<span class="k">def</span> <span class="nf">put_gf_on_mesh</span><span class="p">(</span><span class="n">g_in</span><span class="p">,</span> <span class="n">wmesh</span><span class="p">):</span>
+
+    <span class="k">assert</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">wmesh</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">g_in</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span> <span class="p">)</span>
+    
+    <span class="n">g_out</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">wmesh</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="n">g_in</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">wmesh</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">data_index</span> <span class="o">+</span> <span class="n">wmesh</span><span class="o">.</span><span class="n">first_index</span><span class="p">()</span> <span class="c1"># absolute index</span>
+        <span class="n">g_out</span><span class="p">[</span><span class="n">w</span><span class="p">]</span> <span class="o">=</span> <span class="n">g_in</span><span class="p">[</span><span class="n">Idx</span><span class="p">(</span><span class="n">index</span><span class="p">)]</span>
+
+    <span class="k">return</span> <span class="n">g_out</span>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+<span class="k">def</span> <span class="nf">strip_sigma</span><span class="p">(</span><span class="n">nw</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">sigma_in</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+    <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_almost_equal</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">sigma_in</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">beta</span><span class="p">)</span>
+
+    <span class="n">wmesh</span> <span class="o">=</span> <span class="n">MeshImFreq</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="s1">&#39;Fermion&#39;</span><span class="p">,</span> <span class="n">n_max</span><span class="o">=</span><span class="n">nw</span><span class="p">)</span>
+    <span class="n">sigma</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">wmesh</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="n">sigma_in</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">wmesh</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">data_index</span> <span class="o">+</span> <span class="n">wmesh</span><span class="o">.</span><span class="n">first_index</span><span class="p">()</span> <span class="c1"># absolute index</span>
+        <span class="n">sigma</span><span class="p">[</span><span class="n">w</span><span class="p">]</span> <span class="o">=</span> <span class="n">sigma_in</span><span class="p">[</span><span class="n">Idx</span><span class="p">(</span><span class="n">index</span><span class="p">)]</span>
+
+    <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">triqs.plot.mpl_interface</span> <span class="kn">import</span> <span class="n">oplot</span><span class="p">,</span> <span class="n">plt</span>
+        <span class="n">oplot</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">Sigmalatt_iw</span><span class="p">)</span>
+        <span class="n">oplot</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">();</span> <span class="n">exit</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">sigma</span>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+<span class="k">def</span> <span class="nf">bubble_setup</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">tb_lattice</span><span class="p">,</span> <span class="n">nk</span><span class="p">,</span> <span class="n">nw</span><span class="p">,</span> <span class="n">sigma_w</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+    <span class="nb">print</span><span class="p">((</span><span class="n">tprf_banner</span><span class="p">(),</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">))</span>
+
+    <span class="nb">print</span><span class="p">((</span><span class="s1">&#39;beta  =&#39;</span><span class="p">,</span> <span class="n">beta</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">((</span><span class="s1">&#39;mu    =&#39;</span><span class="p">,</span> <span class="n">mu</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">((</span><span class="s1">&#39;sigma =&#39;</span><span class="p">,</span> <span class="p">(</span><span class="ow">not</span> <span class="p">(</span><span class="n">sigma</span> <span class="o">==</span> <span class="kc">None</span><span class="p">))))</span>
+
+    <span class="n">norb</span> <span class="o">=</span> <span class="n">tb_lattice</span><span class="o">.</span><span class="n">NOrbitalsInUnitCell</span>
+    <span class="nb">print</span><span class="p">((</span><span class="s1">&#39;nk    =&#39;</span><span class="p">,</span> <span class="n">nk</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">((</span><span class="s1">&#39;nw    =&#39;</span><span class="p">,</span> <span class="n">nw</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">((</span><span class="s1">&#39;norb  =&#39;</span><span class="p">,</span> <span class="n">norb</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">()</span>
+
+    <span class="n">ntau</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">nw</span>
+    <span class="n">ntot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">nk</span><span class="p">)</span> <span class="o">*</span> <span class="n">norb</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">nk</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">nw</span> <span class="o">+</span> <span class="n">ntau</span><span class="p">)</span> <span class="o">*</span> <span class="n">norb</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">nbytes</span> <span class="o">=</span> <span class="n">ntot</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">()</span><span class="o">.</span><span class="n">nbytes</span>
+    <span class="n">ngb</span> <span class="o">=</span> <span class="n">nbytes</span> <span class="o">/</span> <span class="mf">1024.</span><span class="o">**</span><span class="mi">3</span>
+    <span class="nb">print</span><span class="p">((</span><span class="s1">&#39;Approx. Memory Utilization: </span><span class="si">%2.2f</span><span class="s1"> GB</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">ngb</span><span class="p">))</span>
+    
+    <span class="n">bz</span> <span class="o">=</span> <span class="n">BrillouinZone</span><span class="p">(</span><span class="n">tb_lattice</span><span class="o">.</span><span class="n">bl</span><span class="p">)</span>
+    <span class="n">bzmesh</span> <span class="o">=</span> <span class="n">MeshBrZone</span><span class="p">(</span><span class="n">bz</span><span class="p">,</span> <span class="n">nk</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--&gt; ek&#39;</span><span class="p">)</span>
+    <span class="n">e_k</span> <span class="o">=</span> <span class="n">ek_tb_dispersion_on_bzmesh</span><span class="p">(</span><span class="n">tb_lattice</span><span class="p">,</span> <span class="n">bzmesh</span><span class="p">,</span> <span class="n">bz</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">sigma</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--&gt; g0k&#39;</span><span class="p">)</span>
+        <span class="n">wmesh</span> <span class="o">=</span> <span class="n">MeshImFreq</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span> <span class="n">S</span><span class="o">=</span><span class="s1">&#39;Fermion&#39;</span><span class="p">,</span> <span class="n">n_max</span><span class="o">=</span><span class="n">nw</span><span class="p">)</span>
+        <span class="n">g_wk</span> <span class="o">=</span> <span class="n">lattice_dyson_g0_wk</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">e_k</span><span class="o">=</span><span class="n">e_k</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="n">wmesh</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--&gt; gk&#39;</span><span class="p">)</span>
+        <span class="n">sigma_w</span> <span class="o">=</span> <span class="n">strip_sigma</span><span class="p">(</span><span class="n">nw</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>
+        <span class="n">g_wk</span> <span class="o">=</span> <span class="n">lattice_dyson_g_wk</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">e_k</span><span class="o">=</span><span class="n">e_k</span><span class="p">,</span> <span class="n">sigma_w</span><span class="o">=</span><span class="n">sigma_w</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--&gt; gr_from_gk (k-&gt;r)&#39;</span><span class="p">)</span>
+    <span class="n">g_wr</span> <span class="o">=</span> <span class="n">fourier_wk_to_wr</span><span class="p">(</span><span class="n">g_wk</span><span class="p">)</span>
+    <span class="k">del</span> <span class="n">g_wk</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--&gt; grt_from_grw (w-&gt;tau)&#39;</span><span class="p">)</span> 
+    <span class="n">g_tr</span> <span class="o">=</span> <span class="n">fourier_wr_to_tr</span><span class="p">(</span><span class="n">g_wr</span><span class="p">)</span>
+    <span class="k">del</span> <span class="n">g_wr</span>
+
+    <span class="k">if</span> <span class="n">sigma</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">g_tr</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">g_tr</span><span class="p">,</span> <span class="n">sigma_w</span>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+<div class="viewcode-block" id="imtime_bubble_chi0_wk"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.lattice_utils.imtime_bubble_chi0_wk">[docs]</a><span class="k">def</span> <span class="nf">imtime_bubble_chi0_wk</span><span class="p">(</span><span class="n">g_wk</span><span class="p">,</span> <span class="n">nw</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">save_memory</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="n">ncores</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+
+    <span class="n">wmesh</span><span class="p">,</span> <span class="n">kmesh</span> <span class="o">=</span>  <span class="n">g_wk</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">components</span>
+
+    <span class="n">norb</span> <span class="o">=</span> <span class="n">g_wk</span><span class="o">.</span><span class="n">target_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">beta</span> <span class="o">=</span> <span class="n">wmesh</span><span class="o">.</span><span class="n">beta</span>
+    <span class="n">nw_g</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">wmesh</span><span class="p">)</span>
+    <span class="n">nk</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">kmesh</span><span class="p">)</span>
+
+    <span class="n">ntau</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">nw_g</span>
+
+    <span class="c1"># -- Memory Approximation</span>
+
+    <span class="n">ng_tr</span> <span class="o">=</span> <span class="n">ntau</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">nk</span><span class="p">)</span> <span class="o">*</span> <span class="n">norb</span><span class="o">**</span><span class="mi">2</span> <span class="c1"># storing G(tau, r)</span>
+    <span class="n">ng_wr</span> <span class="o">=</span> <span class="n">nw_g</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">nk</span><span class="p">)</span> <span class="o">*</span> <span class="n">norb</span><span class="o">**</span><span class="mi">2</span> <span class="c1"># storing G(w, r)</span>
+    <span class="n">ng_t</span> <span class="o">=</span> <span class="n">ntau</span> <span class="o">*</span> <span class="n">norb</span><span class="o">**</span><span class="mi">2</span> <span class="c1"># storing G(tau)</span>
+
+    <span class="n">nchi_tr</span> <span class="o">=</span> <span class="n">ntau</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">nk</span><span class="p">)</span> <span class="o">*</span> <span class="n">norb</span><span class="o">**</span><span class="mi">4</span> <span class="c1"># storing \chi(tau, r)</span>
+    <span class="n">nchi_wr</span> <span class="o">=</span> <span class="n">nw</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">nk</span><span class="p">)</span> <span class="o">*</span> <span class="n">norb</span><span class="o">**</span><span class="mi">4</span> <span class="c1"># storing \chi(w, r)</span>
+    <span class="n">nchi_t</span> <span class="o">=</span> <span class="n">ntau</span> <span class="o">*</span> <span class="n">norb</span><span class="o">**</span><span class="mi">4</span> <span class="c1"># storing \chi(tau)</span>
+    <span class="n">nchi_w</span> <span class="o">=</span> <span class="n">nw</span> <span class="o">*</span> <span class="n">norb</span><span class="o">**</span><span class="mi">4</span> <span class="c1"># storing \chi(w)</span>
+    <span class="n">nchi_r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">nk</span><span class="p">)</span> <span class="o">*</span> <span class="n">norb</span><span class="o">**</span><span class="mi">4</span> <span class="c1"># storing \chi(r)</span>
+
+    <span class="k">if</span> <span class="n">nw</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">ntot_case_1</span> <span class="o">=</span> <span class="n">ng_tr</span> <span class="o">+</span> <span class="n">ng_wr</span>
+        <span class="n">ntot_case_2</span> <span class="o">=</span> <span class="n">ng_tr</span> <span class="o">+</span> <span class="n">nchi_wr</span> <span class="o">+</span> <span class="n">ncores</span><span class="o">*</span><span class="p">(</span><span class="n">nchi_t</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">ng_t</span><span class="p">)</span>
+        <span class="n">ntot_case_3</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">nchi_wr</span>
+
+        <span class="n">ntot</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">ntot_case_1</span><span class="p">,</span> <span class="n">ntot_case_2</span><span class="p">,</span> <span class="n">ntot_case_3</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ntot_case_1</span> <span class="o">=</span> <span class="n">ng_tr</span> <span class="o">+</span> <span class="n">nchi_tr</span> <span class="o">+</span> <span class="n">ncores</span><span class="o">*</span><span class="p">(</span><span class="n">nchi_t</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">ng_t</span><span class="p">)</span>
+        <span class="n">ntot_case_2</span> <span class="o">=</span> <span class="n">nchi_tr</span> <span class="o">+</span> <span class="n">nchi_wr</span> <span class="o">+</span> <span class="n">ncores</span><span class="o">*</span><span class="p">(</span><span class="n">nchi_w</span> <span class="o">+</span> <span class="n">nchi_t</span><span class="p">)</span>
+    
+        <span class="n">ntot</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">ntot_case_1</span><span class="p">,</span> <span class="n">ntot_case_2</span><span class="p">)</span>
+
+    <span class="n">nbytes</span> <span class="o">=</span> <span class="n">ntot</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">()</span><span class="o">.</span><span class="n">nbytes</span>
+    <span class="n">ngb</span> <span class="o">=</span> <span class="n">nbytes</span> <span class="o">/</span> <span class="mf">1024.</span><span class="o">**</span><span class="mi">3</span>
+
+    <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">tprf_banner</span><span class="p">(),</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;beta  =&#39;</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;nk    =&#39;</span><span class="p">,</span> <span class="n">nk</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;nw    =&#39;</span><span class="p">,</span> <span class="n">nw_g</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;norb  =&#39;</span><span class="p">,</span> <span class="n">norb</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Approx. Memory Utilization: </span><span class="si">%2.2f</span><span class="s1"> GB</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">ngb</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;--&gt; fourier_wk_to_wr&#39;</span><span class="p">)</span>
+    <span class="n">g_wr</span> <span class="o">=</span> <span class="n">fourier_wk_to_wr</span><span class="p">(</span><span class="n">g_wk</span><span class="p">)</span>
+    <span class="k">del</span> <span class="n">g_wk</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;--&gt; fourier_wr_to_tr&#39;</span><span class="p">)</span>
+    <span class="n">g_tr</span> <span class="o">=</span> <span class="n">fourier_wr_to_tr</span><span class="p">(</span><span class="n">g_wr</span><span class="p">)</span>
+    <span class="k">del</span> <span class="n">g_wr</span>
+    
+    <span class="k">if</span> <span class="n">nw</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;--&gt; chi0_w0r_from_grt_PH (bubble in tau &amp; r)&#39;</span><span class="p">)</span>
+        <span class="n">chi0_wr</span> <span class="o">=</span> <span class="n">chi0_w0r_from_grt_PH</span><span class="p">(</span><span class="n">g_tr</span><span class="p">)</span>
+        <span class="k">del</span> <span class="n">g_tr</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">save_memory</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;--&gt; chi0_tr_from_grt_PH (bubble in tau &amp; r)&#39;</span><span class="p">)</span>
+            <span class="n">chi0_tr</span> <span class="o">=</span> <span class="n">chi0_tr_from_grt_PH</span><span class="p">(</span><span class="n">g_tr</span><span class="p">)</span>
+            <span class="k">del</span> <span class="n">g_tr</span>
+            
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;--&gt; chi_wr_from_chi_tr&#39;</span><span class="p">)</span>
+            <span class="n">chi0_wr</span> <span class="o">=</span> <span class="n">chi_wr_from_chi_tr</span><span class="p">(</span><span class="n">chi0_tr</span><span class="p">,</span> <span class="n">nw</span><span class="o">=</span><span class="n">nw</span><span class="p">)</span>
+            <span class="k">del</span> <span class="n">chi0_tr</span>
+        <span class="k">elif</span> <span class="n">save_memory</span><span class="p">:</span>
+            <span class="n">chi0_wr</span> <span class="o">=</span> <span class="n">chi0_wr_from_grt_PH</span><span class="p">(</span><span class="n">g_tr</span><span class="p">,</span> <span class="n">nw</span><span class="o">=</span><span class="n">nw</span><span class="p">)</span>
+
+        
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;--&gt; chi_wk_from_chi_wr (r-&gt;k)&#39;</span><span class="p">)</span>
+    <span class="n">chi0_wk</span> <span class="o">=</span> <span class="n">chi_wk_from_chi_wr</span><span class="p">(</span><span class="n">chi0_wr</span><span class="p">)</span>
+    <span class="k">del</span> <span class="n">chi0_wr</span>
+
+    <span class="k">return</span> <span class="n">chi0_wk</span></div>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+<div class="viewcode-block" id="chi_contraction"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.lattice_utils.chi_contraction">[docs]</a><span class="k">def</span> <span class="nf">chi_contraction</span><span class="p">(</span><span class="n">chi</span><span class="p">,</span> <span class="n">op1</span><span class="p">,</span> <span class="n">op2</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Contract a susceptibility with two operators</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    chi : Gf,</span>
+<span class="sd">          Susceptibility :math:`\chi(i\omega_n, \mathbf{k})`. The mesh attribute of</span>
+<span class="sd">          the Gf must be a MeshProduct with the components (MeshImFreq, MeshBrZone)</span>
+<span class="sd">          and its target_rank 4.</span>
+<span class="sd">    op1, op2 : np.ndarray,</span>
+<span class="sd">               Operators in matrix representation.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Gf,</span>
+<span class="sd">    Susceptibility :math:`\chi(i\omega_n, \mathbf{k})`. With a target_rank of 0.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">chi</span><span class="o">.</span><span class="n">target_shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="n">op1</span><span class="o">.</span><span class="n">shape</span> <span class="ow">or</span> <span class="n">chi</span><span class="o">.</span><span class="n">target_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="o">!=</span> <span class="n">op2</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;The shape of the operators </span><span class="si">%s</span><span class="s1"> and </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">op1</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">op2</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span>
+                         <span class="s1">&#39; must fit the shape of chi </span><span class="si">%s</span><span class="s1">.&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">chi</span><span class="o">.</span><span class="n">target_shape</span><span class="p">,))</span>
+
+    <span class="n">chi_op1op2</span> <span class="o">=</span> <span class="n">chi</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">chi_op1op2</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;...abcd,ab,cd-&gt;...&#39;</span><span class="p">,</span> <span class="n">chi</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">op1</span><span class="p">,</span> <span class="n">op2</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">chi_op1op2</span></div>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+<span class="k">def</span> <span class="nf">chi0_w0k_tau_bubble</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">tb_lattice</span><span class="p">,</span> <span class="n">nk</span><span class="p">,</span> <span class="n">nw</span><span class="p">,</span> <span class="n">sigma_w</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+    <span class="k">if</span> <span class="n">sigma_w</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">g_tr</span> <span class="o">=</span> <span class="n">bubble_setup</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">tb_lattice</span><span class="p">,</span> <span class="n">nk</span><span class="p">,</span> <span class="n">nw</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">g_tr</span><span class="p">,</span> <span class="n">sigma_w_cut</span> <span class="o">=</span> <span class="n">bubble_setup</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">tb_lattice</span><span class="p">,</span> <span class="n">nk</span><span class="p">,</span> <span class="n">nw</span><span class="p">,</span> <span class="n">sigma_w</span><span class="o">=</span><span class="n">sigma_w</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--&gt; chi0_w0r_from_grt_PH (bubble in tau &amp; r)&#39;</span><span class="p">)</span>
+    <span class="n">chi0_wr</span> <span class="o">=</span> <span class="n">chi0_w0r_from_grt_PH</span><span class="p">(</span><span class="n">g_tr</span><span class="p">)</span>
+    <span class="k">del</span> <span class="n">grt</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--&gt; chi_wk_from_chi_wr (r-&gt;k)&#39;</span><span class="p">)</span>
+    <span class="n">chi0_wk</span> <span class="o">=</span> <span class="n">chi_wk_from_chi_wr</span><span class="p">(</span><span class="n">chi0_wr</span><span class="p">)</span>
+    <span class="k">del</span> <span class="n">chi0_wr</span>
+
+    <span class="k">if</span> <span class="n">sigma</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">chi0_wk</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">chi0_wk</span><span class="p">,</span> <span class="n">sigma_w_cut</span>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+<span class="k">def</span> <span class="nf">ek_tb_dispersion_on_bzmesh</span><span class="p">(</span><span class="n">tb_lattice</span><span class="p">,</span> <span class="n">bzmesh</span><span class="p">,</span> <span class="n">bz</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Evaluate dispersion on bzmesh from tight binding model. &quot;&quot;&quot;</span>
+
+    <span class="n">n_orb</span> <span class="o">=</span> <span class="n">tb_lattice</span><span class="o">.</span><span class="n">NOrbitalsInUnitCell</span>
+    <span class="n">ek</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">bzmesh</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="p">[</span><span class="n">n_orb</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">k_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">k</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">bzmesh</span><span class="p">])</span>
+    <span class="n">k_vec_rel</span> <span class="o">=</span> <span class="n">get_relative_k_from_absolute</span><span class="p">(</span><span class="n">k_vec</span><span class="p">,</span> <span class="n">bz</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+    
+    <span class="n">ek</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">tb_lattice</span><span class="o">.</span><span class="n">hopping</span><span class="p">(</span><span class="n">k_vec_rel</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ek</span>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+<span class="k">def</span> <span class="nf">get_relative_k_from_absolute</span><span class="p">(</span><span class="n">k_vec</span><span class="p">,</span> <span class="n">units</span><span class="p">):</span>
+    <span class="n">k_vec_rel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">units</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">k_vec</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+    <span class="k">return</span> <span class="n">k_vec_rel</span>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+<span class="k">def</span> <span class="nf">get_kidx_from_k_vec_relative</span><span class="p">(</span><span class="n">k_vec_rel</span><span class="p">,</span> <span class="n">nk</span><span class="p">):</span>
+    <span class="n">kidx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">k_vec_rel</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">nk</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">kidx</span>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+<span class="k">def</span> <span class="nf">get_k_components_from_k_vec</span><span class="p">(</span><span class="n">k_vec</span><span class="p">,</span> <span class="n">nk</span><span class="p">):</span>
+
+    <span class="n">dim</span> <span class="o">=</span> <span class="mi">3</span>
+
+    <span class="n">shape_4</span> <span class="o">=</span> <span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">nk</span><span class="p">)</span>
+    <span class="n">shape_2</span> <span class="o">=</span> <span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">nk</span><span class="p">)]</span>
+
+    <span class="n">k_vec</span> <span class="o">=</span> <span class="n">k_vec</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>    
+    <span class="n">k_vec</span> <span class="o">=</span> <span class="n">k_vec</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape_4</span><span class="p">)</span>
+
+    <span class="c1"># -- cut out values for each axis</span>
+    
+    <span class="n">k_out</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dim</span><span class="p">):</span>
+        <span class="n">cut</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">dim</span>
+        <span class="n">cut</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="n">cut</span> <span class="o">=</span> <span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">+</span> <span class="n">cut</span>
+        <span class="n">k_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k_vec</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">cut</span><span class="p">)])</span>
+        
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">k_out</span><span class="p">)</span>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+<span class="k">def</span> <span class="nf">cluster_mesh_fourier_interpolation</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">chiwr</span><span class="p">):</span>
+
+    <span class="k">assert</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="p">)</span>
+    <span class="k">assert</span><span class="p">(</span> <span class="n">k</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span> <span class="p">)</span>
+    
+    <span class="n">rmesh</span> <span class="o">=</span> <span class="n">chiwr</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">r</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rmesh</span><span class="p">])</span>
+    
+    <span class="n">exp_fact</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mf">1.</span><span class="n">j</span> <span class="o">*</span> <span class="n">k</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>  <span class="o">*</span> <span class="n">r</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="n">chi00wk_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;wrabcd,kr-&gt;wkabcd&#39;</span><span class="p">,</span> <span class="n">chiwr</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">exp_fact</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">chi00wk_data</span>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+<span class="k">def</span> <span class="nf">get_abs_k_chi_interpolator</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">bzmesh</span><span class="p">,</span> <span class="n">bz</span><span class="p">,</span> <span class="n">extend_bz</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+
+    <span class="n">k_mat</span> <span class="o">=</span> <span class="n">bz</span><span class="o">.</span><span class="n">units</span>
+    <span class="n">k_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">k</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">bzmesh</span><span class="p">])</span>
+    
+    <span class="c1"># -- Extend with points beyond the first bz</span>
+
+    <span class="n">k_vec_ext</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">values_ext</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">k_shift</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">extend_bz</span><span class="p">,</span> <span class="n">repeat</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="n">k_shift</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">k_mat</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">k_shift</span><span class="p">)</span>        
+        <span class="n">k_vec_ext</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">k_vec</span> <span class="o">+</span> <span class="n">k_shift</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="p">)</span>
+        <span class="n">values_ext</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+
+    <span class="n">k_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">k_vec_ext</span><span class="p">)</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">values_ext</span><span class="p">)</span>
+
+    <span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">LinearNDInterpolator</span>
+    <span class="n">interp</span> <span class="o">=</span> <span class="n">LinearNDInterpolator</span><span class="p">(</span><span class="n">k_vec</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;nan&#39;</span><span class="p">))</span>
+    
+    <span class="k">return</span> <span class="n">interp</span>
+    
+<span class="c1"># ----------------------------------------------------------------------</span>
+<span class="k">def</span> <span class="nf">get_rel_k_chi_interpolator</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">bzmesh</span><span class="p">,</span> <span class="n">bz</span><span class="p">,</span> <span class="n">nk</span><span class="p">,</span>
+                               <span class="n">extend_boundary</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">interpolator</span><span class="o">=</span><span class="s1">&#39;regular&#39;</span><span class="p">):</span>
+
+    <span class="n">k_mat</span> <span class="o">=</span> <span class="n">bz</span><span class="o">.</span><span class="n">units</span>
+    <span class="n">k_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">k</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">bzmesh</span><span class="p">])</span>
+
+    <span class="n">k_vec_rel</span> <span class="o">=</span> <span class="n">get_relative_k_from_absolute</span><span class="p">(</span><span class="n">k_vec</span><span class="p">,</span> <span class="n">bz</span><span class="o">.</span><span class="n">units</span><span class="p">)</span>
+    <span class="n">k_idx</span> <span class="o">=</span> <span class="n">get_kidx_from_k_vec_relative</span><span class="p">(</span><span class="n">k_vec_rel</span><span class="p">,</span> <span class="n">nk</span><span class="p">)</span>
+
+    <span class="n">kx</span><span class="p">,</span> <span class="n">ky</span><span class="p">,</span> <span class="n">kz</span> <span class="o">=</span> <span class="n">get_k_components_from_k_vec</span><span class="p">(</span><span class="n">k_vec_rel</span><span class="p">,</span> <span class="n">nk</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">extend_boundary</span><span class="p">:</span>
+        <span class="n">values</span><span class="p">,</span> <span class="n">k_vec_rel</span><span class="p">,</span> <span class="p">(</span><span class="n">kx</span><span class="p">,</span> <span class="n">ky</span><span class="p">,</span> <span class="n">kz</span><span class="p">)</span> <span class="o">=</span> \
+            <span class="n">extend_data_on_boundary</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">nk</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nk</span><span class="p">)</span>
+
+    <span class="c1"># -- select interpolator type</span>
+        
+    <span class="k">if</span> <span class="n">interpolator</span> <span class="o">==</span> <span class="s1">&#39;regular&#39;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">RegularGridInterpolator</span>
+        <span class="n">interp</span> <span class="o">=</span> <span class="n">RegularGridInterpolator</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">kx</span><span class="p">,</span> <span class="n">ky</span><span class="p">,</span> <span class="n">kz</span><span class="p">),</span> <span class="n">values</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;nan&#39;</span><span class="p">),</span> <span class="n">bounds_error</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">interpolator</span> <span class="o">==</span> <span class="s1">&#39;nearest&#39;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">NearestNDInterpolator</span>        
+        <span class="n">interp</span> <span class="o">=</span> <span class="n">NearestNDInterpolator</span><span class="p">(</span><span class="n">k_vec_rel</span><span class="p">,</span> <span class="n">values</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+    <span class="k">elif</span> <span class="n">interpolator</span> <span class="o">==</span> <span class="s1">&#39;linear&#39;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">LinearNDInterpolator</span>
+        <span class="n">interp</span> <span class="o">=</span> <span class="n">LinearNDInterpolator</span><span class="p">(</span><span class="n">k_vec_rel</span><span class="p">,</span> <span class="n">values</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">fill_value</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;nan&#39;</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        
+    <span class="k">return</span> <span class="n">interp</span>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+<span class="k">def</span> <span class="nf">extend_data_on_boundary</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">nk</span><span class="p">):</span>
+
+    <span class="c1"># -- extended cube</span>
+
+    <span class="n">nk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">nk</span><span class="p">)</span>
+
+    <span class="c1"># -- this adds points on the boundary</span>
+
+    <span class="c1"># Add extra points in the positive index directions</span>
+    <span class="n">nk_ext</span> <span class="o">=</span> <span class="n">nk</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="p">[</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nk_ext</span> <span class="p">]</span>
+
+    <span class="c1"># This adds two extra points in both positive and negative directions</span>
+    <span class="c1">#nk_ext = nk + 4</span>
+    <span class="c1">#coords = [ np.arange(-2, n+2) for n in nk ]</span>
+    
+    <span class="n">Coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="o">*</span><span class="n">coords</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s1">&#39;ij&#39;</span><span class="p">)</span>
+    <span class="n">Coords_mod</span> <span class="o">=</span> <span class="p">[</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">Coords</span><span class="p">,</span> <span class="n">nk</span><span class="p">)</span> <span class="p">]</span>
+
+    <span class="n">values_ext</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nk</span><span class="p">)[</span><span class="nb">tuple</span><span class="p">([</span> <span class="n">X</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="k">for</span> <span class="n">X</span> <span class="ow">in</span> <span class="n">Coords_mod</span><span class="p">])]</span>
+    <span class="n">values_ext</span> <span class="o">=</span> <span class="n">values_ext</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nk_ext</span><span class="p">)</span>
+
+    <span class="c1"># -- compute kidx_ext</span>
+
+    <span class="n">k_idx_ext</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="n">X</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="k">for</span> <span class="n">X</span> <span class="ow">in</span> <span class="n">Coords</span> <span class="p">])</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">k_vec_rel_ext</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">k_idx_ext</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span> <span class="o">/</span> <span class="n">nk</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">kxe</span><span class="p">,</span> <span class="n">kye</span><span class="p">,</span> <span class="n">kze</span> <span class="o">=</span> <span class="n">get_k_components_from_k_vec</span><span class="p">(</span><span class="n">k_vec_rel_ext</span><span class="p">,</span> <span class="n">nk_ext</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">values_ext</span><span class="p">,</span> <span class="n">k_vec_rel_ext</span><span class="p">,</span> <span class="p">(</span><span class="n">kxe</span><span class="p">,</span> <span class="n">kye</span><span class="p">,</span> <span class="n">kze</span><span class="p">)</span>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+<div class="viewcode-block" id="k_space_path"><a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.lattice_utils.k_space_path">[docs]</a><span class="k">def</span> <span class="nf">k_space_path</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">bz</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Construct a high-symmetry path in momentum space for visualization.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    paths : list of tuple-pairs of k-vectors with three components</span>
+<span class="sd">        Specification of the k-space path in terms of pair segments of k-vectors.</span>
+<span class="sd">    num : int, optional</span>
+<span class="sd">        Number of k-vectors along each segment of the path. (Default `100`)</span>
+<span class="sd">    bz : triqs.lattice_tools.BrillouinZone, optional</span>
+<span class="sd">        Brillouin zone, used to rescale from reative to absolute k-space lengths</span>
+<span class="sd">        (Default `None`)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    k_vecs: (n_k, 3) ndarray</span>
+<span class="sd">        Array with all k-vectors in the k-space path</span>
+<span class="sd">    k_plot: (n_k) ndarray</span>
+<span class="sd">        One-dimensional vector to be used for the x-axis when plotting</span>
+<span class="sd">    K_plot: (n_paths) ndarray</span>
+<span class="sd">        One-dimensional vector with the tick mark positions of the start and end of each sub-path.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">bz</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cell</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cell</span> <span class="o">=</span> <span class="n">bz</span><span class="o">.</span><span class="n">units</span>
+    
+    <span class="n">k_vecs</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
+        <span class="n">ki</span><span class="p">,</span> <span class="n">kf</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="n">ki</span><span class="p">,</span> <span class="n">kf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ki</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">kf</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="n">num</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">k_vec</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">ki</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="n">kf</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="n">k_vecs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k_vec</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">rel_to_abs</span><span class="p">(</span><span class="n">k_vec</span><span class="p">,</span> <span class="n">cell</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ba,ib-&gt;ia&#39;</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">k_vec</span><span class="p">)</span>
+
+    <span class="n">k_vec</span> <span class="o">=</span> <span class="n">k_vecs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">k_vec_abs</span> <span class="o">=</span> <span class="n">rel_to_abs</span><span class="p">(</span><span class="n">k_vec</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
+    <span class="n">k_plot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">k_vec_abs</span> <span class="o">-</span> <span class="n">k_vec_abs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="kc">None</span><span class="p">,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">K_plot</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">kidx</span><span class="p">,</span> <span class="n">k_vec</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">k_vecs</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+        <span class="n">k_vec_abs</span> <span class="o">=</span> <span class="n">rel_to_abs</span><span class="p">(</span><span class="n">k_vec</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
+        <span class="n">k_plot_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">k_vec_abs</span> <span class="o">-</span> <span class="n">k_vec_abs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="kc">None</span><span class="p">,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">k_plot</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">K_plot</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k_plot</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">k_plot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">k_plot</span><span class="p">,</span> <span class="n">k_plot_new</span><span class="p">))</span>
+
+    <span class="n">K_plot</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k_plot</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">K_plot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">K_plot</span><span class="p">)</span>
+    <span class="n">k_vecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">k_vecs</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">k_vecs</span><span class="p">,</span> <span class="n">k_plot</span><span class="p">,</span> <span class="n">K_plot</span></div>
 </pre></div>
 
            </div>
