@@ -996,6 +996,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../../../documentation/python_api/triqs.lattice.utils.html">triqs.lattice.utils</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="../../../documentation/python_api/triqs.lattice.utils.TB_from_pythTB.html">triqs.lattice.utils.TB_from_pythTB</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../documentation/python_api/triqs.lattice.utils.TB_from_wannier90.html">triqs.lattice.utils.TB_from_wannier90</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../documentation/python_api/triqs.lattice.utils.TB_to_sympy.html">triqs.lattice.utils.TB_to_sympy</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../documentation/python_api/triqs.lattice.utils.extend_wannier90_to_spin.html">triqs.lattice.utils.extend_wannier90_to_spin</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../documentation/python_api/triqs.lattice.utils.k_space_path.html">triqs.lattice.utils.k_space_path</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../documentation/python_api/triqs.lattice.utils.parse_hopping_from_wannier90_hr_dat.html">triqs.lattice.utils.parse_hopping_from_wannier90_hr_dat</a></li>
@@ -1659,6 +1660,8 @@
 
 <span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">StringIO</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span> <span class="k">as</span> <span class="n">itp</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;k_space_path&#39;</span><span class="p">,</span> <span class="s1">&#39;TB_from_wannier90&#39;</span><span class="p">]</span>
 
@@ -1900,6 +1903,162 @@
                     <span class="n">orbital_names</span><span class="o">=</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ptb</span><span class="o">.</span><span class="n">get_num_orbitals</span><span class="p">())])</span>
 
     <span class="k">return</span> <span class="n">TBL</span></div>
+
+
+<div class="viewcode-block" id="TB_to_sympy"><a class="viewcode-back" href="../../../documentation/python_api/triqs.lattice.utils.TB_to_sympy.html#triqs.lattice.utils.TB_to_sympy">[docs]</a><span class="k">def</span> <span class="nf">TB_to_sympy</span><span class="p">(</span><span class="n">TBL</span><span class="p">,</span> <span class="n">analytical</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">precision</span> <span class="o">=</span> <span class="mi">6</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    returns the analytical form of the momentum space hamiltonian of the tight-binding model </span>
+<span class="sd">    from a tight-binding lattice object by utilizing Fourier series</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    TBL: triqs TBLattice object</span>
+<span class="sd">        triqs tight binding object</span>
+<span class="sd">    analytical: boolean, default = True</span>
+<span class="sd">        whether to return the Hamiltonian in analytical (true) or numerical (false) form.</span>
+<span class="sd">    precision: integer, default = 6</span>
+<span class="sd">        specifies the number of digits in the floating point amplitudes. The default value is 6 but the user</span>
+<span class="sd">        can decrease it to help recognize similar hopping amplitudes, particularly for symmetrical hoppings</span>
+<span class="sd">        across the crystal lattice</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Hk: NumPy array</span>
+<span class="sd">        the Hamiltonian of the tight-binding model in momentum space. It can be output in either numerical</span>
+<span class="sd">        form (Hk_numerical) or reduced analytical form (Hk) based on the user&#39;s choice. The default output</span>
+<span class="sd">        is the reduced analytical form. The numerical form depends solely on the k-space vector components</span>
+<span class="sd">        while the analytical form takes into account both the k-space vector components and the lattice</span>
+<span class="sd">        vectors</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">import</span> <span class="nn">sympy</span> <span class="k">as</span> <span class="nn">sp</span>
+    
+    <span class="c1"># imaginary number</span>
+    <span class="n">I</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">I</span>
+
+    <span class="c1"># symbolic dot product representation between lattice unit vectors</span>
+    <span class="c1"># and momentum space matrix</span>
+    <span class="n">a1k</span><span class="p">,</span> <span class="n">a2k</span><span class="p">,</span> <span class="n">a3k</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="s2">&quot;a1k a2k a3k&quot;</span><span class="p">,</span> <span class="n">real</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">lattice</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Matrix</span><span class="p">([</span><span class="n">a1k</span><span class="p">,</span> <span class="n">a2k</span><span class="p">,</span> <span class="n">a3k</span><span class="p">])</span>
+
+    <span class="c1"># units contains the displacement vectors</span>
+    <span class="c1"># hops contains details about hopping of electrons such as orbital</span>
+    <span class="c1"># and hopping amplitude</span>
+    <span class="k">if</span> <span class="n">TBL</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="n">TBL_units</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">TBL_units</span><span class="p">[:</span><span class="mi">2</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">TBL</span><span class="o">.</span><span class="n">units</span>
+        <span class="n">TBL_hops</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span> <span class="o">+</span> <span class="p">(</span><span class="mi">0</span><span class="p">,):</span> <span class="n">val</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">TBL</span><span class="o">.</span><span class="n">hoppings</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="k">elif</span> <span class="n">TBL</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">):</span>
+        <span class="n">TBL_units</span> <span class="o">=</span> <span class="n">TBL</span><span class="o">.</span><span class="n">units</span>
+        <span class="n">TBL_hops</span> <span class="o">=</span> <span class="n">TBL</span><span class="o">.</span><span class="n">hoppings</span>
+    <span class="c1"># raises error for when the dimensions of the tb object is neither 2D nor 3D</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;This format of the tight-binding model is not implemented for this function.&quot;</span><span class="p">)</span>
+   
+    <span class="c1"># number of orbitals involved in the unit cell</span>
+    <span class="n">num_orb</span> <span class="o">=</span> <span class="n">TBL</span><span class="o">.</span><span class="n">n_orbitals</span>
+
+    <span class="c1"># maximum hopping distances of electrons in each direction</span>
+    <span class="n">max_x</span><span class="p">,</span> <span class="n">max_y</span><span class="p">,</span> <span class="n">max_z</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">TBL_hops</span><span class="o">.</span><span class="n">keys</span><span class="p">())),</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">))</span>
+
+    <span class="c1"># number of cells involved in the hopping of electrons in each direction</span>
+    <span class="n">num_cells_x</span><span class="p">,</span> <span class="n">num_cells_y</span><span class="p">,</span> <span class="n">num_cells_z</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">max_coord</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">max_coord</span> <span class="ow">in</span> <span class="p">[</span><span class="n">max_x</span><span class="p">,</span> <span class="n">max_y</span><span class="p">,</span> <span class="n">max_z</span><span class="p">]]</span>
+    
+    <span class="c1"># real-space Hamiltonian</span>
+    <span class="n">Hrij</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_cells_x</span><span class="p">,</span> <span class="n">num_cells_y</span><span class="p">,</span> <span class="n">num_cells_z</span><span class="p">,</span> <span class="n">num_orb</span><span class="p">,</span> <span class="n">num_orb</span><span class="p">),</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">exp</span><span class="p">)</span>
+
+    <span class="c1"># looping through hopping parameters of electrons involved in inter-orbital hoppings</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">hopping</span> <span class="ow">in</span> <span class="n">TBL_hops</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">rx</span><span class="p">,</span> <span class="n">ry</span><span class="p">,</span> <span class="n">rz</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="n">hopping</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">hopping</span><span class="p">,</span> <span class="n">precision</span><span class="p">)</span>
+        <span class="n">Hrij</span><span class="p">[</span><span class="n">rx</span> <span class="o">+</span> <span class="n">max_x</span><span class="p">,</span> <span class="n">ry</span> <span class="o">+</span> <span class="n">max_y</span><span class="p">,</span> <span class="n">rz</span> <span class="o">+</span> <span class="n">max_z</span><span class="p">]</span> <span class="o">=</span> <span class="n">hopping</span>
+
+    <span class="c1"># basis of the exponential term in calculation of Hk</span>
+    <span class="n">Hexp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">Hrij</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">exp</span><span class="p">)</span>
+
+    <span class="c1"># perform Fourier transform</span>
+    <span class="k">for</span> <span class="n">xi</span><span class="p">,</span> <span class="n">yi</span><span class="p">,</span> <span class="n">zi</span> <span class="ow">in</span> <span class="n">itp</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_cells_x</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_cells_y</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_cells_z</span><span class="p">)):</span>
+        <span class="n">coefficients</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">xi</span> <span class="o">-</span> <span class="n">max_x</span><span class="p">,</span> <span class="n">yi</span> <span class="o">-</span> <span class="n">max_y</span><span class="p">,</span> <span class="n">zi</span> <span class="o">-</span> <span class="n">max_z</span><span class="p">])</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">lattice</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">coefficients</span><span class="p">)</span>
+        <span class="n">eikr</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">I</span> <span class="o">*</span> <span class="n">r</span><span class="p">)</span>
+        <span class="n">Hexp</span><span class="p">[</span><span class="n">xi</span><span class="p">,</span> <span class="n">yi</span><span class="p">,</span> <span class="n">zi</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">eikr</span>
+
+    <span class="c1"># summation over all real space axes</span>
+    <span class="n">Hk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">Hrij</span> <span class="o">*</span> <span class="n">Hexp</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    
+    <span class="c1"># rewriting exponential terms in Hamiltonian expression in terms of cosine</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">itp</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_orb</span><span class="p">),</span> <span class="n">repeat</span> <span class="o">=</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="n">Hk</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">Hk</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">cos</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_has_complex_exponential_sympy</span><span class="p">(</span><span class="n">matrix</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks if a NumPy array containing SymPy elements has a complex exponential element.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            matrix (NumPy array): The input NumPy array containing SymPy elements</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True if the matrix array contains a complex exponential element, False otherwise.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">sublist</span> <span class="ow">in</span> <span class="n">matrix</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">sublist</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">element</span><span class="o">.</span><span class="n">is_complex</span> <span class="ow">and</span> <span class="n">element</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">exp</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    
+    <span class="k">def</span> <span class="nf">_is_hermitian_sympy</span><span class="p">(</span><span class="n">matrix</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks if a NumPy array containing SymPy elements is hermitian</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            matrix (NumPy array): The input NumPy array containing SymPy elements</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True if the matrix is a hermitian, False otherwise</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">n</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="n">matrix</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">conjugate</span><span class="p">():</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    
+    <span class="c1"># performing the check on the analytical Hamiltonian</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_hermitian_sympy</span><span class="p">(</span><span class="n">Hk</span><span class="p">):</span> <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;The resulting Hamiltonian is not hermitian.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">_has_complex_exponential_sympy</span><span class="p">(</span><span class="n">Hk</span><span class="p">):</span> <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;Your expression has a complex exponential. </span>
+<span class="s2">                                                                    Choosing a different unit cell could make </span>
+<span class="s2">                                                                    your Hamiltonian expression real.&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">analytical</span><span class="p">:</span> <span class="k">return</span> <span class="n">Hk</span>
+
+    <span class="c1"># dealing with the numerical Hamiltonian</span>
+
+    <span class="c1"># convert to SymPy matrix to use substitutions method available in SymPy</span>
+    <span class="n">Hk_numerical</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">Matrix</span><span class="p">(</span><span class="n">Hk</span><span class="p">)</span>
+
+    <span class="c1"># obtaining individual displacement vectors</span>
+    <span class="n">TBL_units_prec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">TBL_units</span><span class="p">,</span> <span class="n">precision</span><span class="p">)</span>
+
+    <span class="c1"># dot product between unit vectors and momentum vector</span>
+    <span class="n">k_vec</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="s2">&quot;kx ky kz&quot;</span><span class="p">,</span> <span class="n">real</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">a1k_n</span><span class="p">,</span> <span class="n">a2k_n</span><span class="p">,</span> <span class="n">a3k_n</span> <span class="o">=</span> <span class="n">TBL_units_prec</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">k_vec</span><span class="p">)</span>
+    
+    <span class="c1"># substitute numerical unit vectors into H_k</span>
+    <span class="n">Hk_numerical</span> <span class="o">=</span> <span class="n">Hk_numerical</span><span class="o">.</span><span class="n">subs</span><span class="p">([(</span><span class="n">a1k</span><span class="p">,</span> <span class="n">a1k_n</span><span class="p">),</span> <span class="p">(</span><span class="n">a2k</span><span class="p">,</span> <span class="n">a2k_n</span><span class="p">),</span> <span class="p">(</span><span class="n">a3k</span><span class="p">,</span> <span class="n">a3k_n</span><span class="p">)])</span>
+
+    <span class="n">Hk_numerical</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Hk_numerical</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_hermitian_sympy</span><span class="p">(</span><span class="n">Hk_numerical</span><span class="p">):</span> <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;The resulting Hamiltonian is not hermitian.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">_has_complex_exponential_sympy</span><span class="p">(</span><span class="n">Hk_numerical</span><span class="p">):</span> <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;Your expression has a complex exponential. </span>
+<span class="s2">                                                                            Choosing a different unit cell could make </span>
+<span class="s2">                                                                            your Hamiltonian expression real.&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Hk_numerical</span></div>
+    
 </pre></div>
 
            </div>
