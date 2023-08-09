@@ -1697,36 +1697,36 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">   * There are several possible constructors, which accept only keyword arguments.</span>
 
-<span class="sd">            * BlockGf(name_list = list of names, block_list = list of blocks, make_copies = False, name = &#39;&#39;)</span>
+<span class="sd">            * BlockGf(block_list = list of blocks, name_list = list of names, make_copies = False)</span>
 
-<span class="sd">                   * ``name_list``: list of the names of the blocks, e.g. [&quot;up&quot;,&quot;down&quot;].</span>
 <span class="sd">                   * ``block_list``: list of blocks of Green&#39;s functions.</span>
-<span class="sd">                   * ``make_copies``: If True, it makes a copy of the blocks and build the Green&#39;s function from these copies.</span>
+<span class="sd">                   * ``name_list``: list of the names of the blocks, e.g. [&quot;up&quot;,&quot;down&quot;]. Default to [&quot;0&quot;, &quot;1&quot;, ...]</span>
+<span class="sd">                   * ``make_copies``: If True, build the Green&#39;s function from a copy of the blocks (default: False).</span>
 
-<span class="sd">            * BlockGf(mesh = mesh, gf_struct = block structure, target_rank = rank of target space, name = &#39;&#39;)</span>
+<span class="sd">            * BlockGf(mesh = mesh, gf_struct = block structure, target_rank = rank of target space)</span>
 
 <span class="sd">                   * ``mesh``: The mesh used to construct each block</span>
-<span class="sd">                   * ``target_rank``: The rank of the target space of each block (default: 2)</span>
 <span class="sd">                   * ``gf_struct``: List of pairs [ (str,int), ... ] providing the block name and its linear size</span>
+<span class="sd">                   * ``target_rank``: The rank of the target space of each block (default: 2)</span>
 
-<span class="sd">            * BlockGf(name_block_generator, make_copies = False, name = &#39;&#39;)</span>
+<span class="sd">            * BlockGf(name_block_generator, make_copies = False)</span>
 
 <span class="sd">                   * ``name_block_generator``: a generator of (name, block)</span>
-<span class="sd">                   * ``make_copies``: If True, it makes a copy of the blocks and build the Green&#39;s function from these copies.</span>
+<span class="sd">                   * ``make_copies``: If True, build the Green&#39;s function from a copy of the blocks (default: False).</span>
 
 <span class="sd">          &quot;&quot;&quot;</span>
         <span class="c1"># first extract the optional name argument</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span><span class="s1">&#39;G&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">note</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;note&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rename_gf</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;rename_gf&#39;</span><span class="p">,</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="c1"># Default arguments</span>
+        <span class="k">if</span> <span class="s1">&#39;block_list&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;make_copies&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;make_copies&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;name_list&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name_list&#39;</span><span class="p">,</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;block_list&#39;</span><span class="p">]))])</span>
         <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="nb">set</span><span class="p">([</span><span class="s1">&#39;mesh&#39;</span><span class="p">,</span><span class="s1">&#39;gf_struct&#39;</span><span class="p">]):</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;target_rank&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
-        <span class="k">if</span> <span class="s1">&#39;block_list&#39;</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="ow">and</span> <span class="s1">&#39;make_copies&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;make_copies&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="nb">set</span><span class="p">([</span><span class="s1">&#39;block_list&#39;</span><span class="p">,</span><span class="s1">&#39;make_copies&#39;</span><span class="p">]):</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;name_list&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;block_list&#39;</span><span class="p">]))]</span>
+        <span class="k">if</span> <span class="s1">&#39;name_block_generator&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;make_copies&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;make_copies&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="nb">set</span><span class="p">([</span><span class="s1">&#39;name_list&#39;</span><span class="p">,</span><span class="s1">&#39;block_list&#39;</span><span class="p">,</span><span class="s1">&#39;make_copies&#39;</span><span class="p">]):</span>
             <span class="n">BlockNameList</span><span class="p">,</span> <span class="n">GFlist</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;name_list&#39;</span><span class="p">],</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;block_list&#39;</span><span class="p">]</span>
@@ -1771,7 +1771,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">__BlockIndexNumberTable</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span><span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__indices</span><span class="p">)</span> <span class="p">)</span> <span class="c1"># a dict: index -&gt; number of its order</span>
 
         <span class="c1"># Add the name to the G</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">note</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rename_gf</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">g</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span> <span class="n">g</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">_</span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">),</span><span class="n">i</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="k">else</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">i</span><span class="p">,)</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rename_gf</span></div>
