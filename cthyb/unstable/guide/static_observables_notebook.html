@@ -126,6 +126,7 @@
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Measuring static observables / impurity density matrix</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#Measuring-\hat{\rho}_\mathrm{imp}-in-cthyb">Measuring <span class="math notranslate nohighlight">\(\hat{\rho}_\mathrm{imp}\)</span> in cthyb</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#Compute-expactation-values-of-static-observables">Compute expactation values of static observables</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Measuring-moments-of-Green's-function-and-self-energy">Measuring moments of Green’s function and self-energy</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#Evaluation-of-the-impurity-interaction-energy">Evaluation of the impurity interaction energy</a></li>
 </ul>
 </li>
@@ -355,7 +356,7 @@
 <p>Let us consider a single-orbital Anderson impurity problem in a weak external magnetic field (<a class="reference external" href="static.py" rel="noopener noreferrer" target="_blank">script: static.py</a>).</p>
 <p>At first, we import all necessary modules, define some input parameters and construct a ctyhb <code class="docutils literal notranslate"><span class="pre">Solver</span></code> object in the usual way:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">h5</span> <span class="kn">import</span> <span class="n">HDFArchive</span>
@@ -374,16 +375,24 @@
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Warning: could not identify MPI environment!
+</pre></div></div>
+</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Starting run with 1 MPI rank(s) at : 2019-11-25 22:04:14.037607
+Starting serial run at: 2023-08-14 16:13:15.854417
 </pre></div></div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Parameters</span>
@@ -396,7 +405,7 @@ Starting run with 1 MPI rank(s) at : 2019-11-25 22:04:14.037607
 
 <span class="c1"># Construct the impurity solver with the inverse temperature</span>
 <span class="c1"># and the structure of the Green&#39;s functions</span>
-<span class="n">S</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span><span class="p">,</span> <span class="n">gf_struct</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,[</span><span class="mi">0</span><span class="p">]),</span> <span class="p">(</span><span class="s1">&#39;down&#39;</span><span class="p">,[</span><span class="mi">0</span><span class="p">])</span> <span class="p">])</span>
+<span class="n">S</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span><span class="p">,</span> <span class="n">gf_struct</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;down&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="p">])</span>
 
 <span class="c1"># Initialize the non-interacting Green&#39;s function S.G0_iw</span>
 <span class="c1"># External magnetic field introduces Zeeman energy splitting between</span>
@@ -413,7 +422,7 @@ Starting run with 1 MPI rank(s) at : 2019-11-25 22:04:14.037607
 parameters</a> for more information.</p>
 <p>Now we run the solver:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Run the solver</span>
@@ -429,60 +438,14 @@ parameters</a> for more information.</p>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
-<div class="output_area docutils container">
+<div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-
-╔╦╗╦═╗╦╔═╗ ╔═╗  ┌─┐┌┬┐┬ ┬┬ ┬┌┐
- ║ ╠╦╝║║═╬╗╚═╗  │   │ ├─┤└┬┘├┴┐
- ╩ ╩╚═╩╚═╝╚╚═╝  └─┘ ┴ ┴ ┴ ┴ └─┘
-
-The local Hamiltonian of the problem:
--1.995*c_dag(&#39;down&#39;,0)*c(&#39;down&#39;,0) + -2.005*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0) + 4*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0)
-Using autopartition algorithm to partition the local Hilbert space
-Found 4 subspaces.
-
-Warming up ...
-22:04:14  10% ETA 00:00:00 cycle 1055 of 10000
-
-
-
-Accumulating ...
-22:04:15   0% ETA 00:00:46 cycle 1063 of 500000
-22:04:17   4% ETA 00:00:43 cycle 23190 of 500000
-22:04:20  10% ETA 00:00:41 cycle 50917 of 500000
-22:04:23  17% ETA 00:00:37 cycle 85400 of 500000
-22:04:27  25% ETA 00:00:34 cycle 128456 of 500000
-22:04:32  36% ETA 00:00:29 cycle 182170 of 500000
-22:04:38  49% ETA 00:00:22 cycle 249867 of 500000
-22:04:46  66% ETA 00:00:15 cycle 334334 of 500000
-22:04:55  87% ETA 00:00:05 cycle 439976 of 500000
-
-
-[Rank 0] Collect results: Waiting for all mpi-threads to finish accumulating...
-[Rank 0] Timings for all measures:
-Measure                                    | seconds
-Average sign                               | 0.0164616
-Density Matrix for local static observable | 0.361092
-G_tau measure                              | 0.0531679
-Total measure time                         | 0.430722
-[Rank 0] Acceptance rate for all moves:
-Move set Insert two operators: 0.0460374
-  Move  Insert Delta_up: 0.0460443
-  Move  Insert Delta_down: 0.0460304
-Move set Remove two operators: 0.0460288
-  Move  Remove Delta_up: 0.0460209
-  Move  Remove Delta_down: 0.0460368
-Move  Shift one operator: 0.032573
-[Rank 0] Warmup lasted: 0.914752 seconds [00:00:00]
-[Rank 0] Simulation lasted: 45.8245 seconds [00:00:45]
-[Rank 0] Number of measures: 500000
-Total number of measures: 500000
-Average sign: 1
+Insert error : recovering ...
 </pre></div></div>
 </div>
 <p>The results of the density matrix accumulation are accessible via the <code class="docutils literal notranslate"><span class="pre">density_matrix</span></code> attribute of the solver:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Extract accumulated density matrix</span>
@@ -496,7 +459,7 @@ Average sign: 1
 <p>Now we can use the function <code class="docutils literal notranslate"><span class="pre">trace_rho_op()</span></code> from <code class="docutils literal notranslate"><span class="pre">triqs.atom_diag</span></code> (<a class="reference external" href="https://triqs.github.io/triqs/latest/documentation/cpp_api/triqs/atom_diag/trace_rho_op.html" rel="noopener noreferrer" target="_blank">see doc</a>) to compute expectation values <span class="math notranslate nohighlight">\(\langle\hat O\rangle = \mathrm{Tr}_\mathrm{imp}[\hat\rho_\mathrm{imp} \hat O]\)</span> of any time independent operator.</p>
 <p>To do so, information about the structure of the local Hilbert space is also needed. This information is stored as a special object in <code class="docutils literal notranslate"><span class="pre">h_loc_diagonalization</span></code>:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Object containing eigensystem of the local Hamiltonian</span>
@@ -506,7 +469,7 @@ Average sign: 1
 </div>
 <p>This allows now to compute for example the expectation values of the impurity occupations, or the double occupancy:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs.atom_diag</span> <span class="kn">import</span> <span class="n">trace_rho_op</span>
@@ -525,17 +488,56 @@ Average sign: 1
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;N_up&gt; = 0.620367909784
-&lt;N_down&gt; =  0.379668700586
-&lt;N_up*N_down&gt; = 0.00358171472283
+&lt;N_up&gt; = 0.6200042407162714
+&lt;N_down&gt; =  0.3801439064667559
+&lt;N_up*N_down&gt; = 0.003665497313727422
 </pre></div></div>
 </div>
+</div>
+<div class="section" id="Measuring-moments-of-Green's-function-and-self-energy">
+<h2>Measuring moments of Green’s function and self-energy<a class="headerlink" href="#Measuring-moments-of-Green's-function-and-self-energy" title="Permalink to this heading"></a></h2>
+<p>The high-frequency moments of the Green’s function and self-energy contain crucial high-frequency information that can be used to (1) improve the Fourier transform of the Green’s function from imaginary time to Matsubara frequencies and (2) improve the tail fit of the self-energy. When a user turns on the measurement of the density matrix (<code class="docutils literal notranslate"><span class="pre">measure_density_matrix</span> <span class="pre">=</span> <span class="pre">True</span></code>), these high-frequency moments are automatically calculated and used.</p>
+<p>The moments are stored as members of the <code class="docutils literal notranslate"><span class="pre">Solver</span></code> class. <code class="docutils literal notranslate"><span class="pre">Solver.Sigma_moments</span></code> are the calculated self-energy moments and <code class="docutils literal notranslate"><span class="pre">Solver.G_moments</span></code> are the calculated Green’s function moments. For example,</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># accessing the high frequency moments stored in the Solver class</span>
+<span class="n">S</span><span class="o">.</span><span class="n">Sigma_moments</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">G_moments</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+({&#39;up&#39;: array([[[1.52057563+0.j]],
+
+         [[3.77015227+0.j]]]),
+  &#39;down&#39;: array([[[2.48001696+0.j]],
+
+         [[3.76958372+0.j]]])},
+ {&#39;up&#39;: array([[[ 0.        +0.j]],
+
+         [[ 1.        +0.j]],
+
+         [[-0.48442437+0.j]]]),
+  &#39;down&#39;: array([[[0.        +0.j]],
+
+         [[1.        +0.j]],
+
+         [[0.48501696+0.j]]])})
+</pre></div></div>
+</div>
+<p>The moments are stored as Python dictonaries and have the same structure as <code class="docutils literal notranslate"><span class="pre">gf_struct</span></code>. For more technical information and details, see the <a class="reference internal" href="high_freq_moments.html"><span class="doc">high frequency moments notebook</span></a>.</p>
 </div>
 <div class="section" id="Evaluation-of-the-impurity-interaction-energy">
 <h2>Evaluation of the impurity interaction energy<a class="headerlink" href="#Evaluation-of-the-impurity-interaction-energy" title="Permalink to this heading"></a></h2>
 <p>The function <code class="docutils literal notranslate"><span class="pre">trace_rho_op()</span></code> can also be used to evaluate the interaction energy of the impurity by computing the expectation value of <span class="math notranslate nohighlight">\(\hat{H}_\mathrm{int}\)</span>:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">Eint</span> <span class="o">=</span> <span class="n">trace_rho_op</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">h_int</span><span class="p">,</span> <span class="n">h_loc_diag</span><span class="p">)</span>
@@ -548,7 +550,7 @@ Average sign: 1
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-E_int=&lt;H_int&gt;= 0.0143
+E_int=&lt;H_int&gt;= 0.0147
 </pre></div></div>
 </div>
 <p>This provides a powerful way to calculate the impurity interaction energy, which is for example needed for calculating the total energy in a combined DFT+DMFT calculation.</p>
