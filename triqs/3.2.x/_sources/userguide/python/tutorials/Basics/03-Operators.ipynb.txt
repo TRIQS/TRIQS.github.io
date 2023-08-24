@@ -1,0 +1,416 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "deletable": true,
+    "editable": true,
+    "run_control": {
+     "frozen": false,
+     "read_only": false
+    }
+   },
+   "source": [
+    "# Manipulating fermionic operators\n",
+    "\n",
+    "Before we see how to use a CTQMC impurity solver, it will be useful to learn about operators. Indeed, one of the\n",
+    "inputs of the CTQMC solver is a Hamiltonian in operator form.\n",
+    "\n",
+    "## Fundamental operators\n",
+    "\n",
+    "After importing the operator module, the keyword `c_dag` and `c` allow to define a new fermionic\n",
+    "operator. `c_dag` and `c` are followed by two indices. Inspired by the block structure of Green's functions,\n",
+    "the first index is a block index, while the second is the index within the block. Here's an example\n",
+    "of operators as they would be defined if we had two blocks *up* and *down* of size 1:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {
+    "collapsed": false,
+    "deletable": true,
+    "editable": true,
+    "execution": {
+     "iopub.execute_input": "2022-06-22T22:11:34.943311Z",
+     "iopub.status.busy": "2022-06-22T22:11:34.942981Z",
+     "iopub.status.idle": "2022-06-22T22:11:35.147547Z",
+     "shell.execute_reply": "2022-06-22T22:11:35.147034Z"
+    },
+    "jupyter": {
+     "outputs_hidden": false
+    },
+    "run_control": {
+     "frozen": false,
+     "read_only": false
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1*c_dag('up',0)\n",
+      "1*c('up',0)\n",
+      "1*c_dag('down',0)\n",
+      "1*c('down',0)\n"
+     ]
+    }
+   ],
+   "source": [
+    "from triqs.operators import c, c_dag, n, Operator # n and Operator will be needed later\n",
+    "print(c_dag('up',0))\n",
+    "print(c('up',0))\n",
+    "print(c_dag('down',0))\n",
+    "print(c('down',0))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "deletable": true,
+    "editable": true,
+    "run_control": {
+     "frozen": false,
+     "read_only": false
+    }
+   },
+   "source": [
+    "## Number operator\n",
+    "\n",
+    "The keyword `n` is defined as $C^\\dagger C$"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {
+    "collapsed": false,
+    "deletable": true,
+    "editable": true,
+    "execution": {
+     "iopub.execute_input": "2022-06-22T22:11:35.150344Z",
+     "iopub.status.busy": "2022-06-22T22:11:35.150042Z",
+     "iopub.status.idle": "2022-06-22T22:11:35.153762Z",
+     "shell.execute_reply": "2022-06-22T22:11:35.153137Z"
+    },
+    "jupyter": {
+     "outputs_hidden": false
+    },
+    "run_control": {
+     "frozen": false,
+     "read_only": false
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1*c_dag('up',0)*c('up',0)\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(n('up',0))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "deletable": true,
+    "editable": true,
+    "run_control": {
+     "frozen": false,
+     "read_only": false
+    }
+   },
+   "source": [
+    "## Operations with operators\n",
+    "\n",
+    "Operators can be manipulated and anti-commutation relations will be used to simplify\n",
+    "expressions"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {
+    "collapsed": false,
+    "deletable": true,
+    "editable": true,
+    "execution": {
+     "iopub.execute_input": "2022-06-22T22:11:35.156759Z",
+     "iopub.status.busy": "2022-06-22T22:11:35.156501Z",
+     "iopub.status.idle": "2022-06-22T22:11:35.159926Z",
+     "shell.execute_reply": "2022-06-22T22:11:35.159193Z"
+    },
+    "jupyter": {
+     "outputs_hidden": false
+    },
+    "run_control": {
+     "frozen": false,
+     "read_only": false
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "0\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Should give 0\n",
+    "print(n('up',0) - c_dag('up',0)*c('up',0))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {
+    "collapsed": false,
+    "deletable": true,
+    "editable": true,
+    "execution": {
+     "iopub.execute_input": "2022-06-22T22:11:35.162747Z",
+     "iopub.status.busy": "2022-06-22T22:11:35.162495Z",
+     "iopub.status.idle": "2022-06-22T22:11:35.166068Z",
+     "shell.execute_reply": "2022-06-22T22:11:35.165493Z"
+    },
+    "jupyter": {
+     "outputs_hidden": false
+    },
+    "run_control": {
+     "frozen": false,
+     "read_only": false
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "-1*c_dag('up',0)*c('up',0)\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Some calculation\n",
+    "print(n('up',0) - 2 * c_dag('up',0)*c('up',0))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {
+    "collapsed": false,
+    "deletable": true,
+    "editable": true,
+    "execution": {
+     "iopub.execute_input": "2022-06-22T22:11:35.169691Z",
+     "iopub.status.busy": "2022-06-22T22:11:35.169431Z",
+     "iopub.status.idle": "2022-06-22T22:11:35.173642Z",
+     "shell.execute_reply": "2022-06-22T22:11:35.173087Z"
+    },
+    "jupyter": {
+     "outputs_hidden": false
+    },
+    "run_control": {
+     "frozen": false,
+     "read_only": false
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "-3*c_dag('down',0)*c('down',0) + -3*c_dag('up',0)*c('up',0) + 4*c_dag('down',0)*c_dag('up',0)*c('up',0)*c('down',0)\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Define the parameters\n",
+    "U = 4\n",
+    "mu = 3\n",
+    "\n",
+    "# H is an empty operator\n",
+    "H = Operator()\n",
+    "\n",
+    "# Add elements to define a Hamiltonian\n",
+    "H += U * n('up',0) * n('down',0)\n",
+    "H -= mu * (n('up',0) + n('down',0))\n",
+    "print(H)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Exact Diagonalization\n",
+    "\n",
+    "For small system-sizes we can use `AtomDiag` provided by TRIQS to perform exact diagonalization on the Hamiltonian"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "\u001b[0;31mSignature:\u001b[0m \u001b[0mAtomDiag\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m*\u001b[0m\u001b[0margs\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;34m**\u001b[0m\u001b[0mkwargs\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+       "\u001b[0;31mDocstring:\u001b[0m\n",
+       "Lightweight exact diagonalization solver\n",
+       "\n",
+       "Use the QR algorithm to diagonalize the Hamiltonian.\n",
+       "Auto-partitions the Hamiltonian into subspaces (blocks)\n",
+       "such that all creation and annihilation operators map one\n",
+       "subspace to exactly one other subspace.\n",
+       "\n",
+       "Parameters\n",
+       "----------\n",
+       "h: Operator\n",
+       "    Hamiltonian to be diagonalized.\n",
+       "fops: list of tuple of strings and ints\n",
+       "    List of all annihilation / creation operator flavors (indices).\n",
+       "    Must at least contain all flavors met in `h`.\n",
+       "qn_vector: list of Operator, optional\n",
+       "    Vector of quantum number operators to be used for the auto-partitioning\n",
+       "n_min, n_max: integers, optional\n",
+       "    Truncate the Fock-space to states with particle number in [n_min, n_max]\n",
+       "    Cannot be combined with qn_vector\n",
+       "\u001b[0;31mFile:\u001b[0m      ~/opt/triqs/lib/python3.9/site-packages/triqs/atom_diag/__init__.py\n",
+       "\u001b[0;31mType:\u001b[0m      function\n"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "from triqs.atom_diag import AtomDiag\n",
+    "?AtomDiag"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-06-22T22:11:35.315115Z",
+     "iopub.status.busy": "2022-06-22T22:11:35.314883Z",
+     "iopub.status.idle": "2022-06-22T22:11:35.318793Z",
+     "shell.execute_reply": "2022-06-22T22:11:35.318197Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "-3.0\n"
+     ]
+    }
+   ],
+   "source": [
+    "# List of operator flavors\n",
+    "fops = [('up',0), ('down',0)]\n",
+    "\n",
+    "# Construct AtomDiag object, Performs diagonalization\n",
+    "AD = AtomDiag(h=H, fops=fops)\n",
+    "\n",
+    "print(AD.gs_energy)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We can then use the `AtomDiag` object to obtain for example the atomic Green functions"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {
+    "execution": {
+     "iopub.execute_input": "2022-06-22T22:11:35.321531Z",
+     "iopub.status.busy": "2022-06-22T22:11:35.321258Z",
+     "iopub.status.idle": "2022-06-22T22:11:36.126080Z",
+     "shell.execute_reply": "2022-06-22T22:11:36.125564Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "image/png": "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\n",
+      "text/plain": [
+       "<Figure size 432x288 with 1 Axes>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "from triqs.atom_diag import atomic_g_tau\n",
+    "Gtau = atomic_g_tau(atom=AD, beta=10, gf_struct=[('up',1),('down',1)], n_tau=1001)\n",
+    "\n",
+    "from triqs.plot.mpl_interface import oplot\n",
+    "%matplotlib inline\n",
+    "oplot(Gtau[\"up\"][0,0].real, name='G')"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.9.13"
+  },
+  "latex_envs": {
+   "LaTeX_envs_menu_present": true,
+   "autocomplete": true,
+   "bibliofile": "biblio.bib",
+   "cite_by": "apalike",
+   "current_citInitial": 1,
+   "eqLabelWithNumbers": true,
+   "eqNumInitial": 1,
+   "hotkeys": {
+    "equation": "Ctrl-E",
+    "itemize": "Ctrl-I"
+   },
+   "labels_anchors": false,
+   "latex_user_defs": false,
+   "report_style_numbering": false,
+   "user_envs_cfg": false
+  },
+  "widgets": {
+   "state": {},
+   "version": "1.1.1"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
