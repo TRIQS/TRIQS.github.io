@@ -692,6 +692,7 @@
 <span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">Gf</span>
 <span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">Idx</span>
 <span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">MeshImFreq</span>
+<span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">MeshDLRImFreq</span>
 <span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">MeshProduct</span>
 <span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">MeshBrZone</span>
 
@@ -1166,6 +1167,79 @@
         <span class="n">ret</span> <span class="o">=</span> <span class="p">(</span><span class="n">k_vecs</span><span class="p">,</span> <span class="n">k_plot</span><span class="p">,</span> <span class="n">k_ticks</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">ret</span></div>
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+<span class="k">def</span> <span class="nf">gf_tensor_to_matrix</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+    
+    <span class="n">N</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">target_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">g</span><span class="o">.</span><span class="n">target_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> 
+    <span class="n">M</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">target_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">g</span><span class="o">.</span><span class="n">target_shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> 
+    <span class="n">g_mat</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">g</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="p">[</span><span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="p">])</span>
+    
+    <span class="n">g_mat</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">g_mat</span>
+
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+<span class="k">def</span> <span class="nf">gf_matrix_to_tensor</span><span class="p">(</span><span class="n">g_mat</span><span class="p">,</span> <span class="n">target_shape</span><span class="p">):</span>
+    
+    <span class="n">g</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">g_mat</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="n">target_shape</span><span class="p">)</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">g_mat</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">target_shape</span><span class="p">)</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">g_mat</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">g</span>
+
+
+<span class="c1"># ----------------------------------------------------------------------</span>
+<span class="k">def</span> <span class="nf">pade_analytical_continuation_wk</span><span class="p">(</span>
+    <span class="n">g_wk</span><span class="p">,</span> <span class="n">fmesh</span><span class="p">,</span> <span class="n">n_points</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">freq_offset</span><span class="o">=</span><span class="mf">0.05</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Perform Pade analytical continuation of a lattice Green&#39;s function</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    g_wk : triqs.gf.Gf with mesh (MeshImFreq or MeshDLRImFreq, MeshBrZone)</span>
+<span class="sd">        Lattice Green&#39;s function in Matsubara frequency and momentum space :math:`G(i\omega_n, \mathbf{k})`.</span>
+<span class="sd">    fmesh : MeshReFreq</span>
+<span class="sd">        Real frequency mesh to perform the analytical continuation to.</span>
+<span class="sd">    n_points : int</span>
+<span class="sd">        Number of Matsubara frequencies to use in the Pade fit.</span>
+<span class="sd">    freq_offset : float</span>
+<span class="sd">        Distance from the real axis used in the fit.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    g_fk : triqs.gf.Gf with mesh (MeshReFreq, MeshBrZone)</span>
+<span class="sd">        Analytically continued real-frequency lattice Green&#39;s function</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">wmesh</span> <span class="o">=</span> <span class="n">g_wk</span><span class="o">.</span><span class="n">mesh</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">kmesh</span> <span class="o">=</span> <span class="n">g_wk</span><span class="o">.</span><span class="n">mesh</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">g_fk</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">MeshProduct</span><span class="p">(</span><span class="n">fmesh</span><span class="p">,</span> <span class="n">kmesh</span><span class="p">),</span> <span class="n">target_shape</span><span class="o">=</span><span class="n">g_wk</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kmesh</span><span class="p">:</span>
+        <span class="n">g_f</span> <span class="o">=</span> <span class="n">g_fk</span><span class="p">[:,</span> <span class="n">k</span><span class="p">]</span>
+        <span class="n">g_w</span> <span class="o">=</span> <span class="n">g_wk</span><span class="p">[:,</span> <span class="n">k</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">g_wk</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">g_w</span> <span class="o">=</span> <span class="n">gf_tensor_to_matrix</span><span class="p">(</span><span class="n">g_w</span><span class="p">)</span>
+            <span class="n">g_f</span> <span class="o">=</span> <span class="n">gf_tensor_to_matrix</span><span class="p">(</span><span class="n">g_f</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">g_w</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span> <span class="o">==</span> <span class="n">MeshDLRImFreq</span><span class="p">:</span>
+            <span class="n">g_c</span> <span class="o">=</span> <span class="n">make_gf_dlr</span><span class="p">(</span><span class="n">g_w</span><span class="p">)</span>
+            <span class="n">small_mesh</span> <span class="o">=</span> <span class="n">MeshImFreq</span><span class="p">(</span><span class="n">g_w</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="n">g_w</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">statistic</span><span class="p">,</span> <span class="n">n_points</span><span class="p">)</span>
+            <span class="n">g_w</span> <span class="o">=</span> <span class="n">dlr_on_imfreq</span><span class="p">(</span><span class="n">g_c</span><span class="p">,</span> <span class="n">small_mesh</span><span class="p">)</span>
+            
+        <span class="n">g_f</span><span class="o">.</span><span class="n">set_from_pade</span><span class="p">(</span><span class="n">g_w</span><span class="p">,</span> <span class="n">n_points</span><span class="o">=</span><span class="n">n_points</span><span class="p">,</span> <span class="n">freq_offset</span><span class="o">=</span><span class="n">freq_offset</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">g_wk</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">g_f</span> <span class="o">=</span> <span class="n">gf_matrix_to_tensor</span><span class="p">(</span><span class="n">g_f</span><span class="p">,</span> <span class="n">g_wk</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span>
+            <span class="n">g_fk</span><span class="p">[:,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">g_f</span>
+        
+    <span class="k">return</span> <span class="n">g_fk</span>
 </pre></div>
 
            </div>
