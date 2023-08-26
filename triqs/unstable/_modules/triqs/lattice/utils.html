@@ -1667,12 +1667,12 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;k_space_path&#39;</span><span class="p">,</span> <span class="s1">&#39;TB_from_wannier90&#39;</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="k_space_path"><a class="viewcode-back" href="../../../documentation/python_api/triqs.lattice.utils.k_space_path.html#triqs.lattice.utils.k_space_path">[docs]</a><span class="k">def</span> <span class="nf">k_space_path</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">101</span><span class="p">,</span> <span class="n">bz</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">relative_coordinates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_ticks</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="k_space_path"><a class="viewcode-back" href="../../../documentation/python_api/triqs.lattice.utils.k_space_path.html#triqs.lattice.utils.k_space_path">[docs]</a><span class="k">def</span> <span class="nf">k_space_path</span><span class="p">(</span><span class="n">segments</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">101</span><span class="p">,</span> <span class="n">bz</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">relative_coordinates</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Generate an array of k-vectors along a path defined by a list of pairs of k-vectors</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    paths : list of pairs of three-vectors of floats</span>
+<span class="sd">    segments : list of pairs of three-vectors of floats</span>
 <span class="sd">       List of pairs of k-vectors in reciprocal units to create a path in-between.</span>
 <span class="sd">    num : int, default=100</span>
 <span class="sd">       Number of k-vectors along each segment of the overall path</span>
@@ -1685,16 +1685,15 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    kvecs: numpy.ndarray [shape=(len(paths)*num,3)]</span>
+<span class="sd">    kvecs: numpy.ndarray [shape=(len(segments)*num,3)]</span>
 <span class="sd">        Two-dimensional numpy array containing the path vectors (in reciprocal units) as rows</span>
 <span class="sd">    dist: numpy.ndarray  [shape=(kvecs.shape[0])]</span>
 <span class="sd">        One-dimensional numpy array containing, for each element in kvecs,</span>
 <span class="sd">        the distance travelled along the path. Useful for plotting.</span>
 <span class="sd">        If bz is provided, calculate the distance in absolute units.</span>
-<span class="sd">        The distances for the relevant k-points in paths can be obtained with dist[num::num].</span>
-<span class="sd">    ticks : numpy.ndarray [shape=(len(paths)-1)], optional</span>
-<span class="sd">        Array with tick points, i.e. distances at the interfaces of path segments.</span>
-<span class="sd">        Only returned if `return_ticks` is `True`.</span>
+<span class="sd">    ticks : numpy.ndarray [shape=(len(segments)+1)]</span>
+<span class="sd">        Array with tick points, i.e. distances at the interfaces between segment.</span>
+<span class="sd">        Includes the initial and final distance.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">bz</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1703,8 +1702,8 @@
         <span class="n">cell</span> <span class="o">=</span> <span class="n">bz</span><span class="o">.</span><span class="n">units</span>
 
     <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="n">num</span><span class="p">)</span>
-    <span class="n">paths</span> <span class="o">=</span> <span class="p">[(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ki</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">kf</span><span class="p">))</span> <span class="k">for</span> <span class="n">ki</span><span class="p">,</span> <span class="n">kf</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">]</span>
-    <span class="n">kvecs</span> <span class="o">=</span> <span class="p">[</span><span class="n">ki</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">kf</span> <span class="o">-</span> <span class="n">ki</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="k">for</span> <span class="n">ki</span><span class="p">,</span> <span class="n">kf</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">]</span>
+    <span class="n">segments</span> <span class="o">=</span> <span class="p">[(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ki</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">kf</span><span class="p">))</span> <span class="k">for</span> <span class="n">ki</span><span class="p">,</span> <span class="n">kf</span> <span class="ow">in</span> <span class="n">segments</span><span class="p">]</span>
+    <span class="n">kvecs</span>    <span class="o">=</span> <span class="p">[</span><span class="n">ki</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">kf</span> <span class="o">-</span> <span class="n">ki</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="k">for</span> <span class="n">ki</span><span class="p">,</span> <span class="n">kf</span> <span class="ow">in</span> <span class="n">segments</span><span class="p">]</span>
 
     <span class="n">cur_dist</span> <span class="o">=</span> <span class="mf">0.0</span>
     <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
@@ -1716,10 +1715,7 @@
         <span class="n">cur_dist</span> <span class="o">=</span> <span class="n">dist</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">relative_coordinates</span><span class="p">:</span> <span class="n">kvecs</span> <span class="o">=</span> <span class="n">kvecs_abs</span>
-    <span class="k">if</span> <span class="n">return_ticks</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">kvecs</span><span class="p">),</span> <span class="n">dist</span><span class="p">,</span> <span class="n">dist</span><span class="p">[</span><span class="n">num</span><span class="p">::</span><span class="n">num</span><span class="p">]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">kvecs</span><span class="p">),</span> <span class="n">dist</span></div>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">kvecs</span><span class="p">),</span> <span class="n">dist</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(([</span><span class="mi">0</span><span class="p">],</span> <span class="n">dist</span><span class="p">[</span><span class="n">num</span><span class="o">-</span><span class="mi">1</span><span class="p">::</span><span class="n">num</span><span class="p">]))</span></div>
 
 
 <span class="c1"># ----------------------------------------------------------------------</span>
