@@ -2,6 +2,22 @@
 
 # Changelog
 
+## Version 3.2.0
+
+omegamaxent_interface version 3.2.0 is a compatibility release for TRIQS version 3.2.0.
+
+We thank all contributors: Thomas Hahn, Alexander Hampel, Dylan Simon, Nils Wentzell
+
+Find below an itemized list of changes in this release.
+
+### General
+* Remove use of Gf Indices and restore compatibility against TRIQS/unstable
+* Fix: Iterable should be imported from collections.abc
+
+### cmake
+* Improve omegamaxent cmake to use existing nda/triqs targets and to use find_package(GSL)
+
+
 ## Version 3.1.0
 
 omegamaxent_interface version 3.1.0 is a compatibility
