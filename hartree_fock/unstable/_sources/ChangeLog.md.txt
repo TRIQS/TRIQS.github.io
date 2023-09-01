@@ -2,7 +2,6 @@
 
 # Changelog
 
-
 ## Version 3.2.0
 
 This is the initial release of hartree_fock, a Hartree-Fock lattice and impurity solvers based on the TRIQS library.
