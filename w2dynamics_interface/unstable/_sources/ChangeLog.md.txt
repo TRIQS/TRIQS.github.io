@@ -2,6 +2,34 @@
 
 # Changelog
 
+## Version 3.2.0
+
+w2dynamics_interface version 3.2.0 is a compatibility release for TRIQS version 3.2.0
+that introduces worm sampling support for measuring two-particle Green functions.
+
+We thank all contributors: Thomas Hahn, Alexander Hampel, Dylan Simon, Hugo U. R. Strand, Nils Wentzell
+
+Find below an itemized list of changes in this release.
+
+### General
+* Add g4 worm sampling support
+* Expose Delta_infty as done in triqs_cthyb
+* Fix F2PY module compilation with clang 16+
+* Fix doc/guide/aim.py script and documentation build by adding aim_solution.h5
+* Add CXXFLAGS to github actions for clang
+
+### cmake
+* Update to more recent w2dynamics commit
+
+### jenkins
+* Work around permission issue in make install
+
+### fix
+* temporary use fixed fork of w2dyn and set manuall cflags for clang16
+* numpy complex type
+* Update 2pGF reference test data after removal of Block2Gf.note
+
+
 ## Version 3.1.0
 
 w2dynamics_interface version 3.1.0 is a compatibility
