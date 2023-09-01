@@ -304,7 +304,18 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="issues.html">Reporting issues</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Changelog</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#unstable">unstable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#version-3-2-0">Version 3.2.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#general">General</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#elk">Elk</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#vasp">Vasp</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#w90-qe">w90 + QE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#clean">clean</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#version-3-1-1">Version 3.1.1</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">General</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#version-3-1-0">Version 3.1.0</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#wannier90-converter">Wannier90 Converter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#change-in-gf-struct">Change in gf_struct</a></li>
@@ -316,7 +327,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#version-3-0-0">Version 3.0.0</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#restructuring">Restructuring</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#dependency-management">Dependency Management</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id2">Other Changes:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">Other Changes:</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#version-2-2-1">Version 2.2.1</a></li>
@@ -358,19 +369,105 @@
              
   <div class="tex2jax_ignore mathjax_ignore section" id="changelog">
 <span id="id1"></span><h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this heading"></a></h1>
-<div class="section" id="unstable">
-<h2>unstable<a class="headerlink" href="#unstable" title="Permalink to this heading"></a></h2>
+<div class="section" id="version-3-2-0">
+<h2>Version 3.2.0<a class="headerlink" href="#version-3-2-0" title="Permalink to this heading"></a></h2>
+<p>DFTTools Version 3.2.0 is a release that</p>
 <ul class="simple">
-<li>updated github work flow to match triqs unstable requisites</li>
-<li>sumk_dft_tools.py rewritten to have single routines to calculate DOS, spaghettis and (Elk specific for now) spectral contours</li>
-<li>occupied DOS can be calculated (sumk_dft_tools.occupations() is needed to be calculated first)</li>
-<li>analysis.rst and conv_elk.rst updated to improve routine descriptions and includes example figures</li>
-<li>updated Elk tests and rewritten test scripts (.h5 files remain unchanged)</li>
-<li>New converter routines to read in Elk data for sumk_dft_tools.spectral_contours() (Elk k-mesh generator and checker needs to be optimized as it’s currently slow). commented out Elk “bandcharacter” conversion from Elk converter and Elk DFT+DMFT PDOS code which used it (this method needs to be checked)</li>
+<li>is compatible with TRIQS 3.2.x</li>
+<li>introduces a coherent mesh of the SumK object passed on init used throughout all member functions (see below for details)</li>
+<li>unifies post-processing routines in <code class="docutils literal notranslate"><span class="pre">sumk_dft_tools</span></code> for all DFT codes to calculate DOS and spectral functions</li>
+<li>adds support for non-collinear projectors when using Vasp 6</li>
+<li>adds transport / optics calculation support with Elk</li>
+<li>introduces a new <code class="docutils literal notranslate"><span class="pre">dft_input</span></code> variable <code class="docutils literal notranslate"><span class="pre">dft_code</span></code> that identifies automatically the used dft code</li>
+<li>adds transport / optics calculation with wannier90 using WannierBerri</li>
+<li>moves all optics and transport related functions to a new module <code class="docutils literal notranslate"><span class="pre">sumk_dft_transport.py</span></code></li>
+<li>new chemical potential finder (fully backward combatible), that supports besides bisection also gradient finders</li>
+<li>new double counting routines, moved to a separate function, improving spin-dependent formulas</li>
+<li>improve performance of all routines performing k-sums. <code class="docutils literal notranslate"><span class="pre">extract_G_loc</span></code> is up to 5 times faster now</li>
+</ul>
+<p>We thank all contributors: Sophie Beck, Alberto Carta, Alexander Hampel, Alyn James, Harrison LaBollita, Dario Fiore Mosca, Oleg Peil, Nils Wentzell</p>
+<p>Find below an itemized list of changes in this release.</p>
+<div class="section" id="general">
+<h3>General<a class="headerlink" href="#general" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li>general fixes to match new triqs 3.2 release</li>
 <li>SumK requires now to pass a mesh on init to clarify the mesh on which it operates</li>
 <li>rename / unify name of <code class="docutils literal notranslate"><span class="pre">sumk.Sigma_imp_iw</span></code> and <code class="docutils literal notranslate"><span class="pre">sumk.Sigma_imp_w</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">sumk.Sigma_imp</span></code></li>
 <li>remove <code class="docutils literal notranslate"><span class="pre">iw_or_w</span></code> arguments</li>
+<li><code class="docutils literal notranslate"><span class="pre">sumk_dft_tools.py</span></code> rewritten to have single routines to calculate DOS (<code class="docutils literal notranslate"><span class="pre">dos_wannier_basis</span></code> renamed to <code class="docutils literal notranslate"><span class="pre">density_of_states</span></code>), spaghettis and (Elk specific for now) spectral contours</li>
+<li>occupied DOS can be calculated (<code class="docutils literal notranslate"><span class="pre">sumk_dft_tools.occupations()</span></code> is needed to be calculated first)</li>
+<li>analysis.rst and conv_elk.rst updated to improve routine descriptions and includes example figures</li>
+<li>remove any transport from <code class="docutils literal notranslate"><span class="pre">sumk_dft_tools.py</span></code> and move to <code class="docutils literal notranslate"><span class="pre">sumk_dft_transport</span></code></li>
+<li>outsource <code class="docutils literal notranslate"><span class="pre">calc_DC_from_density</span></code> into <a class="reference external" href="http://util.py" rel="noopener noreferrer" target="_blank">util.py</a> and cleanup</li>
+<li>Added new way to compute double counting. This is moved to a separate function and the old method is kept to modify in-place the double counting and keep compatibility. A legacy interface was kept for the old method (using integers to denote DC type). The new convention follow the notation introduced here (<a class="reference external" href="http://dx.doi.org/10.1038/s41598-018-27731-4" rel="noopener noreferrer" target="_blank">http://dx.doi.org/10.1038/s41598-018-27731-4</a>)</li>
+<li>Added tests for DC calculation to compare with old implementation</li>
+<li>Added 2 new methods to find chemical potential, refactored DC calculation with stateless function while keeping legacy code</li>
+<li>In magnetic calculations, the dichotomy adjustment is struggling to find the mu (maxes out iterations). Added new methods to find the dft mu: newton (fastest but can fail) and brent (more stable)</li>
+<li>fix: fix f2py command for numpy ver &gt;1.22</li>
+<li>fix: np.int / np.float / np. complex are  deprecated (np v1.20) / removed (np v1.24)</li>
+<li>Fixed DC formulas with SOC (#227)</li>
+<li>Fixes issue with projected A(k,w) (#225)</li>
+<li>fix obsolote iw_or_w param in calc_mu</li>
+<li>improve performance of extract Gloc by factor 5! huge cleanup</li>
+<li>edit SumKDFT class to take gf mesh at initialization and force Sigma to have that mesh</li>
+<li>update mpi.all_reduce calls 52bccac</li>
+<li>issue #216 correctly use beta when calling density on MeshReFreq</li>
 </ul>
+</div>
+<div class="section" id="elk">
+<h3>Elk<a class="headerlink" href="#elk" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li>Elk Transport code and subsequent updates (#229)</li>
+<li>elk-interface bug fixes (#228)</li>
+<li>updated Elk tests and rewritten test scripts (.h5 files remain unchanged)</li>
+<li>New converter routines to read in Elk data for sumk_dft_tools.spectral_contours() (Elk k-mesh generator and checker needs to be optimized as it’s currently slow). commented out Elk “bandcharacter” conversion from Elk converter and Elk DFT+DMFT PDOS code which used it (this method needs to be checked)</li>
+</ul>
+</div>
+<div class="section" id="vasp">
+<h3>Vasp<a class="headerlink" href="#vasp" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li>change normion default to False</li>
+<li>change Vasp NiO tutorial scripts to reflect changes to sumk</li>
+<li>fix deprecated safeconfigparser</li>
+<li>fixes a bug in the Vasp charge self-consistent update step</li>
+<li>adjust NiO reference h5-file</li>
+<li>add test of NiO with two correlated shells</li>
+<li>fix tests of LuNiO3 and SrVO3 after changes</li>
+<li>fix mapping from shell/ions to corr-shells in converter</li>
+</ul>
+</div>
+<div class="section" id="w90-qe">
+<h3>w90 + QE<a class="headerlink" href="#w90-qe" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li>feat: optical prop with Wannier90 and WannierBerri, see documentation for details</li>
+<li>fix bug for Gamma only mode</li>
+<li>w90 conv more generous matching to find fermi</li>
+<li>Updated W90 converter: bug fixes for SOC, code restructured, more tests for <code class="docutils literal notranslate"><span class="pre">add_lambda</span></code> and <code class="docutils literal notranslate"><span class="pre">bloch_basis</span></code></li>
+<li>BUGFIX: changed character in QE output for reading occupations with</li>
+<li>Split wannier90 tests up</li>
+<li>Fix for wannier converter: reordering of orbital/spin order only necessary for vasp 5</li>
+</ul>
+</div>
+<div class="section" id="clean">
+<h3>clean<a class="headerlink" href="#clean" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li>remove Gf indices and remove calc_dc_for_density (unused)</li>
+</ul>
+</div>
+</div>
+<div class="section" id="version-3-1-1">
+<h2>Version 3.1.1<a class="headerlink" href="#version-3-1-1" title="Permalink to this heading"></a></h2>
+<p>DFTTools Version 3.1.1 is a patch release that contains a few bug fixes.
+In particular, we resolve incompatibility with recent numpy versions.</p>
+<p>We thank all contributors: Alexander Hampel, Harry LaBollita</p>
+<p>Find below an itemized list of changes in this release.</p>
+<div class="section" id="id2">
+<h3>General<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li>fix: np.int / np.float / np. complex are  depracted (np v1.20) / removed (np v1.24)</li>
+<li>Fixes issue with projected A(k,w) (#225)</li>
+</ul>
+</div>
 </div>
 <div class="section" id="version-3-1-0">
 <h2>Version 3.1.0<a class="headerlink" href="#version-3-1-0" title="Permalink to this heading"></a></h2>
@@ -468,8 +565,8 @@ This behavior can be altered using the additional cmake options</p>
 </ul>
 <p>during the configuration step. See also the TRIQS documentation for more detailed instructions.</p>
 </div>
-<div class="section" id="id2">
-<h3>Other Changes:<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h3>
+<div class="section" id="id3">
+<h3>Other Changes:<a class="headerlink" href="#id3" title="Permalink to this heading"></a></h3>
 <ul class="simple">
 <li>Run port_to_triqs3 script</li>
 <li>Port py files to python3</li>
