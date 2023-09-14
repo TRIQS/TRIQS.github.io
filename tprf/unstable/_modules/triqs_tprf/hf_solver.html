@@ -745,7 +745,7 @@
         
     <span class="c1"># ------------------------------------------------------------------</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e_k</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">H_int</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gf_struct</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">mu0</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">mu_max</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">mu_min</span><span class="o">=-</span><span class="mf">10.</span><span class="p">):</span>
+                 <span class="n">mu0</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">mu_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mu_min</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
         <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
             <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logo</span><span class="p">())</span>
@@ -771,7 +771,7 @@
 
         <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;beta =&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;mu =&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;mu = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="si">}</span><span class="s1"> -- (min/max = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mu_min</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mu_max</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;bands =&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">norb</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;n_k =&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="o">.</span><span class="n">mesh</span><span class="p">))</span>
             <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;H_int =&#39;</span><span class="p">,</span> <span class="n">H_int</span><span class="p">)</span>
@@ -826,7 +826,10 @@
             <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">fermi</span><span class="p">(</span><span class="n">e</span> <span class="o">-</span> <span class="n">mu</span><span class="p">))</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_k</span>
             <span class="k">return</span> <span class="n">n</span> <span class="o">-</span> <span class="n">N_target</span>
 
-        <span class="n">mu</span> <span class="o">=</span> <span class="n">brentq</span><span class="p">(</span><span class="n">target_function</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu_min</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu_max</span><span class="p">)</span>
+        <span class="n">mu_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu_min</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu_min</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">e</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">mu_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu_max</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu_max</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">e</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+
+        <span class="n">mu</span> <span class="o">=</span> <span class="n">brentq</span><span class="p">(</span><span class="n">target_function</span><span class="p">,</span> <span class="n">mu_min</span><span class="p">,</span> <span class="n">mu_max</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">=</span> <span class="n">mu</span>        
 
