@@ -1222,14 +1222,20 @@
 
     <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kmesh</span><span class="p">:</span>
         <span class="n">g_f</span> <span class="o">=</span> <span class="n">g_fk</span><span class="p">[:,</span> <span class="n">k</span><span class="p">]</span>
-        <span class="n">g_w</span> <span class="o">=</span> <span class="n">g_wk</span><span class="p">[:,</span> <span class="n">k</span><span class="p">]</span>
+
+        <span class="c1"># Make_gf_dlr is broken on gf views (issue #913),</span>
+        <span class="c1"># so make a copy of the data instead</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">wmesh</span><span class="p">)</span> <span class="o">==</span> <span class="n">MeshDLRImFreq</span><span class="p">:</span>
+            <span class="n">g_w</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">wmesh</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="n">g_wk</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span>
+            <span class="n">g_w</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">g_wk</span><span class="p">[:,</span> <span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">g_w</span> <span class="o">=</span> <span class="n">g_wk</span><span class="p">[:,</span> <span class="n">k</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">g_wk</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
             <span class="n">g_w</span> <span class="o">=</span> <span class="n">gf_tensor_to_matrix</span><span class="p">(</span><span class="n">g_w</span><span class="p">)</span>
             <span class="n">g_f</span> <span class="o">=</span> <span class="n">gf_tensor_to_matrix</span><span class="p">(</span><span class="n">g_f</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">g_w</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span> <span class="o">==</span> <span class="n">MeshDLRImFreq</span><span class="p">:</span>
-
             <span class="n">g_c</span> <span class="o">=</span> <span class="n">make_gf_dlr</span><span class="p">(</span><span class="n">g_w</span><span class="p">)</span>
             <span class="n">small_mesh</span> <span class="o">=</span> <span class="n">MeshImFreq</span><span class="p">(</span><span class="n">g_w</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="n">g_w</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">statistic</span><span class="p">,</span> <span class="n">n_points</span><span class="p">)</span>
             <span class="n">g_w</span> <span class="o">=</span> <span class="n">dlr_on_imfreq</span><span class="p">(</span><span class="n">g_c</span><span class="p">,</span> <span class="n">small_mesh</span><span class="p">)</span>
