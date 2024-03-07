@@ -38,15 +38,15 @@ log=build_$(date +%Y%m%d%H%M).log
 testlog="$(pwd)/${log/.log/_test.log}"
 
 # choose triqs + app to be installed
-packages="triqs dft_tools cthyb tprf maxent hubbardI hartree_fock solid_dmft"
+packages=(triqs dft_tools cthyb tprf maxent hubbardI hartree_fock solid_dmft)
 
 # build loop
 (
-    for pkg in ${packages} ; do 
+    for pkg in "${packages[@]}" ; do
         cd ${BUILDDIR}
-        git clone -b unstable --depth 1 https://github.com/TRIQS/$pkg $pkg.src
+        git clone -b unstable --depth 1 https://github.com/TRIQS/$pkg
         # fetch latest changes
-        cd $pkg.src && git pull
+        cd $pkg && git pull
         mkdir -p build && cd build
         cmake ../ -DCMAKE_INSTALL_PREFIX=${INSTALLDIR} -DMPIEXEC_PREFLAGS='--allow-run-as-root'
         make -j$NCORES
