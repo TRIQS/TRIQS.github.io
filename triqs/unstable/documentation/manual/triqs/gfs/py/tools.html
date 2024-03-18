@@ -1742,65 +1742,49 @@ CAUTION: This function assumes the following properties of g</p>
 <dl class="py function">
 <dt class="sig sig-object py">
 <span class="sig-prename descclassname"><span class="pre">triqs.gf.tools.</span></span><span class="sig-name descname"><span class="pre">discretize_bath</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">delta_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxiter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmplx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BFGS'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../../_modules/triqs/gf/tools.html#discretize_bath"><span class="viewcode-link"><span class="pre">[source]</span></span></a></dt>
-<dd><blockquote>
-<div><p>Discretize a given hybridization function using Nb bath sites.</p>
+<dd><p>Discretize a given hybridization function using Nb bath sites.</p>
 <p>The discretized hybridization is constructed as
 .. math:: Delta_{kl}^{disc} (i omega_n) = sum_{j=1}^{Nb} V_{kj} S  V_{jl}^* .
 where S is either:
 .. math:: [i omega_n - eps_j]^{-1}
 for MeshImFreq or
-.. math:: - exp(-tau * eps_j) / (1 + exp(-eta * eps_j) )
+.. math:: - exp(-tau * eps_j) / (1 + exp(-beta * eps_j) )
 for MeshImTime.</p>
 <p>The hoppings V and energies eps are chosen to minimize the norm
-.. math:: left[</p>
-</div></blockquote>
-<p>rac{1}{sqrt(N)} sum_{i omega_n}^{N} | Delta^{disc} (i omega_n) - Delta (i omega_n) <a href="#id1"><span class="problematic" id="id2">|</span></a>^2
-ight]^{
-rac{1}{2}}</p>
-<blockquote>
-<div><p>and for MeshImTime
-.. math:: left[</p>
-</div></blockquote>
-<p>rac{1}{sqrt(N)} sum_{   au}^{N} | Delta^{disc} (       au) - Delta (  au) <a href="#id3"><span class="problematic" id="id4">|</span></a>^2
-ight]^{
-rac{1}{2}}</p>
-<blockquote>
-<div><p>This minimization is performed with the given tolerance using scipy.optimize.minimize
+.. math:: left[ frac{1}{sqrt(N)} sum_{i omega_n}^{N} | Delta^{disc} (i omega_n) - Delta (i omega_n) <a href="#id1"><span class="problematic" id="id2">|</span></a>^2 right]^{frac{1}{2}}
+and for MeshImTime
+.. math:: left[ frac{1}{sqrt(N)} sum_{tau}^{N} | Delta^{disc} (tau) - Delta (tau) <a href="#id3"><span class="problematic" id="id4">|</span></a>^2 right]^{frac{1}{2}}
+This minimization is performed with the given tolerance using scipy.optimize.minimize
 or the scipy.optimize.basinhopping frontend.</p>
-<dl class="simple">
-<dt>delta_in<span class="classifier">Gf or BlockGf</span></dt><dd><p>Matsubara or imaginary-time hybridization function to discretize</p>
-</dd>
-<dt>Nb<span class="classifier">int</span></dt><dd><p>Number of bath sites per Gf block</p>
-</dd>
-<dt>eps0: float or list(float), default=3.0</dt><dd><p>Approximate bandwith or initial guesses for bath energies.</p>
-</dd>
-<dt>V0<span class="classifier">float or np.ndarray (shape norb X Nb), optional</span></dt><dd><p>If float: initial guess used for all hopping values.
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>delta_in</strong> (<a class="reference internal" href="../../../../python_api/triqs.gf.gf.Gf.html#triqs.gf.gf.Gf" title="triqs.gf.gf.Gf"><em>Gf</em></a><em> or </em><a class="reference internal" href="../../../../python_api/triqs.gf.block_gf.BlockGf.html#triqs.gf.block_gf.BlockGf" title="triqs.gf.block_gf.BlockGf"><em>BlockGf</em></a>) – Matsubara or imaginary-time hybridization function to discretize</p></li>
+<li><p><strong>Nb</strong> (<em>int</em>) – Number of bath sites per Gf block</p></li>
+<li><p><strong>eps0</strong> (<em>float</em><em> or </em><em>list</em><em>(</em><em>float</em><em>)</em><em>, </em><em>default=3.0</em>) – Approximate bandwith or initial guesses for bath energies.</p></li>
+<li><p><strong>V0</strong> (<em>float</em><em> or </em><em>np.ndarray</em><em> (</em><em>shape norb X Nb</em><em>)</em><em>, </em><em>optional</em>) – If float: initial guess used for all hopping values.
 If np.ndarray: initial guess for V.
 Otherwise use the cholesky decomposition of
 .. math:: lim_{omega-&gt;infty} iomega*Delta(iomega)
 or
-.. math:: -Delta(      au=0^+) - Delta(       au=eta^-)
-to obtain an initial guess for V.</p>
+.. math:: -Delta(tau=0^+) - Delta(tau=beta^-)
+to obtain an initial guess for V.</p></li>
+<li><p><strong>tol</strong> (<em>float</em><em>, </em><em>default=1e-15</em>) – Tolerance for scipy minimize on data to optimize (xatol / ftol)</p></li>
+<li><p><strong>maxiter</strong> (<em>int</em><em>, </em><em>default=10000</em>) – Maximum number of optimization steps</p></li>
+<li><p><strong>complx</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Allow the hoppings V to be complex</p></li>
+<li><p><strong>method</strong> (<em>string</em><em>, </em><em>default=BFGS</em>) – Method for minimizing the function.
+Should be one of ‘BFGS’, ‘Nelder-Mead’ and ‘basinhopping’.</p></li>
+</ul>
 </dd>
-<dt>tol<span class="classifier">float, default=1e-15</span></dt><dd><p>Tolerance for scipy minimize on data to optimize (xatol / ftol)</p>
-</dd>
-<dt>maxiter<span class="classifier">int, default=10000</span></dt><dd><p>Maximum number of optimization steps</p>
-</dd>
-<dt>complx<span class="classifier">bool, default=False</span></dt><dd><p>Allow the hoppings V to be complex</p>
-</dd>
-<dt>method<span class="classifier">string, default=BFGS</span></dt><dd><p>Method for minimizing the function.
-Should be one of ‘BFGS’, ‘Nelder-Mead’ and ‘basinhopping’.</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>V_opt<span class="classifier">np.array (shape norb x Nb) or list thereof</span></dt><dd><p>Optimized bath hoppings</p>
-</dd>
-<dt>eps_opt<span class="classifier">list(float) or list(list(float)</span></dt><dd><p>Optimized bath energies (sorted)</p>
-</dd>
-<dt>delta_disc<span class="classifier">Gf or BlockGf</span></dt><dd><p>Discretized hybridization function</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>V_opt</strong> (<em>np.array (shape norb x Nb) or list thereof</em>) – Optimized bath hoppings</p></li>
+<li><p><strong>eps_opt</strong> (<em>list(float) or list(list(float)</em>) – Optimized bath energies (sorted)</p></li>
+<li><p><strong>delta_disc</strong> (<em>Gf or BlockGf</em>) – Discretized hybridization function</p></li>
+</ul>
+</p>
 </dd>
 </dl>
-</div></blockquote>
 </dd></dl>
 
 <dl class="py function">
@@ -1857,7 +1841,7 @@ as
 where S is either
 .. math:: [i omega_n - eps_j]^{-1}
 for MeshImFreq or
-.. math:: - exp(-tau * eps_j) / (1 + exp(-eta * eps_j) )
+.. math:: - exp(-tau * eps_j) / (1 + exp(-beta * eps_j) )
 for MeshImTime</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
