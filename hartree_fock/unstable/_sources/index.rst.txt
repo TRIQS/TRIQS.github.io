@@ -3,11 +3,11 @@
 hartree_fock
 ************
 
-.. sidebar:: hartree_fock 3.1.0
+.. sidebar:: hartree_fock 3.2.1
 
-   This is the homepage of hartree_fock v3.1.0.
+   This is the homepage of hartree_fock v3.2.1.
    For changes see the :ref:`changelog page <changelog>`.
-      
+
       .. image:: _static/logo_github.png
          :width: 75%
          :align: center
@@ -21,7 +21,7 @@ and the comments in the sources and headers.
 
 Learn how to use hartree_fock in the :ref:`documentation`.
 
-    
+
 .. toctree::
    :maxdepth: 2
    :hidden:
