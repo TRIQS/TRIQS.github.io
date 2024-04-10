@@ -2273,7 +2273,7 @@
 <a class="viewcode-back" href="../../_python_api/triqs_dft_tools.sumk_dft.SumkDFT.symm_deg_gf.html#triqs_dft_tools.sumk_dft.SumkDFT.symm_deg_gf">[docs]</a>
     <span class="k">def</span> <span class="nf">symm_deg_gf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gf_to_symm</span><span class="p">,</span> <span class="n">ish</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Averages a GF over degenerate shells.</span>
+<span class="sd">        Averages a GF or a dict of np.ndarrays over degenerate shells.</span>
 
 <span class="sd">        Degenerate shells of an inequivalent correlated shell are defined by</span>
 <span class="sd">        `self.deg_shells`. This function enforces corresponding degeneracies</span>
@@ -2283,6 +2283,7 @@
 <span class="sd">        ----------</span>
 <span class="sd">        gf_to_symm : gf_struct_solver like</span>
 <span class="sd">                     Input and output GF (i.e., it gets overwritten)</span>
+<span class="sd">                     or dict of np.ndarrays.</span>
 <span class="sd">        ish : int</span>
 <span class="sd">              Index of an inequivalent shell. (default value 0)</span>
 
@@ -2292,6 +2293,13 @@
         <span class="c1"># an h5 file, self.deg_shells might be None</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">deg_shells</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="k">return</span>
 
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gf_to_symm</span><span class="p">,</span> <span class="n">BlockGf</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gf_to_symm</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">gf_to_symm</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">blockgf</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gf_to_symm</span><span class="p">,</span> <span class="n">BlockGf</span><span class="p">):</span>
+            <span class="n">blockgf</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;gf_to_symm should be either a BlockGf or a dict of numpy arrays&quot;</span><span class="p">)</span>
+
         <span class="k">for</span> <span class="n">degsh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">deg_shells</span><span class="p">[</span><span class="n">ish</span><span class="p">]:</span>
             <span class="c1"># ss will hold the averaged orbitals in the basis where the</span>
             <span class="c1"># blocks are all equal</span>
@@ -2300,18 +2308,30 @@
             <span class="n">n_deg</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">degsh</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">degsh</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">ss</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">ss</span> <span class="o">=</span> <span class="n">gf_to_symm</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-                    <span class="n">ss</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
-                    <span class="n">helper</span> <span class="o">=</span> <span class="n">ss</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">blockgf</span><span class="p">:</span>
+                        <span class="n">ss</span> <span class="o">=</span> <span class="n">gf_to_symm</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                        <span class="n">ss</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
+                        <span class="n">helper</span> <span class="o">=</span> <span class="n">ss</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">ss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">gf_to_symm</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+                        <span class="n">helper</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">gf_to_symm</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+
                 <span class="c1"># get the transformation matrix</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">degsh</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
                     <span class="n">v</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="n">degsh</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="c1"># for backward compatibility, allow degsh to be a list</span>
-                    <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="o">*</span><span class="n">ss</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">blockgf</span><span class="p">:</span>
+                        <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="o">*</span><span class="n">ss</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="o">*</span><span class="n">ss</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
                     <span class="n">C</span> <span class="o">=</span> <span class="kc">False</span>
                 <span class="c1"># the helper is in the basis where the blocks are all equal</span>
-                <span class="n">helper</span><span class="o">.</span><span class="n">from_L_G_R</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span> <span class="n">gf_to_symm</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">v</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">blockgf</span><span class="p">:</span>
+                    <span class="n">helper</span><span class="o">.</span><span class="n">from_L_G_R</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span> <span class="n">gf_to_symm</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">v</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">helper</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">gf_to_symm</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">v</span><span class="p">))</span>
+
                 <span class="k">if</span> <span class="n">C</span><span class="p">:</span>
                     <span class="n">helper</span> <span class="o">&lt;&lt;</span> <span class="n">helper</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
                 <span class="c1"># average over all shells</span>
@@ -2322,12 +2342,19 @@
                     <span class="n">v</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="n">degsh</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="c1"># for backward compatibility, allow degsh to be a list</span>
-                    <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="o">*</span><span class="n">ss</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">blockgf</span><span class="p">:</span>
+                        <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="o">*</span><span class="n">ss</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="o">*</span><span class="n">ss</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
                     <span class="n">C</span> <span class="o">=</span> <span class="kc">False</span>
-                <span class="k">if</span> <span class="n">C</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">blockgf</span> <span class="ow">and</span> <span class="n">C</span><span class="p">:</span>
                     <span class="n">gf_to_symm</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">from_L_G_R</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">ss</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">v</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">gf_to_symm</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">from_L_G_R</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">ss</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span></div>
+                <span class="k">elif</span> <span class="n">blockgf</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">C</span><span class="p">:</span>
+                    <span class="n">gf_to_symm</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">from_L_G_R</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">ss</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span>
+                <span class="k">elif</span> <span class="ow">not</span> <span class="n">blockgf</span> <span class="ow">and</span> <span class="n">C</span><span class="p">:</span>
+                    <span class="n">gf_to_symm</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">ss</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">v</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">()))</span>
+                <span class="k">elif</span> <span class="ow">not</span> <span class="n">blockgf</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">C</span><span class="p">:</span>
+                    <span class="n">gf_to_symm</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">ss</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">()))</span></div>
 
 
 <div class="viewcode-block" id="SumkDFT.total_density">
