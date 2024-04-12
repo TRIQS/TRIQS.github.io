@@ -20,7 +20,7 @@ As for code contribution, you are going to submit your changes as a pull request
 of the `triqs github <https://github.com/TRIQS/triqs>`_. If you are unsure on how to do it, you can follow instructions
 :ref:`here <pull_request>`.
 
-If you have any question, feel free to use our `Google group <https://triqs.github.io/announcements>`_.
+If you have any question, feel free to use our `slack workspace <https://triqs.github.io/slack>`_.
 
 
 Building the documentation
