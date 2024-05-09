@@ -17,12 +17,12 @@ This page describes the installation of the TRIQS library itself. The
 installation procedure of the applications is described on their respective
 sites, under 'Install'.
 
-We provide pre-compiled versions of triqs and applications of each stable release. 
-If however you would like to try the latest development version you can use the 
-`unstable` branch instead and compile triqs manually. This will make the latest library 
-improvements and new features available to you. Note however that the development versions may include 
-changes of the API. We use `continuous integration <https://jenkins.flatironinstitute.org/job/TRIQS/>`_ 
-to ensure that both the unstable and release branches compile and pass all tests. 
+We provide pre-compiled versions of triqs and applications of each stable release.
+If however you would like to try the latest development version you can use the
+`unstable` branch instead and compile triqs manually. This will make the latest library
+improvements and new features available to you. Note however that the development versions may include
+changes of the API. We use `continuous integration <https://jenkins.flatironinstitute.org/job/TRIQS/>`_
+to ensure that both the unstable and release branches compile and pass all tests.
 This is checked for both the TRIQS library and several public (and private) applications.
 
 .. note:: To guarantee reproducibility in scientific calculations we strongly recommend the use of a stable `release <https://github.com/TRIQS/triqs/releases>`_ of both TRIQS and its applications.
@@ -141,25 +141,25 @@ We here assume that a working copy of EasyBuild is already available (see `insta
 To bring EasyBuild to the latest release (including the latest definitions of all software installable via EasyBuild), type::
 
       eb --install-latest-eb-release
-      
+
 To search for the available TRIQS packages, type::
 
       eb -S TRIQS
-      
+
 To install TRIQS or a TRIQS applications, type (for example)::
 
       eb --robot TRIQS-3.0.0-foss-2020a-Python-3.8.2.eb
       eb --robot TRIQS-cthyb-3.0.0-foss-2020a-Python-3.8.2.eb
-     
+
 This will fetch, compile and install the requested package, as well as all required dependencies (including toolchains, Python, various libraries). Corresponding environment modules will also be generated, thus a package can be loaded using (for example)::
 
       module load TRIQS-cthyb/3.0.0-foss-2020a-Python-3.8.2
-      
+
 or simply::
 
       module load TRIQS-cthyb
-      
-for the most recent version.    
+
+for the most recent version.
 
 
 .. _triqs_compilation:
@@ -189,22 +189,31 @@ on two standard systems:
 Installation steps
 ------------------
 
-We provide hereafter the build instructions in the form of a documented bash script.
-You can adapt INSTALL_PREFIX, NCORES for your local settings.
-Note that, contrary to previous versions of TRIQS,
-the installation directory CMAKE_INSTALL_PREFIX is now mandatory in the cmake configuration.
-If you are using a :ref:`Python virtual environment<python_virtualenv>`, make sure that it is activated. 
+We provide hereafter the build instructions for the TRIQS library.
+First export `INSTALL_PREFIX` for the installation location, and `NCORES` for the number of cores to use during compilation, for example::
 
+    export INSTALL_PREFIX=$(pwd)/install
+    export NCORES=4
 
-.. literalinclude:: install.sh
-   :language: bash
+Then clone the TRIQS repository and create a build directory::
+
+    git clone https://github.com/TRIQS/triqs
+    cd triqs && mkdir -p build && cd build
+
+Use cmake to configure the TRIQS build process::
+
+    cmake ../ -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX
+
+Note, that we have to provide cmake with the flag `CMAKE_INSTALL_PREFIX` to define the installation directory for TRIQS and all its applications. If you are using a :ref:`Python virtual environment<python_virtualenv>`, make sure that it is activated. Finally, build, test and install TRIQS::
+
+    make -j$NCORES && ctest -j$NCORES test && make install
 
 To install TRIQS together with several of its :ref:`applications<applications>` we provide a bash script that
 automatizes the build and test process :download:`build_triqs.sh <installation/build_triqs.sh>`. The script
 can be edited to customize the compilation of TRIQS and its applications using both environment variables
 and cmake configuration options. The script assumes that all dependencies / required libraries are already
-installed. Executing the script via `bash build_triqs.sh` will generate a `build_x.log` containing the command-line 
-build output and a `build_x_test.log` containing the test output. 
+installed. Executing the script via `bash build_triqs.sh` will generate a `build_x.log` containing the command-line
+build output and a `build_x_test.log` containing the test output.
 
 .. note:: Caution: The compilation of TRIQS, even if run in serial mode, can temporarily
           use up to 4 Gigabytes of RAM. The restrictions on the Login-Nodes of certain
@@ -223,6 +232,8 @@ Please source it with the proper replacement of INSTALL_PREFIX::
 
 To automate this process, please add this line to your `~/.bash_profile <https://en.wikipedia.org/wiki/Bash_(Unix_shell)#Startup_scripts>`_
 (or `~/.zprofile <http://zsh.sourceforge.net/FAQ/zshfaq03.html#l19>`_)
+
+We also provide a module file for the `Lmod <https://lmod.readthedocs.io/en/latest/>`_ environment module system in the top build dir called `triqs.modulefile`.
 
 Further reading
 ---------------
