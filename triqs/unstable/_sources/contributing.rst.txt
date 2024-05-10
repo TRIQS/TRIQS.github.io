@@ -9,6 +9,7 @@ Contributing
    :ref:`userguide` first. Should this not answer your questions, you can get in contact with
    other users and developers via our `slack workspace <https://triqs.github.io/slack>`_.
 
+
 Issues and feature requests
 ---------------------------
 
@@ -16,6 +17,7 @@ Please report bugs and feature request directly on the github
 `issue page <https://github.com/TRIQS/triqs/issues>`_.  In order to make it easier
 for us to treat your issue please use and fill one of the templates provided to you
 when opening a `new issue <https://github.com/TRIQS/triqs/issues/new>`_.
+
 
 Contributing to code and documentation
 --------------------------------------
