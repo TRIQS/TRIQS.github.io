@@ -8,18 +8,14 @@
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=f7f783a0" />
       <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
 
   
     <link rel="shortcut icon" href="../_static/triqs_favicon.ico"/>
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
   
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/jquery.js?v=8dae8fb0"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
         <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
         <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
@@ -128,7 +124,7 @@
 <li class="toctree-l3"><a class="reference internal" href="static_observables_notebook.html">Measuring static observables / impurity density matrix</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="static_observables_notebook.html#Measuring-\hat{\rho}_\mathrm{imp}-in-cthyb">Measuring <span class="math notranslate nohighlight">\(\hat{\rho}_\mathrm{imp}\)</span> in cthyb</a></li>
 <li class="toctree-l4"><a class="reference internal" href="static_observables_notebook.html#Compute-expactation-values-of-static-observables">Compute expactation values of static observables</a></li>
-<li class="toctree-l4"><a class="reference internal" href="static_observables_notebook.html#Measuring-moments-of-Green's-function-and-self-energy">Measuring moments of Green’s function and self-energy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="static_observables_notebook.html#Measuring-moments-of-Green’s-function-and-self-energy">Measuring moments of Green’s function and self-energy</a></li>
 <li class="toctree-l4"><a class="reference internal" href="static_observables_notebook.html#Evaluation-of-the-impurity-interaction-energy">Evaluation of the impurity interaction energy</a></li>
 </ul>
 </li>
@@ -362,13 +358,292 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="Convergence-test-of-CTHYB-solver-parameters">
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars and line breaks on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+    white-space: pre;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt .copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+.jp-RenderedHTMLCommon thead,
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+.jp-RenderedHTMLCommon th,
+div.rendered_html th {
+  font-weight: bold;
+}
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+.jp-RenderedHTMLCommon tbody tr:hover,
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="Convergence-test-of-CTHYB-solver-parameters">
 <h1>Convergence test of CTHYB solver parameters<a class="headerlink" href="#Convergence-test-of-CTHYB-solver-parameters" title="Link to this heading"></a></h1>
 <section id="Overview">
 <h2>Overview<a class="headerlink" href="#Overview" title="Link to this heading"></a></h2>
 <p>The goal of this tutorial is to learn how to choose the parameters for the CTHYB solver in order to obtain accurate results with an optimized efficiency. The solver parameters investigated in this notebook are the following:</p>
 <ol class="arabic simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">length_cycle</span></code> : The number of Monte Carlo updates in a cycle, i.e. between two consecutive measurements.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">length_cycle</span></code> : The number of Monte Carlo updates in a cycle, i.e. between two consecutive measurements.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">n_warmup_cycles</span></code> : The number of warmup (thermalization) cycles at the beginning of the simulation before any measurements are made.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">n_cycles</span></code> : The total number of QMC measurements.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">n_iw</span></code> : The number of Matsubara frequencies used for the representation of the Green’s functions.</p></li>
@@ -447,11 +722,11 @@ You are using triqs_cthyb version 3.1.0
 operators, or by moving operators in the configuration. Let’s imagine each measurement is made every <strong>L</strong> moves, then we can say that these <strong>L</strong> moves form a cycle and the length of the cycle is <strong>L</strong>.</p>
 <p>The reason why we do not want to measure, for example <span class="math notranslate nohighlight">\(G(\tau)\)</span>, after each move is because we want the configurations to be decorrelated from each other. To get an idea of decorrelation, we can look at the sign or expansion order which vary from one configuration to another. Plotting the standard deviation of sign/order versus the size of the data bins used to determine the error shows that it converges to a value called <code class="docutils literal notranslate"><span class="pre">auto-correlation</span> <span class="pre">time</span></code>. If,</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">auto-correlation</span> <span class="pre">time</span></code> <span class="math notranslate nohighlight">\(&gt;\)</span> 1 : Consecutive measurements are correlated, i.e. measurements are performed too close to one another. This is not recommended if the the measurement process is time-consuming or if the error bars need to be accurate. <code class="docutils literal notranslate"><span class="pre">Length_cycle</span></code> should be increased.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">auto-correlation</span> <span class="pre">time</span></code> <span class="math notranslate nohighlight">\(&gt;\)</span> 1 : Consecutive measurements are correlated, i.e. measurements are performed too close to one another. This is not recommended if the the measurement process is time-consuming or if the error bars need to be accurate. <code class="docutils literal notranslate"><span class="pre">Length_cycle</span></code> should be increased.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">auto-correlation</span> <span class="pre">time</span></code> <span class="math notranslate nohighlight">\(\sim\)</span> 1 : Consecutive measurements are uncorrelated often enough. <code class="docutils literal notranslate"><span class="pre">Length_cycle</span></code> is the correct value.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">auto-correlation</span> <span class="pre">time</span></code> <span class="math notranslate nohighlight">\(\ll\)</span> 1 : Many more moves are performed even though the measurements would be uncorrelated. It means many less samples will be measured, requiring much longer calculation times for the same statistical noise. Moreover, it increases the error on <span class="math notranslate nohighlight">\(G(\tau)\)</span>. <code class="docutils literal notranslate"><span class="pre">Length_cycle</span></code> should be decreased.</p></li>
 </ul>
-<p>It must be noted that <code class="docutils literal notranslate"><span class="pre">auto-correlation</span> <span class="pre">time</span></code> depends on the measured observable (i.e. sign or expansion order), therefore it should be taken with caution. Ideally <code class="docutils literal notranslate"><span class="pre">auto-correlation</span> <span class="pre">time</span></code> should be of order one. If the measurement process is fast, there is no drawback in measuring too often (<code class="docutils literal notranslate"><span class="pre">auto-correlation</span> <span class="pre">time</span></code> <span class="math notranslate nohighlight">\(&gt;\)</span> 1). However there is a drawback in measuring too rarely (<code class="docutils literal notranslate"><span class="pre">auto-correlation</span> <span class="pre">time</span></code> <span class="math notranslate nohighlight">\(\ll\)</span> 1).</p>
+<p>It must be noted that <code class="docutils literal notranslate"><span class="pre">auto-correlation</span> <span class="pre">time</span></code> depends on the measured observable (i.e. sign or expansion order), therefore it should be taken with caution. Ideally <code class="docutils literal notranslate"><span class="pre">auto-correlation</span> <span class="pre">time</span></code> should be of order one. If the measurement process is fast, there is no drawback in measuring too often (<code class="docutils literal notranslate"><span class="pre">auto-correlation</span> <span class="pre">time</span></code> <span class="math notranslate nohighlight">\(&gt;\)</span> 1). However there is a drawback in measuring too rarely (<code class="docutils literal notranslate"><span class="pre">auto-correlation</span> <span class="pre">time</span></code> <span class="math notranslate nohighlight">\(\ll\)</span> 1).</p>
 <p>Here we take a single orbital Hubbard model at half-filling with a semi-circular density of states for three different betas <span class="math notranslate nohighlight">\(\mathcal{\beta} = 10, 20, 30 (1/eV)\)</span> and plot <code class="docutils literal notranslate"><span class="pre">auto_correlation</span> <span class="pre">time</span></code> vs <code class="docutils literal notranslate"><span class="pre">length_cycle</span></code>. The fit of a 1/x function approximately shows the converged value of <code class="docutils literal notranslate"><span class="pre">length_cycle</span></code> for each <span class="math notranslate nohighlight">\(\beta\)</span>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
@@ -529,11 +804,11 @@ operators, or by moving operators in the configuration. Let’s imagine each mea
 <img alt="../_images/guide_cthyb_convergence_tests_10_0.png" src="../_images/guide_cthyb_convergence_tests_10_0.png" />
 </div>
 </div>
-<p>We observe that for example at <span class="math notranslate nohighlight">\(\beta=10\)</span>, the converged value of <code class="docutils literal notranslate"><span class="pre">length_cycle</span></code> (i.e. when <code class="docutils literal notranslate"><span class="pre">auto-correlation</span> <span class="pre">time</span></code> reaches one) is roughly 187. The calculation here has been performed for a fixed value of <code class="docutils literal notranslate"><span class="pre">n_cycles</span></code> and <code class="docutils literal notranslate"><span class="pre">n_warmup_cycles</span></code> , whereas they should ideally be increased with increasing <span class="math notranslate nohighlight">\(\beta\)</span>.</p>
+<p>We observe that for example at <span class="math notranslate nohighlight">\(\beta=10\)</span>, the converged value of <code class="docutils literal notranslate"><span class="pre">length_cycle</span></code> (i.e. when <code class="docutils literal notranslate"><span class="pre">auto-correlation</span> <span class="pre">time</span></code> reaches one) is roughly 187. The calculation here has been performed for a fixed value of <code class="docutils literal notranslate"><span class="pre">n_cycles</span></code> and <code class="docutils literal notranslate"><span class="pre">n_warmup_cycles</span></code> , whereas they should ideally be increased with increasing <span class="math notranslate nohighlight">\(\beta\)</span>.</p>
 </section>
 <section id="2.-n_warmup_cycles">
 <h2>2. n_warmup_cycles<a class="headerlink" href="#2.-n_warmup_cycles" title="Link to this heading"></a></h2>
-<p>The system needs to be thermalized first, i.e. for the first few thousand cycles (<code class="docutils literal notranslate"><span class="pre">n_warmup_cycles</span></code>), we don’t make measurements. In order to have an estimate of how many cycles are needed for thermalization, we set <code class="docutils literal notranslate"><span class="pre">n_warmup_cycle</span></code> to be zero in the solver and plot the <code class="docutils literal notranslate"><span class="pre">average_order</span></code> versus the number of cycles. This way, measurements are made from the beginning and the number of cycles at which the <code class="docutils literal notranslate"><span class="pre">average_order</span></code> starts to saturate is a good estimate for <code class="docutils literal notranslate"><span class="pre">n_warmup_cycles</span></code>.</p>
+<p>The system needs to be thermalized first, i.e. for the first few thousand cycles (<code class="docutils literal notranslate"><span class="pre">n_warmup_cycles</span></code>), we don’t make measurements. In order to have an estimate of how many cycles are needed for thermalization, we set <code class="docutils literal notranslate"><span class="pre">n_warmup_cycle</span></code> to be zero in the solver and plot the <code class="docutils literal notranslate"><span class="pre">average_order</span></code> versus the number of cycles. This way, measurements are made from the beginning and the number of cycles at which the <code class="docutils literal notranslate"><span class="pre">average_order</span></code> starts to saturate is a good estimate for <code class="docutils literal notranslate"><span class="pre">n_warmup_cycles</span></code>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
@@ -673,7 +948,7 @@ operators, or by moving operators in the configuration. Let’s imagine each mea
 <img alt="../_images/guide_cthyb_convergence_tests_18_0.png" src="../_images/guide_cthyb_convergence_tests_18_0.png" />
 </div>
 </div>
-<p>As you can see larger <code class="docutils literal notranslate"><span class="pre">n_cycles</span></code> gives a smoother Green’s function, i.e. a smaller error on <span class="math notranslate nohighlight">\(G(\tau\)</span>). It depends on the user’s needs in terms of accuracy as to how large <code class="docutils literal notranslate"><span class="pre">n_cycles</span></code> should be.</p>
+<p>As you can see larger <code class="docutils literal notranslate"><span class="pre">n_cycles</span></code> gives a smoother Green’s function, i.e. a smaller error on <span class="math notranslate nohighlight">\(G(\tau\)</span>). It depends on the user’s needs in terms of accuracy as to how large <code class="docutils literal notranslate"><span class="pre">n_cycles</span></code> should be.</p>
 </section>
 <section id="4.-n_iw">
 <h2>4. n_iw<a class="headerlink" href="#4.-n_iw" title="Link to this heading"></a></h2>
@@ -740,7 +1015,7 @@ WARNING: High frequency moments have an error greater than 1e-4.
 </div>
 </div>
 <p>The warning message printed is a hint that the frequency mesh is too small. Since we are working with the semi-circular density of states at half-filling, the electorn filling converges to 0.5. The error on <code class="docutils literal notranslate"><span class="pre">n</span></code> is plotted on the right which shows that electron filling converges with 320 Matsubara frquencies in the mesh.</p>
-<p>So far, we have study the number of Matsubara frequencies only for non-interacting cases. However, interaction can renormalize the shape of the Green’s function, in which case it’s better to directly investigate the Green’s function instead of the electron filling. One can consider that there are enough numbers of Matsubara frequencies in the mesh if the Green’s function is in the <span class="math notranslate nohighlight">\(\frac{1}{\omega}\)</span> decay region (i.e. if the tail of the Green’s function is close to zero).</p>
+<p>So far, we have study the number of Matsubara frequencies only for non-interacting cases. However, interaction can renormalize the shape of the Green’s function, in which case it’s better to directly investigate the Green’s function instead of the electron filling. One can consider that there are enough numbers of Matsubara frequencies in the mesh if the Green’s function is in the <span class="math notranslate nohighlight">\(\frac{1}{\omega}\)</span> decay region (i.e. if the tail of the Green’s function is close to zero).</p>
 <p>Below is an example of demonstrating the convergence by looking at the Green’s function (still for the non-interacting case).</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
