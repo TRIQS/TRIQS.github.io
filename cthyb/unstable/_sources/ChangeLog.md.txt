@@ -2,6 +2,27 @@
 
 # Changelog
 
+## Version 3.3.0
+
+CTHYB version 3.3.0 is a compatibility release for TRIQS version 3.3.0 including an update to the latest app4triqs skeleton.
+This release includes the fixes of Version 3.2.1 related to the G2 measurements (see below for details).
+
+We thank all contributors: Thomas Hahn, Alexander Hampel, Henri Menke, Hugo U. R. Strand, Nils Wentzell
+
+Find below an itemized list of changes in this release.
+
+### General
+* polish delta(t) diag imag warning
+* benchmark: update measure_g2 hubbard_atom_2bath scripts
+
+### doc
+* Clarify install instructions with regards to NFFT dependency
+
+### jenkins
+* Add ubuntu-intel build
+* For sanitized build use RelWithDebInfo build mode
+
+
 ## Version 3.2.1
 
 CTHYB version 3.2.1 is a patch release contains an important bugfix
@@ -97,10 +118,10 @@ local Hamiltonian instead of the Weiss-field.
 
 ### Delta Interface
 
-The Delta Interface allows the user to provide the hybridization function directly instead of providing G0_iw. 
-It can be used by setting delta_interface=True when initializing the solver object. 
+The Delta Interface allows the user to provide the hybridization function directly instead of providing G0_iw.
+It can be used by setting delta_interface=True when initializing the solver object.
 When calling the solver, the quadratic part of the local Hamiltonian must be provided with the parameter h_loc0, which is a many body operator like h_int.
-The Solver.G0_iw and Solver.Delta_infty objects cannot be accessed while using the Delta Interface. 
+The Solver.G0_iw and Solver.Delta_infty objects cannot be accessed while using the Delta Interface.
 
 We provide a more detailed description of the changes and fixes below.
 
