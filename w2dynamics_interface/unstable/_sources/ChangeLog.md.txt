@@ -2,6 +2,25 @@
 
 # Changelog
 
+## Version 3.3.0
+
+w2dynamics_interface version 3.3.0 is a compatibility release for TRIQS version 3.3.0
+that introduces worm sampling support for measuring two-particle Green functions.
+
+We thank all contributors: Thomas Hahn, Alexander Hampel, Henri Menke, Hugo U. R. Strand, Nils Wentzell
+
+Find below an itemized list of changes in this release.
+
+### General
+* Conjugate frequency relation converter
+* Install additional dependencies for Ubuntu builds
+* Merge latest version of app4triqs skeleton
+
+### cmake
+* Update w2ynamics version to v1.1.5 and adjust Patch file
+* Include general cleanup in w2dynamics Python find logic
+
+
 ## Version 3.2.0
 
 w2dynamics_interface version 3.2.0 is a compatibility release for TRIQS version 3.2.0
