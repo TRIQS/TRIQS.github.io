@@ -21,12 +21,10 @@ Find below an itemized list of changes in this release.
 
 ### General
 * Add CRM dyson solver
-* Allow optional DLR Mesh symmetrization, expose to Python
 * Add functions init_from_representative_data and get_representative_data to sym_grp + test
 * Enable and fix most compiler warnings: -Wpedantic -Wextra -Wall -Wfloat-conversion -Wshadow
-* l=1 support spherical_to_cubic
+* l=1 support in function `spherical_to_cubic`
 * Remove redundant make_matrix function
-* In gf_dlr test do not compare values of coefficient green functions
 * Remove use of deprecated unittest.assertEquals
 * Add missing cstdint include, see issue #915
 * Replace getargspec with getfullargspec Fix #911
@@ -36,16 +34,23 @@ Find below an itemized list of changes in this release.
 * Fix compilation issues with LLVM 18 related to C++26 unnamed placeholder _
 * Fix insufficient reserved memory in det_manip try_insert function
 
-### jenkins
-* Update Docker base images to Ubuntu 24.04 (noble)
-* Set OPENBLAS_NUM_THREADS=1 and MKL_NUM_THREADS=1
-* Enable ubuntu-intel docker build based on oneapi 2024.0.1
-* Consistently use openblas over liblapack for ubuntu build environments, update doc
-* Make Dockerfile.build and Jenkinsfile more consistent with app4triqs
-* For sanitized build use RelWithDebInfo build mode
-* Make sure docker run is using sufficient shared memory
-* Allow setting ARG NCORES for dockerbuilds
-* Make builduid configurable and dynamic
+### Gf
+* Generalize make_gf_[dlr_]imtime, make_gf_[dlr_]imfreq too allow for all (relevant) dlr mesh type inputs
+* Allow optional DLR Mesh symmetrization, expose to Python
+* Add density function for DLRImFreq and DLRImTime
+* Add python bindings of dlr mesh constructors from other dlr meshes
+* Add basic algebra operations in Python for all mesh types
+* Expose call operators to python for MeshLegendre Green functions
+* Expose n_iw for mesh::imfreq and MeshImFreq
+* Restore oplot functionality for MeshLegendre Green functions
+* Fix Gf data access using MatsubaraFreq + test, general code simplifications
+* In gf_dlr test do not compare values of coefficient green functions
+* Fix block_gf constructor from mesh and list of block sizes
+
+### atom_diag
+* Revert order of hyb and fops in atom diag constructor call
+* Extend AtomDiag constructor to check if all operators are real + test
+* In AtomDiag constructor force real if real + extended unit test
 
 ### doc
 * Merge 3.2.1 changes into changelog
@@ -68,17 +73,6 @@ Find below an itemized list of changes in this release.
 * Remove numpydoc sources and install numpydoc in doc build environment
 * Avoid failed 'git clone' attempt when userguide/python/tutorials directory already present
 
-### Gf
-* Generalize make_gf_[dlr_]imtime, make_gf_[dlr_]imfreq too allow for all (relevant) dlr mesh type inputs
-* Add density function for DLRImFreq and DLRImTime
-* Add python bindings of dlr mesh constructors from other dlr meshes
-* Add basic algebra operations in Python for all meshe types
-* Expose call operators to python for MeshLegendre Green functions
-* Expose n_iw for mesh::imfreq and MeshImFreq
-* Restore oplot functionality for MeshLegendre Green functions
-* Fix Gf data access using MatsubaraFreq + test, general code simplifications
-* Fix block_gf constructor from mesh and list of block sizes
-
 ### cmake
 * Bump Version number to 3.3
 * Use GNUInstallDirs to obtain proper LIBDIR install locations
@@ -96,10 +90,16 @@ Find below an itemized list of changes in this release.
 * Fix issue in RPATH setting for osx builds
 * Fix issue in TRIQSConfig-version.cmake.in
 
-### atom_diag
-* Revert order of hyb and fops in atom diag constructor call
-* Extend AtomDiag constructor to check if all operators are real + test
-* In AtomDiag constructor force real if real + extended unit test
+### jenkins
+* Update Docker base images to Ubuntu 24.04 (noble)
+* Set OPENBLAS_NUM_THREADS=1 and MKL_NUM_THREADS=1
+* Enable ubuntu-intel docker build based on oneapi 2024.0.1
+* Consistently use openblas over liblapack for ubuntu build environments, update doc
+* Make Dockerfile.build and Jenkinsfile more consistent with app4triqs
+* For sanitized build use RelWithDebInfo build mode
+* Make sure docker run is using sufficient shared memory
+* Allow setting ARG NCORES for dockerbuilds
+* Make builduid configurable and dynamic
 
 
 ## Version 3.2.1
@@ -543,7 +543,7 @@ The relevant header files for nda are
 ### triqs::stat Rework
 
 This release includes a rework of the statistics routines in triqs. Associated with this, we have renamed this part of
-triqs from "statistics" to "stat" in C++ namespace, C++ headers, python module (where wrapped), and documentation. 
+triqs from "statistics" to "stat" in C++ namespace, C++ headers, python module (where wrapped), and documentation.
 
 The main object of triqs::stat is the so-called `accumulator` class. This class takes in measurements during a Monte
 Carlo simulation and serves a dual purpose: (a) to perform logarithmic binning which can be used to estimate the
