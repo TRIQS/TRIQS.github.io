@@ -2,6 +2,34 @@
 
 # Changelog
 
+## Version 3.3.0
+
+TPRF version 3.3.0 is a compatibility release for TRIQS version 3.3.0.
+
+We thank all contributors: Thomas Hahn, Alexander Hampel, Henri Menke, Hugo U. R. Strand, Yann in 't Veld, Nils Wentzell
+
+Find below an itemized list of changes in this release.
+
+### General
+* Updated vasp cRPA parsers to triqs 3.3.x
+* Use unstable branch of cpp2py and update CI builds
+* In HF stablizie mu finder
+* Fix h5serialization for ParameterCollections
+* Fix broken Pade on DLR Gfs
+
+### gw
+* Implemented gw_sigma DLR mesh types
+* Fix optional SigmaH and SigmaF in rf calculation
+
+### doc
+* Dual BSE tutorial fixes
+* Correct Ubuntu Version in install instructions
+* Fixed incorrect GW indices in documentation
+
+### cmake
+* Add setuptools to requirements.txt
+* Remove packaging/conda directory, already contained in feedstock
+
 
 ## Version 3.2.0
 
