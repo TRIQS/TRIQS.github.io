@@ -2,6 +2,18 @@
 
 # Changelog
 
+## Version 3.3.0
+
+omegamaxent_interface version 3.3.0 is a compatibility release for TRIQS version 3.3.0.
+
+We thank all contributors: Thomas Hahn, Alexander Hampel, Henri Menke, Nils Wentzell
+
+Find below an itemized list of changes in this release.
+
+### ghactions
+* Add gsl dependency to macos builds
+
+
 ## Version 3.2.0
 
 omegamaxent_interface version 3.2.0 is a compatibility release for TRIQS version 3.2.0.
