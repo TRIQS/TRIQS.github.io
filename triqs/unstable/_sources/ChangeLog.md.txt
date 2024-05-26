@@ -5,6 +5,103 @@
 
 This document describes the main changes in TRIQS.
 
+## Version 3.3.0
+
+TRIQS Version 3.3.0 is a release that
+* Introduces symmetrization and other improvements for the Discrete Lehmann Representation (DLR) Mesh types
+* Extends conversion routines between DLR and existing Mesh types
+* Adds a Constrained Residual Minimization (CRM) Dyson Solver
+* Adds Intel Compiler and Intel MPI based testing to our Continuous Integration
+* Introduces various documentation improvements
+* Fixes several library issues
+
+We thank all contributors: Thomas Hahn, Alexander Hampel, Dominik Kiese, H. L. Nourse, Dylan Simon, Nils Wentzell
+
+Find below an itemized list of changes in this release.
+
+### General
+* Add CRM dyson solver
+* Allow optional DLR Mesh symmetrization, expose to Python
+* Add functions init_from_representative_data and get_representative_data to sym_grp + test
+* Enable and fix most compiler warnings: -Wpedantic -Wextra -Wall -Wfloat-conversion -Wshadow
+* l=1 support spherical_to_cubic
+* Remove redundant make_matrix function
+* In gf_dlr test do not compare values of coefficient green functions
+* Remove use of deprecated unittest.assertEquals
+* Add missing cstdint include, see issue #915
+* Replace getargspec with getfullargspec Fix #911
+* Add test reproducing the failure of issue913
+* Fix bug in gf_base_op.py test
+* Fix debug check in atom_diag get_matrix_element_of_monomial
+* Fix compilation issues with LLVM 18 related to C++26 unnamed placeholder _
+* Fix insufficient reserved memory in det_manip try_insert function
+
+### jenkins
+* Update Docker base images to Ubuntu 24.04 (noble)
+* Set OPENBLAS_NUM_THREADS=1 and MKL_NUM_THREADS=1
+* Enable ubuntu-intel docker build based on oneapi 2024.0.1
+* Consistently use openblas over liblapack for ubuntu build environments, update doc
+* Make Dockerfile.build and Jenkinsfile more consistent with app4triqs
+* For sanitized build use RelWithDebInfo build mode
+* Make sure docker run is using sufficient shared memory
+* Allow setting ARG NCORES for dockerbuilds
+* Make builduid configurable and dynamic
+
+### doc
+* Merge 3.2.1 changes into changelog
+* Improve DLR documentation in both C++ and Python
+* Update TRIQS landing page to include publications, corelibs and numerical algorithms
+* Convert README into markdown and add conda badge
+* Add OpenMP to list of build requirements
+* Add Ubuntu 24.04 (noble) to supported distributions
+* Remove google group from documentation pages, advertise slack workspace instead
+* Ubuntu 20.04 no longer supported
+* Update install instructions for osx and venvs
+* Update conda install instructions with custom environment commands and note for developers
+* Remove duplicate install script; update install doc (#941)
+* Add Nevanlinna to application section on TRIQS Website
+* Define latex docstrings as raw strings to avoid invalid escape sequences
+* Update build_triqs.sh to work for zsh on macos
+* Fix doc string of k_space_path
+* Fix issue in layout.html #912
+* Install gpg-agent in install instructions
+* Remove numpydoc sources and install numpydoc in doc build environment
+* Avoid failed 'git clone' attempt when userguide/python/tutorials directory already present
+
+### Gf
+* Generalize make_gf_[dlr_]imtime, make_gf_[dlr_]imfreq too allow for all (relevant) dlr mesh type inputs
+* Add density function for DLRImFreq and DLRImTime
+* Add python bindings of dlr mesh constructors from other dlr meshes
+* Add basic algebra operations in Python for all meshe types
+* Expose call operators to python for MeshLegendre Green functions
+* Expose n_iw for mesh::imfreq and MeshImFreq
+* Restore oplot functionality for MeshLegendre Green functions
+* Fix Gf data access using MatsubaraFreq + test, general code simplifications
+* Fix block_gf constructor from mesh and list of block sizes
+
+### cmake
+* Bump Version number to 3.3
+* Use GNUInstallDirs to obtain proper LIBDIR install locations
+* Use Boost imported target and bump version requirement to 1.70
+* Remove C as a project language
+* Use google benchmark main branch
+* Add range checking for cmake
+* Use unstable branch of cpp2py
+* Bump fmt version to 10.2.1
+* Do not copy desc files to build directory
+* Replace redundant macro TRIQS_ARRAYS_ENFORCE_BOUNDCHECK by NDA_DEBUG
+* Use CPP2PY_PYTHON_xxx variables instead of PYTHON_xxx
+* Do not define DEBUG macros for RelWithDebInfo builds
+* Set policy 114 to new
+* Fix issue in RPATH setting for osx builds
+* Fix issue in TRIQSConfig-version.cmake.in
+
+### atom_diag
+* Revert order of hyb and fops in atom diag constructor call
+* Extend AtomDiag constructor to check if all operators are real + test
+* In AtomDiag constructor force real if real + extended unit test
+
+
 ## Version 3.2.1
 
 TRIQS Version 3.2.1 is a patch-release that includes a
@@ -217,7 +314,6 @@ that you can download and run in the top-level directory of your repository.
 * Requirements: Update Boost minimum version.
 * Add GMP to the list of requirements
 * Improve Documentation of AtomDiag function
-* Replace apt-key add in commands to add debian repository
 * Update Ubuntu prerequisites install instructions, include also python3-clang
 * Simplify brew osx instructions
 * Bump Compiler and cmake version requirements, allow IntelLLVM >= 2023.1.0
