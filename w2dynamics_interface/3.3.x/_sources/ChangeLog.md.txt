@@ -5,7 +5,7 @@
 ## Version 3.3.0
 
 w2dynamics_interface version 3.3.0 is a compatibility release for TRIQS version 3.3.0
-that introduces worm sampling support for measuring two-particle Green functions.
+that updates the w2dynamics version to v1.1.5.
 
 We thank all contributors: Thomas Hahn, Alexander Hampel, Henri Menke, Hugo U. R. Strand, Nils Wentzell
 
