@@ -551,8 +551,15 @@
         <span class="c1"># Second, let&#39;s read the file containing the Hamiltonian in WF basis</span>
         <span class="c1"># produced by Wannier90</span>
         <span class="p">(</span><span class="n">wannier_hr</span><span class="p">,</span> <span class="n">u_total</span><span class="p">,</span> <span class="n">ks_eigenvals</span><span class="p">,</span> <span class="n">r_vector</span><span class="p">,</span> <span class="n">r_degeneracy</span><span class="p">,</span> <span class="n">n_wannier</span><span class="p">,</span> <span class="n">n_bands</span><span class="p">,</span>
-         <span class="n">k_mesh_from_umat</span><span class="p">)</span> <span class="o">=</span> <span class="n">read_all_wannier90_data</span><span class="p">(</span><span class="n">n_spin_blocks</span><span class="p">,</span> <span class="n">dim_corr_shells</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">w90_seed</span><span class="p">,</span>
-                                                     <span class="bp">self</span><span class="o">.</span><span class="n">add_lambda</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bloch_basis</span><span class="p">)</span>
+         <span class="n">k_mesh_from_umat</span><span class="p">,</span> <span class="n">wan_centres</span><span class="p">)</span> <span class="o">=</span> <span class="n">read_all_wannier90_data</span><span class="p">(</span><span class="n">n_spin_blocks</span><span class="p">,</span> <span class="n">dim_corr_shells</span><span class="p">,</span>
+                                                                  <span class="bp">self</span><span class="o">.</span><span class="n">w90_seed</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_lambda</span><span class="p">,</span>
+                                                                  <span class="bp">self</span><span class="o">.</span><span class="n">bloch_basis</span><span class="p">)</span>
+
+        <span class="c1"># Read high-symmetry k-path from _band.kpt</span>
+        <span class="n">w90_kpath_results</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+            <span class="n">w90_kpath_results</span> <span class="o">=</span> <span class="n">read_wannier90_symm_kpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w90_seed</span><span class="p">)</span>
+        <span class="n">symm_kpath_info</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">w90_kpath_results</span><span class="p">)</span>
 
         <span class="c1"># Builds kmesh or uses kmesh from _u.mat</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bloch_basis</span><span class="p">:</span>
@@ -700,8 +707,10 @@
                               <span class="s1">&#39;symm_op&#39;</span><span class="p">,</span> <span class="s1">&#39;n_shells&#39;</span><span class="p">,</span> <span class="s1">&#39;shells&#39;</span><span class="p">,</span> <span class="s1">&#39;n_corr_shells&#39;</span><span class="p">,</span> <span class="s1">&#39;corr_shells&#39;</span><span class="p">,</span> <span class="s1">&#39;use_rotations&#39;</span><span class="p">,</span> <span class="s1">&#39;rot_mat&#39;</span><span class="p">,</span>
                               <span class="s1">&#39;rot_mat_time_inv&#39;</span><span class="p">,</span> <span class="s1">&#39;n_reps&#39;</span><span class="p">,</span> <span class="s1">&#39;dim_reps&#39;</span><span class="p">,</span> <span class="s1">&#39;T&#39;</span><span class="p">,</span> <span class="s1">&#39;n_orbitals&#39;</span><span class="p">,</span> <span class="s1">&#39;proj_mat&#39;</span><span class="p">,</span> <span class="s1">&#39;bz_weights&#39;</span><span class="p">,</span> <span class="s1">&#39;hopping&#39;</span><span class="p">,</span>
                               <span class="s1">&#39;n_inequiv_shells&#39;</span><span class="p">,</span> <span class="s1">&#39;corr_to_inequiv&#39;</span><span class="p">,</span> <span class="s1">&#39;inequiv_to_corr&#39;</span><span class="p">,</span> <span class="s1">&#39;kpt_weights&#39;</span><span class="p">,</span> <span class="s1">&#39;kpts&#39;</span><span class="p">,</span> <span class="s1">&#39;dft_code&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">wan_centres</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">things_to_save</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;wan_centres&#39;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bloch_basis</span><span class="p">:</span>
-                    <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">things_to_save</span><span class="p">,</span> <span class="s1">&#39;kpt_basis&#39;</span><span class="p">)</span>
+                    <span class="n">things_to_save</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;kpt_basis&#39;</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">things_to_save</span><span class="p">:</span>
                     <span class="n">archive</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dft_subgrp</span><span class="p">][</span><span class="n">it</span><span class="p">]</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()[</span><span class="n">it</span><span class="p">]</span>
 
@@ -709,6 +718,12 @@
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">misc_subgrp</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">archive</span><span class="p">:</span>
                     <span class="n">archive</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">misc_subgrp</span><span class="p">)</span>
                 <span class="n">archive</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">misc_subgrp</span><span class="p">][</span><span class="s1">&#39;dft_fermi_energy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fermi_energy</span>
+                <span class="k">if</span> <span class="n">symm_kpath_info</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">archive</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">misc_subgrp</span><span class="p">]</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s1">&#39;symm_kpath&#39;</span><span class="p">)</span>
+                    <span class="n">kpath_grp</span> <span class="o">=</span> <span class="n">archive</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">misc_subgrp</span><span class="p">][</span><span class="s1">&#39;symm_kpath&#39;</span><span class="p">]</span>
+                    <span class="n">kpath_grp</span><span class="p">[</span><span class="s1">&#39;kpts&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">symm_kpath_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">kpath_grp</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">symm_kpath_info</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">kpath_grp</span><span class="p">[</span><span class="s1">&#39;label_idx&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">symm_kpath_info</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bloch_basis</span><span class="p">:</span>
                     <span class="n">archive</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">misc_subgrp</span><span class="p">][</span><span class="s1">&#39;dft_fermi_weights&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_weights</span>
                     <span class="n">archive</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">misc_subgrp</span><span class="p">][</span><span class="s1">&#39;band_window&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">band_window</span><span class="o">+</span><span class="mi">1</span> <span class="c1"># Change to 1-based index</span>
@@ -1018,7 +1033,7 @@
     <span class="k">assert</span> <span class="n">ks_eigenvals_spin</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">num_ks_bands</span><span class="p">,</span> <span class="s1">&#39;.eig and u_dis.mat data inconsistent&#39;</span>
 
     <span class="k">if</span> <span class="n">disentangle</span><span class="p">:</span>
-        <span class="c1"># In case the disentanglement window is not set by the user, change manually both limits to </span>
+        <span class="c1"># In case the disentanglement window is not set by the user, change manually both limits to</span>
         <span class="c1"># larger window to avoid possible counting error in next line</span>
         <span class="n">dis_tol</span> <span class="o">=</span> <span class="mf">1e-5</span>
         <span class="n">shift_dis_down</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">ks_eigenvals_spin</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">dis_window_min</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">dis_tol</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span> <span class="o">==</span> <span class="kc">True</span><span class="p">)</span>
@@ -1064,6 +1079,65 @@
 
 
 
+<div class="viewcode-block" id="read_wannier90_centres">
+<a class="viewcode-back" href="../../../_python_api/triqs_dft_tools.converters.wannier90.read_wannier90_centres.html#triqs_dft_tools.converters.wannier90.read_wannier90_centres">[docs]</a>
+<span class="k">def</span> <span class="nf">read_wannier90_centres</span><span class="p">(</span><span class="n">wannier_seed</span><span class="p">):</span>
+    <span class="n">centres_filename</span> <span class="o">=</span> <span class="n">wannier_seed</span> <span class="o">+</span> <span class="s1">&#39;_centres.xyz&#39;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">centres_filename</span><span class="p">):</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Wannier centres file, </span><span class="si">{</span><span class="n">centres_filename</span><span class="si">}</span><span class="s1">, does not exist. Please set: &#39;</span>
+            <span class="s1">&#39;write_xyz = true, translate_home_cell = false if you want to use the centres.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Wannier centres read from file: </span><span class="si">{</span><span class="n">centres_filename</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">centres</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">centres_filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">c_file</span><span class="p">:</span>
+        <span class="n">c_data</span> <span class="o">=</span> <span class="n">c_file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Reading </span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">centres_filename</span><span class="p">,</span> <span class="n">c_data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span>
+        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">c_data</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;X&#39;</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+                <span class="n">R</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+                <span class="n">centres</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
+    <span class="n">centres</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">centres</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">centres</span></div>
+
+
+
+<div class="viewcode-block" id="read_wannier90_symm_kpath">
+<a class="viewcode-back" href="../../../_python_api/triqs_dft_tools.converters.wannier90.read_wannier90_symm_kpath.html#triqs_dft_tools.converters.wannier90.read_wannier90_symm_kpath">[docs]</a>
+<span class="k">def</span> <span class="nf">read_wannier90_symm_kpath</span><span class="p">(</span><span class="n">wannier_seed</span><span class="p">):</span>
+    <span class="n">kpath_filename</span> <span class="o">=</span> <span class="n">wannier_seed</span> <span class="o">+</span> <span class="s1">&#39;_band.kpt&#39;</span>
+    <span class="n">label_filename</span> <span class="o">=</span> <span class="n">wannier_seed</span> <span class="o">+</span> <span class="s1">&#39;_band.labelinfo.dat&#39;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">kpath_filename</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">label_filename</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">labels</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">label_idx</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">label_filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">label_file</span><span class="p">:</span>
+        <span class="n">label_data</span> <span class="o">=</span> <span class="n">label_file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">label_data</span><span class="p">:</span>
+            <span class="n">l</span><span class="p">,</span> <span class="n">idx</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[:</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">labels</span> <span class="o">+=</span> <span class="n">l</span>
+            <span class="n">label_idx</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+    <span class="n">label_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">label_idx</span><span class="p">)</span>
+
+    <span class="n">kpts_interpolate</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">kpath_filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">path_file</span><span class="p">:</span>
+        <span class="n">linelist</span> <span class="o">=</span> <span class="n">path_file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Reading </span><span class="si">{}</span><span class="s1">: high-symmetry path </span><span class="se">\&#39;</span><span class="si">{}</span><span class="se">\&#39;</span><span class="s1"> for &#39;</span>
+                   <span class="s1">&#39;band structure&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">kpath_filename</span><span class="p">,</span> <span class="n">labels</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">linelist</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">kpts_interpolate</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">kpts_interpolate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">kpts_interpolate</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">kpts_interpolate</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">label_idx</span></div>
+
+
+
 <div class="viewcode-block" id="read_all_wannier90_data">
 <a class="viewcode-back" href="../../../_python_api/triqs_dft_tools.converters.wannier90.read_all_wannier90_data.html#triqs_dft_tools.converters.wannier90.read_all_wannier90_data">[docs]</a>
 <span class="k">def</span> <span class="nf">read_all_wannier90_data</span><span class="p">(</span><span class="n">n_spin_blocks</span><span class="p">,</span> <span class="n">dim_corr_shells</span><span class="p">,</span> <span class="n">w90_seed</span><span class="p">,</span> <span class="n">add_lambda</span><span class="p">,</span> <span class="n">bloch_basis</span><span class="p">):</span>
@@ -1091,9 +1165,12 @@
 <span class="sd">        Number of bands</span>
 <span class="sd">    k_mesh_from_umat : np.ndarray[n_k, 3] of float</span>
 <span class="sd">        The k points as used in wannier for consistency. None if not bloch_basis</span>
+<span class="sd">    centres: np.ndarray[n_spin_blocks, 3, 3] of float or None</span>
+<span class="sd">        Centres of wannier functions</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">spin_w90name</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;_up&#39;</span><span class="p">,</span> <span class="s1">&#39;_down&#39;</span><span class="p">]</span>
     <span class="n">wannier_hr</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">centres</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">if</span> <span class="n">bloch_basis</span><span class="p">:</span>
         <span class="n">u_mat</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">udis_mat</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1121,6 +1198,11 @@
             <span class="c1"># number of R vectors, their indices, their degeneracy, number of WFs, H(R),</span>
             <span class="c1"># U matrices, U(dis) matrices, band energies, k_mesh of U matrices</span>
             <span class="n">u_mat_spin</span><span class="p">,</span> <span class="n">udis_mat_spin</span><span class="p">,</span> <span class="n">ks_eigenvals_spin</span><span class="p">,</span> <span class="n">k_mesh_from_umat</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">w90_results</span><span class="p">)</span>
+
+        <span class="n">w90_centres_results</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+            <span class="n">w90_centres_results</span> <span class="o">=</span> <span class="n">read_wannier90_centres</span><span class="p">(</span><span class="n">file_seed</span><span class="p">)</span>
+        <span class="n">centres_spin</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">w90_centres_results</span><span class="p">)</span>
 
         <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">... done: </span><span class="si">{}</span><span class="s1"> R vectors, </span><span class="si">{}</span><span class="s1"> WFs found&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_r_spin</span><span class="p">,</span> <span class="n">n_wannier_spin</span><span class="p">))</span>
 
@@ -1164,6 +1246,7 @@
             <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">r_degeneracy_spin</span> <span class="o">==</span> <span class="n">r_degeneracy</span><span class="p">),</span> <span class="s1">&#39;R vec. degeneracy different between spin components&#39;</span>
 
         <span class="n">wannier_hr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">wannier_hr_spin</span><span class="p">)</span>
+        <span class="n">centres</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">centres_spin</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">bloch_basis</span><span class="p">:</span>
             <span class="n">u_mat</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">u_mat_spin</span><span class="p">)</span>
             <span class="n">udis_mat</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">udis_mat_spin</span><span class="p">)</span>
@@ -1178,9 +1261,10 @@
         <span class="n">ks_eigenvals</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">k_mesh_from_umat</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">wannier_hr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">wannier_hr</span><span class="p">)</span>
+    <span class="n">centres</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">centres</span><span class="p">)</span> <span class="k">if</span> <span class="n">centres</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="n">wannier_hr</span><span class="p">,</span> <span class="n">u_total</span><span class="p">,</span> <span class="n">ks_eigenvals</span><span class="p">,</span> <span class="n">r_vector</span><span class="p">,</span> <span class="n">r_degeneracy</span><span class="p">,</span>
-            <span class="n">n_wannier</span><span class="p">,</span> <span class="n">n_bands</span><span class="p">,</span> <span class="n">k_mesh_from_umat</span><span class="p">)</span></div>
+            <span class="n">n_wannier</span><span class="p">,</span> <span class="n">n_bands</span><span class="p">,</span> <span class="n">k_mesh_from_umat</span><span class="p">,</span> <span class="n">centres</span><span class="p">)</span></div>
 
 
 
