@@ -325,7 +325,7 @@ The following code extracts from a <code class="docutils literal notranslate"><s
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_h0_Delta</span><span class="p">(</span><span class="n">G0_iw</span><span class="p">):</span>
     <span class="n">h0_lst</span><span class="p">,</span> <span class="n">Delta_iw</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">G0_iw</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">bl</span> <span class="ow">in</span> <span class="n">G0_iw</span><span class="o">.</span><span class="n">indices</span><span class="p">:</span>
-        <span class="n">Delta_iw</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">iOmega_n</span> <span class="o">-</span> <span class="n">inverse</span><span class="p">(</span><span class="n">G_iw</span><span class="p">[</span><span class="n">bl</span><span class="p">])</span>
+        <span class="n">Delta_iw</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">iOmega_n</span> <span class="o">-</span> <span class="n">inverse</span><span class="p">(</span><span class="n">G0_iw</span><span class="p">[</span><span class="n">bl</span><span class="p">])</span>
         <span class="n">tail</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">fit_hermitian_tail</span><span class="p">(</span><span class="n">Delta_iw</span><span class="p">[</span><span class="n">bl</span><span class="p">])</span>
         <span class="n">Delta_iw</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">Delta_iw</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span> <span class="o">-</span> <span class="n">tail</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">h0_lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tail</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
@@ -353,20 +353,14 @@ directly used as the solver input. In the general case, they need to be rotated 
 </section>
 <section id="chemical-potential">
 <h3>Chemical potential<a class="headerlink" href="#chemical-potential" title="Link to this heading"></a></h3>
-<p>The orbital-dependent chemical potential is passed to the solver as the solve parameter <code class="docutils literal notranslate"><span class="pre">hartree_shift</span></code> (see below),
-a list with one value per color. For example, for the single-orgital problem:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hartree_shift</span> <span class="o">=</span> <span class="p">[</span><span class="n">mu</span><span class="p">,</span> <span class="n">mu</span><span class="p">]</span>
+<p>The orbital-dependent chemical potential is passed to the solver as the solve parameter <code class="docutils literal notranslate"><span class="pre">chemical_potential</span></code> (see below),
+a list with one value per color. For example, for the single-orbital problem:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">chemical_potential</span> <span class="o">=</span> <span class="p">[</span><span class="n">mu</span><span class="p">,</span> <span class="n">mu</span><span class="p">]</span>
 </pre></div>
 </div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>In CTSEG, the meaning of the <code class="docutils literal notranslate"><span class="pre">hartree_shift</span></code> parameter is not the same as in CTHYB. In CTHYB, it represents
-a shift of the chemical potential with respect to the one already contained in <code class="docutils literal notranslate"><span class="pre">G0_iw</span></code>. In CTSEG,
-<code class="docutils literal notranslate"><span class="pre">hartree_shift</span></code> is the full chemical potential with all shifts applied.</p>
-</div>
-<p>If the list of chemical potentials is extracted from the CTHYB input <code class="docutils literal notranslate"><span class="pre">G0_iw</span></code> as above, then:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hartree_shift_ctseg</span> <span class="o">=</span> <span class="p">[</span><span class="n">mu_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">hartree_shift_cthyb</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_colors</span><span class="p">)]</span>
-</pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is different from the Delta interface in CTHYB, which takes <code class="docutils literal notranslate"><span class="pre">h0</span></code> (supplied as TRIQS operator) as an input.</p>
 </div>
 </section>
 <section id="dynamical-density-density-interaction">
@@ -375,8 +369,12 @@ a shift of the chemical potential with respect to the one already contained in <
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">D_tau</span> <span class="o">=</span> <span class="n">GfImTime</span><span class="p">(</span><span class="n">indices</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_colors</span><span class="p">),</span> <span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span><span class="p">,</span> <span class="n">statistic</span> <span class="o">=</span> <span class="s2">&quot;Boson&quot;</span><span class="p">,</span> <span class="n">n_points</span> <span class="o">=</span> <span class="n">n_tau_k</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>It is a matrix Green’s function, for which no block strucutre is explicitly enforced. The data in
-<code class="docutils literal notranslate"><span class="pre">D_tau</span></code> can be specified manually (<code class="docutils literal notranslate"><span class="pre">D_tau.data</span> <span class="pre">=</span> <span class="pre">...</span></code>) or by using an analytical expression.
+<p>It is a matrix Green’s function, for which no block structure is explicitly enforced.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The ordering of the rows and columns in <code class="docutils literal notranslate"><span class="pre">D_tau</span></code> is consistent with the ordering of the blocks in <code class="docutils literal notranslate"><span class="pre">Delta_tau</span></code>.</p>
+</div>
+<p>The data in <code class="docutils literal notranslate"><span class="pre">D_tau</span></code> can be specified manually (<code class="docutils literal notranslate"><span class="pre">D_tau.data</span> <span class="pre">=</span> <span class="pre">...</span></code>) or by using an analytical expression.
 For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs.gf.descriptors</span> <span class="kn">import</span> <span class="n">Function</span>
 <span class="n">wp</span> <span class="o">=</span> <span class="mi">1</span>
@@ -392,7 +390,7 @@ For example:</p>
 </section>
 <section id="spin-spin-interaction">
 <h3>Spin-spin interaction<a class="headerlink" href="#spin-spin-interaction" title="Link to this heading"></a></h3>
-<p>The prependicular spin-spin interaction <span class="math notranslate nohighlight">\(J_{\perp}(\tau)\)</span> (see <a class="reference internal" href="../algorithm_implementation/ctseg.html"><span class="doc">CTSEG algorithm</span></a>) is initialized as:</p>
+<p>The perpendicular spin-spin interaction <span class="math notranslate nohighlight">\(J_{\perp}(\tau)\)</span> (see <a class="reference internal" href="../algorithm_implementation/ctseg.html"><span class="doc">CTSEG algorithm</span></a>) is initialized as:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Jperp_tau</span> <span class="o">=</span> <span class="n">GfImTime</span><span class="p">(</span><span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span><span class="p">,</span> <span class="n">statistic</span> <span class="o">=</span> <span class="s2">&quot;Boson&quot;</span><span class="p">,</span> <span class="n">n_points</span> <span class="o">=</span> <span class="n">n_tau_k</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -419,7 +417,7 @@ it can be split into a density-density and a perpendicular spin-spin term. Indee
 The following parameters need to be specified for every run. For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">solve_params</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;h_int&quot;</span><span class="p">:</span> <span class="n">h_int</span><span class="p">,</span>
-    <span class="s2">&quot;hartree_shift&quot;</span><span class="p">:</span> <span class="n">hartree_shift</span><span class="p">,</span>
+    <span class="s2">&quot;chemical_potential&quot;</span><span class="p">:</span> <span class="n">chemical_potential</span><span class="p">,</span>
     <span class="s2">&quot;length_cycle&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
     <span class="s2">&quot;n_warmup_cycles&quot;</span><span class="p">:</span> <span class="mi">20000</span><span class="p">,</span>
     <span class="s2">&quot;n_cycles&quot;</span><span class="p">:</span> <span class="mi">200000</span>
@@ -428,7 +426,7 @@ The following parameters need to be specified for every run. For example:</p>
 </div>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">h_int</span></code> is the local interaction Hamiltonian (see above).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">hartree_shift</span></code> is the total orbital-dependent chemical potential (see above).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">chemical_potential</span></code> is the total orbital-dependent chemical potential (see above).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">length_cycle</span></code> is the length of a Monte Carlo cycle. Observables are sampled every <code class="docutils literal notranslate"><span class="pre">length_cycle</span></code> Monte Carlo moves (either accepted or rejected).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">n_warmup_cycles</span></code> is the number of cycles to do before any observables are samples, so as to “forget” the initial configuration.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">n_cycles</span></code> is the number of cycles used for the production run.</p></li>
@@ -438,7 +436,7 @@ The following parameters need to be specified for every run. For example:</p>
 <li><p><strong>Measure control</strong>. All the <a class="reference internal" href="measurements.html"><span class="doc">measurements</span></a> can be switched on and off. Some of the measurements (self-energy improved estimator,
 density correlation functions) can be time-consuming, and they are off by default. For example, to turn the improved estimator
 measurement on, one should set <code class="docutils literal notranslate"><span class="pre">solve_params[&quot;measure_ft&quot;]</span> <span class="pre">=</span> <span class="pre">True</span></code>.</p></li>
-<li><p><strong>Move control</strong>. All the <a class="reference internal" href="moves.html"><span class="doc">Monte Carlo moves</span></a> can be switched on and off. This functionality exists to faciliate testing
+<li><p><strong>Move control</strong>. All the <a class="reference internal" href="moves.html"><span class="doc">Monte Carlo moves</span></a> can be switched on and off. This functionality exists to facilitate testing
 for developers. The solver chooses the relevant moves depending on its inputs, and regular users should not need move control.</p></li>
 </ul>
 <p>The complete list of parameters is available <a class="reference internal" href="../_ref/triqs_ctseg.solver.Solver.solve.html"><span class="doc">here</span></a>.</p>
@@ -454,9 +452,9 @@ for developers. The solver chooses the relevant moves depending on its inputs, a
 <p class="admonition-title">Warning</p>
 <p>The solver prints to the command line the interaction matrix <code class="docutils literal notranslate"><span class="pre">U</span></code> and chemical potential <code class="docutils literal notranslate"><span class="pre">mu</span></code> that are used internally.
 In the presence of dynamical interactions, these are renormalized values, different from the input parameters contained
-in <code class="docutils literal notranslate"><span class="pre">h_int</span></code> and <code class="docutils literal notranslate"><span class="pre">hartree_shift</span></code> (see <a class="reference internal" href="../algorithm_implementation/ctseg.html"><span class="doc">CTSEG algorithm</span></a>).</p>
+in <code class="docutils literal notranslate"><span class="pre">h_int</span></code> and <code class="docutils literal notranslate"><span class="pre">chemical_potential</span></code> (see <a class="reference internal" href="../algorithm_implementation/ctseg.html"><span class="doc">CTSEG algorithm</span></a>).</p>
 </div>
-<p>After it is done accumulating, the solver prints the average acceptance rates. Very low acceptance rates for all moves (below 0.1)
+<p>After it is done accumulating, the solver prints the average acceptance rates. Very low acceptance rates for all moves (below 0.01)
 are generally a sign that something went wrong. However, some of the moves (<code class="docutils literal notranslate"><span class="pre">split_spin_segment</span></code>, <code class="docutils literal notranslate"><span class="pre">regroup_spin_segment</span></code>)
 often have low acceptance rates, even if the calculation runs as it should.</p>
 </section>
