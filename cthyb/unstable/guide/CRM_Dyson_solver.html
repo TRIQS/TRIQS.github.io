@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tail fitting via the CRM Dyson solver &mdash; TRIQS Hybridization Expansion Solver  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=f7f783a0" />
+      <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+
+  
+    <link rel="shortcut icon" href="../_static/triqs_favicon.ico"/>
+  
+        <script src="../_static/jquery.js?v=8dae8fb0"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=default"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="The Anderson impurity model" href="aim.html" />
+    <link rel="prev" title="Perturbation order histograms" href="perturbation_order_notebook.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #7E588A" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            TRIQS Hybridization Expansion Solver
+          </a>
+              <div class="version">
+                3.3.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Install CTHYB</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#packaged-versions-of-cthyb">Packaged Versions of CTHyb</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../install.html#ubuntu-debian-packages">Ubuntu Debian packages</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../install.html#anaconda-experimental">Anaconda (experimental)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../install.html#docker">Docker</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#compiling-cthyb-from-source">Compiling CTHYB from source</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../install.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../install.html#installation-steps">Installation steps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../install.html#version-compatibility">Version compatibility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../install.html#custom-cmake-options">Custom CMake options</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="../documentation.html">Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../documentation.html#basic-notions">Basic notions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../basicnotions/cthyb.html">A word on the algorithm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../basicnotions/moves.html">QMC moves</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../basicnotions/moves.html#insert-one-pair-of-operators">Insert one pair of operators</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../basicnotions/moves.html#remove-one-pair-of-operators">Remove one pair of operators</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../basicnotions/moves.html#insert-two-pairs-of-operators">Insert two pairs of operators</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../basicnotions/moves.html#remove-two-pairs-of-operators">Remove two pairs of operators</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../basicnotions/moves.html#shift-one-operator">Shift one operator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../basicnotions/moves.html#global-move-change-of-operator-indices">Global move - change of operator indices</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../basicnotions/measurements.html">Measurements: definitions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../basicnotions/measurements.html#green-s-function">Green’s function</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../basicnotions/measurements.html#imaginary-time">Imaginary time</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../basicnotions/measurements.html#legendre-polynomial-basis">Legendre polynomial basis</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../basicnotions/measurements.html#local-susceptibility-and-other-operator-pairs">Local susceptibility and other operator pairs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../basicnotions/measurements.html#two-particle-green-s-functions">Two-particle Green’s functions</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../basicnotions/measurements.html#imaginary-time-binning">Imaginary time binning</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../basicnotions/measurements.html#matsubara-frequency-measurements">Matsubara frequency measurements</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../basicnotions/measurements.html#mixed-matsubara-frequency-and-legendre-measurements">Mixed Matsubara Frequency and Legendre measurements</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../basicnotions/measurements.html#impurity-density-matrix">Impurity density matrix</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../basicnotions/measurements.html#perturbation-order-histograms">Perturbation order histograms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../basicnotions/measurements.html#average-sign">Average sign</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 current"><a class="reference internal" href="../documentation.html#user-guide">User guide</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="settingparameters.html">Setting the parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="settingparameters.html#step-1-construct-the-solver-instance">Step 1 - construct the solver instance</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="settingparameters.html#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="settingparameters.html#step-2-the-hamiltonian">Step 2 - the Hamiltonian</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="settingparameters.html#id1">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="settingparameters.html#step-3-the-monte-carlo-parameters">Step 3 - the Monte Carlo parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="settingparameters.html#step-6-legendre-or-not">Step 6 - Legendre or not?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="settingparameters.html#step-7-prepare-the-non-interacting-green-s-function">Step 7 - prepare the non-interacting Green’s function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="settingparameters.html#step-8-we-re-ready-to-go">Step 8 - we’re ready to go!</a></li>
+<li class="toctree-l4"><a class="reference internal" href="settingparameters.html#final-step-analyze-the-output">Final Step - analyze the output</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="dmft.html">Building DMFT calculations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="dmft.html#plain-vanilla-dmft-the-bethe-lattice">Plain-vanilla DMFT: the Bethe lattice</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="random.html">Random number generators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="static_observables_notebook.html">Measuring static observables / impurity density matrix</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="static_observables_notebook.html#Measuring-\hat{\rho}_\mathrm{imp}-in-cthyb">Measuring <span class="math notranslate nohighlight">\(\hat{\rho}_\mathrm{imp}\)</span> in cthyb</a></li>
+<li class="toctree-l4"><a class="reference internal" href="static_observables_notebook.html#Compute-expactation-values-of-static-observables">Compute expactation values of static observables</a></li>
+<li class="toctree-l4"><a class="reference internal" href="static_observables_notebook.html#Measuring-moments-of-Green’s-function-and-self-energy">Measuring moments of Green’s function and self-energy</a></li>
+<li class="toctree-l4"><a class="reference internal" href="static_observables_notebook.html#Evaluation-of-the-impurity-interaction-energy">Evaluation of the impurity interaction energy</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="multiplet_analysis_notebook.html">Multiplet analysis &amp; particle number histograms</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="multiplet_analysis_notebook.html#Analysis-of-results">Analysis of results</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="multiplet_analysis_notebook.html#plot-particle-number-histogram">plot particle number histogram</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="multiplet_analysis_notebook.html#More-complex-example">More complex example</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="dynamic_susceptibility_notebook.html">Dynamical spin-spin susceptibility <span class="math notranslate nohighlight">\(\chi_{S_z S_z}(\tau)\)</span></a></li>
+<li class="toctree-l3"><a class="reference internal" href="perturbation_order_notebook.html">Perturbation order histograms</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="perturbation_order_notebook.html#Plotting-perturbation-order-histograms">Plotting perturbation order histograms</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Tail fitting via the CRM Dyson solver</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Setup">Setup</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Using-the-Constrained-Residual-Minimization-Dyson-solver">Using the Constrained Residual Minimization Dyson solver</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation.html#tutorials">Tutorials</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="aim.html">The Anderson impurity model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="slater_five_band.html">Multiorbital impurity model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cthyb_convergence_tests.html">Convergence test of CTHYB solver parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cthyb_convergence_tests.html#Overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cthyb_convergence_tests.html#1.-length_cycle">1. length_cycle</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cthyb_convergence_tests.html#2.-n_warmup_cycles">2. n_warmup_cycles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cthyb_convergence_tests.html#3.-n_cycles">3. n_cycles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cthyb_convergence_tests.html#4.-n_iw">4. n_iw</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cthyb_convergence_tests.html#5.-n_l">5. n_l</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cthyb_convergence_tests.html#6.-n_tau">6. n_tau</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="high_freq_moments.html">High Frequency Moments of the Green’s Functions and Self-energy</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="high_freq_moments.html#Derivation">Derivation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="high_freq_moments.html#Implentation-in-TRIQS/cthyb">Implentation in TRIQS/cthyb</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation.html#reference-manual">Reference manual</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../_ref/triqs_cthyb.multiplet_tools.html">triqs_cthyb.multiplet_tools</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_ref/triqs_cthyb.multiplet_tools.multiplet_analysis.html">triqs_cthyb.multiplet_tools.multiplet_analysis</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.multiplet_tools.multiplet_analysis.html#triqs_cthyb.multiplet_tools.multiplet_analysis"><code class="docutils literal notranslate"><span class="pre">multiplet_analysis()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_ref/triqs_cthyb.solver.html">triqs_cthyb.solver</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.html">triqs_cthyb.solver.Solver</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.html#triqs_cthyb.solver.Solver"><code class="docutils literal notranslate"><span class="pre">Solver</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.__init__.html">triqs_cthyb.solver.Solver.__init__</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.solve.html">triqs_cthyb.solver.Solver.solve</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.Delta_infty.html">triqs_cthyb.solver.Solver.Delta_infty</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.Delta_tau.html">triqs_cthyb.solver.Solver.Delta_tau</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.G0_iw.html">triqs_cthyb.solver.Solver.G0_iw</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.G2_iw.html">triqs_cthyb.solver.Solver.G2_iw</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.G2_iw_nfft.html">triqs_cthyb.solver.Solver.G2_iw_nfft</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.G2_iw_ph.html">triqs_cthyb.solver.Solver.G2_iw_ph</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.G2_iw_ph_nfft.html">triqs_cthyb.solver.Solver.G2_iw_ph_nfft</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.G2_iw_pp.html">triqs_cthyb.solver.Solver.G2_iw_pp</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.G2_iw_pp_nfft.html">triqs_cthyb.solver.Solver.G2_iw_pp_nfft</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.G2_iwll_ph.html">triqs_cthyb.solver.Solver.G2_iwll_ph</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.G2_iwll_pp.html">triqs_cthyb.solver.Solver.G2_iwll_pp</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.G2_tau.html">triqs_cthyb.solver.Solver.G2_tau</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.G_l.html">triqs_cthyb.solver.Solver.G_l</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.G_tau.html">triqs_cthyb.solver.Solver.G_tau</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.G_tau_accum.html">triqs_cthyb.solver.Solver.G_tau_accum</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.O_tau.html">triqs_cthyb.solver.Solver.O_tau</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.asymmetry_G_tau.html">triqs_cthyb.solver.Solver.asymmetry_G_tau</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.auto_corr_time.html">triqs_cthyb.solver.Solver.auto_corr_time</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.average_order.html">triqs_cthyb.solver.Solver.average_order</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.average_sign.html">triqs_cthyb.solver.Solver.average_sign</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.constr_parameters.html">triqs_cthyb.solver.Solver.constr_parameters</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.density_matrix.html">triqs_cthyb.solver.Solver.density_matrix</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.h_loc.html">triqs_cthyb.solver.Solver.h_loc</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.h_loc0.html">triqs_cthyb.solver.Solver.h_loc0</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.h_loc_diagonalization.html">triqs_cthyb.solver.Solver.h_loc_diagonalization</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.hybridisation_is_complex.html">triqs_cthyb.solver.Solver.hybridisation_is_complex</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.last_constr_parameters.html">triqs_cthyb.solver.Solver.last_constr_parameters</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.last_solve_parameters.html">triqs_cthyb.solver.Solver.last_solve_parameters</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.local_hamiltonian_is_complex.html">triqs_cthyb.solver.Solver.local_hamiltonian_is_complex</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.performance_analysis.html">triqs_cthyb.solver.Solver.performance_analysis</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.perturbation_order.html">triqs_cthyb.solver.Solver.perturbation_order</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.perturbation_order_total.html">triqs_cthyb.solver.Solver.perturbation_order_total</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.solve_parameters.html">triqs_cthyb.solver.Solver.solve_parameters</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.solve_status.html">triqs_cthyb.solver.Solver.solve_status</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_ref/triqs_cthyb.tail_fit.html">triqs_cthyb.tail_fit</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_ref/triqs_cthyb.tail_fit.green_high_frequency_moments.html">triqs_cthyb.tail_fit.green_high_frequency_moments</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.tail_fit.green_high_frequency_moments.html#triqs_cthyb.tail_fit.green_high_frequency_moments"><code class="docutils literal notranslate"><span class="pre">green_high_frequency_moments()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../_ref/triqs_cthyb.tail_fit.sigma_high_frequency_moments.html">triqs_cthyb.tail_fit.sigma_high_frequency_moments</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.tail_fit.sigma_high_frequency_moments.html#triqs_cthyb.tail_fit.sigma_high_frequency_moments"><code class="docutils literal notranslate"><span class="pre">sigma_high_frequency_moments()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../_ref/triqs_cthyb.tail_fit.tail_fit.html">triqs_cthyb.tail_fit.tail_fit</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.tail_fit.tail_fit.html#triqs_cthyb.tail_fit.tail_fit"><code class="docutils literal notranslate"><span class="pre">tail_fit()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_ref/triqs_cthyb.util.html">triqs_cthyb.util</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_ref/triqs_cthyb.util.block_size_from_gf_struct.html">triqs_cthyb.util.block_size_from_gf_struct</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.util.block_size_from_gf_struct.html#triqs_cthyb.util.block_size_from_gf_struct"><code class="docutils literal notranslate"><span class="pre">block_size_from_gf_struct()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../_ref/triqs_cthyb.util.estimate_nfft_buf_size.html">triqs_cthyb.util.estimate_nfft_buf_size</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.util.estimate_nfft_buf_size.html#triqs_cthyb.util.estimate_nfft_buf_size"><code class="docutils literal notranslate"><span class="pre">estimate_nfft_buf_size()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../_ref/triqs_cthyb.util.orbital_occupations.html">triqs_cthyb.util.orbital_occupations</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_cthyb.util.orbital_occupations.html#triqs_cthyb.util.orbital_occupations"><code class="docutils literal notranslate"><span class="pre">orbital_occupations()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.solve_parameters.html">triqs_cthyb.solver.Solver.solve_parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.solve_parameters.html#triqs_cthyb.solver.Solver.solve_parameters"><code class="docutils literal notranslate"><span class="pre">Solver.solve_parameters</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.constr_parameters.html">triqs_cthyb.solver.Solver.constr_parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_ref/triqs_cthyb.solver.Solver.constr_parameters.html#triqs_cthyb.solver.Solver.constr_parameters"><code class="docutils literal notranslate"><span class="pre">Solver.constr_parameters</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation.html#faqs">FAQs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../faqs.html">Frequently-asked questions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../faqs.html#q-why-is-my-code-running-so-slowly">Q: Why is my code running so slowly?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../faqs.html#q-how-do-i-save-the-triqs-and-cthyb-hash-and-script-for-debugging-purposes">Q: How do I save the triqs and cthyb hash and script for debugging purposes?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../faqs.html#q-why-does-my-data-look-so-noisy">Q: Why does my data look so noisy?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../faqs.html#q-how-do-i-use-the-segment-picture">Q: How do I use the segment picture?</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../issues.html">Reporting issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ChangeLog.html">Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../ChangeLog.html#version-3-3-0">Version 3.3.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#general">General</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#doc">doc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#jenkins">jenkins</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../ChangeLog.html#version-3-2-1">Version 3.2.1</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#id2">General</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#id3">doc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#id4">jenkins</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../ChangeLog.html#version-3-2-0">Version 3.2.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#id5">General</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#id6">doc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#fix">fix</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../ChangeLog.html#version-3-1-1">Version 3.1.1</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#id7">General</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#id8">Doc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#numpy">Numpy</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../ChangeLog.html#version-3-1-0">Version 3.1.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#delta-interface">Delta Interface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#id9">General</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#id10">jenkins</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#id11">doc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#cmake">cmake</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#gh-actions">gh-actions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../ChangeLog.html#version-3-0-0">Version 3.0.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#fundamental-green-function-symmetries">Fundamental Green Function Symmetries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#dependency-management">Dependency Management</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#other-changes">Other Changes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../ChangeLog.html#version-2-2-1">Version 2.2.1</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#id12">doc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#id13">General</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../ChangeLog.html#version-2-2-0">Version 2.2.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#id14">cmake</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#id15">doc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#id16">General</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#h5">h5</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#packaging">packaging</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../ChangeLog.html#version-2-1-0">Version 2.1.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#contributors">Contributors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#testers">Testers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#changes-in-installation-and-cmake-files">Changes in installation and cmake files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#solver-interface">Solver Interface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#changes-in-behavior">Changes in behavior</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#dependencies">Dependencies</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">Authors</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../about.html#citation">Citation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../about.html#license">License</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../about.html#disclaimer">Disclaimer</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #7E588A" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TRIQS Hybridization Expansion Solver</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../documentation.html">Documentation</a></li>
+      <li class="breadcrumb-item active">Tail fitting via the CRM Dyson solver</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/guide/CRM_Dyson_solver.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars and line breaks on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+    white-space: pre;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt .copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+.jp-RenderedHTMLCommon thead,
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+.jp-RenderedHTMLCommon th,
+div.rendered_html th {
+  font-weight: bold;
+}
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+.jp-RenderedHTMLCommon tbody tr:hover,
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="Tail-fitting-via-the-CRM-Dyson-solver">
+<h1>Tail fitting via the CRM Dyson solver<a class="headerlink" href="#Tail-fitting-via-the-CRM-Dyson-solver" title="Link to this heading"></a></h1>
+<p>Computing the self-energy within DMFT is a numerically unstable problem that leads to large errors at high-frequencies. These errors must be corrected in order to update the local Green’s function for the next DMFT cycle. Historically, the high-frequency error in the self-energy has been dealt with by fitting a high-frequency expansion of the self-energy to the raw QMC data (this procedure is referred to as tail fitting). However, tail fitting is cumbersome and error prone. Morevoer, it requires
+‘by-hand’ tuning by the user. Recently, a new algorithm has been developed to address the tail fitting problem by recasting the solution of the numerically unstable Dyson equation as a constrained minimization problem (CRM). For more complete details of the algorithm and examples, please see <a class="reference external" href="https://arxiv.org/abs/2310.01266" rel="noopener noreferrer" target="_blank">arXiv:2310.01266</a> and <a class="reference external" href="https://triqs.github.io/cthyb/latest/guide/high_freq_moments.html" rel="noopener noreferrer" target="_blank">this TRIQS/cthyb tutorial</a>.</p>
+<p>In the this tutorial, we will demonstrate how to use the CRM method to compute the self-energy from the TRIQS/cthyb impurity solver for a simple one-orbital Bethe lattice problem. Experts will note that for this specific problem, the self-energy is not needed to update the Green’s function in the DMFT loop but remains sufficient for illustrative purposes.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s2">&quot;Pdf&quot;</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="o">%</span><span class="k">matplotlib</span> inline
+
+
+<span class="c1"># set matplotlib parameters</span>
+<span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;backend&#39;</span><span class="p">:</span> <span class="s1">&#39;ps&#39;</span><span class="p">,</span>
+          <span class="s1">&#39;axes.labelsize&#39;</span><span class="p">:</span> <span class="mi">13</span><span class="p">,</span>
+          <span class="s1">&#39;font.size&#39;</span><span class="p">:</span> <span class="mi">13</span><span class="p">,</span>
+          <span class="s1">&#39;legend.fontsize&#39;</span><span class="p">:</span> <span class="mi">13</span><span class="p">,</span>
+          <span class="s1">&#39;xtick.labelsize&#39;</span><span class="p">:</span> <span class="mi">13</span><span class="p">,</span>
+          <span class="s1">&#39;ytick.labelsize&#39;</span><span class="p">:</span> <span class="mi">13</span>
+         <span class="p">}</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span> <span class="c1">#ignore some matplotlib warnings</span>
+
+<span class="c1"># numpy</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+</pre></div>
+</div>
+</div>
+<section id="Setup">
+<h2>Setup<a class="headerlink" href="#Setup" title="Link to this heading"></a></h2>
+<p>First we setup a simple Bethe lattice impurity model. Here we use the <code class="docutils literal notranslate"><span class="pre">delta_interface=True</span></code> of the solver, compared to <a class="reference external" href="https://triqs.github.io/cthyb/latest/guide/dmft.html" rel="noopener noreferrer" target="_blank">other tutorials with the Bethe lattice</a>. The below cells demonstrate how one can set up the impurity Green’s function, hybridization function, and run the solver.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">h5</span> <span class="kn">import</span> <span class="n">HDFArchive</span>
+<span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">Gf</span><span class="p">,</span> <span class="n">iOmega_n</span><span class="p">,</span> <span class="n">make_gf_from_fourier</span><span class="p">,</span> <span class="n">make_zero_tail</span><span class="p">,</span> <span class="n">fit_hermitian_tail</span><span class="p">,</span> <span class="n">inverse</span>
+<span class="kn">from</span> <span class="nn">triqs.operators</span> <span class="kn">import</span> <span class="n">c</span><span class="p">,</span> <span class="n">c_dag</span><span class="p">,</span> <span class="n">n</span>
+<span class="kn">from</span> <span class="nn">triqs.gf.descriptors</span> <span class="kn">import</span> <span class="n">SemiCircular</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
+
+<span class="c1"># plotting interface</span>
+<span class="kn">from</span> <span class="nn">triqs.plot.mpl_interface</span> <span class="kn">import</span> <span class="n">plt</span><span class="p">,</span> <span class="n">oplot</span>
+
+<span class="kn">from</span> <span class="nn">triqs_cthyb.solver</span> <span class="kn">import</span> <span class="n">Solver</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Warning: could not identify MPI environment!
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Starting serial run at: 2024-06-12 13:42:54.707417
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set up a few parameters</span>
+<span class="n">U</span> <span class="o">=</span> <span class="mf">4.0</span>
+<span class="n">half_bandwidth</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="n">chemical_potential</span> <span class="o">=</span> <span class="n">U</span><span class="o">/</span><span class="mf">2.0</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">n_cycles</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">1e+6</span><span class="p">)</span>
+<span class="n">length_cycle</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="n">warmup</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">1e+5</span><span class="p">)</span>
+
+<span class="c1"># we are using the delta_interface here compared to earlier examples!</span>
+<span class="n">S</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span><span class="p">,</span> <span class="n">gf_struct</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;down&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="p">],</span> <span class="n">delta_interface</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">n_iw</span><span class="o">=</span><span class="mi">501</span><span class="p">,</span> <span class="n">n_tau</span><span class="o">=</span><span class="mi">5001</span><span class="p">)</span>
+
+
+<span class="c1"># Initalize the Green&#39;s function to a semi circular DOS</span>
+<span class="n">S</span><span class="o">.</span><span class="n">G_iw</span> <span class="o">&lt;&lt;</span> <span class="n">SemiCircular</span><span class="p">(</span><span class="n">half_bandwidth</span><span class="p">)</span>
+<span class="n">delta_iw</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G_iw</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">delta_iw</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">set_tail_fit_parameters</span><span class="p">(</span><span class="n">tail_fraction</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">n_tail_max</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">expansion_order</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="c1"># first moment of delta is 0</span>
+<span class="n">known_moments</span> <span class="o">=</span> <span class="n">make_zero_tail</span><span class="p">(</span><span class="n">delta_iw</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># prepare non-interacting impurity Hamiltonian</span>
+<span class="n">N</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">n</span><span class="p">(</span><span class="n">sp</span><span class="p">,</span><span class="n">orb</span><span class="p">)</span> <span class="k">for</span> <span class="n">sp</span><span class="p">,</span> <span class="n">orb</span> <span class="ow">in</span> <span class="p">[(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;down&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)])</span>
+<span class="n">h_loc0</span> <span class="o">=</span> <span class="o">-</span><span class="n">chemical_potential</span><span class="o">*</span><span class="n">N</span>
+
+<span class="c1"># Now do the DMFT loop once</span>
+<span class="c1"># Compute new S.G0_iw with the self-consistency condition while imposing paramagnetism</span>
+<span class="n">g_sym</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span> <span class="n">S</span><span class="o">.</span><span class="n">G_iw</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">S</span><span class="o">.</span><span class="n">G_iw</span><span class="p">[</span><span class="s1">&#39;down&#39;</span><span class="p">]</span> <span class="p">)</span>
+
+<span class="n">G0_iw</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">G_iw</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">G0_iw</span> <span class="o">&lt;&lt;</span> <span class="n">inverse</span><span class="p">(</span><span class="n">iOmega_n</span> <span class="o">+</span> <span class="n">chemical_potential</span> <span class="o">-</span> <span class="p">(</span><span class="n">half_bandwidth</span><span class="o">/</span><span class="mf">2.0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">g_sym</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">delta</span> <span class="ow">in</span> <span class="n">delta_iw</span><span class="p">:</span>
+    <span class="n">delta</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">half_bandwidth</span><span class="o">/</span><span class="mf">2.0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">g_sym</span>
+
+    <span class="n">tail</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">fit_hermitian_tail</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span> <span class="n">known_moments</span><span class="p">)</span>
+    <span class="n">S</span><span class="o">.</span><span class="n">Delta_tau</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">make_gf_from_fourier</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">Delta_tau</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">tail</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+
+<span class="c1"># Run the solver without any tail-fitting or legendre measurements</span>
+<span class="n">S</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">h_int</span> <span class="o">=</span> <span class="n">U</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;down&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>    <span class="c1"># Local Hamiltonian</span>
+        <span class="n">n_cycles</span> <span class="o">=</span> <span class="n">n_cycles</span><span class="p">,</span>                    <span class="c1"># Number of QMC cycles</span>
+        <span class="n">length_cycle</span> <span class="o">=</span> <span class="n">length_cycle</span><span class="p">,</span>            <span class="c1"># Length of a cycle</span>
+        <span class="n">n_warmup_cycles</span> <span class="o">=</span> <span class="n">warmup</span><span class="p">,</span>               <span class="c1"># How many warmup cycles</span>
+        <span class="n">h_loc0</span> <span class="o">=</span> <span class="n">h_loc0</span><span class="p">,</span>                        <span class="c1"># non-interacting impurity Hamiltonian</span>
+        <span class="n">measure_density_matrix</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>          <span class="c1"># measure impurity density matrix for moments</span>
+        <span class="n">use_norm_as_weight</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;imp occ: </span><span class="si">{:2.4f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">G_iw</span><span class="o">.</span><span class="n">total_density</span><span class="p">()</span><span class="o">.</span><span class="n">real</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+╔╦╗╦═╗╦╔═╗ ╔═╗  ┌─┐┌┬┐┬ ┬┬ ┬┌┐
+ ║ ╠╦╝║║═╬╗╚═╗  │   │ ├─┤└┬┘├┴┐
+ ╩ ╩╚═╩╚═╝╚╚═╝  └─┘ ┴ ┴ ┴ ┴ └─┘
+
+The local Hamiltonian of the problem:
+-2*c_dag(&#39;down&#39;,0)*c(&#39;down&#39;,0) + -2*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0) + 4*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0)
+Using autopartition algorithm to partition the local Hilbert space
+Found 4 subspaces.
+
+Warming up ...
+13:42:55   2% ETA 00:00:04 cycle 2017 of 100000
+13:42:57  47% ETA 00:00:02 cycle 47928 of 100000
+13:42:59 100% ETA 00:00:00 cycle 99999 of 100000
+
+
+
+Accumulating ...
+13:42:59   0% ETA 00:00:45 cycle 2195 of 1000000
+13:43:01   4% ETA 00:00:43 cycle 46241 of 1000000
+13:43:04  10% ETA 00:00:41 cycle 101455 of 1000000
+13:43:07  17% ETA 00:00:38 cycle 170514 of 1000000
+13:43:11  25% ETA 00:00:34 cycle 256794 of 1000000
+13:43:16  36% ETA 00:00:29 cycle 364557 of 1000000
+13:43:22  49% ETA 00:00:23 cycle 498855 of 1000000
+13:43:30  66% ETA 00:00:15 cycle 666798 of 1000000
+13:43:39  87% ETA 00:00:05 cycle 876758 of 1000000
+13:43:45 100% ETA 00:00:00 cycle 999999 of 1000000
+
+
+[Rank 0] Collect results: Waiting for all mpi-threads to finish accumulating...
+[Rank 0] Timings for all measures:
+Measure                                    | seconds
+Auto-correlation time                      | 0.300902
+Average order                              | 0.0362441
+Average sign                               | 0.0312844
+Density Matrix for local static observable | 1.01593
+G_tau measure                              | 0.112968
+Total measure time                         | 1.49733
+[Rank 0] Acceptance rate for all moves:
+Move set Insert two operators: 0.141738
+  Move  Insert Delta_up: 0.141697
+  Move  Insert Delta_down: 0.141778
+Move set Remove two operators: 0.141941
+  Move  Remove Delta_up: 0.141938
+  Move  Remove Delta_down: 0.141944
+Move set Insert four operators: 0.0360915
+  Move  Insert Delta_up_up: 0.0212035
+  Move  Insert Delta_up_down: 0.0508802
+  Move  Insert Delta_down_up: 0.0510066
+  Move  Insert Delta_down_down: 0.0212639
+Move set Remove four operators: 0.0359989
+  Move  Remove Delta_up_up: 0.0209461
+  Move  Remove Delta_up_down: 0.0508458
+  Move  Remove Delta_down_up: 0.0511521
+  Move  Remove Delta_down_down: 0.021033
+Move  Shift one operator: 0.212673
+[Rank 0] Warmup lasted: 4.42282 seconds [00:00:04]
+[Rank 0] Simulation lasted: 45.9534 seconds [00:00:45]
+[Rank 0] Number of measures: 1000000
+Total number of measures: 1000000
+Average sign: 1
+Average order: 1.98421
+Auto-correlation time: 0.852318
+imp occ: 0.9877
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Warning :: Trace of the density matrix is 1.000000000001 instead of 1
+</pre></div></div>
+</div>
+<p>First, we will compute the self-energy by direct inversion from the Dyson equation.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># average impurity Green&#39;s function:</span>
+<span class="n">G_iw_avg</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">G_iw</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">S</span><span class="o">.</span><span class="n">G_iw</span><span class="p">[</span><span class="s1">&#39;down&#39;</span><span class="p">])</span>
+<span class="n">G_tau_avg</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">G_tau</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">S</span><span class="o">.</span><span class="n">G_tau</span><span class="p">[</span><span class="s1">&#39;down&#39;</span><span class="p">])</span>
+
+<span class="c1"># calculate Sigma via standard Dyson equation:</span>
+<span class="n">S_iw_dyson</span> <span class="o">=</span> <span class="n">inverse</span><span class="p">(</span><span class="n">G0_iw</span><span class="p">)</span> <span class="o">-</span> <span class="n">inverse</span><span class="p">(</span><span class="n">G_iw_avg</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Plot the resulting self-energy:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">6</span><span class="p">),</span><span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">wspace</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.08</span><span class="p">)</span>
+
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">oplot</span><span class="p">(</span><span class="n">S_iw_dyson</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Dyson&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">oplot</span><span class="p">(</span><span class="n">S_iw_dyson</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Dyson&#39;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">40</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mf">1.6</span><span class="p">,</span><span class="mf">2.4</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">2.5</span><span class="p">,</span><span class="mf">0.2</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Re $\Sigma_\mathrm</span><span class="si">{imp}</span><span class="s1">$ (eV)&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Im $\Sigma_\mathrm</span><span class="si">{imp}</span><span class="s1">$ (eV)&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$i \omega_n$&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/guide_CRM_Dyson_solver_8_0.png" src="../_images/guide_CRM_Dyson_solver_8_0.png" />
+</div>
+</div>
+<p>One can immediately observe a numerical catastrophe occurs at high-frequencies (which is due to the instability of the Dyson equation). The goal is to “repair” the noisy tail of the self-energy, such that it can be used in the subsequent DMFT update.</p>
+</section>
+<section id="Using-the-Constrained-Residual-Minimization-Dyson-solver">
+<h2>Using the Constrained Residual Minimization Dyson solver<a class="headerlink" href="#Using-the-Constrained-Residual-Minimization-Dyson-solver" title="Link to this heading"></a></h2>
+<p>The CRM algorithm (<a class="reference external" href="https://arxiv.org/abs/2310.01266" rel="noopener noreferrer" target="_blank">arXiv:2310.01266</a>) introduces a novel method for computing the self-energy, effectively bypassing the numerical instability associated with directly inverting the Dyson equation. This is achieved by representing all quantities in a compact basis. We use the discrete Lehmann representation (DLR) to do this. For more details on the DLR, please see <a class="reference external" href="https://journals.aps.org/prb/abstract/10.1103/PhysRevB.105.235115" rel="noopener noreferrer" target="_blank">Phys. Rev B 105, 235115
+(2022)</a>. With all quantities represented in this basis, one can construct a constrained minimization problem for the self-energy, where the constraints are its first two moments of its high-frequency expansion. These moments can be directly measured to high accuracy by <a class="reference external" href="https://triqs.github.io/cthyb/latest/guide/high_freq_moments.html" rel="noopener noreferrer" target="_blank">the CT-HYB impurity solver</a>.</p>
+<p>We begin by constructing the DLR basis. The DLR basis is built by specifying two parameters <span class="math notranslate nohighlight">\(\omega_{\mathrm{max}}\)</span> and <span class="math notranslate nohighlight">\(\varepsilon\)</span>. The first parameter (<span class="math notranslate nohighlight">\(\omega_{\mathrm{max}}\)</span>) is physically meaningful and corresponds to the spectral width of the impurity problem that you are studying. The second parameter <span class="math notranslate nohighlight">\(\varepsilon\)</span> represenst the accuracy of the DLR basis to represent any spectral representable Green’s function with the given <span class="math notranslate nohighlight">\(\omega_{\mathrm{max}}\)</span>, and
+can be thought of as an error tolerance. In this tutorial, we will set <span class="math notranslate nohighlight">\(\omega_{\mathrm{max}} = 2.5\)</span> eV and <span class="math notranslate nohighlight">\(\varepsilon = 10^{-7}\)</span>. As an exercise, one can play with these parameters and observe how the resulting self-energies change.</p>
+<p>We start by fitting a DLR Green’s function to our imaginary time Green’s function using the TRIQS function <code class="docutils literal notranslate"><span class="pre">fit_gf_dlr</span></code>. In the figure below, we see the DLR Green’s function (orange crosses) gives a compact representation of the full imaginary time Green’s function (solid blue line).</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">fit_gf_dlr</span><span class="p">,</span> <span class="n">make_gf_dlr_imtime</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">G_dlr_imp</span> <span class="o">=</span> <span class="n">fit_gf_dlr</span><span class="p">(</span><span class="n">G_tau_avg</span><span class="p">,</span> <span class="n">w_max</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">eps</span> <span class="o">=</span> <span class="mf">1e-7</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span><span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># plot rebinned G_tau to suppress noise slightly for plotting</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">oplot</span><span class="p">(</span><span class="n">G_tau_avg</span><span class="o">.</span><span class="n">rebinning_tau</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;measured&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">oplot</span><span class="p">(</span><span class="n">make_gf_dlr_imtime</span><span class="p">(</span><span class="n">G_dlr_imp</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;DLR fit&#39;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">beta</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.6</span><span class="p">,</span><span class="mf">0.0</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$G(\tau)$&#39;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\tau$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;lower center&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/guide_CRM_Dyson_solver_11_0.png" src="../_images/guide_CRM_Dyson_solver_11_0.png" />
+</div>
+</div>
+<p>We repeat the process to obtain <span class="math notranslate nohighlight">\(\mathcal{G}^{0}\)</span> in the DLR basis. We can achieve this by directly reading off the values of <span class="math notranslate nohighlight">\(\mathcal{G}^{0}(i\omega_{n})\)</span> at the DLR nodes <span class="math notranslate nohighlight">\(i\omega_{n_{k}}\)</span>, since <span class="math notranslate nohighlight">\(\mathcal{G}^{0}\)</span> is typically given without noise.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">MeshDLRImFreq</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># construct DLR iw empty Gf container</span>
+<span class="n">mesh_iw</span> <span class="o">=</span> <span class="n">MeshDLRImFreq</span><span class="p">(</span><span class="n">G_dlr_imp</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+<span class="n">G0_dlr_iw</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">mesh_iw</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="n">G_dlr_imp</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span>
+
+<span class="c1"># fill G0_dlr_iw from full Matsubara version</span>
+<span class="k">for</span> <span class="n">iwn</span> <span class="ow">in</span> <span class="n">mesh_iw</span><span class="p">:</span>
+    <span class="n">G0_dlr_iw</span><span class="p">[</span><span class="n">iwn</span><span class="p">]</span> <span class="o">=</span> <span class="n">G0_iw</span><span class="p">(</span><span class="n">iwn</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span><span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">oplot</span><span class="p">(</span><span class="n">G0_iw</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;Re $\mathcal</span><span class="si">{G}</span><span class="s1">^0(i\omega_n)$&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">oplot</span><span class="p">(</span><span class="n">G0_iw</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;Im $\mathcal</span><span class="si">{G}</span><span class="s1">^0(i\omega_n)$&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">oplot</span><span class="p">(</span><span class="n">G0_dlr_iw</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Re DLR fit&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">oplot</span><span class="p">(</span><span class="n">G0_dlr_iw</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Im DLR fit&#39;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">100</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\mathcal</span><span class="si">{G}</span><span class="s1">^0(i\omega_n)$&#39;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$i \omega_n$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/guide_CRM_Dyson_solver_14_0.png" src="../_images/guide_CRM_Dyson_solver_14_0.png" />
+</div>
+</div>
+<p>We now have everything we need to run the CRM solver (<code class="docutils literal notranslate"><span class="pre">minimize_dyson</span></code>). The required inputs are a <span class="math notranslate nohighlight">\(G\)</span>, <span class="math notranslate nohighlight">\(\mathcal{G}^{0}\)</span>, and the high-frequency moments of the self-energy, which are stored in the <code class="docutils literal notranslate"><span class="pre">Solver</span></code> class as <code class="docutils literal notranslate"><span class="pre">Sigma_moments</span></code>. Both <span class="math notranslate nohighlight">\(G\)</span>, <span class="math notranslate nohighlight">\(\mathcal{G}^{0}\)</span> have to be given on one of the DLR meshes (<code class="docutils literal notranslate"><span class="pre">MeshDLR</span></code>, <code class="docutils literal notranslate"><span class="pre">MeshDLRImFreq</span></code>, or <code class="docutils literal notranslate"><span class="pre">MeshDLRImTime</span></code>)</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs.gf.dlr_crm_dyson_solver</span> <span class="kn">import</span> <span class="n">minimize_dyson</span>
+<span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">make_gf_imfreq</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># now use the solver</span>
+<span class="n">S_dlr</span><span class="p">,</span> <span class="n">S_HF</span><span class="p">,</span> <span class="n">residual</span> <span class="o">=</span> <span class="n">minimize_dyson</span><span class="p">(</span><span class="n">G0_dlr</span> <span class="o">=</span> <span class="n">G0_dlr_iw</span><span class="p">,</span>
+                                       <span class="n">G_dlr</span> <span class="o">=</span> <span class="n">G_dlr_imp</span><span class="p">,</span>
+                                       <span class="n">Sigma_moments</span><span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Sigma_moments</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">S</span><span class="o">.</span><span class="n">Sigma_moments</span><span class="p">[</span><span class="s1">&#39;down&#39;</span><span class="p">]))</span> <span class="c1"># average moments for higher accuracy here</span>
+
+<span class="c1"># Since a spectral representable G has no constant we have to manually add the Hartree shift after the solver is finished again</span>
+<span class="n">S_iw_crm</span> <span class="o">=</span> <span class="n">make_gf_imfreq</span><span class="p">(</span><span class="n">S_dlr</span><span class="p">,</span> <span class="n">n_iw</span><span class="o">=</span><span class="n">S_iw_dyson</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">n_iw</span><span class="p">)</span> <span class="o">+</span> <span class="n">S_HF</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+`xtol` termination condition is satisfied.
+Number of iterations: 318, function evaluations: 2835, CG iterations: 141, optimality: 1.01e+01, constraint violation: 2.56e-10, execution time: 0.83 s.
+`xtol` termination condition is satisfied.
+L2 norm of residual (G-G₀-G₀ΣG): 5.6408e-04
+Σ1 constraint diff: 2.6589e-10
+</pre></div></div>
+</div>
+<p>The output of <code class="docutils literal notranslate"><span class="pre">minimize_dyson</span></code> reports if the termination of scipy minimize has been successful (<code class="docutils literal notranslate"><span class="pre">scipy.optimize.OptimizeResult.message</span></code>). Next the final number of iterations and other stats are reported by scipy minimize. Finally, the L2 norm of the residual is printed and the constraint violation if the second moment of Sigma is given.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">6</span><span class="p">),</span><span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">wspace</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.08</span><span class="p">)</span>
+
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">oplot</span><span class="p">(</span><span class="n">S_iw_dyson</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Dyson&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">oplot</span><span class="p">(</span><span class="n">S_iw_dyson</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Dyson&#39;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">oplot</span><span class="p">(</span><span class="n">S_iw_crm</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;CRM&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">oplot</span><span class="p">(</span><span class="n">S_iw_crm</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;CRM&#39;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">40</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span><span class="mf">2.5</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">2.5</span><span class="p">,</span><span class="mf">0.</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Re $\Sigma_\mathrm</span><span class="si">{imp}</span><span class="s1">$ (eV)&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Im $\Sigma_\mathrm</span><span class="si">{imp}</span><span class="s1">$ (eV)&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$i \omega_n$&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;lower right&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/guide_CRM_Dyson_solver_19_0.png" src="../_images/guide_CRM_Dyson_solver_19_0.png" />
+</div>
+</div>
+<p>The resulting self-energy computed within the CRM scheme is absent of the high-frequency noise while maintaining the same accuracy at low-frequencies!</p>
+<p><strong>Important</strong>: Because the DLR requires inputs (<span class="math notranslate nohighlight">\(\omega_{\mathrm{max}}\)</span>, <span class="math notranslate nohighlight">\(\varepsilon\)</span>) to determine the basis, one should check that the values of <span class="math notranslate nohighlight">\(\omega_{\mathrm{max}}\)</span> and <span class="math notranslate nohighlight">\(\varepsilon\)</span> are chosen properly. In most cases, one can leave <span class="math notranslate nohighlight">\(\varepsilon\)</span> fixed (<span class="math notranslate nohighlight">\(\varepsilon\sim10^{-6}-10^{-7}\)</span>) and converge <span class="math notranslate nohighlight">\(\omega_{\mathrm{max}}\)</span>, which is demonstrated (and recommended) explicitly in <a class="reference external" href="https://arxiv.org/abs/2310.01266" rel="noopener noreferrer" target="_blank">arXiv:2310.01266</a>.</p>
+<p>Finally, this tutorial demonstrates some caveat of the DLR representation. The real part of <span class="math notranslate nohighlight">\(\Sigma_{imp}\)</span> is constant for the half-filled Bethe lattice, which is inherently hard to be represented by DLR. One always obtains in this example a slighlty oscillating solution. However, the high frequency tail is correctly preserved by the provided moments.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="perturbation_order_notebook.html" class="btn btn-neutral float-left" title="Perturbation order histograms" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="aim.html" class="btn btn-neutral float-right" title="The Anderson impurity model" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2014-2021, Simons Foundation, P. Seth, I. Krivenko, H. Strand, M. Ferrero, O. Parcollet.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
