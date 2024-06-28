@@ -88,9 +88,8 @@
 </li>
 <li class="toctree-l4"><a class="reference internal" href="step_by_step.html#step-2-construct-the-solver">Step 2 - Construct the solver</a></li>
 <li class="toctree-l4"><a class="reference internal" href="step_by_step.html#step-3-supply-the-solver-inputs">Step 3 - Supply the solver inputs</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="step_by_step.html#interaction-hamiltonian">Interaction Hamiltonian</a></li>
+<li class="toctree-l5"><a class="reference internal" href="step_by_step.html#local-hamiltonian">Local Hamiltonian</a></li>
 <li class="toctree-l5"><a class="reference internal" href="step_by_step.html#hybridization-function">Hybridization function</a></li>
-<li class="toctree-l5"><a class="reference internal" href="step_by_step.html#chemical-potential">Chemical potential</a></li>
 <li class="toctree-l5"><a class="reference internal" href="step_by_step.html#dynamical-density-density-interaction">Dynamical density-density interaction</a></li>
 <li class="toctree-l5"><a class="reference internal" href="step_by_step.html#spin-spin-interaction">Spin-spin interaction</a></li>
 <li class="toctree-l5"><a class="reference internal" href="step_by_step.html#solve-parameters">Solve parameters</a></li>
@@ -215,7 +214,8 @@ turned on or off via the corresponding parameter of the <code class="docutils li
 \[G_{ij}^{A}(\tau) = - \langle T_{\tau} c_{Ai}(\tau) c^{\dagger}_{Aj}(0) \rangle,\]</div>
 <p>where <span class="math notranslate nohighlight">\(A\)</span> is a block index and <span class="math notranslate nohighlight">\(i, j\)</span> are inner indices within the block. The block structure
 of <span class="math notranslate nohighlight">\(G_{ij}^A(\tau)\)</span> (valid values of the indices) is set by <code class="docutils literal notranslate"><span class="pre">gf_struct</span></code> in the <code class="docutils literal notranslate"><span class="pre">constr_params</span></code>.
-It is measured on a uniform time grid, whose number of points is set by <code class="docutils literal notranslate"><span class="pre">n_tau</span></code> in the <code class="docutils literal notranslate"><span class="pre">constr_params</span></code>.</p>
+It is measured on a uniform time grid, whose number of points is set by <code class="docutils literal notranslate"><span class="pre">n_tau_G</span></code> in the <code class="docutils literal notranslate"><span class="pre">solve_params</span></code>
+(defaults to <code class="docutils literal notranslate"><span class="pre">n_tau</span></code> in <code class="docutils literal notranslate"><span class="pre">constr_params</span></code>).</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>The value of <code class="docutils literal notranslate"><span class="pre">n_tau</span></code> supplied in the <code class="docutils literal notranslate"><span class="pre">constr_params</span></code> and the number of points in the <span class="math notranslate nohighlight">\(\tau\)</span> grid of
@@ -255,46 +255,46 @@ accumulation is accessible through the <code class="docutils literal notranslate
 <h2>Density<a class="headerlink" href="#density" title="Link to this heading"></a></h2>
 <p>The average density is</p>
 <div class="math notranslate nohighlight">
-\[\langle n_i \rangle = \frac{1}{\beta} \int_0^{\beta} d \tau \langle n_i(\tau) \rangle.\]</div>
-<p>Here the index <span class="math notranslate nohighlight">\(i = 0, \dots N - 1\)</span> represents the color (irrespective of the block structure). The measurement
-is turned on by setting <code class="docutils literal notranslate"><span class="pre">measure_n</span></code> in the <code class="docutils literal notranslate"><span class="pre">solve_params</span></code> to <code class="docutils literal notranslate"><span class="pre">True</span></code>. The result of the
-accumulation is accessible through the <code class="docutils literal notranslate"><span class="pre">results.densities</span></code> attribute of the solver object, as a numpy
-array of size <span class="math notranslate nohighlight">\(N\)</span>.</p>
+\[\langle n^A_i \rangle = \frac{1}{\beta} \int_0^{\beta} d \tau \langle n^A_i(\tau) \rangle.\]</div>
+<p>Here <span class="math notranslate nohighlight">\(A\)</span> represents a block name and <span class="math notranslate nohighlight">\(i\)</span> an index within the block. The measurement
+is turned on by setting <code class="docutils literal notranslate"><span class="pre">measure_densities</span></code> in the <code class="docutils literal notranslate"><span class="pre">solve_params</span></code> to <code class="docutils literal notranslate"><span class="pre">True</span></code>. The result of the
+accumulation is accessible through the <code class="docutils literal notranslate"><span class="pre">results.densities</span></code> attribute of the solver object, as a Python
+dictionary that associates a numpy vector to a block name. For example, the average density in the first
+color of the spin up block is accessed as <code class="docutils literal notranslate"><span class="pre">results.densities[&quot;up&quot;][0]</span></code>.</p>
 </section>
 <section id="static-density-correlation-function">
 <h2>Static density correlation function<a class="headerlink" href="#static-density-correlation-function" title="Link to this heading"></a></h2>
 <p>The static density correlation function is defined as</p>
 <div class="math notranslate nohighlight">
-\[\langle n_i n_j \rangle = \frac{1}{\beta} \int_0^{\beta} d \tau \langle n_i(\tau) n_j(\tau) \rangle.\]</div>
-<p>Here the indices <span class="math notranslate nohighlight">\(i, j = 0, \dots N - 1\)</span> represents colors (irrespective of the block structure). The measurement
-is turned on by setting <code class="docutils literal notranslate"><span class="pre">measure_nn</span></code> in the <code class="docutils literal notranslate"><span class="pre">solve_params</span></code> to <code class="docutils literal notranslate"><span class="pre">True</span></code>. The result of the
-accumulation is accessible through the <code class="docutils literal notranslate"><span class="pre">results.nn_static</span></code> attribute of the solver object, as a numpy
-array of size <span class="math notranslate nohighlight">\(N \times N\)</span>.</p>
+\[\langle n^A_i n^B_j \rangle = \frac{1}{\beta} \int_0^{\beta} d \tau \langle n^A_i(\tau) n^A_j(\tau) \rangle.\]</div>
+<p>Here <span class="math notranslate nohighlight">\(A, B\)</span> represents block names and <span class="math notranslate nohighlight">\(i, j\)</span> indices within the block. The measurement
+is turned on by setting <code class="docutils literal notranslate"><span class="pre">measure_nn_static</span></code> in the <code class="docutils literal notranslate"><span class="pre">solve_params</span></code> to <code class="docutils literal notranslate"><span class="pre">True</span></code>. The result of the
+accumulation is accessible through the <code class="docutils literal notranslate"><span class="pre">results.nn_static</span></code> attribute of the solver object, as a Python
+dictionary that associates a matrix to a pair of block names. For example the static density correlation function
+of the spin up block with itself is acccessed as <code class="docutils literal notranslate"><span class="pre">results.nn_static[(&quot;up&quot;,</span> <span class="pre">&quot;up&quot;)]</span></code>.</p>
 </section>
 <section id="dynamic-density-correlation-function">
 <h2>Dynamic density correlation function<a class="headerlink" href="#dynamic-density-correlation-function" title="Link to this heading"></a></h2>
 <p>The dynamic density correlation function is defined as</p>
 <div class="math notranslate nohighlight">
-\[\chi_{ij}(\tau) =  \langle T_{\tau} n_i(\tau) n_j(0) \rangle.\]</div>
+\[\chi^{AB}_{ij}(\tau) =  \langle T_{\tau} n^A_i(\tau) n^B_j(0) \rangle.\]</div>
 <p>Here the indices <span class="math notranslate nohighlight">\(i, j = 0, \dots N - 1\)</span> represents colors (irrespective of the block structure).
-<span class="math notranslate nohighlight">\(\chi_{ij}(\tau)\)</span> is measured on a uniform time grid, whose number of points is set by <code class="docutils literal notranslate"><span class="pre">n_tau_bosonic</span></code> in the <code class="docutils literal notranslate"><span class="pre">constr_params</span></code>.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>The value of <code class="docutils literal notranslate"><span class="pre">n_tau_bosonic</span></code> supplied in the <code class="docutils literal notranslate"><span class="pre">constr_params</span></code> and the number of points in the <span class="math notranslate nohighlight">\(\tau\)</span> grids of
-the <span class="math notranslate nohighlight">\(D(\tau)\)</span> and <span class="math notranslate nohighlight">\(J_{\perp}(\tau)\)</span> inputs must match.</p>
-</div>
+<span class="math notranslate nohighlight">\(\chi_{ij}(\tau)\)</span> is measured on a uniform time grid, whose number of points is set by <code class="docutils literal notranslate"><span class="pre">n_tau_chi2</span></code> in the <code class="docutils literal notranslate"><span class="pre">solve_params</span></code>
+(which defaults to <code class="docutils literal notranslate"><span class="pre">n_tau_bosonic</span></code> from <code class="docutils literal notranslate"><span class="pre">constr_params</span></code>).</p>
 <p>The measurement is turned on by setting <code class="docutils literal notranslate"><span class="pre">measure_nn_tau</span></code> in the <code class="docutils literal notranslate"><span class="pre">solve_params</span></code> to <code class="docutils literal notranslate"><span class="pre">True</span></code>. The result of the
-accumulation is accessible through the <code class="docutils literal notranslate"><span class="pre">results.nn_tau</span></code> attribute of the solver object, as a matrix-valued
-<code class="docutils literal notranslate"><span class="pre">GfImTime</span></code> with size <span class="math notranslate nohighlight">\(N \times N\)</span>.</p>
+accumulation is accessible through the <code class="docutils literal notranslate"><span class="pre">results.nn_tau</span></code> attribute of the solver object, as a
+<code class="docutils literal notranslate"><span class="pre">Block2Gf</span></code>. For example, the correlation function in the first color of the spin up block is accessed as
+<code class="docutils literal notranslate"><span class="pre">results.nn_tau[&quot;up&quot;,</span> <span class="pre">&quot;up&quot;][0,</span> <span class="pre">0]</span></code>.</p>
 </section>
 <section id="perpendicular-spin-spin-correlation-function">
 <h2>Perpendicular spin-spin correlation function<a class="headerlink" href="#perpendicular-spin-spin-correlation-function" title="Link to this heading"></a></h2>
 <p>The perpendicular spin-spin correlation function is defined as</p>
 <div class="math notranslate nohighlight">
 \[\chi^{\perp}(\tau) =  \langle T_{\tau} s^x(\tau) s^x(0) \rangle.\]</div>
-<p><span class="math notranslate nohighlight">\(\chi^{\perp}(\tau)\)</span> is measured on a uniform time grid, whose number of points is set by <code class="docutils literal notranslate"><span class="pre">n_tau_bosonic</span></code> in the <code class="docutils literal notranslate"><span class="pre">constr_params</span></code>.
-This measurement is useful if rotational invariance is broken (for instance, in the presence of a Zeeman field). Otherwise,
-all components of the spin-spin correlation function can be determined from <span class="math notranslate nohighlight">\(\chi_{ij}(\tau)\)</span>, with better statistics.</p>
+<p><span class="math notranslate nohighlight">\(\chi^{\perp}(\tau)\)</span> is measured on a uniform time grid, whose number of points is set by <code class="docutils literal notranslate"><span class="pre">n_tau_chi2</span></code> in the <code class="docutils literal notranslate"><span class="pre">solve_params</span></code>
+(which defaults to <code class="docutils literal notranslate"><span class="pre">n_tau_bosonic</span></code> from <code class="docutils literal notranslate"><span class="pre">constr_params</span></code>).
+This measurement is useful if rotational invariance is broken (for instance, in the presence of a Zeeman field). It is
+implemented for a single orbital only. Otherwise, all components of the spin-spin correlation function can be determined from <span class="math notranslate nohighlight">\(\chi_{ij}(\tau)\)</span>, with better statistics.</p>
 <p>The measurement is turned on by setting <code class="docutils literal notranslate"><span class="pre">measure_sperp_tau</span></code> in the <code class="docutils literal notranslate"><span class="pre">solve_params</span></code> to <code class="docutils literal notranslate"><span class="pre">True</span></code>. The result of the
 accumulation is accessible through the <code class="docutils literal notranslate"><span class="pre">results.sperp_tau</span></code> attribute of the solver object, as a matrix-valued
 <code class="docutils literal notranslate"><span class="pre">GfImTime</span></code> with size <span class="math notranslate nohighlight">\(1 \times 1\)</span>.</p>
@@ -312,15 +312,16 @@ accumulation is accessible through the <code class="docutils literal notranslate
 <section id="average-sign">
 <h2>Average sign<a class="headerlink" href="#average-sign" title="Link to this heading"></a></h2>
 <p>This measurement computes the average sign of the weight of the configuration.
-The measurement is turned on by setting <code class="docutils literal notranslate"><span class="pre">measure_sign</span></code> in the <code class="docutils literal notranslate"><span class="pre">solve_params</span></code> to <code class="docutils literal notranslate"><span class="pre">True</span></code>. The result of the
-accumulation is accessible through the <code class="docutils literal notranslate"><span class="pre">results.sign</span></code> attribute of the solver object as a double precision scalar.</p>
+It is always on. The result of the accumulation is accessible through the <code class="docutils literal notranslate"><span class="pre">results.average_sign</span></code>
+attribute of the solver object as a double precision scalar.</p>
 </section>
 <section id="perturbation-order-histograms">
 <h2>Perturbation order histograms<a class="headerlink" href="#perturbation-order-histograms" title="Link to this heading"></a></h2>
 <p>This measurement determines the histograms of the perturbation orders in <span class="math notranslate nohighlight">\(\Delta(\tau)\)</span> and <span class="math notranslate nohighlight">\(\mathcal{J}_{\perp}(\tau)\)</span>.
-The measurement is turned on by setting <code class="docutils literal notranslate"><span class="pre">measure_state_hist</span></code> in the <code class="docutils literal notranslate"><span class="pre">solve_params</span></code> to <code class="docutils literal notranslate"><span class="pre">True</span></code>. The results of the
-accumulation are accessible through the <code class="docutils literal notranslate"><span class="pre">results.pert_order_histo_Delta</span></code> and <code class="docutils literal notranslate"><span class="pre">results.pert_order_histo_Jperp</span></code>
-attributes of the solver, as TRIQS histogram objects.</p>
+The measurement is turned on by setting <code class="docutils literal notranslate"><span class="pre">measure_pert_order</span></code> in the <code class="docutils literal notranslate"><span class="pre">solve_params</span></code> to <code class="docutils literal notranslate"><span class="pre">True</span></code>. The results of the
+accumulation are accessible through the <code class="docutils literal notranslate"><span class="pre">results.pert_order_Delta</span></code> and <code class="docutils literal notranslate"><span class="pre">results.pert_order_Jperp</span></code>
+attributes of the solver, as TRIQS histogram objects. The average orders can also be directly accessed via
+<code class="docutils literal notranslate"><span class="pre">results.average_order_Delta</span></code> and <code class="docutils literal notranslate"><span class="pre">results.average_order_Jperp</span></code>.</p>
 </section>
 </section>
 
