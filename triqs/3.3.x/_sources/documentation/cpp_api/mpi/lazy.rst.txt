@@ -16,7 +16,7 @@ mpi::lazy
 
 .. rst-class:: cppsynopsis
 
-     template<typename Tag, typename T> class  :red:`lazy`
+     template<typename A> class  :red:`lazy`
 
 
 
@@ -24,9 +24,7 @@ mpi::lazy
 Template parameters
 -------------------
 
- * **Tag**: An mpi::tag to specify the kind of MPI communication.
-
- * **T**: Type to be communicated.
+ * **A**: nda::Array type to be scattered.
 
 
 Public members
@@ -36,14 +34,46 @@ Public members
    :widths: 40 60
 
 
-   +------+--------------+---------------------------------------------------------------------------------------+
-   | rhs  | T            |  Object to be communicated.                                                           |
-   +------+--------------+---------------------------------------------------------------------------------------+
-   | c    | communicator |  mpi::communicator used in the lazy communication.                                    |
-   +------+--------------+---------------------------------------------------------------------------------------+
-   | root | int          |  Rank of the root process.                                                            |
-   +------+--------------+---------------------------------------------------------------------------------------+
-   | all  | bool         |  Whether to use the `MPI_Allxxx` operation                                            |
-   +------+--------------+---------------------------------------------------------------------------------------+
-   | op   | MPI_Op       |  `MPI_Op` used in the lazy communication (only relevant if mpi::tag::reduce is used). |
-   +------+--------------+---------------------------------------------------------------------------------------+
+   +------+-------------------+----------------------------------------------------------------------------+
+   | rhs  | const_view_type   |  View of the array/view to be scattered.                                   |
+   +------+-------------------+----------------------------------------------------------------------------+
+   | comm | mpi::communicator |  MPI communicator.                                                         |
+   +------+-------------------+----------------------------------------------------------------------------+
+   | root | const int         |  MPI root process.                                                         |
+   +------+-------------------+----------------------------------------------------------------------------+
+   | all  | const bool        |  Should all processes receive the result. (doesn't make sense for scatter) |
+   +------+-------------------+----------------------------------------------------------------------------+
+
+
+Member types
+------------
+
+.. table::
+   :widths: 40 60
+
+
+   +-----------------+--------------------------------------+---------------------------------------------------------------+
+   | value_type      | typename std::decay_t<A>::value_type |  Value type of the array/view.                                |
+   +-----------------+--------------------------------------+---------------------------------------------------------------+
+   | const_view_type | decltype(std::declval<const A>()())  |  Const view type of the array/view stored in the lazy object. |
+   +-----------------+--------------------------------------+---------------------------------------------------------------+
+
+
+Member functions
+----------------
+
+.. table::
+   :widths: 40 60
+
+
+   +-----------------------------------+-----------------------------------------------------------------------------+
+   | :ref:`shape <mpi__lazy__shape>`   | Compute the shape of the target array.                                      |
+   +-----------------------------------+-----------------------------------------------------------------------------+
+   | :ref:`invoke <mpi__lazy__invoke>` | Execute the lazy MPI operation and write the result to a target array/view. |
+   +-----------------------------------+-----------------------------------------------------------------------------+
+
+.. toctree::
+    :hidden:
+
+    lazy/shape
+    lazy/invoke
