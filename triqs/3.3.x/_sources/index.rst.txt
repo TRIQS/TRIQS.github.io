@@ -85,7 +85,7 @@ Please cite the relevant papers when using these algorithms in your research.
 TRIQS Community
 ---------------
 
-Connect with fellow users and developers through our `TRIQS Slack Workspace <https://github.com/TRIQS/slack>`_,
+Connect with fellow users and developers through our `TRIQS Slack Workspace <https://triqs.github.io/slack>`_,
 where you can share insights, ask questions, and get involved in the development of TRIQS and applications.
 We also provide information about new software releases and events such as summer schools and our annual
 TRIQS Community Meeting. We look forward to welcoming you to our community!
