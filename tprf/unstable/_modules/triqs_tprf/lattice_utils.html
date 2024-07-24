@@ -870,6 +870,11 @@
 
     <span class="n">ntau</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">nw_g</span>
 
+    <span class="n">is_dlr_mesh</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">wmesh</span><span class="p">)</span> <span class="o">==</span> <span class="n">MeshDLRImFreq</span>
+    <span class="k">if</span> <span class="n">is_dlr_mesh</span><span class="p">:</span>
+        <span class="n">iw_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromiter</span><span class="p">(</span><span class="n">wmesh</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+        <span class="n">is_symmetrized</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">iw_values</span><span class="p">,</span> <span class="o">-</span><span class="n">iw_values</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
     <span class="c1"># -- Memory Approximation</span>
 
     <span class="n">ng_tr</span> <span class="o">=</span> <span class="n">ntau</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">nk</span><span class="p">)</span> <span class="o">*</span> <span class="n">norb</span><span class="o">**</span><span class="mi">2</span> <span class="c1"># storing G(tau, r)</span>
@@ -922,7 +927,10 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">save_memory</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;--&gt; chi0_tr_from_grt_PH (bubble in tau &amp; r)&#39;</span><span class="p">)</span>
-            <span class="n">chi0_tr</span> <span class="o">=</span> <span class="n">chi0_tr_from_grt_PH</span><span class="p">(</span><span class="n">g_tr</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">is_dlr_mesh</span><span class="p">:</span>
+                <span class="n">chi0_tr</span> <span class="o">=</span> <span class="n">chi0_tr_from_grt_PH</span><span class="p">(</span><span class="n">g_tr</span><span class="p">,</span> <span class="n">is_symmetrized</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">chi0_tr</span> <span class="o">=</span> <span class="n">chi0_tr_from_grt_PH</span><span class="p">(</span><span class="n">g_tr</span><span class="p">)</span>
             <span class="k">del</span> <span class="n">g_tr</span>
             
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span> <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;--&gt; chi_wr_from_chi_tr&#39;</span><span class="p">)</span>
