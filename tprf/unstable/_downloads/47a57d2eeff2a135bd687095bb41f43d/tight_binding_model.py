@@ -66,8 +66,8 @@ if __name__ == '__main__':
     labels = [r'$\Gamma$', r'$X$', r'$M$', r'$\Gamma$', ]
     paths = [(G, X), (X, M), (M, G),]
 
-    from triqs_tprf.lattice_utils import k_space_path
-    k_vecs, k_plot, K_plot = k_space_path(paths, bz=t_r.bz, num=128)
+    from triqs.lattice.utils import k_space_path
+    k_vecs, k_plot, K_plot = k_space_path(paths, bz=t_r.bz, num=128, relative_coordinates=True)
 
     from numpy.linalg import eigvalsh as eigv
     e_k_interp = [ eigv(t_r.tb.fourier(k)) for k in k_vecs ]
