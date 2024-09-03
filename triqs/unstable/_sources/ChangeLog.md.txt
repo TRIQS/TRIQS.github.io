@@ -5,6 +5,23 @@
 
 This document describes the main changes in TRIQS.
 
+## Version 3.3.1
+
+TRIQS Version 3.3.1 is a patch-release that introduces
+minor fixes and restores compatibility against recent numpy versions.
+
+We thank all contributors: Nils Wentzell
+
+Find below an itemized list of changes in this release.
+
+### General
+* Restore backward compatible h5::read calls dlr, dlr_imfreq, dlr_imtime, Fix #946
+* Remove use of deprecated aliases numpy.complex_ and numpy.float_
+
+### doc
+* Fix slack workspace signup url
+
+
 ## Version 3.3.0
 
 TRIQS Version 3.3.0 is a release that
