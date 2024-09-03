@@ -2,6 +2,18 @@
 
 # Changelog
 
+## Version 3.3.1
+
+TPRF version 3.3.1 is a patch release that fixes an issue with recent numpy versions.
+
+We thank all contributors: Nils Wentzell
+
+Find below an itemized list of changes in this release.
+
+### General
+* Fix compatibility against numpy 2.0
+
+
 ## Version 3.3.0
 
 TPRF version 3.3.0 is a compatibility release for TRIQS version 3.3.0.
