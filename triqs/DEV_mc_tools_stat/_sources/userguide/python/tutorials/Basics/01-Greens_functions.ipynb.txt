@@ -1,0 +1,1003 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "# TRIQS Green's functions\n",
+    "\n",
+    "It is now time to start using some of the tools provided by TRIQS.\n",
+    "\n",
+    "Much of the functionality in TRIQS, while implemented in C++ for optimal performance, is exposed\n",
+    "through a Python interface to make it easier to use. From a practical point of view this means\n",
+    "that you can think of TRIQS as a python library, just like numpy or matplotlib.\n",
+    "\n",
+    "One of the central objects of a many-body calculation is a Green's function.\n",
+    "Green's functions in TRIQS are functions defined on a mesh $\\cal{M}$ of points that hold values in some domain $\\cal{D}$, for example $\\mathbb{C}^{2\\times2}$\n",
+    "\n",
+    "$$\n",
+    "G: \\cal{M} \\rightarrow \\cal{D}\n",
+    "$$\n",
+    "\n",
+    "A few common Green's function meshes in TRIQS include:\n",
+    "\n",
+    "- `MeshReFreq` - Real-frequencies equally spaced in $[\\omega_{min},\\omega_{max}]$\n",
+    "- `MeshImFreq` - Matsubara Frequencies\n",
+    "- `MeshImTime` - Imaginary time points equally spaced in $[0,\\beta]$\n",
+    "- `MeshReTime` - Real-time points (not covered in this tutorial)\n",
+    "\n",
+    "Let's see how we can **construct a Mesh and print its values**."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Import the Mesh type we want to use\n",
+    "from triqs.gf import MeshImTime\n",
+    "\n",
+    "# The documentation tells us which parameters we need to pass for the mesh construction\n",
+    "?MeshImTime"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Provide the inverse temperature, Statistic, and number of points\n",
+    "tau_mesh = MeshImTime(beta=5, S='Fermion', n_tau=11)\n",
+    "\n",
+    "# We can loop and print the mesh-point values\n",
+    "for tau in tau_mesh:\n",
+    "    print(tau.value)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Let us now **create and initialize a Green's function for a single atomic level** with energy $\\epsilon$ in the grand-canonical ensemble with inverse temperature $\\beta$\n",
+    "\n",
+    "$$\n",
+    "G[\\tau] = -\\langle\\cal{T}c(\\tau) c^\\dagger\\rangle = -\\frac{e^{-\\tau \\epsilon}}{1+e^{-\\beta \\epsilon}}\n",
+    "= -\\frac{e^{\\left(\\beta \\Theta(-\\epsilon) -\\tau\\right) \\epsilon}}{1+e^{-\\beta |\\epsilon|}}$$\n",
+    "\n",
+    "In practice we use the second expression, as it avoids diverging exponentials for large values of $\\beta$.\n",
+    "We first have a look at the documentation for `Gf`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from triqs.gf import Gf\n",
+    "?Gf"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Create scalar-valued imaginary-time Green's function\n",
+    "G = Gf(mesh=tau_mesh, target_shape=[], is_real=True)\n",
+    "\n",
+    "# Print the Green's function description\n",
+    "print(G)\n",
+    "\n",
+    "# Loop initialization\n",
+    "eps = -0.4\n",
+    "beta = G.mesh.beta\n",
+    "from math import exp\n",
+    "for tau in G.mesh:\n",
+    "    G[tau] = -exp((beta*(eps<0) - tau.value) * eps) / (1. + exp(-beta * abs(eps)))\n",
+    "    print(\"{:.3f}\".format(G[tau]))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "In order to **plot this Green's function** we can use the matplotlib interface defined in TRIQS.\n",
+    "Note that the function to plot Green's function is `oplot` and not just `plot` like in matplotlib."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from triqs.plot.mpl_interface import oplot,plt\n",
+    "\n",
+    "# Make plots show up directly in the notebook:\n",
+    "%matplotlib inline\n",
+    "\n",
+    "# Make all figures slightly bigger\n",
+    "import matplotlib as mpl\n",
+    "mpl.rcParams['figure.dpi']=100\n",
+    "\n",
+    "# Additional arguments like 'linewidth' are passed on to matplotlib\n",
+    "oplot(G, '-', name='G', linewidth=2)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "## Matrix-Valued Green's functions\n",
+    "\n",
+    "In most realistic problems we have to treat more than just a single orbital\n",
+    "\n",
+    "$$\n",
+    "G_{ij}[\\tau] = -\\langle\\cal{T}c_i(\\tau) c_j^\\dagger\\rangle\n",
+    "$$\n",
+    "\n",
+    "For this purpose, TRIQS provides Green's functions that have a Matrix structure. Let's see how you can create and use them"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# A uniform real-frequency mesh on a given interval\n",
+    "from triqs.gf import MeshReFreq\n",
+    "w_mesh = MeshReFreq(window=(-4,4), n_w=1000)\n",
+    "\n",
+    "# Gf with 2x2 Matrix structure holding complex values\n",
+    "G = Gf(mesh=w_mesh, target_shape=[2,2])\n",
+    "G # <- Same as print(repr(G))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Accessing a specific mesh point gives us a matrix\n",
+    "from triqs.gf import Idx # Use Idx to access Gf at specific Index\n",
+    "print(G[Idx(0)])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# By Fixing the orbital indices we obtain a Green's function that is no longer matrix but complex-valued\n",
+    "G[0,0]"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "## Block Green's functions\n",
+    "\n",
+    "In many realistic problems we know a priori that (due to e.g. symmetries or conserved quantum numbers) certain components of the Green's function will vanish.\n",
+    "In other words, the Green's functions has an additional *block structure*.\n",
+    "\n",
+    "$$\n",
+    "\\hat{G} =\n",
+    "\\begin{pmatrix}\n",
+    "\\hat{g}^0 & 0 & \\cdots & \\cdots \\\\\n",
+    "0 & \\hat{g}^1 & 0 & \\cdots \\\\\n",
+    "\\cdots & 0 & \\hat{g}^2 & 0 \\\\\n",
+    "\\cdots & \\cdots & \\cdots & \\cdots\n",
+    "\\end{pmatrix}\n",
+    "$$\n",
+    "\n",
+    "Here the $\\hat{g}^i$ are Green's functions with non-zero elements $g^i_{ab}$. In principle they can have\n",
+    "different dimensions.\n",
+    "\n",
+    "For example, you can imagine a system of 5 $d$-orbitals that are split by a\n",
+    "crystal field into 3 $t_{2g}$-orbitals and 2 $e_g$-orbitals. For symmetry reasons, you can have a\n",
+    "situation where these orbitals do not talk to each other. In that case, the complete Green's function\n",
+    "would have two blocks, one of size 2x2 corresponding to the $e_g$ orbitals and one of size 3x3 corresponding for the $t_{2g}$ orbitals. \n",
+    "\n",
+    "$$\n",
+    "\\hat{G} =\n",
+    "\\begin{pmatrix}\n",
+    "\\hat{g}^{e_g} & 0  \\\\\n",
+    "0 & \\hat{g}^{t_{2g}}  \\\\\n",
+    "\\end{pmatrix}=\n",
+    "\\begin{pmatrix}\n",
+    "\\begin{pmatrix}\n",
+    "g^{e_g}_{00} & g^{e_g}_{01} \\\\\n",
+    "g^{e_g}_{10} & g^{e_g}_{11}\n",
+    "\\end{pmatrix} & 0 \\\\\n",
+    "0 & \\begin{pmatrix}\n",
+    "g^{t_{2g}}_{00} & g^{t_{2g}}_{01} & g^{t_{2g}}_{02} \\\\\n",
+    "g^{t_{2g}}_{10} & g^{t_{2g}}_{11} & g^{t_{2g}}_{12} \\\\\n",
+    "g^{t_{2g}}_{20} & g^{t_{2g}}_{21} & g^{t_{2g}}_{22} \\\\\n",
+    "\\end{pmatrix}\n",
+    "\\end{pmatrix}\n",
+    "$$\n",
+    "\n",
+    "Let us now consider a more concrete example for the case outlined above:\n",
+    "$$\n",
+    "\\hat{G} =\n",
+    "\\begin{pmatrix}\n",
+    "\\begin{pmatrix}\n",
+    "\\omega & V_1 \\\\\n",
+    "V_1 & \\omega\n",
+    "\\end{pmatrix}^{-1} & 0 \\\\\n",
+    "0 & \\begin{pmatrix}\n",
+    "\\omega - \\epsilon_2 & 0 & V_2 \\\\\n",
+    "0 & \\omega - \\epsilon_2 & 0 \\\\\n",
+    "V_2 & 0 & \\omega - \\epsilon_2\n",
+    "\\end{pmatrix}^{-1}\n",
+    "\\end{pmatrix}\n",
+    "$$\n",
+    "\n",
+    "The associated type in TRIQS is called `BlockGf`. Let us have a first look at it's documentation:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from triqs.gf import BlockGf\n",
+    "?BlockGf"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We will in the following consider the first two options for the construction listed in the documentation.\n",
+    "\n",
+    "The first way is to simply define the two Green's function blocks separately, and to then pass these blocks, together with their names:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Construct individual blocks\n",
+    "g_eg  = Gf(mesh=w_mesh, target_shape=[2,2])\n",
+    "g_t2g = Gf(mesh=w_mesh, target_shape=[3,3])\n",
+    "\n",
+    "# Combine blocks into a BlockGf\n",
+    "G = BlockGf(name_list=['eg', 't2g'], block_list=[g_eg, g_t2g])\n",
+    "print(G)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We can then access individual blocks simply by using their name"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "G['eg']"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "For cases where all blocks have a square-matrix `target_shape` we can alternatively pass a list of pairs of block-names and linear matrix sizes."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# List of Block-names and their linear matrix size\n",
+    "gf_struct = [('eg',2), ('t2g',3)]\n",
+    "\n",
+    "G = BlockGf(mesh=w_mesh, gf_struct=gf_struct)\n",
+    "print(G)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Let us now initialize the Green's function values. Instead of writing a loop over the mesh, we here make use of the the operator `<<`, which can fill the Green's function with simple expressions containing the `Omega` descriptor. Here `Omega` is replaced by the values of the mesh."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from triqs.gf import Omega\n",
+    "\n",
+    "V1 = 0.1\n",
+    "V2 = 0.2\n",
+    "eps_t2g = -2.0\n",
+    "\n",
+    "# The e_g part\n",
+    "G['eg'][0,0] << Omega\n",
+    "G['eg'][0,1] << V1\n",
+    "G['eg'][1,0] << V1\n",
+    "G['eg'][1,1] << Omega\n",
+    "\n",
+    "# Perform an in-place Matrix inversion\n",
+    "G['eg'].invert()\n",
+    "\n",
+    "# The t_2g part\n",
+    "G['t2g'][0,0] << Omega - eps_t2g\n",
+    "G['t2g'][1,1] << Omega - eps_t2g\n",
+    "G['t2g'][2,2] << Omega - eps_t2g\n",
+    "G['t2g'][0,2] << V2\n",
+    "G['t2g'][2,0] << V2\n",
+    "G['t2g'].invert()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "When using the Green's function object, it is often convenient to **iterate over all the blocks** of a `BlockGf`. We can do this with the following construct"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Loop over the blocks\n",
+    "for name, g in G:\n",
+    "    print(\"This is the block called\", name)\n",
+    "    print(\"The associated Green's function is\", g)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Additional Initialization Descriptors\n",
+    "\n",
+    "In the following we will introduce a few additional means of initializing Green's functions using `<<`."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Flat density of states\n",
+    "Consider the problem of a single impurity level embedded in a flat conduction bath $\\Gamma$ of electrons.\n",
+    "$$\n",
+    "g^\\mathrm{imp} (\\omega) = \\frac{1}{\\omega - \\epsilon_d - V^2 \\Gamma(\\omega)}\n",
+    "$$\n",
+    "\n",
+    "In the equation above $\\epsilon_d$ is the energy of the level and $\\Gamma$ is the Green's function of\n",
+    "a flat conduction bath\n",
+    "\n",
+    "$$\n",
+    "\\Gamma(\\omega) = \\int_{-D}^{D}\\frac{1}{\\omega-\\epsilon + i\\eta}\\frac{d\\epsilon}{2D}\n",
+    "$$\n",
+    "\n",
+    "Here $D$ denotes the half-bandwidth.\n",
+    "Let's see how to define and then plot this Green's function by using `inverse` and the `Flat` descriptor."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "eps_d = 1.0 # Energy\n",
+    "V = 0.2   # Bath Hybridization\n",
+    "D = 1.5   # Half bandwidth\n",
+    "\n",
+    "G = Gf(mesh=w_mesh, target_shape=[])\n",
+    "\n",
+    "from triqs.gf import Omega, Flat, inverse\n",
+    "G << inverse(Omega - eps_d - V**2 * Flat(D))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Note the predefined function `Flat` for a flat conduction bath $\\Gamma(\\omega)$.\n",
+    "Let's plot the impurity Green's function. Note that default, both the real and imaginary parts are plotted."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "oplot(G, '-', linewidth=2, name=\"G\") "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We can plot the spectral function, which is defined as\n",
+    "\n",
+    "$$ \\rho(\\omega) = -\\frac{1}{\\pi} \\, \\textbf{Im} \\, G $$"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from math import pi\n",
+    "oplot(-G.imag/pi, linewidth=2, name=r\"$\\rho$\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "As expected the spectral function is peaked at $\\epsilon_d$ and shows a jump in spectral weight at $D$."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Semi-circular density of states\n",
+    "\n",
+    "Another predefined Green's function is the one corresponding to a semi-circular spectral function. This one will be useful in the DMFT Tutorials later on."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "D = 1.0 # Half bandwidth\n",
+    "\n",
+    "G = Gf(mesh=w_mesh, target_shape=[])\n",
+    "\n",
+    "from triqs.gf import SemiCircular\n",
+    "G << SemiCircular(D)\n",
+    "\n",
+    "oplot(-G.imag/pi, name=r\"$\\rho$\") "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Imaginary-frequency Green's functions\n",
+    "-------------------------------------\n",
+    "\n",
+    "These are Green's function defined on the Matsubara axis. The fermionic Matsubara frequencies\n",
+    "are defined by\n",
+    "\n",
+    "$$\\omega_n = \\frac{(2n+1)\\pi}{\\beta}$$\n",
+    "\n",
+    "where $\\beta = 1/T$ is the inverse temperature. These Green's functions are important because\n",
+    "most Monte Carlo algorithms yield results on the Matsubara axis. Let's see how they\n",
+    "are defined:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Define the imaginary-frequency mesh\n",
+    "from triqs.gf import MeshImFreq\n",
+    "iw_mesh = MeshImFreq(beta=5, S='Fermion', n_iw=1000)\n",
+    "\n",
+    "# Create Green's Function and fill it using the iOmega_n descriptor\n",
+    "G = Gf(mesh=iw_mesh, target_shape=[])\n",
+    "from triqs.gf import iOmega_n\n",
+    "G << inverse(iOmega_n - 0.2)\n",
+    "\n",
+    "# Plot the Green's function\n",
+    "oplot(G, '-o', name='G')\n",
+    "plt.xlim(0,10)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Arithmetic Operations\n",
+    "\n",
+    "Green's functions can be added, multiplied by numbers, etc. The way this is done is quite natural."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "oplot(G, \"-o\", name='G')\n",
+    "oplot(G+G, \"-o\", name='G+G')\n",
+    "oplot(3*G+2, \"-o\", name='3*G+2')\n",
+    "plt.xlim(0,10)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Obtaining the density\n",
+    "\n",
+    "You can obtain the density for Green's functions with a `MeshReFreq` and `MeshImFreq` using the `density` method"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "G = Gf(mesh=iw_mesh, target_shape=[])\n",
+    "G << inverse(iOmega_n - 0.2)\n",
+    "print(\"Density =\", G.density())"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Do not worry about the imaginary component as the machine precision is on the order of $10^{-15}$."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Fourier transforms\n",
+    "\n",
+    "TRIQS allows you to easily Fourier transform Green's functions from imaginary-time to imaginary-frequency."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# A Green's function in frequency set to semi-circular\n",
+    "Giw = Gf(mesh=iw_mesh, target_shape=[])\n",
+    "Giw << SemiCircular(1.0)\n",
+    "\n",
+    "# A Green's function in time set by inverse Fourier transform\n",
+    "from triqs.gf import make_gf_from_fourier\n",
+    "Gtau = make_gf_from_fourier(Giw)\n",
+    "oplot(Gtau, name='G')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We can also go the other way. Let's check that it gives back the original result."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "Giw_2 = make_gf_from_fourier(Gtau)\n",
+    "oplot(Giw, 'o')\n",
+    "oplot(Giw_2, 'x')\n",
+    "plt.xlim(0,5)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "In the example above `make_gf_from_fourier` will construct a new Green's Function object.\n",
+    "This uses the `statistic` information of `MeshImTime` to decide wether to use bosonic or fermionic Matsubara frequencies.\n",
+    "If we want to instead use an existing Green's function we can use the `Fourier` descriptor"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from triqs.gf import Fourier\n",
+    "Gtau << Fourier(Giw)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Compact meshes for imaginary time / frequency: DLR Green's function\n",
+    "\n",
+    "When representing Green's functions at low temperatures the regular meshes `MeshImFreq` and `MeshImTime` may easily require several thousand of points to store the relevant information. This is often problematic when storing or initializing lattice Green's functions\n",
+    "with a momentum and orbital dependence.\n",
+    "\n",
+    "For this purpose TRIQS provides mesh types on the Matsubara / imaginary time axis that are much more compact,\n",
+    "based on the Discrete Lehman Representation (DLR), for a detailed introduction see [Kaye et al., PRB105, 2022](https://doi.org/10.1103/PhysRevB.105.235115).\n",
+    "\n",
+    "The DLR of an imaginary time Green's function is given by an expansion of the form\n",
+    "\n",
+    "$$ G(\\tau) \\approx \\sum_{l=1}^r K(\\tau, \\omega_l) \\, \\widehat{g}_l $$\n",
+    "\n",
+    "where $K(\\tau,\\omega) = -\\frac{e^{-\\tau \\omega}}{1+e^{-\\beta \\omega}}$ is the analytic continuation kernel appearing in the spectral Lehmann representation\n",
+    "\n",
+    "$$ G(\\tau) = \\int_{-\\infty}^\\infty d\\omega \\, K(\\tau, \\omega) \\rho(\\omega) $$\n",
+    "\n",
+    "relating $G$ to its spectral density $\\rho$. \n",
+    "\n",
+    "The DLR frequencies $\\omega_l$ are obtained by a numerical scheme that is independent of the specific Green's function $G$. They depend only on the desired accuracy $\\epsilon$ of the DLR expansion, and a dimensionless cutoff parameter $\\Lambda = \\beta \\omega_{max}$ characterized by the assumption that $\\rho(\\omega) = 0$ outside of the interval $[-\\omega_{max}, \\omega_{max}]$. The DLR basis is one of the most compact representations of Matsubara Green's functions and the basis size scales only logarithmically with $\\beta$.\n",
+    "\n",
+    "To get started we first create a Matsubara Green's function with a SemiCircular density of states function at a low temperature of $\\beta=100$. For the imaginary part of G to decay to zero we have to use as many as `~1500` Matsubara frequencies."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "iw_mesh = MeshImFreq(beta=100, S='Fermion', n_iw=1500)\n",
+    "Giw = Gf(mesh=iw_mesh, target_shape=[])\n",
+    "Giw << SemiCircular(1.0)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We now construct a DLR Matsubara Green's function. Similar to the MeshImFreq we have to provide $\\beta$ and the particle statistics. Additionally we set the maximal spectral width of the Greens function `w_max` (half spectral width), plus the precision we want to achieve with the DLR basis:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# import DLR mesh\n",
+    "from triqs.gf.meshes import MeshDLRImFreq\n",
+    "\n",
+    "dlr_iw_mesh = MeshDLRImFreq(beta=100, statistic='Fermion', w_max=1.2, eps=1e-15)\n",
+    "# the Gf is constructed then the same way\n",
+    "Giw_dlr = Gf(mesh= dlr_iw_mesh, target_shape=[])\n",
+    "\n",
+    "print(dlr_iw_mesh)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "By printing the mesh we see that its size is `43` which is substantially smaller than `1500`.\n",
+    "We can initialize the DLR Matsubara Green's function using the same syntax as before"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "Giw_dlr << SemiCircular(1.0);"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Let us now plot both Green's functions:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fig, ax = plt.subplots(1,figsize=(12,5))\n",
+    "oplot(Giw, \"-\", name='G')\n",
+    "oplot(Giw_dlr, name='G DLR')\n",
+    "plt.xlim(-0.1,94)\n",
+    "plt.ylim(-2,0.1)\n",
+    "plt.legend(loc='lower right');"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The DLR mesh Matsubara nodes are quite sparse but as we will see below the data is sufficient to reconstruct the full Matsubara mesh up to the precision specified. \n",
+    "\n",
+    "Next we create the DLR coefficient Green's function associated with `Giw_dlr`. This form is central as it can be easily converted into a `Gf` with any of the mesh types `MeshImTime`, `MeshImFreq`, `MeshDLRImTime` and `MeshDLRImFreq`.\n",
+    "\n",
+    "We obtain the Green's function on the full Matsubara mesh using the function `make_gf_imfreq` to then compare it against the original `Giw`. "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# import helper functions\n",
+    "from triqs.gf import make_gf_dlr, make_gf_dlr_imtime, make_gf_imfreq, make_gf_imtime\n",
+    "\n",
+    "# create DLR coefficient Green's function\n",
+    "G_dlr = make_gf_dlr(Giw_dlr)\n",
+    "\n",
+    "# Get back Green's function on the full Matsubara mesh, no Fourier transform needed\n",
+    "Giw_from_dlr = make_gf_imfreq(G_dlr, n_iw=1500)\n",
+    "\n",
+    "# plot the difference between the original\n",
+    "fig, ax = plt.subplots(1,figsize=(7,5))\n",
+    "\n",
+    "mesh = [iw.imag for iw in Giw.mesh.values()]\n",
+    "ax.plot(mesh, abs((Giw_from_dlr-Giw).data))\n",
+    "ax.semilogy()\n",
+    "ax.set_xlim(0,94)\n",
+    "ax.set_xlabel(r'$i\\omega_n$')\n",
+    "ax.set_ylabel(r'$|G_{ref}-G_{DLR}|$');"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The given accuracy `eps=1e-15` is reached over the full Matsubara mesh!\n",
+    "\n",
+    "The coefficient DLR mesh Gf can be evaluated on any given tau point by passing the Gf a float:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "G_dlr(1.2)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "or on the Matsubara axis by passing a Matsubara mesh point:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "G_dlr(iw_mesh(0))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Finally we can also construct an imaginary time Green's functions, using `make_gf_dlr_imtime` on the compact mesh, and using `make_gf_imtime` on arbirarily dense $\\tau$ meshes by passing the parameter `n_tau`:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "Gtau_dlr = make_gf_dlr_imtime(G_dlr)\n",
+    "Gtau = make_gf_imtime(G_dlr, n_tau=5001)\n",
+    "\n",
+    "oplot(Gtau_dlr.real, name='G DLR')\n",
+    "oplot(Gtau.real, name='G')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Pade analytical continuation\n",
+    "\n",
+    "The Fourier transforms allow to go from time to frequency. A much more delicate thing is to do the so-called \"analytical continuation\". This means to start from a Matsubara-frequency Green's function and obtain the corresponding real-frequency Green's function. This can formally be done, but turns out to be a mathematically ill-conditioned problem. Even small amounts of noise in the Matsubara-frequency data will make the continuation to the real axis very unstable.\n",
+    "\n",
+    "One of the ways to do perform analytical continuation is to use [Pade approximants](https://en.wikipedia.org/wiki/Padé_approximant#Definition). TRIQS can do that for you in the following way:\n",
+    "\n",
+    "*Note:* Pade is currently implemented only for Green's Functions with a Matrix structure"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# The Matsubara Green's function to be continued\n",
+    "iw_mesh = MeshImFreq(beta=50, S='Fermion', n_iw=1000)\n",
+    "Giw = Gf(mesh=iw_mesh, target_shape=[1,1])\n",
+    "Giw << SemiCircular(1.0)\n",
+    "\n",
+    "# Construct real-frequency Green's function and initialize it using Pade approximants\n",
+    "Gw = Gf(mesh=w_mesh, target_shape=[1,1])\n",
+    "Gw.set_from_pade(Giw)\n",
+    "\n",
+    "oplot(-Gw.imag/pi, linewidth=2)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The coarse Matsubara discretization at high temperatures will worsen the Pade result, which is why we chose a much lower temperature value for this example.\n",
+    "\n",
+    "You can see that the Pade continuation did a pretty good job. We will see later that noise will completely change this picture!"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Exercises"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### <i class=\"fa fa-gear fa-x\" style=\"color: #186391\"></i> Exercise 1\n",
+    "\n",
+    "Define the following real-frequency Green's function, where $\\Gamma$ is the Green's function of a\n",
+    "flat bath (width = 1), $\\epsilon_d = 0.3$ and $V=0.2$:\n",
+    "\n",
+    "$$\n",
+    "G^\\mathrm{s+d} (\\omega) =\n",
+    "\\begin{pmatrix} \\omega - \\epsilon_d & V \\\\\\\\ V & \\Gamma^{-1}\n",
+    "\\end{pmatrix}^{-1}\n",
+    "$$\n",
+    "\n",
+    "Plot the spectral function for both diagonal components of this Green's function. What\n",
+    "do they represent physically?"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### <i class=\"fa fa-gear fa-x\" style=\"color: #186391\"></i> Exercise 2\n",
+    "\n",
+    "Plot the density $n(\\epsilon)$ as a function of $\\epsilon$ for a Green's function $G = 1/(i\\omega_n - \\epsilon)$. What is the curve that you obtained? How does it change with temperature?"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### <i class=\"fa fa-gear fa-x\" style=\"color: #186391\"></i> Exercise 3\n",
+    "\n",
+    "Define a block Green's function with an *up* and a *down* block. Each block is just a simple 1x1 imaginary-frequency Green's function. Iterate over the blocks to initialize the two blocks to $1/i \\omega_n$. What happens if you change $\\beta$?"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### <i class=\"fa fa-gear fa-x\" style=\"color: #186391\"></i> Exercise 4\n",
+    "\n",
+    "Consider a Hubbard atom with $U=2$ at temperature $T = 1/\\beta = 1/10$. The non-interacting and interacting Green's functions for this problem are:\n",
+    "\n",
+    "$$\n",
+    "G_0 = \\frac{1}{i \\omega_n + U/2} \\qquad G = \\frac{1}{2(i\\omega_n + U/2)} + \\frac{1}{2(i\\omega_n - U/2)}\n",
+    "$$\n",
+    "\n",
+    "Using Dyson's equation, verify that the corresponding self-energy is indeed\n",
+    "\n",
+    "$$\n",
+    "\\Sigma = \\frac{U}{2} + \\frac{U^2}{4 i\\omega_n}\n",
+    "$$"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### <i class=\"fa fa-gear fa-x\" style=\"color: #186391\"></i> Exercise 5\n",
+    "\n",
+    "Compute the following second-order self-energy with $U=2$ and $\\beta=50$\n",
+    "\n",
+    "$$ \\Sigma(i\\omega_n) = U^2 \\int_0^\\beta d\\tau e^{i \\omega_n \\tau} G_0(\\tau)^3 $$\n",
+    "\n",
+    "using an non-interacting $G_0$ given by a semi-circular of half-bandwidth 1. Use Dyson's equation to compute $G(i\\omega_n)$.\n",
+    "\n",
+    "Hint: The `SemiCircular` initializer only works for frequency Green's functions.\n",
+    "\n",
+    "Hint: The \"power operator\" is not defined for Green's functions. Use multiplication."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### <i class=\"fa fa-gear fa-x\" style=\"color: #186391\"></i> Exercise 6\n",
+    "\n",
+    "Use Pade approximants to obtain a real-frequency version of the Green's function computed in the Exercise 5. What is the effect of interactions at second-order perturbation theory? How is it changing with different values of $U$?"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.8"
+  },
+  "latex_envs": {
+   "LaTeX_envs_menu_present": true,
+   "autocomplete": true,
+   "bibliofile": "biblio.bib",
+   "cite_by": "apalike",
+   "current_citInitial": 1,
+   "eqLabelWithNumbers": true,
+   "eqNumInitial": 1,
+   "hotkeys": {
+    "equation": "Ctrl-E",
+    "itemize": "Ctrl-I"
+   },
+   "labels_anchors": false,
+   "latex_user_defs": false,
+   "report_style_numbering": false,
+   "user_envs_cfg": false
+  },
+  "widgets": {
+   "state": {},
+   "version": "1.1.1"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
