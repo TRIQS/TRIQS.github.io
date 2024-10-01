@@ -2,24 +2,27 @@
 
 .. _install:
 
+Install TPRF
+************
+
 Packaged Versions of TPRF
 =========================
 
 .. _ubuntu_debian:
-
 Ubuntu Debian packages
 ----------------------
 
-We provide a Debian package for the Ubuntu LTS Version 22.04 (jammy), see :ref:`Triqs Debian package install instructions <triqslibs:ubuntu_debian>`. After installing Triqs the command::
+We provide a Debian package for the Ubuntu LTS Version 24.04 (noble).
+Please first install TRIQS using the :ref:`Ubuntu Install Instructions<triqslibs:ubuntu_debian>`.
+After the TRIQS setup the command::
 
-  sudo apt-get install -y triqs_tprf
+     sudo apt-get install -y triqs_tprf
 
 can be used to install the TPRF package.
-    
-.. _anaconda_exp:
 
-Anaconda (experimental)
------------------------
+.. _anaconda:
+Anaconda
+--------
 
 We provide Linux and OSX packages for the `Anaconda <https://www.anaconda.com/>`_ distribution. The packages are provided through the `conda-forge <https://conda-forge.org/>`_ repositories. After `installing conda <https://docs.conda.io/en/latest/miniconda.html>`_ you can install TPRF with::
 
@@ -28,7 +31,6 @@ We provide Linux and OSX packages for the `Anaconda <https://www.anaconda.com/>`
 See also `github.com/conda-forge/triqs_tprf-feedstock <https://github.com/conda-forge/triqs_tprf-feedstock/>`_.
 
 .. _docker:
-
 Docker
 ------
 
@@ -43,7 +45,7 @@ Compiling TPRF from source
 Prerequisites
 -------------
 
-#. The :ref:`TRIQS <triqslibs:welcome>` library, see `TRIQS installation instruction <https://triqs.github.io/triqs/latest/install.html>`_.
+#. The :ref:`TRIQS <triqslibs:welcome>` library, see :ref:`TRIQS installation instruction <triqslibs:triqs_install>`.
    In the following, we assume that TRIQS is installed in the directory ``path_to_triqs``.
 
 #. For Python 3.12 and higher, `setuptools <https://pypi.org/project/setuptools/>`_ is required. 
@@ -85,7 +87,7 @@ To use a particular version, go into the directory with the sources, and look at
 
 Checkout the version that you want::
 
-     $ git checkout 2.1.0
+     $ git checkout 3.3.1
 
 and follow steps 2 to 4 above to compile the code.
 
