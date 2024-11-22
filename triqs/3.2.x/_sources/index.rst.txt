@@ -91,25 +91,43 @@ You can also post an issue on the `TRIQS GitHub <https://github.com/TRIQS/triqs>
 
 Finally, if you want to contribute to the project, please check our :ref:`Contributing <triqs_contributing>` section.
 
+.. raw:: html
+
+   <style>
+       .img {
+           margin-right: 2%;
+       }
+   </style>
+
+.. image:: _static/logo_simons.png
+   :width: 19.0%
+   :target: https://www.simonsfoundation.org
+   :class: img
+
+.. image:: _static/logo_ccq.png
+   :width: 32.6%
+   :target: https://www.simonsfoundation.org/flatiron/center-for-computational-quantum-physics/
+   :class: img
+
+.. image:: _static/logo_cdf.png
+   :width: 4.7%
+   :target: https://www.college-de-france.fr
+   :class: img
+
 .. image:: _static/logo_cea.png
-   :width: 14%
+   :width: 7.7%
    :target: http://ipht.cea.fr
+   :class: img
 
 .. image:: _static/logo_x.png
-   :width: 14%
+   :width: 4.6%
    :target: "https://www.cpht.polytechnique.fr
+   :class: img
 
 .. image:: _static/logo_cnrs.png
-   :width: 14%
+   :width: 6.3%
    :target: https://www.cnrs.fr
+   :class: img
 
 .. image:: _static/logo_erc.jpg
-   :width: 14%
-
-.. image:: _static/logo_flatiron.png
-   :width: 20%
-   :target: https://www.simonsfoundation.org/flatiron
-
-.. image:: _static/logo_simons.jpg
-   :width: 20%
-   :target: https://www.simonsfoundation.org
+   :width: 6.6%
