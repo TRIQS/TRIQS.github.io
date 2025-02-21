@@ -533,8 +533,8 @@ lock file.</p>
 it creates a lock file <cite>vasp.lock</cite> and waits until the lock file is
 removed. The shell script, in turn, waits for the VASP process and once
 the lock file is created it starts a DMFT iteration. The DMFT iteration
-must finish by generating a Kohn-Sham (KS) density matrix (file <cite>GAMMA</cite>)
-and removing the lock file. The VASP process then reads in <cite>GAMMA</cite>
+must finish by generating a Kohn-Sham (KS) density matrix (file <cite>GAMMA</cite> or <cite>vaspgamma.h5</cite>)
+and removing the lock file. The VASP process then reads in <cite>GAMMA</cite>/<cite>vaspgamma.h5</cite>
 and proceeds with the next iteration. PLOVasp interface provides a shell-script <strong class="program">vasp_dmft</strong> (in the triqs bin directory):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">vasp_dmft</span> <span class="p">[</span><span class="o">-</span><span class="n">n</span> <span class="o">&lt;</span><span class="n">number</span> <span class="n">of</span> <span class="n">cores</span><span class="o">&gt;</span><span class="p">]</span> <span class="o">-</span><span class="n">i</span> <span class="o">&lt;</span><span class="n">number</span> <span class="n">of</span> <span class="n">iterations</span><span class="o">&gt;</span>  <span class="o">-</span><span class="n">j</span> <span class="o">&lt;</span><span class="n">number</span> <span class="n">of</span> <span class="n">VASP</span> <span class="n">iterations</span> <span class="k">with</span> <span class="n">fixed</span> <span class="n">charge</span> <span class="n">density</span><span class="o">&gt;</span> <span class="p">[</span><span class="o">-</span><span class="n">v</span> <span class="o">&lt;</span><span class="n">VASP</span> <span class="n">version</span><span class="o">&gt;</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">p</span> <span class="o">&lt;</span><span class="n">path</span> <span class="n">to</span> <span class="n">VASP</span> <span class="n">directory</span><span class="o">&gt;</span><span class="p">]</span> <span class="p">[</span><span class="o">&lt;</span><span class="n">dmft_script</span><span class="o">.</span><span class="n">py</span><span class="o">&gt;</span><span class="p">]</span>
 
@@ -560,13 +560,14 @@ and proceeds with the next iteration. PLOVasp interface provides a shell-script 
 calculations with the main difference that its functionality (apart from the
 lines importing other modules) should be placed inside a function <cite>dmft_cycle()</cite>
 which will be called every DMFT cycle and returns both the correlation energy and the SumK object.</p>
-<p>VASP has a special INCAR <cite>ICHARG=5</cite> mode, that has to be switched on to make VASP wait for the <cite>vasp.lock</cite> file, and read the updated charge density after each step. One should add the following lines to the <cite>INCAR</cite> file:</p>
+<p>VASP has a special INCAR <a class="reference external" href="https://www.vasp.at/wiki/index.php/ICHARG" rel="noopener noreferrer" target="_blank">ICHARG=5</a> mode, that has to be switched on to make VASP wait for the <cite>vasp.lock</cite> file, and read the updated charge density after each step. One should add the following lines to the <cite>INCAR</cite> file:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ICHARG</span> <span class="o">=</span> <span class="mi">5</span>
 <span class="n">NELM</span> <span class="o">=</span> <span class="mi">1000</span>
 <span class="n">NELMIN</span> <span class="o">=</span> <span class="mi">1000</span>
 <span class="n">IMIX</span><span class="o">=</span><span class="mi">1</span>
 <span class="n">BMIX</span><span class="o">=</span><span class="mf">0.5</span>
 <span class="n">AMIX</span><span class="o">=</span><span class="mf">0.02</span>
+<span class="n">LSYNCH5</span><span class="o">=</span><span class="kc">True</span>
 </pre></div>
 </div>
 <p>Technically, VASP runs with <cite>ICHARG=5</cite> in a SCF mode, and adding the DMFT
@@ -582,7 +583,8 @@ that the KS states are well converged before the first projectors are created!
 To understand the difference please make sure to read <a class="reference external" href="https://www.vasp.at/wiki/index.php/ISTART" rel="noopener noreferrer" target="_blank">ISTART flag VASP wiki</a>. Furthermore, the flags <cite>NELM</cite> and
 <cite>NELMIN</cite> ensure that VASP does not terminate after the default number of
 iterations of 60.</p>
-<p>For more detailed and fine grained methods to run Vasp in CSC also on clusters see the methods implemented in <a class="reference external" href="https://triqs.github.io/solid_dmft/_ref/dft_managers.html" rel="noopener noreferrer" target="_blank">solid dmft</a>.</p>
+<p>The <a class="reference external" href="https://www.vasp.at/wiki/index.php/LSYNCH5" rel="noopener noreferrer" target="_blank">LSYNCH5</a> flag is set to <cite>True</cite> to ensure that the <a class="reference external" href="https://www.vasp.at/wiki/index.php/Vaspout.h5" rel="noopener noreferrer" target="_blank">vaspout.h5</a> file can be read while VASP is running. Starting from VASP 6.5.0 all communication between VASP and TRIQS is performed through two hdf5 files: <a class="reference external" href="https://www.vasp.at/wiki/index.php/Vaspout.h5" rel="noopener noreferrer" target="_blank">vaspout.h5</a> and <a class="reference external" href="https://www.vasp.at/wiki/index.php/Vaspgamma.h5" rel="noopener noreferrer" target="_blank">vaspgamma.h5</a> when VASP is compiled with hdf5 support.</p>
+<p>For more detailed and fine grained methods to run VASP in CSC also on clusters see the methods implemented in <a class="reference external" href="https://triqs.github.io/solid_dmft/_ref/dft_managers.html" rel="noopener noreferrer" target="_blank">solid dmft</a>.</p>
 </section>
 <section id="elk">
 <h2>Elk<a class="headerlink" href="#elk" title="Link to this heading"></a></h2>
