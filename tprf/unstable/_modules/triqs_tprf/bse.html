@@ -936,7 +936,7 @@
 
 <div class="viewcode-block" id="get_chi0_nk_at_specific_w">
 <a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.bse.get_chi0_nk_at_specific_w">[docs]</a>
-<span class="k">def</span> <span class="nf">get_chi0_nk_at_specific_w</span><span class="p">(</span><span class="n">g_wk</span><span class="p">,</span> <span class="n">nw_index</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">nwf</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_chi0_nk_at_specific_w</span><span class="p">(</span><span class="n">g_wk</span><span class="p">,</span> <span class="n">nw_index</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">nwf</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">g_nonlocal</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot; Compute the generalized bare lattice susceptibility </span>
 <span class="sd">    :math:`\chi^{0}_{\bar{a}b\bar{c}d}(i\omega_{n=\mathrm{nw\_index}}, i\nu_n, \mathbf{k})` from the single-particle</span>
 <span class="sd">    Green&#39;s function :math:`G_{a\bar{b}}(i\nu_n, \mathbf{k})` for a specific :math:`i\omega_{n=\mathrm{nw\_index}}`.</span>
@@ -950,7 +950,11 @@
 <span class="sd">               The bosonic Matsubara frequency index :math:`i\omega_{n=\mathrm{nw\_index}}`</span>
 <span class="sd">               at which :math:`\chi^0` is calculated.</span>
 <span class="sd">    nwf : int,</span>
-<span class="sd">          Number of fermionic frequencies in :math:`\chi^0`.    </span>
+<span class="sd">          Number of fermionic frequencies in :math:`\chi^0`.</span>
+
+<span class="sd">    g_nonlocal : bool, optional</span>
+<span class="sd">          Special case for D-BSE. Remove local component of the single particle Green&#39;s function.</span>
+<span class="sd">          Default: `False`</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -973,6 +977,9 @@
 
     <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;--&gt; g_wr from g_wk&#39;</span><span class="p">)</span>
     <span class="n">g_wr</span> <span class="o">=</span> <span class="n">fourier_wk_to_wr</span><span class="p">(</span><span class="n">g_wk</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">g_nonlocal</span><span class="p">:</span>
+        <span class="n">g_wr</span><span class="p">[:,</span> <span class="n">Idx</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">0.</span>
     
     <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;--&gt; chi0_wnr from g_wr&#39;</span><span class="p">)</span>
     <span class="n">chi0_nr</span> <span class="o">=</span> <span class="n">chi0_nr_from_gr_PH_at_specific_w</span><span class="p">(</span><span class="n">nw_index</span><span class="o">=</span><span class="n">nw_index</span><span class="p">,</span> <span class="n">nn</span><span class="o">=</span><span class="n">nwf</span><span class="p">,</span> <span class="n">g_nr</span><span class="o">=</span><span class="n">g_wr</span><span class="p">)</span>

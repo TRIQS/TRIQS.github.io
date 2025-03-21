@@ -679,8 +679,8 @@
 <span class="c1">#</span>
 <span class="c1"># TPRF: Two-Particle Response Function (TPRF) Toolbox for TRIQS</span>
 <span class="c1">#</span>
-<span class="c1"># Copyright (C) 2023 H. U.R. Strand</span>
-<span class="c1"># Authors: H. U.R. Strand</span>
+<span class="c1"># Copyright (C) 2023 H. U.R. Strand and E G.C.P. van Loon</span>
+<span class="c1"># Authors: H. U.R. Strand and E. G.C.P. van Loon</span>
 <span class="c1">#</span>
 <span class="c1"># TPRF is free software: you can redistribute it and/or modify it under the</span>
 <span class="c1"># terms of the GNU General Public License as published by the Free Software</span>
@@ -706,6 +706,9 @@
 
 <span class="kn">from</span> <span class="nn">triqs_tprf.linalg</span> <span class="kn">import</span> <span class="n">product_PH</span><span class="p">,</span> <span class="n">inverse_PH</span>
 <span class="kn">from</span> <span class="nn">triqs_tprf.chi_from_gg2</span> <span class="kn">import</span> <span class="n">chi0_from_gg2_PH</span><span class="p">,</span> <span class="n">chi_from_gg2_PH</span>
+
+<span class="kn">from</span> <span class="nn">triqs_tprf.bse</span> <span class="kn">import</span> <span class="n">get_chi0_nk_at_specific_w</span>
+<span class="kn">from</span> <span class="nn">triqs_tprf.lattice_utils</span> <span class="kn">import</span> <span class="n">add_fake_bosonic_mesh</span>
 
 
 <div class="viewcode-block" id="impurity_reducible_vertex_F">
@@ -815,6 +818,7 @@
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--&gt; DBSE chi_kw&#39;</span><span class="p">)</span>
     <span class="n">chi_kw</span> <span class="o">=</span> <span class="n">chiq_sum_nu_from_chi0q_and_gamma_and_L_wn_PH</span><span class="p">(</span>
         <span class="n">chi0_nonlocal_wnk</span><span class="p">,</span> <span class="n">F_wnn</span><span class="p">,</span> <span class="n">L_resize_wn</span><span class="p">)</span>
+    
     <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">bmesh</span><span class="p">:</span>
         <span class="n">chi_kw</span><span class="p">[:,</span> <span class="n">w</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">+=</span> <span class="n">chi_imp_w</span><span class="p">[</span><span class="n">Idx</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">index</span><span class="p">)]</span><span class="o">.</span><span class="n">data</span>
 
@@ -823,6 +827,84 @@
     
     <span class="k">return</span> <span class="n">chi_kw</span></div>
 
+
+
+<span class="k">def</span> <span class="nf">solve_lattice_dbse_lomem</span><span class="p">(</span><span class="n">g_wk</span><span class="p">,</span> <span class="n">F_wnn</span><span class="p">,</span> <span class="n">L_wn</span><span class="p">,</span> <span class="n">chi_imp_w</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot; Compute the generalized lattice susceptibility </span>
+<span class="sd">    :math:`\chi_{\bar{a}b\bar{c}d}(\mathbf{k}, \omega_n)` using the dual Bethe-Salpeter </span>
+<span class="sd">    equation (DBSE).</span>
+
+<span class="sd">    This implementation loops over individual bosonic frequencies, requiring less memory</span>
+<span class="sd">    but slightly more computations.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    g_wk : Gf,</span>
+<span class="sd">           Single-particle Green&#39;s function :math:`G_{a\bar{b}}(i\nu_n, \mathbf{k})`.</span>
+<span class="sd">    F_wnn : Gf,</span>
+<span class="sd">                Local particle-hole reducible vertex function </span>
+<span class="sd">                :math:`F_{a\bar{b}c\bar{d}}(i\omega_n, i\nu_n, i\nu_n&#39;)`.</span>
+<span class="sd">    L_wn : Gf,</span>
+<span class="sd">                Local particle-hole reducible triangle vertex function </span>
+<span class="sd">                :math:`L_{a\bar{b}c\bar{d}}(i\omega_n, i\nu_n)`.</span>
+<span class="sd">    chi_imp_w : Gf,</span>
+<span class="sd">                Generalized DMFT impurity susceptibility</span>
+<span class="sd">                :math:`\chi_{a\bar{b}c\bar{d}}(i\omega_n)`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    chi_kw : Gf,</span>
+<span class="sd">             Generalized lattice susceptibility </span>
+<span class="sd">             :math:`\chi_{\bar{a}b\bar{c}d}(\mathbf{k}, i\omega_n)`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">bmesh</span> <span class="o">=</span> <span class="n">F_wnn</span><span class="o">.</span><span class="n">mesh</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">fmesh</span> <span class="o">=</span> <span class="n">F_wnn</span><span class="o">.</span><span class="n">mesh</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">assert</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">fmesh</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">g_wk</span><span class="o">.</span><span class="n">mesh</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="p">)</span>
+    <span class="k">assert</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">bmesh</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">L_wn</span><span class="o">.</span><span class="n">mesh</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="p">)</span>
+    <span class="k">assert</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">fmesh</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">L_wn</span><span class="o">.</span><span class="n">mesh</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="p">)</span>
+    <span class="k">assert</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">bmesh</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">chi_imp_w</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span> <span class="p">)</span>
+    
+    <span class="n">nw</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">bmesh</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="n">nn</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fmesh</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+    
+    <span class="n">L_resize_wn</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">MeshProduct</span><span class="p">(</span><span class="n">bmesh</span><span class="p">,</span> <span class="n">fmesh</span><span class="p">),</span> <span class="n">indices</span><span class="o">=</span><span class="n">L_wn</span><span class="o">.</span><span class="n">indices</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">w</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">L_resize_wn</span><span class="o">.</span><span class="n">mesh</span><span class="p">:</span>
+        <span class="n">L_resize_wn</span><span class="p">[</span><span class="n">w</span><span class="p">,</span> <span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">L_wn</span><span class="p">[</span><span class="n">Idx</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">index</span><span class="p">),</span> <span class="n">Idx</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">index</span><span class="p">)]</span>
+
+    <span class="n">kmesh</span> <span class="o">=</span> <span class="n">g_wk</span><span class="o">.</span><span class="n">mesh</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">chi_kw</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">MeshProduct</span><span class="p">(</span><span class="n">kmesh</span><span class="p">,</span> <span class="n">bmesh</span><span class="p">),</span> <span class="n">indices</span><span class="o">=</span><span class="n">F_wnn</span><span class="o">.</span><span class="n">indices</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">W</span> <span class="ow">in</span> <span class="n">bmesh</span><span class="p">:</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="o">*</span><span class="mi">72</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;DBSE: Low memory calc at bosonic frequency index </span><span class="si">{</span><span class="n">W</span><span class="o">.</span><span class="n">index</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;DBSE: </span><span class="si">{</span><span class="n">W</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="o">*</span><span class="mi">72</span><span class="p">)</span>
+
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">Idx</span><span class="p">(</span><span class="n">W</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">F_Wnn</span> <span class="o">=</span> <span class="n">add_fake_bosonic_mesh</span><span class="p">(</span><span class="n">F_wnn</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:])</span>
+        <span class="n">L_resize_Wn</span> <span class="o">=</span> <span class="n">add_fake_bosonic_mesh</span><span class="p">(</span><span class="n">L_resize_wn</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="p">:])</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--&gt; chi0_nonlocal_Wnk&#39;</span><span class="p">)</span>
+        <span class="n">chi0_nonlocal_Wnk</span> <span class="o">=</span> <span class="n">add_fake_bosonic_mesh</span><span class="p">(</span><span class="n">get_chi0_nk_at_specific_w</span><span class="p">(</span>
+            <span class="n">g_wk</span><span class="p">,</span> <span class="n">nw_index</span><span class="o">=</span><span class="n">W</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">nwf</span><span class="o">=</span><span class="n">nn</span><span class="p">,</span> <span class="n">g_nonlocal</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--&gt; DBSE chi_kW&#39;</span><span class="p">)</span>
+        <span class="n">chi_kW</span> <span class="o">=</span> <span class="n">chiq_sum_nu_from_chi0q_and_gamma_and_L_wn_PH</span><span class="p">(</span>
+            <span class="n">chi0_nonlocal_Wnk</span><span class="p">,</span> <span class="n">F_Wnn</span><span class="p">,</span> <span class="n">L_resize_Wn</span><span class="p">)</span>
+
+        <span class="n">chi_kw</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">chi_kW</span><span class="p">[:,</span> <span class="n">Idx</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span> <span class="o">+</span> <span class="n">chi_imp_w</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+            
+        <span class="k">del</span> <span class="n">chi0_nonlocal_Wnk</span>
+        <span class="k">del</span> <span class="n">chi_kW</span>
+
+    <span class="k">del</span> <span class="n">L_resize_wn</span>
+
+    <span class="k">return</span> <span class="n">chi_kw</span>
 </pre></div>
 
            </div>
