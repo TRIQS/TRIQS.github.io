@@ -82,6 +82,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../algorithm_implementation/implementation_notes.html#work-data">Work data</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../algorithm_implementation/implementation_notes.html#determinants">Determinants</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../algorithm_implementation/implementation_notes.html#miscellaneous">Miscellaneous</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../algorithm_implementation/implementation_notes.html#automatic-tests">Automatic tests</a></li>
 </ul>
 </li>
 </ul>
@@ -98,6 +99,7 @@
 <li class="toctree-l5"><a class="reference internal" href="#hybridization-function">Hybridization function</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#dynamical-density-density-interaction">Dynamical density-density interaction</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#spin-spin-interaction">Spin-spin interaction</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#conditions-for-half-filling">Conditions for half-filling</a></li>
 <li class="toctree-l5"><a class="reference internal" href="#solve-parameters">Solve parameters</a></li>
 </ul>
 </li>
@@ -113,6 +115,8 @@
 <li class="toctree-l4"><a class="reference internal" href="moves.html#split-segment">Split segment</a></li>
 <li class="toctree-l4"><a class="reference internal" href="moves.html#regroup-segment">Regroup segment</a></li>
 <li class="toctree-l4"><a class="reference internal" href="moves.html#move-segment">Move segment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="moves.html#double-insert-segment">Double insert segment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="moves.html#double-remove-segment">Double remove segment</a></li>
 <li class="toctree-l4"><a class="reference internal" href="moves.html#insert-spin-segment">Insert spin segment</a></li>
 <li class="toctree-l4"><a class="reference internal" href="moves.html#remove-spin-segment">Remove spin segment</a></li>
 <li class="toctree-l4"><a class="reference internal" href="moves.html#swap-spin-lines">Swap spin lines</a></li>
@@ -181,6 +185,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../about.html">About CTSEG</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html#references">References</a></li>
 </ul>
 
         </div>
@@ -226,16 +231,8 @@ They can be conveniently supplied as a Python dictionary:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">gf_struct</span></code> specifies the block structure of the impurity Green’s function (see below).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">beta</span></code> is the inverse temperature.</p></li>
-<li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">n_tau</span></code> is the number of points of the imaginary time grid on which the input hybridization <span class="math notranslate nohighlight">\(\Delta(\tau)\)</span> is sampled.</dt><dd><p>It is also the default number of samples for the measured fermionic two-point functions.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">n_tau_bosonic</span></code> is the number of points of the imaginary time grid on which the bosonic two-point function inputs (<span class="math notranslate nohighlight">\(D_0(\tau)\)</span> and <span class="math notranslate nohighlight">\(\mathcal{J}_{\perp}(\tau)\)</span>) are sampled.</dt><dd><p>It is also the default number of samples for the measured bosonic two-point functions.</p>
-</dd>
-</dl>
-</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_tau</span></code> is the number of points of the imaginary time grid on which the input hybridization <span class="math notranslate nohighlight">\(\Delta(\tau)\)</span> is sampled. It is also the default number of samples for the measured fermionic two-point functions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_tau_bosonic</span></code> is the number of points of the imaginary time grid on which the bosonic two-point function inputs (<span class="math notranslate nohighlight">\(D_0(\tau)\)</span> and <span class="math notranslate nohighlight">\(\mathcal{J}_{\perp}(\tau)\)</span>) are sampled. It is also the default number of samples for the measured bosonic two-point functions.</p></li>
 </ul>
 <section id="green-s-function-structure">
 <h3>Green’s function structure<a class="headerlink" href="#green-s-function-structure" title="Link to this heading"></a></h3>
@@ -366,21 +363,21 @@ The following code extracts from a <code class="docutils literal notranslate"><s
 </div>
 <p>If the <code class="docutils literal notranslate"><span class="pre">h0</span></code> are already expressed in the local eigenbasis, the obtained hybridization function can be
 directly used as the solver input. In the general case, they need to be rotated to the eigenbasis:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rot_lst</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">h0_bl</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">h0_bl</span> <span class="ow">in</span> <span class="n">h0</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">linalg</span>
+<span class="n">rot_lst</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">h0_bl</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">h0_bl</span> <span class="ow">in</span> <span class="n">h0</span><span class="p">]</span>
 <span class="k">for</span> <span class="p">(</span><span class="n">bl</span><span class="p">,</span> <span class="n">g0_bl</span><span class="p">),</span> <span class="n">rot_bl</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">Delta_iw</span><span class="p">,</span> <span class="n">rot_lst</span><span class="p">):</span>
     <span class="n">g0_bl</span> <span class="o">&lt;&lt;</span> <span class="n">rot_bl</span><span class="o">.</span><span class="n">H</span> <span class="o">*</span> <span class="n">g0_bl</span> <span class="o">*</span> <span class="n">rot_bl</span>
 </pre></div>
 </div>
 <p>If a rotation is required, then the interactions should also be rotated accordingly.
 The non-interacting Hamiltonian operator in its eigenbasis is obtained as:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">linalg</span>
-<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">bl_name</span><span class="p">,</span> <span class="n">bl_size</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span> <span class="n">bl_size</span><span class="p">:</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">bl_name</span><span class="p">,</span> <span class="n">bl_size</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">bl_size</span><span class="p">):</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
-            <span class="n">hloc_0</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">h0_lst</span><span class="p">[</span><span class="n">i</span><span class="p">])[</span><span class="mi">0</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="n">bl_name</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+            <span class="n">h_loc0</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">h0_lst</span><span class="p">[</span><span class="n">i</span><span class="p">])[</span><span class="mi">0</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="n">bl_name</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">hloc_0</span> <span class="o">+=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">h0_lst</span><span class="p">[</span><span class="n">i</span><span class="p">])[</span><span class="mi">0</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="n">bl_name</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+            <span class="n">h_loc0</span> <span class="o">+=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">h0_lst</span><span class="p">[</span><span class="n">i</span><span class="p">])[</span><span class="mi">0</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="n">bl_name</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -438,6 +435,16 @@ it can be split into a density-density and a perpendicular spin-spin term. Indee
 <p>The value of <code class="docutils literal notranslate"><span class="pre">n_tau_bosonic</span></code> supplied in the <code class="docutils literal notranslate"><span class="pre">constr_params</span></code> and the number of points in the <span class="math notranslate nohighlight">\(\tau\)</span> grids of
 the <span class="math notranslate nohighlight">\(D(\tau)\)</span> and <span class="math notranslate nohighlight">\(J_{\perp}(\tau)\)</span> inputs must match.</p>
 </section>
+<section id="conditions-for-half-filling">
+<h3>Conditions for half-filling<a class="headerlink" href="#conditions-for-half-filling" title="Link to this heading"></a></h3>
+<p>For a particle-hole symmetric, spin-symmetric single-orbital problem, the following values of the chemical potential correspond to half-filling (assuming that the orbital energy <code class="docutils literal notranslate"><span class="pre">eps</span></code> is 0):</p>
+<ul class="simple">
+<li><p>In the absence of dynamical density-density interaction: <span class="math notranslate nohighlight">\(\mu = U/2\)</span>.</p></li>
+<li><p>In the presence of a dynamical density-density interaction <span class="math notranslate nohighlight">\(D_{\sigma \sigma'} (\tau)\)</span> and possibly a perpendicular spin-spin interaction <span class="math notranslate nohighlight">\(J_{\perp}(\tau)\)</span>:</p></li>
+</ul>
+<div class="math notranslate nohighlight">
+\[\mu = \frac{U + [D_{\uparrow\uparrow} + D_{\uparrow \downarrow}](i\omega_n = 0)}{2}\]</div>
+</section>
 <section id="solve-parameters">
 <h3>Solve parameters<a class="headerlink" href="#solve-parameters" title="Link to this heading"></a></h3>
 <p>The parameters required to perform a CTQMC run are conveniently supplied as a Python dictionary.
@@ -469,6 +476,7 @@ for developers. The solver chooses the relevant moves depending on its inputs, a
 and <code class="docutils literal notranslate"><span class="pre">n_tau_chi2</span></code> (defaults to <code class="docutils literal notranslate"><span class="pre">n_tau_bosonic</span></code>) for bosonic functions.</p></li>
 </ul>
 <p>The complete list of parameters is available <a class="reference internal" href="../_ref/triqs_ctseg.solver.Solver.solve.html"><span class="doc">here</span></a>.</p>
+<p>The moves <code class="docutils literal notranslate"><span class="pre">double_insert_segment</span></code> and <code class="docutils literal notranslate"><span class="pre">double_remove_segment</span></code> are off by default. They may be switched on by the user when solving impurities with strong attractive interactions to improve ergodicity.</p>
 </section>
 </section>
 <section id="step-4-run-the-solver">
@@ -540,7 +548,7 @@ and at the end the results from the different cores are averaged together.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2024 The Simons Foundation, authors: N. Kavokine, H. Lu, N. Wentzell, O. Parcollet.</p>
+    <p>&#169; Copyright 2022--present The TRIQS/ctseg Authors and their Assignees.</p>
   </div>
 
    
