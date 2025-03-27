@@ -174,6 +174,10 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../reference/python_reference.html#two-particle-self-consistent-solver-tpsc">Two-particle self-consistent solver (TPSC)</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../reference/python_reference.html#triqs_tprf.tpsc_solver.tpsc_solver"><code class="docutils literal notranslate"><span class="pre">tpsc_solver</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../reference/python_reference.html#triqs_tprf.tpsc_solver.tpsc_solver.get_GG0_bubble_chi2_wk"><code class="docutils literal notranslate"><span class="pre">tpsc_solver.get_GG0_bubble_chi2_wk()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../reference/python_reference.html#triqs_tprf.tpsc_solver.tpsc_solver.get_sigma"><code class="docutils literal notranslate"><span class="pre">tpsc_solver.get_sigma()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../reference/python_reference.html#triqs_tprf.tpsc_solver.tpsc_solver.get_sigma_tpsc_dynamic"><code class="docutils literal notranslate"><span class="pre">tpsc_solver.get_sigma_tpsc_dynamic()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../reference/python_reference.html#triqs_tprf.tpsc_solver.tpsc_solver.get_sigma_tpsc_dynamic_numpy"><code class="docutils literal notranslate"><span class="pre">tpsc_solver.get_sigma_tpsc_dynamic_numpy()</span></code></a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../reference/python_reference.html#triqs_tprf.tpsc_solver.tpsc_solver.solve"><code class="docutils literal notranslate"><span class="pre">tpsc_solver.solve()</span></code></a></li>
 </ul>
 </li>
@@ -693,8 +697,8 @@
 <span class="c1">#</span>
 <span class="c1"># TPRF: Two-Particle Response Function (TPRF) Toolbox for TRIQS</span>
 <span class="c1">#</span>
-<span class="c1"># Copyright (C) 2025 by Xaver Landerl, H. U.R. Strand</span>
-<span class="c1"># Authors: Xaver Landerl, H. U.R. Strand</span>
+<span class="c1"># Copyright (C) 2025 by Xaver Landerl, Hugo U.R. Strand</span>
+<span class="c1"># Authors: Xaver Landerl, Hugo U.R. Strand</span>
 <span class="c1">#</span>
 <span class="c1"># TPRF is free software: you can redistribute it and/or modify it under the</span>
 <span class="c1"># terms of the GNU General Public License as published by the Free Software</span>
@@ -710,6 +714,8 @@
 <span class="c1"># TPRF. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
 <span class="c1">#</span>
 <span class="c1">################################################################################</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
@@ -733,7 +739,431 @@
 <span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">fourier_tr_to_wr</span>
 <span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">fourier_wr_to_wk</span>
 
-<span class="kn">import</span> <span class="nn">sys</span>
+
+<div class="viewcode-block" id="tpsc_solver">
+<a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.tpsc_solver.tpsc_solver">[docs]</a>
+<span class="k">class</span> <span class="nc">tpsc_solver</span><span class="p">:</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Two-particle self-consistency [1] solver for single-band Hubbard models</span>
+
+<span class="sd">    Determining the single-particle Green&#39;s function and self-energy,</span>
+<span class="sd">    as well as the charge and spin susceptibilities.</span>
+
+<span class="sd">    [1] Y.M. Vilk, A.-M.S. Tremblay, J. Phys. I France, v7, no 11, pp 1309-1368 (1997)</span>
+<span class="sd">    https://doi.org/10.1051/jp1:1997135 and https://arxiv.org/abs/cond-mat/9702188</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">wmesh</span><span class="p">,</span> <span class="n">e_k</span><span class="p">,</span> <span class="n">docc</span><span class="o">=</span><span class="s1">&#39;tpsc_ansatz&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the TPSC solver.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n : double</span>
+<span class="sd">            total electron density (spin up and down combined)</span>
+<span class="sd">        U : double</span>
+<span class="sd">            Hubbard interaction</span>
+<span class="sd">        wmesh : MeshImFreq or MeshDLRImFreq</span>
+<span class="sd">                imaginary frequency mesh</span>
+<span class="sd">        e_k : Gf</span>
+<span class="sd">              dispersion relation (excluding spin DOFs)</span>
+<span class="sd">        docc : double, optional</span>
+<span class="sd">               double occupancy (default: `tpsc_ansatz` using the TPSC-Ansatz [1])</span>
+<span class="sd">        verbose : bool, optional</span>
+<span class="sd">                  Verbose printouts (default: `True`)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">U</span> <span class="o">=</span> <span class="n">U</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wmesh</span> <span class="o">=</span> <span class="n">wmesh</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wmesh</span><span class="o">.</span><span class="n">beta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">e_k</span> <span class="o">=</span> <span class="n">e_k</span>
+
+        <span class="k">if</span> <span class="n">docc</span> <span class="o">==</span> <span class="s1">&#39;tpsc_ansatz&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">use_tpsc_ansatz</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span><span class="p">(</span> <span class="nb">type</span><span class="p">(</span><span class="n">docc</span><span class="p">)</span> <span class="o">==</span> <span class="nb">float</span> <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">use_tpsc_ansatz</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">docc</span> <span class="o">=</span> <span class="n">docc</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="n">tpsc_banner</span><span class="p">()</span><span class="o">+</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_tpsc_ansatz</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;  Using the TPSC-Ansatz for the double occupancy.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;docc = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">docc</span><span class="si">}</span><span class="s1"> (not using the TPSC-ansatz)&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;len(wmesh) = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">wmesh</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;nk = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;beta = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;n = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;U = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">U</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="tpsc_solver.solve">
+<a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.tpsc_solver.tpsc_solver.solve">[docs]</a>
+    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">calc_sigma</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">calc_g</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+              <span class="n">Usp_tol</span><span class="o">=</span><span class="mf">2e-12</span><span class="p">,</span> <span class="n">Uch_tol</span><span class="o">=</span><span class="mf">2e-12</span><span class="p">,</span> <span class="n">Uch_max</span><span class="o">=</span><span class="mf">100.</span><span class="p">,</span> <span class="n">chi0_wk</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the TPSC-calculation on the given model determining the screened</span>
+<span class="sd">        spin and charge vertices `Usp` and `Uch`, respectively.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        calc_sigma : bool, optional</span>
+<span class="sd">                     Enable the TPSC-self-energy calculation (default: `True`)</span>
+<span class="sd">        calc_g : bool, optional</span>
+<span class="sd">                 Enable the lattice Green&#39;s function calculation (default: `True`)</span>
+<span class="sd">        </span>
+<span class="sd">        Usp_tol : double, optional</span>
+<span class="sd">                  Tolerance for spin vertex `Usp` solution (default: 2e-12)</span>
+<span class="sd">        Uch_tol : double, optional</span>
+<span class="sd">                  Tolerance for charge vertex `Uch` solution (default: 2e-12)</span>
+<span class="sd">        Uch_max : maximum value of the charge vertex `Uch` to consider</span>
+<span class="sd">                  in numerical search (default: 100.)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">calc_g</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span> <span class="n">calc_sigma</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">chi0_wk</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">chi0_wk</span> <span class="o">=</span> <span class="n">chi0_wk</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Calculating non-interacting Green&#39;s function (g0_wk) and susceptibility (chi0_wk)&quot;</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">g0_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_g0_wk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+            <span class="n">nw</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wmesh</span><span class="p">,</span> <span class="n">MeshDLRImFreq</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">wmesh</span><span class="o">.</span><span class="n">n_iw</span> <span class="c1"># tprf api FIXME!</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">chi0_wk</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">imtime_bubble_chi0_wk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g0_wk</span><span class="p">,</span> <span class="n">nw</span><span class="o">=</span><span class="n">nw</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Calculating first level of approximation...&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">   Calculating Usp...&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Usp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve_Usp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chi0_wk</span><span class="p">,</span> <span class="n">Usp_tol</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">   Calculating Uch...&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Uch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve_Uch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chi0_wk</span><span class="p">,</span> <span class="n">Uch_tol</span><span class="p">,</span> <span class="n">Uch_max</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">   Calculating chisp_wk and chich_wk...&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chisp_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve_rpa</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chi0_wk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Usp</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chich_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve_rpa</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chi0_wk</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">Uch</span><span class="p">)</span>
+
+        <span class="n">chi_sum_rule</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_density</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chisp_wk</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">chich_wk</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">assert</span><span class="p">(</span> <span class="n">chi_sum_rule</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">Usp_tol</span><span class="p">,</span> <span class="n">Uch_tol</span><span class="p">])</span> <span class="p">)</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_tpsc_ansatz</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">   Calculating double occupancy...&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">docc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Usp</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">U</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">/</span><span class="mi">4</span>
+        
+        <span class="c1"># print out results</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Summary first level approximation:&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Usp = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">Usp</span><span class="si">}</span><span class="s2">, Uch = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">Uch</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Double Occupation &lt;n_up*n_down&gt; = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">docc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                
+        <span class="k">if</span> <span class="n">calc_sigma</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Calculating self-energy...&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sigma_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sigma</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="n">calc_g</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Calculating Green</span><span class="se">\&#39;</span><span class="s2">s function...&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">g_wk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_g_wk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma_wk</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="o">*</span><span class="mi">72</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s1">&#39;Doing sum rule check of second-level approximation...&#39;</span><span class="p">)</span>
+
+            <span class="n">tr_SG0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_density</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma_wk</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">g0_wk</span><span class="p">)</span>
+            <span class="n">tr_SG</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_density</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma_wk</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">g_wk</span><span class="p">)</span>
+            <span class="n">rel_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">((</span><span class="n">tr_SG0</span> <span class="o">-</span> <span class="n">tr_SG</span><span class="p">)</span> <span class="o">/</span> <span class="n">tr_SG0</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Tr[Sigma * G0] = </span><span class="si">{</span><span class="n">tr_SG0</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">U</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">docc</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Tr[Sigma * G ] = </span><span class="si">{</span><span class="n">tr_SG</span><span class="w">  </span><span class="o">-</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">U</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">docc</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Relative difference = </span><span class="si">{</span><span class="n">rel_diff</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>                    </div>
+
+
+
+    <span class="k">def</span> <span class="nf">_solve_Usp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chi0_wk</span><span class="p">,</span> <span class="n">Usp_tol</span><span class="p">,</span> <span class="n">Usp_epsilon</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">):</span>
+
+        <span class="k">def</span> <span class="nf">Usp_root</span><span class="p">(</span><span class="n">Usp</span><span class="p">):</span>
+            <span class="n">chi_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve_rpa</span><span class="p">(</span><span class="n">chi0_wk</span><span class="p">,</span> <span class="n">Usp</span><span class="p">)</span>
+            <span class="n">tr_chi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_density</span><span class="p">(</span><span class="n">chi_wk</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_tpsc_ansatz</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">RHS</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">-</span> <span class="n">Usp</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">U</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">/</span><span class="mi">2</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">RHS</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">docc</span>
+
+            <span class="k">return</span> <span class="n">tr_chi</span> <span class="o">-</span> <span class="n">RHS</span>
+        
+        <span class="c1"># here chi_sp diverges (Usp_epsilon for numerical stability)</span>
+        <span class="n">Usp_max</span> <span class="o">=</span> <span class="mf">2.0</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chi0_wk</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">real</span> <span class="o">-</span> <span class="n">Usp_epsilon</span>
+
+        <span class="n">Usp</span> <span class="o">=</span> <span class="n">brentq</span><span class="p">(</span><span class="n">Usp_root</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">Usp_max</span><span class="p">,</span> <span class="n">xtol</span><span class="o">=</span><span class="n">Usp_tol</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Usp</span>
+
+
+    <span class="k">def</span> <span class="nf">_solve_Uch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chi0_wk</span><span class="p">,</span> <span class="n">Uch_tol</span><span class="p">,</span> <span class="n">Uch_max</span><span class="p">):</span>
+
+        <span class="k">def</span> <span class="nf">Uch_root</span><span class="p">(</span><span class="n">Uch</span><span class="p">):</span>
+            <span class="n">chi_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve_rpa</span><span class="p">(</span><span class="n">chi0_wk</span><span class="p">,</span> <span class="o">-</span><span class="n">Uch</span><span class="p">)</span>
+            <span class="n">tr_chi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_density</span><span class="p">(</span><span class="n">chi_wk</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_tpsc_ansatz</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">RHS</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">Usp</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">U</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">RHS</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">docc</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span>
+            
+            <span class="k">return</span> <span class="n">tr_chi</span> <span class="o">-</span> <span class="n">RHS</span>
+        
+        <span class="n">Uch</span> <span class="o">=</span> <span class="n">brentq</span><span class="p">(</span><span class="n">Uch_root</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">Uch_max</span><span class="p">,</span> <span class="n">xtol</span><span class="o">=</span><span class="n">Uch_tol</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Uch</span>
+
+
+    <span class="k">def</span> <span class="nf">_solve_rpa</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chi0_wk</span><span class="p">,</span> <span class="n">U_vert</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates an rpa-susceptibility with a scalar vertex from the non-interacting susceptibility.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        U_vert : double</span>
+<span class="sd">                 RPA vertex</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="c1"># TPRF RPA routine (its tensor/matrix products gives a large overhead for the scalar case)</span>
+            <span class="n">V</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">U_vert</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+            <span class="n">chi_wk</span> <span class="o">=</span> <span class="n">solve_rpa_PH</span><span class="p">(</span><span class="n">chi0_wk</span><span class="p">,</span> <span class="n">V</span><span class="p">)</span>
+
+        <span class="n">chi_wk</span> <span class="o">=</span> <span class="n">chi0_wk</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">chi_wk</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">chi0_wk</span><span class="o">.</span><span class="n">data</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">U_vert</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="n">chi0_wk</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="c1"># FIXME: 1/2 fator to U_vert</span>
+        <span class="k">return</span> <span class="n">chi_wk</span>
+
+    
+    <span class="k">def</span> <span class="nf">_get_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g_wk</span><span class="p">):</span>
+
+        <span class="n">wmesh</span> <span class="o">=</span> <span class="n">g_wk</span><span class="o">.</span><span class="n">mesh</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">nk</span> <span class="o">=</span> <span class="n">g_wk</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">g_w</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">wmesh</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="n">g_wk</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span>
+        <span class="n">g_w</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">g_wk</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">nk</span>
+
+        <span class="k">assert</span><span class="p">(</span> <span class="n">g_w</span><span class="o">.</span><span class="n">target_shape</span> <span class="o">==</span> <span class="nb">tuple</span><span class="p">([</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">g_w</span><span class="o">.</span><span class="n">target_shape</span><span class="p">))</span> <span class="p">)</span>
+    
+        <span class="n">g_w_scalar</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">g_w</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="p">[])</span>
+        <span class="n">g_w_scalar</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">g_w</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        
+        <span class="n">dens</span> <span class="o">=</span> <span class="n">density_from_gf</span><span class="p">(</span><span class="n">g_w_scalar</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+        
+        <span class="k">if</span> <span class="n">g_w</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">statistic</span> <span class="o">==</span> <span class="s1">&#39;Boson&#39;</span><span class="p">:</span>
+            <span class="n">dens</span> <span class="o">=</span> <span class="o">-</span><span class="n">dens</span>
+
+        <span class="k">return</span> <span class="n">dens</span>   
+
+    <span class="k">def</span> <span class="nf">_calc_g0_wk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_density</span><span class="p">):</span>
+
+        <span class="c1"># find the mu that leads to the correct density</span>
+        <span class="n">mu_min</span><span class="p">,</span> <span class="n">mu_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">target_function</span><span class="p">(</span><span class="n">mu</span><span class="p">):</span>
+            <span class="n">g0_wk</span> <span class="o">=</span> <span class="n">lattice_dyson_g0_wk</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">e_k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wmesh</span><span class="p">)</span>
+            <span class="n">density</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_density</span><span class="p">(</span><span class="n">g0_wk</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">target_density</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="n">density</span>
+    
+        <span class="n">mu0</span> <span class="o">=</span> <span class="n">brentq</span><span class="p">(</span><span class="n">target_function</span><span class="p">,</span> <span class="n">mu_min</span><span class="p">,</span> <span class="n">mu_max</span><span class="p">)</span>
+        <span class="n">g0_wk</span> <span class="o">=</span> <span class="n">lattice_dyson_g0_wk</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="n">mu0</span><span class="p">,</span> <span class="n">e_k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wmesh</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">g0_wk</span>
+
+
+    <span class="k">def</span> <span class="nf">_calc_g_wk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_density</span><span class="p">,</span> <span class="n">sigma_wk</span><span class="p">):</span>
+
+        <span class="c1"># find the mu that leads to the correct density</span>
+        <span class="n">mu_min</span><span class="p">,</span> <span class="n">mu_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">target_function</span><span class="p">(</span><span class="n">mu</span><span class="p">):</span>
+            <span class="n">g_wk</span> <span class="o">=</span> <span class="n">lattice_dyson_g_wk</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="p">,</span> <span class="n">sigma_wk</span><span class="p">)</span>
+            <span class="n">density</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_density</span><span class="p">(</span><span class="n">g_wk</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">target_density</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="n">density</span>
+    
+        <span class="n">mu</span> <span class="o">=</span> <span class="n">brentq</span><span class="p">(</span><span class="n">target_function</span><span class="p">,</span> <span class="n">mu_min</span><span class="p">,</span> <span class="n">mu_max</span><span class="p">)</span>
+        <span class="n">g_wk</span> <span class="o">=</span> <span class="n">lattice_dyson_g_wk</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="p">,</span> <span class="n">sigma_wk</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">g_wk</span><span class="p">,</span> <span class="n">mu</span>
+    
+    
+<div class="viewcode-block" id="tpsc_solver.get_sigma_tpsc_dynamic_numpy">
+<a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.tpsc_solver.tpsc_solver.get_sigma_tpsc_dynamic_numpy">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_sigma_tpsc_dynamic_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the second-level approximation of the self-energy.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># define effective potential</span>
+        <span class="n">V_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">U</span><span class="o">/</span><span class="mi">8</span><span class="o">*</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">Usp</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">chisp_wk</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">Uch</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">chich_wk</span><span class="p">)</span>
+
+        <span class="c1"># get V(-t,-r)</span>
+        <span class="n">V_mtr</span> <span class="o">=</span> <span class="n">fourier_wk_to_mtr</span><span class="p">(</span><span class="n">V_wk</span><span class="p">)</span>
+
+        <span class="c1"># get G(t,r)</span>
+        <span class="n">g0_tr</span> <span class="o">=</span> <span class="n">fourier_wk_to_tr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g0_wk</span><span class="p">)</span>
+
+        <span class="c1"># multiply V(-t,-r) * G0(t,r) = Sigma(t,r)</span>
+        <span class="n">sigma_tr</span> <span class="o">=</span> <span class="n">g0_tr</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>    <span class="c1"># the 2 means second level of approximation, must be fermionic</span>
+        <span class="n">sigma_tr</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">V_mtr</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">g0_tr</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        
+        <span class="c1"># transform Sigma(t,r) to Sigma(w,k)</span>
+        <span class="c1">#self.Sigma2_dlr_wk = fourier_tr_to_wk(Sigma2_dlr_tr)</span>
+        <span class="n">sigma_wk</span> <span class="o">=</span> <span class="n">fourier_tr_to_wk</span><span class="p">(</span><span class="n">sigma_tr</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">sigma_wk</span></div>
+
+        
+<div class="viewcode-block" id="tpsc_solver.get_sigma_tpsc_dynamic">
+<a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.tpsc_solver.tpsc_solver.get_sigma_tpsc_dynamic">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_sigma_tpsc_dynamic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the dynamic part of the second-level TPSC approximation of the self-energy.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># define effective potential</span>
+        <span class="n">V_wk</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">U</span><span class="o">/</span><span class="mi">8</span><span class="o">*</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">Usp</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">chisp_wk</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">Uch</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">chich_wk</span><span class="p">)</span>
+
+        <span class="n">V_wr</span> <span class="o">=</span> <span class="n">fourier_wk_to_wr</span><span class="p">(</span><span class="n">V_wk</span><span class="p">)</span>
+        <span class="n">V_tr</span> <span class="o">=</span> <span class="n">fourier_wr_to_tr</span><span class="p">(</span><span class="n">V_wr</span><span class="p">)</span>
+
+        <span class="n">g0_wr</span> <span class="o">=</span> <span class="n">fourier_wk_to_wr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g0_wk</span><span class="p">)</span>
+        <span class="n">g0_tr</span> <span class="o">=</span> <span class="n">fourier_wr_to_tr</span><span class="p">(</span><span class="n">g0_wr</span><span class="p">)</span>
+        
+        <span class="n">sigma_tr</span> <span class="o">=</span> <span class="n">gw_dynamic_sigma</span><span class="p">(</span><span class="n">V_tr</span><span class="p">,</span> <span class="n">g0_tr</span><span class="p">)</span>
+
+        <span class="n">sigma_wr</span> <span class="o">=</span> <span class="n">fourier_tr_to_wr</span><span class="p">(</span><span class="n">sigma_tr</span><span class="p">)</span>
+        <span class="n">sigma_wk</span> <span class="o">=</span> <span class="n">fourier_wr_to_wk</span><span class="p">(</span><span class="n">sigma_wr</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">sigma_wk_ref</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_sigma_deprecated</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--&gt; sigma test&#39;</span><span class="p">)</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_array_almost_equal</span><span class="p">(</span><span class="n">sigma_wk</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">sigma_wk_ref</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;ok!&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">sigma_wk</span></div>
+
+
+
+<div class="viewcode-block" id="tpsc_solver.get_sigma">
+<a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.tpsc_solver.tpsc_solver.get_sigma">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_sigma</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the self-energy including the Hartree-Fock term.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">sigma_dyn_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sigma_tpsc_dynamic</span><span class="p">()</span>
+        <span class="n">sigma_wk</span> <span class="o">=</span> <span class="n">sigma_dyn_wk</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">sigma_wk</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">U</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">/</span><span class="mi">2</span>
+        <span class="k">return</span> <span class="n">sigma_wk</span></div>
+
+
+
+<div class="viewcode-block" id="tpsc_solver.get_GG0_bubble_chi2_wk">
+<a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.tpsc_solver.tpsc_solver.get_GG0_bubble_chi2_wk">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_GG0_bubble_chi2_wk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates chi2(r,tau) = - G2(r,tau)*G0(-r,-tau) - G2(-r,-tau)*G0(r,tau) in wk-space.</span>
+
+<span class="sd">        Requires</span>
+<span class="sd">        --------</span>
+<span class="sd">        self.g0_dlr_wk and self.g2_dlr_wk must have been calculated</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        self                :   self</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self.chi2_dlr_wk    :   second-level approximation of bubble in TPSC</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Fourier transform Gs to real space</span>
+        <span class="n">g2_tr</span> <span class="o">=</span> <span class="n">fourier_wk_to_tr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g_wk</span><span class="p">)</span>
+        <span class="n">g0_tr</span> <span class="o">=</span> <span class="n">fourier_wk_to_tr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g0_wk</span><span class="p">)</span>
+
+        <span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">chi0_tr_from_grt_PH</span>
+
+        <span class="n">chi2_tr</span> <span class="o">=</span> \
+            <span class="n">chi0_tr_from_grt_PH</span><span class="p">(</span><span class="n">g2_tr</span><span class="p">,</span> <span class="n">g0_tr</span><span class="p">)</span> <span class="o">+</span> \
+            <span class="n">chi0_tr_from_grt_PH</span><span class="p">(</span><span class="n">g0_tr</span><span class="p">,</span> <span class="n">g2_tr</span><span class="p">)</span>
+
+        <span class="n">chi2_wk</span> <span class="o">=</span> <span class="n">fourier_tr_to_wk</span><span class="p">(</span><span class="n">chi2_tr</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">g2_mtr</span> <span class="o">=</span> <span class="n">fourier_wk_to_mtr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g_wk</span><span class="p">)</span>
+            <span class="n">g0_mtr</span> <span class="o">=</span> <span class="n">fourier_wk_to_mtr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g0_wk</span><span class="p">)</span>
+
+            <span class="c1"># calculate chi2</span>
+            <span class="n">chi2_tr_ref</span> <span class="o">=</span> <span class="n">fourier_wk_to_tr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chi0_wk</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">chi2_tr_ref</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> \
+                <span class="o">-</span>  <span class="n">g2_tr</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">g0_mtr</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> \
+                <span class="o">-</span> <span class="n">g2_mtr</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span>  <span class="n">g0_tr</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_array_almost_equal</span><span class="p">(</span><span class="n">chi2_tr_ref</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">chi2_tr</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">chi2_wk</span></div>
+
+
+
+    <span class="k">def</span> <span class="nf">vprint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">string</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">()</span>
+
+
+    <span class="k">def</span> <span class="nf">__skip_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__skip_keys</span><span class="p">():</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">==</span> <span class="n">Gf</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span> <span class="k">continue</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="kc">True</span>
+
+
+    <span class="k">def</span> <span class="nf">__reduce_to_dict__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__skip_keys</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span> <span class="k">del</span> <span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">d</span>
+
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">__factory_from_dict__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="n">arg_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;n&#39;</span><span class="p">,</span> <span class="s1">&#39;U&#39;</span><span class="p">,</span> <span class="s1">&#39;wmesh&#39;</span><span class="p">,</span> <span class="s1">&#39;e_k&#39;</span><span class="p">]</span>
+        <span class="n">argv_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;docc&#39;</span><span class="p">,</span> <span class="s1">&#39;verbose&#39;</span><span class="p">]</span>
+        <span class="n">verbose</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]</span>
+        <span class="n">d</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span> <span class="c1"># -- Suppress printouts on reconstruction from dict</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="o">*</span><span class="p">[</span> <span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">arg_keys</span> <span class="p">],</span>
+                  <span class="o">**</span><span class="p">{</span> <span class="n">key</span> <span class="p">:</span> <span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">argv_keys</span> <span class="p">})</span>
+        <span class="n">ret</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="k">return</span> <span class="n">ret</span></div>
+
+
+
+<span class="c1"># -- Register Solver in Triqs formats</span>
+
+<span class="kn">from</span> <span class="nn">h5.formats</span> <span class="kn">import</span> <span class="n">register_class</span>
+<span class="n">register_class</span><span class="p">(</span><span class="n">tpsc_solver</span><span class="p">)</span>
+
 
 <span class="k">def</span> <span class="nf">tpsc_banner</span><span class="p">():</span>
     <span class="k">if</span> <span class="s1">&#39;UTF&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">encoding</span><span class="p">:</span>
@@ -753,7 +1183,6 @@
 
 <span class="s2">  Two-Particle Self-Consistent method&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">banner</span>
-
 
 
 <span class="k">def</span> <span class="nf">fourier_wk_to_tr</span><span class="p">(</span><span class="n">g_wk</span><span class="p">):</span>
@@ -879,485 +1308,6 @@
 
     <span class="c1"># return result</span>
     <span class="k">return</span> <span class="n">g_wk</span>
-
-
-
-<div class="viewcode-block" id="tpsc_solver">
-<a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.tpsc_solver.tpsc_solver">[docs]</a>
-<span class="k">class</span> <span class="nc">tpsc_solver</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Class to calculate the TPSC-approximation to the single-band Hubbard Model, introduced in [1].</span>
-
-<span class="sd">    Can calculate TPSC-susceptibilities, self-energy and Green&#39;s function.</span>
-
-<span class="sd">    [1] Non-perturbative many-body approach to the Hubbard model and single-particle pseudogap, Y.M. Vilk &amp; A.-M.S. Tremblay</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">wmesh</span><span class="p">,</span> <span class="n">e_k</span><span class="p">,</span> <span class="n">docc</span><span class="o">=</span><span class="s1">&#39;tpsc_ansatz&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize a tpsc_solver object.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        n : double</span>
-<span class="sd">            total electron density</span>
-<span class="sd">        U : double</span>
-<span class="sd">            Hubbard interaction</span>
-<span class="sd">        wmesh : MeshImFreq or MeshDLRImFreq</span>
-<span class="sd">                imaginary frequency mesh</span>
-<span class="sd">        e_k : Gf</span>
-<span class="sd">              dispersion relation</span>
-<span class="sd">        docc : double, optional</span>
-<span class="sd">               double occupancy (default: use TPSC-Ansatz)</span>
-<span class="sd">        verbose : bool, optional</span>
-<span class="sd">                  if true, print out information (default: True)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        
-        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">U</span> <span class="o">=</span> <span class="n">U</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">wmesh</span> <span class="o">=</span> <span class="n">wmesh</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wmesh</span><span class="o">.</span><span class="n">beta</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">e_k</span> <span class="o">=</span> <span class="n">e_k</span>
-
-        <span class="k">if</span> <span class="n">docc</span> <span class="o">==</span> <span class="s1">&#39;tpsc_ansatz&#39;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">use_tpsc_ansatz</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">assert</span><span class="p">(</span> <span class="nb">type</span><span class="p">(</span><span class="n">docc</span><span class="p">)</span> <span class="o">==</span> <span class="nb">float</span> <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">use_tpsc_ansatz</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">docc</span> <span class="o">=</span> <span class="n">docc</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="n">tpsc_banner</span><span class="p">()</span><span class="o">+</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_tpsc_ansatz</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;  Using the TPSC-Ansatz for the double occupancy.&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;docc = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">docc</span><span class="si">}</span><span class="s1"> (not using the TPSC-ansatz)&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;len(wmesh) = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">wmesh</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;nk = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;beta = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;n = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;U = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">U</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-    
-    <span class="k">def</span> <span class="nf">vprint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">string</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">()</span>
-
-<div class="viewcode-block" id="tpsc_solver.solve">
-<a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.tpsc_solver.tpsc_solver.solve">[docs]</a>
-    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">calc_sigma</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">calc_g</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check_self_consistency</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-              <span class="n">Usp_tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Uch_tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Uch_max</span><span class="o">=</span><span class="mf">100.</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Runs the TPSC-Calculation on the specified model.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        calc_sigma : bool, optional</span>
-<span class="sd">                     if True, the TPSC-self-energy is calculated</span>
-<span class="sd">                     (default: True)</span>
-<span class="sd">        calc_g : bool, optional</span>
-<span class="sd">                 if True, the lattice Green&#39;s function is calculated</span>
-<span class="sd">                 (default: True)</span>
-<span class="sd">        check_self_consistency : bool, optional</span>
-<span class="sd">                                 if True, self-consistency of the result is checked</span>
-<span class="sd">                                 (default: True)</span>
-<span class="sd">        Usp_tol : double, optional</span>
-<span class="sd">                  the computed Usp will satisfy np.allclose(Usp, Usp_exact, atol=Usp_tol)</span>
-<span class="sd">                  (default: 2e-12, same as scipy.optimize.brentq)</span>
-<span class="sd">        Uch_tol : double, optional</span>
-<span class="sd">                  the computed Uch will satisfy np.allclose(Uch, Uch_exact, atol=Usp_tol)</span>
-<span class="sd">                  (default: 2e-12, same as scipy.optimize.brentq)</span>
-<span class="sd">        Uch_max : maximum value in Uch search</span>
-<span class="sd">                  (default: 100.)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1"># check consistency of input</span>
-        <span class="k">if</span> <span class="n">calc_g</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">calc_sigma</span> <span class="o">!=</span> <span class="kc">True</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Sigma must known to calculate the Green&#39;s function!&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">check_self_consistency</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">calc_sigma</span> <span class="o">!=</span> <span class="kc">True</span> <span class="ow">or</span> <span class="n">calc_g</span> <span class="o">!=</span> <span class="kc">True</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Sigma and G must be known to check self-consistency!&quot;</span><span class="p">)</span>
-              
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Calculating non-interacting quantities...&quot;</span><span class="p">)</span>
-        
-        <span class="bp">self</span><span class="o">.</span><span class="n">g0_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_g0_wk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
-
-        <span class="c1"># clean up tprf api FIXME</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wmesh</span><span class="p">,</span> <span class="n">MeshDLRImFreq</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">chi0_wk</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">imtime_bubble_chi0_wk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g0_wk</span><span class="p">,</span> <span class="n">nw</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wmesh</span><span class="p">,</span> <span class="n">MeshImFreq</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">chi0_wk</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">imtime_bubble_chi0_wk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g0_wk</span><span class="p">,</span> <span class="n">nw</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wmesh</span><span class="o">.</span><span class="n">n_iw</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Calculating first level of approximation...&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_calc_first_level_approx</span><span class="p">(</span><span class="n">Usp_tol</span><span class="o">=</span><span class="n">Usp_tol</span><span class="p">,</span> <span class="n">Uch_tol</span><span class="o">=</span><span class="n">Uch_tol</span><span class="p">,</span> <span class="n">Uch_max</span><span class="o">=</span><span class="n">Uch_max</span><span class="p">)</span>
-        
-        <span class="k">if</span> <span class="n">calc_sigma</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;Calculating self-energy...&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_get_sigma</span><span class="p">()</span>
-        
-        <span class="k">if</span> <span class="n">calc_g</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;Calculating Green</span><span class="se">\&#39;</span><span class="s2">s function...&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">g_wk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_g_wk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma_wk</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">check_self_consistency</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;Checking self-consistency requirements...&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_check_for_self_consistency</span><span class="p">()</span>
-        
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot; DONE! &quot;</span><span class="p">)</span></div>
-
-
-    <span class="k">def</span> <span class="nf">_calc_first_level_approx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Usp_tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Uch_tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Uch_max</span><span class="o">=</span><span class="mf">100.</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Runs the first-level approximation of the TPSC-Calculation on the specified model.</span>
-<span class="sd">        If docc is specified in the model, it will be used to evaluate the sum rules.</span>
-<span class="sd">        If docc is not specified in the model, the TPSC-Ansatz will be used to evaluate the sum rules.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        Usp_tol : double, optional</span>
-<span class="sd">                  the computed Usp will satisfy np.allclose(Usp, Usp_exact, atol=Usp_tol)</span>
-<span class="sd">                  (default: 2e-12, same as scipy.optimize.brentq)</span>
-<span class="sd">        Uch_tol : double, optional</span>
-<span class="sd">                  the computed Uch will satisfy np.allclose(Uch, Uch_exact, atol=Usp_tol)</span>
-<span class="sd">                  (default: 2e-12, same as scipy.optimize.brentq)</span>
-<span class="sd">                  (if Usp_tol is set and Uch_tol is not, then Uch_tol=Usp_tol)</span>
-<span class="sd">        Uch_max : maximum value in Uch search</span>
-<span class="sd">                  (default: 100.)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        
-        <span class="c1"># calculate vertices</span>
-
-        <span class="c1"># calculate Usp</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;   Calculating Usp...&quot;</span><span class="p">)</span>
-        <span class="k">def</span> <span class="nf">_Usp_root</span><span class="p">(</span><span class="n">Usp</span><span class="p">):</span>
-
-            <span class="n">chi_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve_rpa</span><span class="p">(</span><span class="n">Usp</span><span class="p">)</span>
-            <span class="n">LHS</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_density</span><span class="p">(</span><span class="n">chi_wk</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_tpsc_ansatz</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
-                <span class="n">RHS</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">-</span> <span class="n">Usp</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">U</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">/</span><span class="mi">2</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">RHS</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">docc</span>
-
-            <span class="k">return</span> <span class="n">LHS</span> <span class="o">-</span> <span class="n">RHS</span>
-        
-        <span class="c1"># here chi_sp diverges (1e-7 for numerical stability)</span>
-        <span class="n">Usp_max</span> <span class="o">=</span> <span class="mf">2.0</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chi0_wk</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">real</span> <span class="o">-</span> <span class="mf">1e-7</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">Usp</span> <span class="o">=</span> <span class="n">brentq</span><span class="p">(</span><span class="n">_Usp_root</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">Usp_max</span><span class="p">,</span> <span class="o">**</span><span class="p">({</span><span class="s1">&#39;xtol&#39;</span><span class="p">:</span><span class="n">Usp_tol</span><span class="p">}</span> <span class="k">if</span> <span class="n">Usp_tol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}))</span>
-        
-        <span class="c1"># calculate Uch</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;   Calculating Uch...&quot;</span><span class="p">)</span>
-        <span class="k">def</span> <span class="nf">_Uch_root</span><span class="p">(</span><span class="n">Uch</span><span class="p">):</span>
-            
-            <span class="n">chi_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve_rpa</span><span class="p">(</span><span class="o">-</span><span class="n">Uch</span><span class="p">)</span>
-            <span class="n">LHS</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_density</span><span class="p">(</span><span class="n">chi_wk</span><span class="p">)</span>
-            
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_tpsc_ansatz</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
-                <span class="n">RHS</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">Usp</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">U</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">RHS</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">docc</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span>
-            
-            <span class="k">return</span> <span class="n">LHS</span> <span class="o">-</span> <span class="n">RHS</span>
-        
-        <span class="bp">self</span><span class="o">.</span><span class="n">Uch</span> <span class="o">=</span> <span class="n">brentq</span><span class="p">(</span><span class="n">_Uch_root</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">Uch_max</span><span class="p">,</span> <span class="o">**</span><span class="p">({</span><span class="s1">&#39;xtol&#39;</span><span class="p">:</span><span class="n">Uch_tol</span><span class="p">}</span> <span class="k">if</span> <span class="n">Uch_tol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}))</span>
-
-        <span class="c1"># calculate susceptibilities</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;   Calculating chisp_wk and chich_wk...&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">chisp_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve_rpa</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Usp</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">chich_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve_rpa</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">Uch</span><span class="p">)</span>
-        
-        <span class="c1"># calculate double occupation</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_tpsc_ansatz</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;   Calculating double occupancy...&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">docc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Usp</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">U</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">/</span><span class="mi">4</span>
-        
-        <span class="c1"># print out results</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;Summary first level approximation:&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;    Usp = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Usp</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;, Uch = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Uch</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;    Double Occupation &lt;n_up*n_down&gt; = &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">docc</span><span class="p">))</span>
-
-    <span class="k">def</span> <span class="nf">_check_for_self_consistency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Checks the evaluated model for self-consistency.</span>
-<span class="sd">        </span>
-<span class="sd">        Requires</span>
-<span class="sd">        --------</span>
-<span class="sd">        Must have calculated chi_sp and chi_ch.</span>
-<span class="sd">        </span>
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        self    : self</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        None</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        
-        <span class="c1"># check that the sum rule is fulfilled</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;------------------------------------------------------------------------------------------&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s1">&#39;Doing self-consistency check of first-level approximation...&#39;</span><span class="p">)</span>
-        <span class="n">check_sum_rule</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_density</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chisp_wk</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">chich_wk</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;The sum rule is fulfilled with an accuracy of </span><span class="si">{</span><span class="nb">abs</span><span class="p">(</span><span class="n">check_sum_rule</span><span class="p">)</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;------------------------------------------------------------------------------------------&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s1">&#39;Doing self-consistency check of second-level approximation...&#39;</span><span class="p">)</span>
-
-        <span class="c1"># get traces (the second term comes from the HF self-energy)</span>
-        <span class="n">trace_F1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_density</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma_wk</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">g0_wk</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">U</span>
-        <span class="n">trace_F2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_density</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma_wk</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">g_wk</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">U</span>
-
-        <span class="c1"># get the relative difference</span>
-        <span class="n">rel_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">((</span><span class="n">trace_F1</span> <span class="o">-</span> <span class="n">trace_F2</span><span class="p">)</span> <span class="o">/</span> <span class="n">trace_F1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
-
-        <span class="c1"># check consistency</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s1">&#39;Sum_k {Sigma^(2)(k) * G^(1)(k)} - U*&lt;n_up * n_down&gt; = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">trace_F1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">docc</span><span class="p">)))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s1">&#39;Sum_k {Sigma^(2)(k) * G^(2)(k)} - U*&lt;n_up * n_down&gt; = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">trace_F2</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">docc</span><span class="p">))))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Relative difference of traces = </span><span class="si">{</span><span class="n">rel_diff</span><span class="si">:</span><span class="s1">.2f</span><span class="si">}</span><span class="s1">%&#39;</span><span class="p">)</span>
-
-        
-    <span class="k">def</span> <span class="nf">_solve_rpa</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">U_vert</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Calculates an rpa-susceptibility with a scalar vertex from the non-interacting susceptibility.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        U_vert : double</span>
-<span class="sd">                 RPA vertex</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        </span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1">### FIXME</span>
-        <span class="k">if</span> <span class="kc">False</span><span class="p">:</span>
-            <span class="n">V</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">U_vert</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
-            <span class="n">chi_wk</span> <span class="o">=</span> <span class="n">solve_rpa_PH</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chi0_wk</span><span class="p">,</span> <span class="n">V</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">chi_wk</span>
-
-        <span class="n">chi_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi0_wk</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-
-        <span class="c1"># fill with data</span>
-        <span class="n">chi_wk</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi0_wk</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">U_vert</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">chi0_wk</span><span class="o">.</span><span class="n">data</span><span class="p">[:])</span>
-
-        <span class="c1"># return results</span>
-        <span class="k">return</span> <span class="n">chi_wk</span>
-
-    
-    <span class="k">def</span> <span class="nf">_get_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g_wk</span><span class="p">):</span>
-
-        <span class="n">wmesh</span> <span class="o">=</span> <span class="n">g_wk</span><span class="o">.</span><span class="n">mesh</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">nk</span> <span class="o">=</span> <span class="n">g_wk</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">g_w</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">wmesh</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="n">g_wk</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span>
-        <span class="n">g_w</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">g_wk</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">nk</span>
-
-        <span class="k">assert</span><span class="p">(</span> <span class="n">g_w</span><span class="o">.</span><span class="n">target_shape</span> <span class="o">==</span> <span class="nb">tuple</span><span class="p">([</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">g_w</span><span class="o">.</span><span class="n">target_shape</span><span class="p">))</span> <span class="p">)</span>
-    
-        <span class="n">g_w_scalar</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">g_w</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="p">[])</span>
-        <span class="n">g_w_scalar</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">g_w</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
-        
-        <span class="n">dens</span> <span class="o">=</span> <span class="n">density_from_gf</span><span class="p">(</span><span class="n">g_w_scalar</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
-        
-        <span class="k">if</span> <span class="n">g_w</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">statistic</span> <span class="o">==</span> <span class="s1">&#39;Boson&#39;</span><span class="p">:</span>
-            <span class="n">dens</span> <span class="o">=</span> <span class="o">-</span><span class="n">dens</span>
-
-        <span class="k">return</span> <span class="n">dens</span>   
-
-    <span class="k">def</span> <span class="nf">_calc_g0_wk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_density</span><span class="p">):</span>
-
-        <span class="c1"># find the mu that leads to the correct density</span>
-        <span class="n">mu_min</span><span class="p">,</span> <span class="n">mu_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
-
-        <span class="k">def</span> <span class="nf">target_function</span><span class="p">(</span><span class="n">mu</span><span class="p">):</span>
-            <span class="n">g0_wk</span> <span class="o">=</span> <span class="n">lattice_dyson_g0_wk</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">e_k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wmesh</span><span class="p">)</span>
-            <span class="n">density</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_density</span><span class="p">(</span><span class="n">g0_wk</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">target_density</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="n">density</span>
-    
-        <span class="n">mu0</span> <span class="o">=</span> <span class="n">brentq</span><span class="p">(</span><span class="n">target_function</span><span class="p">,</span> <span class="n">mu_min</span><span class="p">,</span> <span class="n">mu_max</span><span class="p">)</span>
-        <span class="n">g0_wk</span> <span class="o">=</span> <span class="n">lattice_dyson_g0_wk</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="n">mu0</span><span class="p">,</span> <span class="n">e_k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wmesh</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">g0_wk</span>
-
-
-    <span class="k">def</span> <span class="nf">_calc_g_wk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_density</span><span class="p">,</span> <span class="n">sigma_wk</span><span class="p">):</span>
-
-        <span class="c1"># find the mu that leads to the correct density</span>
-        <span class="n">mu_min</span><span class="p">,</span> <span class="n">mu_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
-
-        <span class="k">def</span> <span class="nf">target_function</span><span class="p">(</span><span class="n">mu</span><span class="p">):</span>
-            <span class="n">g_wk</span> <span class="o">=</span> <span class="n">lattice_dyson_g_wk</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="p">,</span> <span class="n">sigma_wk</span><span class="p">)</span>
-            <span class="n">density</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_density</span><span class="p">(</span><span class="n">g_wk</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">target_density</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="n">density</span>
-    
-        <span class="n">mu</span> <span class="o">=</span> <span class="n">brentq</span><span class="p">(</span><span class="n">target_function</span><span class="p">,</span> <span class="n">mu_min</span><span class="p">,</span> <span class="n">mu_max</span><span class="p">)</span>
-        <span class="n">g_wk</span> <span class="o">=</span> <span class="n">lattice_dyson_g_wk</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="p">,</span> <span class="n">sigma_wk</span><span class="p">)</span>
-        
-        <span class="k">return</span> <span class="n">g_wk</span><span class="p">,</span> <span class="n">mu</span>
-    
-    
-    <span class="k">def</span> <span class="nf">_calc_sigma_deprecated</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Calculates the second-level approximation of the self-energy.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1"># define effective potential</span>
-        <span class="n">V_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">U</span><span class="o">/</span><span class="mi">8</span><span class="o">*</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">Usp</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">chisp_wk</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">Uch</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">chich_wk</span><span class="p">)</span>
-
-        <span class="c1"># get V(-t,-r)</span>
-        <span class="n">V_mtr</span> <span class="o">=</span> <span class="n">fourier_wk_to_mtr</span><span class="p">(</span><span class="n">V_wk</span><span class="p">)</span>
-
-        <span class="c1"># get G(t,r)</span>
-        <span class="n">g0_tr</span> <span class="o">=</span> <span class="n">fourier_wk_to_tr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g0_wk</span><span class="p">)</span>
-
-        <span class="c1"># multiply V(-t,-r) * G0(t,r) = Sigma(t,r)</span>
-        <span class="n">sigma_tr</span> <span class="o">=</span> <span class="n">g0_tr</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>    <span class="c1"># the 2 means second level of approximation, must be fermionic</span>
-        <span class="n">sigma_tr</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">V_mtr</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">g0_tr</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
-        
-        <span class="c1"># transform Sigma(t,r) to Sigma(w,k)</span>
-        <span class="c1">#self.Sigma2_dlr_wk = fourier_tr_to_wk(Sigma2_dlr_tr)</span>
-        <span class="n">sigma_wk</span> <span class="o">=</span> <span class="n">fourier_tr_to_wk</span><span class="p">(</span><span class="n">sigma_tr</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">sigma_wk</span>
-        
-    <span class="k">def</span> <span class="nf">_calc_sigma_TPSC_dynamic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Calculates the dynamic part of the second-level TPSC approximation of the self-energy.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1"># define effective potential</span>
-        <span class="n">V_wk</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">U</span><span class="o">/</span><span class="mi">8</span><span class="o">*</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">Usp</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">chisp_wk</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">Uch</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">chich_wk</span><span class="p">)</span>
-
-        <span class="n">V_wr</span> <span class="o">=</span> <span class="n">fourier_wk_to_wr</span><span class="p">(</span><span class="n">V_wk</span><span class="p">)</span>
-        <span class="n">V_tr</span> <span class="o">=</span> <span class="n">fourier_wr_to_tr</span><span class="p">(</span><span class="n">V_wr</span><span class="p">)</span>
-
-        <span class="n">g0_wr</span> <span class="o">=</span> <span class="n">fourier_wk_to_wr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g0_wk</span><span class="p">)</span>
-        <span class="n">g0_tr</span> <span class="o">=</span> <span class="n">fourier_wr_to_tr</span><span class="p">(</span><span class="n">g0_wr</span><span class="p">)</span>
-        
-        <span class="n">sigma_tr</span> <span class="o">=</span> <span class="n">gw_dynamic_sigma</span><span class="p">(</span><span class="n">V_tr</span><span class="p">,</span> <span class="n">g0_tr</span><span class="p">)</span>
-
-        <span class="n">sigma_wr</span> <span class="o">=</span> <span class="n">fourier_tr_to_wr</span><span class="p">(</span><span class="n">sigma_tr</span><span class="p">)</span>
-        <span class="n">sigma_wk</span> <span class="o">=</span> <span class="n">fourier_wr_to_wk</span><span class="p">(</span><span class="n">sigma_wr</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="kc">False</span><span class="p">:</span>
-            <span class="n">sigma_wk_ref</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_sigma_deprecated</span><span class="p">()</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--&gt; sigma test&#39;</span><span class="p">)</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_array_almost_equal</span><span class="p">(</span><span class="n">sigma_wk</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">sigma_wk_ref</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;ok!&#39;</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">sigma_wk</span>
-        
-    <span class="k">def</span> <span class="nf">_get_sigma</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Calculates the self-energy including the Hartree-Fock term.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">sigma_wk_TPSC_dynamic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_sigma_TPSC_dynamic</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">sigma_wk</span> <span class="o">=</span> <span class="n">sigma_wk_TPSC_dynamic</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">sigma_wk</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">U</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">/</span><span class="mi">2</span>
-
-<span class="c1">### do not use, under construction ###</span>
-    <span class="k">def</span> <span class="nf">_imtime_bubble_chi2_wk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Calculates chi2(r,tau) = - G2(r,tau)*G0(-r,-tau) - G2(-r,-tau)*G0(r,tau) in wk-space.</span>
-
-<span class="sd">        Requires</span>
-<span class="sd">        --------</span>
-<span class="sd">        self.g0_dlr_wk and self.g2_dlr_wk must have been calculated</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        self                :   self</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        self.chi2_dlr_wk    :   second-level approximation of bubble in TPSC</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1"># Fourier transform Gs to real space</span>
-        <span class="n">g2_tr</span> <span class="o">=</span> <span class="n">fourier_wk_to_tr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g_wk</span><span class="p">)</span>
-        <span class="n">g0_tr</span> <span class="o">=</span> <span class="n">fourier_wk_to_tr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g0_wk</span><span class="p">)</span>
-
-        <span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">chi0_tr_from_grt_PH</span>
-
-        <span class="n">chi2_tr</span> <span class="o">=</span> \
-            <span class="n">chi0_tr_from_grt_PH</span><span class="p">(</span><span class="n">g2_tr</span><span class="p">,</span> <span class="n">g0_tr</span><span class="p">)</span> <span class="o">+</span> \
-            <span class="n">chi0_tr_from_grt_PH</span><span class="p">(</span><span class="n">g0_tr</span><span class="p">,</span> <span class="n">g2_tr</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">chi2_wk</span> <span class="o">=</span> <span class="n">fourier_tr_to_wk</span><span class="p">(</span><span class="n">chi2_tr</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="n">g2_mtr</span> <span class="o">=</span> <span class="n">fourier_wk_to_mtr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g_wk</span><span class="p">)</span>
-            <span class="n">g0_mtr</span> <span class="o">=</span> <span class="n">fourier_wk_to_mtr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g0_wk</span><span class="p">)</span>
-
-            <span class="c1"># calculate chi2</span>
-            <span class="n">chi2_tr_ref</span> <span class="o">=</span> <span class="n">fourier_wk_to_tr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chi0_wk</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-            <span class="n">chi2_tr_ref</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> \
-                <span class="o">-</span>  <span class="n">g2_tr</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">g0_mtr</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> \
-                <span class="o">-</span> <span class="n">g2_mtr</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span>  <span class="n">g0_tr</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
-
-            <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_array_almost_equal</span><span class="p">(</span><span class="n">chi2_tr_ref</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">chi2_tr</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
-
-
-    <span class="k">def</span> <span class="nf">__skip_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">[]</span>
-
-
-    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
-
-        <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">return</span> <span class="kc">False</span>
-
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__skip_keys</span><span class="p">():</span>
-                <span class="n">a</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
-                <span class="n">b</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
-                    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">==</span> <span class="n">Gf</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span> <span class="k">continue</span>
-                    <span class="k">return</span> <span class="kc">False</span>
-
-        <span class="k">return</span> <span class="kc">True</span>
-
-
-    <span class="k">def</span> <span class="nf">__reduce_to_dict__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__skip_keys</span><span class="p">())</span>
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span> <span class="k">del</span> <span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">d</span>
-
-
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">__factory_from_dict__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
-        <span class="n">arg_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;n&#39;</span><span class="p">,</span> <span class="s1">&#39;U&#39;</span><span class="p">,</span> <span class="s1">&#39;wmesh&#39;</span><span class="p">,</span> <span class="s1">&#39;e_k&#39;</span><span class="p">]</span>
-        <span class="n">argv_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;docc&#39;</span><span class="p">,</span> <span class="s1">&#39;verbose&#39;</span><span class="p">]</span>
-        <span class="n">verbose</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]</span>
-        <span class="n">d</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span> <span class="c1"># -- Suppress printouts on reconstruction from dict</span>
-        <span class="n">ret</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="o">*</span><span class="p">[</span> <span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">arg_keys</span> <span class="p">],</span>
-                  <span class="o">**</span><span class="p">{</span> <span class="n">key</span> <span class="p">:</span> <span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">argv_keys</span> <span class="p">})</span>
-        <span class="n">ret</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
-        <span class="n">ret</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
-        <span class="k">return</span> <span class="n">ret</span></div>
-
-
-
-<span class="c1"># -- Register Solver in Triqs formats</span>
-
-<span class="kn">from</span> <span class="nn">h5.formats</span> <span class="kn">import</span> <span class="n">register_class</span>
-<span class="n">register_class</span><span class="p">(</span><span class="n">tpsc_solver</span><span class="p">)</span>
-
 </pre></div>
 
            </div>
