@@ -1289,23 +1289,25 @@
 
         <span class="c1"># Fourier transform Gs to real space</span>
         <span class="n">g2_tr</span> <span class="o">=</span> <span class="n">fourier_wk_to_tr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g_wk</span><span class="p">)</span>
-        <span class="n">g2_mtr</span> <span class="o">=</span> <span class="n">fourier_wk_to_mtr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g_wk</span><span class="p">)</span>
         <span class="n">g0_tr</span> <span class="o">=</span> <span class="n">fourier_wk_to_tr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g0_wk</span><span class="p">)</span>
-        <span class="n">g0_mtr</span> <span class="o">=</span> <span class="n">fourier_wk_to_mtr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g0_wk</span><span class="p">)</span>
 
-        <span class="c1"># calculate chi2</span>
-        <span class="n">chi2_tr</span> <span class="o">=</span> <span class="n">fourier_wk_to_tr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chi0_wk</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">chi2_tr</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">g2_tr</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">g0_mtr</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">g2_mtr</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">g0_tr</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+        <span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">chi0_tr_from_grt_PH</span>
+
+        <span class="n">chi2_tr</span> <span class="o">=</span> \
+            <span class="n">chi0_tr_from_grt_PH</span><span class="p">(</span><span class="n">g2_tr</span><span class="p">,</span> <span class="n">g0_tr</span><span class="p">)</span> <span class="o">+</span> \
+            <span class="n">chi0_tr_from_grt_PH</span><span class="p">(</span><span class="n">g0_tr</span><span class="p">,</span> <span class="n">g2_tr</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">chi2_wk</span> <span class="o">=</span> <span class="n">fourier_tr_to_wk</span><span class="p">(</span><span class="n">chi2_tr</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="kc">False</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">chi0_tr_from_grt_PH</span>
+        <span class="k">if</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">g2_mtr</span> <span class="o">=</span> <span class="n">fourier_wk_to_mtr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g_wk</span><span class="p">)</span>
+            <span class="n">g0_mtr</span> <span class="o">=</span> <span class="n">fourier_wk_to_mtr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g0_wk</span><span class="p">)</span>
 
-            <span class="n">chi0_1</span> <span class="o">=</span> <span class="n">chi0_tr_from_grt_PH</span><span class="p">(</span><span class="n">g2_tr</span><span class="p">,</span> <span class="n">g0_tr</span><span class="p">)</span>
-            <span class="n">chi0_2</span> <span class="o">=</span> <span class="n">chi0_tr_from_grt_PH</span><span class="p">(</span><span class="n">g0_tr</span><span class="p">,</span> <span class="n">g2_tr</span><span class="p">)</span>
-
-            <span class="n">chi2_tr_ref</span> <span class="o">=</span> <span class="n">chi0_1</span> <span class="o">+</span> <span class="n">chi0_2</span>
+            <span class="c1"># calculate chi2</span>
+            <span class="n">chi2_tr_ref</span> <span class="o">=</span> <span class="n">fourier_wk_to_tr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chi0_wk</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">chi2_tr_ref</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> \
+                <span class="o">-</span>  <span class="n">g2_tr</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">g0_mtr</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> \
+                <span class="o">-</span> <span class="n">g2_mtr</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span>  <span class="n">g0_tr</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
 
             <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_array_almost_equal</span><span class="p">(</span><span class="n">chi2_tr_ref</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">chi2_tr</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
 
