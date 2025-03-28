@@ -821,7 +821,7 @@
 <div class="viewcode-block" id="tpsc_solver.solve">
 <a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.tpsc_solver.tpsc_solver.solve">[docs]</a>
     <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">calc_sigma</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">calc_g</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-              <span class="n">Usp_tol</span><span class="o">=</span><span class="mf">2e-12</span><span class="p">,</span> <span class="n">Uch_tol</span><span class="o">=</span><span class="mf">2e-12</span><span class="p">,</span> <span class="n">Uch_max</span><span class="o">=</span><span class="mf">100.</span><span class="p">,</span> <span class="n">chi0_wk</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+              <span class="n">Usp_tol</span><span class="o">=</span><span class="mf">2e-12</span><span class="p">,</span> <span class="n">Uch_tol</span><span class="o">=</span><span class="mf">2e-12</span><span class="p">,</span> <span class="n">Uch_max</span><span class="o">=</span><span class="mf">100.</span><span class="p">,</span> <span class="n">Usp_epsilon</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">,</span> <span class="n">chi0_wk</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run the TPSC-calculation on the given model determining the screened</span>
 <span class="sd">        spin and charge vertices `Usp` and `Uch`, respectively.</span>
@@ -840,6 +840,9 @@
 <span class="sd">        Uch_max : double, optional</span>
 <span class="sd">                  maximum value of the charge vertex `Uch` to consider</span>
 <span class="sd">                  in numerical search (default: 100.)</span>
+<span class="sd">        Usp_epsilon : double, optional</span>
+<span class="sd">                Offset from maximum value of the spin vertex `Usp` to consider</span>
+<span class="sd">                Increases numerical stability of root search (default: 1e-7)</span>
 <span class="sd">        chi0_wk : Gf, optional</span>
 <span class="sd">                  Enables passing of a partially dressed susceptibility (default: None)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -858,7 +861,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Calculating first level of approximation...&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">   Calculating Usp...&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">Usp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve_Usp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chi0_wk</span><span class="p">,</span> <span class="n">Usp_tol</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Usp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve_Usp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chi0_wk</span><span class="p">,</span> <span class="n">Usp_tol</span><span class="p">,</span> <span class="n">Usp_epsilon</span><span class="p">)</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">   Calculating Uch...&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">Uch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve_Uch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chi0_wk</span><span class="p">,</span> <span class="n">Uch_tol</span><span class="p">,</span> <span class="n">Uch_max</span><span class="p">)</span>
@@ -867,7 +870,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">chisp_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve_rpa</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chi0_wk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Usp</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">chich_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve_rpa</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chi0_wk</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">Uch</span><span class="p">)</span>
 
-        <span class="n">chi_sum_rule</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_density</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chisp_wk</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">chich_wk</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">chi_sum_rule</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_density</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chisp_wk</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">chich_wk</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
         <span class="k">assert</span><span class="p">(</span> <span class="n">chi_sum_rule</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">Usp_tol</span><span class="p">,</span> <span class="n">Uch_tol</span><span class="p">])</span> <span class="p">)</span>
         
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_tpsc_ansatz</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
@@ -900,7 +903,7 @@
 
 
 
-    <span class="k">def</span> <span class="nf">_solve_Usp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chi0_wk</span><span class="p">,</span> <span class="n">Usp_tol</span><span class="p">,</span> <span class="n">Usp_epsilon</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_solve_Usp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chi0_wk</span><span class="p">,</span> <span class="n">Usp_tol</span><span class="p">,</span> <span class="n">Usp_epsilon</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculates screened spin vertex Usp given a bare susceptibility.</span>
 
@@ -910,8 +913,9 @@
 <span class="sd">                  bare susceptibility</span>
 <span class="sd">        Usp_tol : double</span>
 <span class="sd">                  Tolerance for spin vertex `Usp` solution</span>
-<span class="sd">        Usp_epsilon : double, optional</span>
+<span class="sd">        Usp_epsilon : double</span>
 <span class="sd">                      Offset from maximum value of the spin vertex `Usp` to consider</span>
+<span class="sd">                      Increases numerical stability of root search</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
