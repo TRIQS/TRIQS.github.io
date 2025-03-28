@@ -7,7 +7,7 @@
   <title>Lattice Green’s functions &mdash; triqs_tprf  documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=f7f783a0" />
-      <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css?v=7f9a90b1" />
+      <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
 
   
     <link rel="shortcut icon" href="../_static/triqs_favicon.ico"/>
@@ -177,7 +177,17 @@
 <li class="toctree-l4"><a class="reference internal" href="#triqs_tprf.gw.g0w_sigma"><code class="docutils literal notranslate"><span class="pre">g0w_sigma()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#two-particle-self-consistent-solver-tpsc">Two-particle self-consistent solver (TPSC)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#two-particle-self-consistent-solver-tpsc">Two-particle self-consistent solver (TPSC)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#triqs_tprf.tpsc_solver.tpsc_solver"><code class="docutils literal notranslate"><span class="pre">tpsc_solver</span></code></a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#triqs_tprf.tpsc_solver.tpsc_solver.get_GG0_bubble_chi2_wk"><code class="docutils literal notranslate"><span class="pre">tpsc_solver.get_GG0_bubble_chi2_wk()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#triqs_tprf.tpsc_solver.tpsc_solver.get_sigma"><code class="docutils literal notranslate"><span class="pre">tpsc_solver.get_sigma()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#triqs_tprf.tpsc_solver.tpsc_solver.get_sigma_tpsc_dynamic"><code class="docutils literal notranslate"><span class="pre">tpsc_solver.get_sigma_tpsc_dynamic()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#triqs_tprf.tpsc_solver.tpsc_solver.get_sigma_tpsc_dynamic_numpy"><code class="docutils literal notranslate"><span class="pre">tpsc_solver.get_sigma_tpsc_dynamic_numpy()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="#triqs_tprf.tpsc_solver.tpsc_solver.solve"><code class="docutils literal notranslate"><span class="pre">tpsc_solver.solve()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#linearized-eliashberg-equation">Linearized Eliashberg equation</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#triqs_tprf.eliashberg.solve_eliashberg"><code class="docutils literal notranslate"><span class="pre">solve_eliashberg()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#triqs_tprf.eliashberg.preprocess_gamma_for_fft"><code class="docutils literal notranslate"><span class="pre">preprocess_gamma_for_fft()</span></code></a></li>
@@ -1664,6 +1674,200 @@ Add some docs</p>
 </section>
 <section id="two-particle-self-consistent-solver-tpsc">
 <h1>Two-particle self-consistent solver (TPSC)<a class="headerlink" href="#two-particle-self-consistent-solver-tpsc" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="triqs_tprf.tpsc_solver.tpsc_solver">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">triqs_tprf.tpsc_solver.</span></span><span class="sig-name descname"><span class="pre">tpsc_solver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wmesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e_k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">docc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tpsc_ansatz'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/triqs_tprf/tpsc_solver.html#tpsc_solver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#triqs_tprf.tpsc_solver.tpsc_solver" title="Link to this definition"></a></dt>
+<dd><p>Two-particle self-consistency [1] solver for single-band Hubbard models</p>
+<p>TPSC assumes RPA-like charge and spin susceptibilities
+.. math:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>\<span class="n">chi_</span><span class="p">{</span><span class="n">ch</span><span class="p">}(</span><span class="n">k</span><span class="p">)</span> <span class="o">=</span> \<span class="n">frac</span><span class="p">{</span>\<span class="n">chi_0</span><span class="p">(</span><span class="n">k</span><span class="p">)}{</span><span class="mi">1</span> <span class="o">+</span> \<span class="n">frac</span><span class="p">{</span><span class="n">U_</span><span class="p">{</span><span class="n">ch</span><span class="p">}}{</span><span class="mi">2</span><span class="p">}</span>\<span class="n">chi_0</span><span class="p">(</span><span class="n">k</span><span class="p">)},</span> \<span class="n">quad</span>
+\<span class="n">chi_</span><span class="p">{</span><span class="n">sp</span><span class="p">}(</span><span class="n">k</span><span class="p">)</span> <span class="o">=</span> \<span class="n">frac</span><span class="p">{</span>\<span class="n">chi_0</span><span class="p">(</span><span class="n">k</span><span class="p">)}{</span><span class="mi">1</span> <span class="o">-</span> \<span class="n">frac</span><span class="p">{</span><span class="n">U_</span><span class="p">{</span><span class="n">sp</span><span class="p">}}{</span><span class="mi">2</span><span class="p">}</span>\<span class="n">chi_0</span><span class="p">(</span><span class="n">k</span><span class="p">)}</span>
+</pre></div>
+</div>
+<p>with renormalized vertices and determines them such that the sum rules
+.. math:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>\<span class="n">frac</span><span class="p">{</span><span class="n">T</span><span class="p">}{</span><span class="n">N</span><span class="p">}</span>\<span class="n">sum_</span><span class="p">{</span><span class="n">k</span><span class="p">}{</span>\<span class="n">chi_</span><span class="p">{</span><span class="n">ch</span><span class="p">}(</span><span class="n">k</span><span class="p">)}</span> <span class="o">=</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">2</span>\<span class="n">braket</span><span class="p">{</span><span class="n">n_</span>\<span class="n">uparrow</span> <span class="n">n_</span>\<span class="n">downarrow</span><span class="p">}</span> <span class="o">-</span> <span class="n">n</span><span class="o">^</span><span class="mi">2</span><span class="p">,</span> \<span class="n">quad</span>
+\<span class="n">frac</span><span class="p">{</span><span class="n">T</span><span class="p">}{</span><span class="n">N</span><span class="p">}</span>\<span class="n">sum_</span><span class="p">{</span><span class="n">k</span><span class="p">}{</span>\<span class="n">chi_</span><span class="p">{</span><span class="n">sp</span><span class="p">}(</span><span class="n">k</span><span class="p">)}</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">2</span>\<span class="n">braket</span><span class="p">{</span><span class="n">n_</span>\<span class="n">uparrow</span> <span class="n">n_</span>\<span class="n">downarrow</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>are fulfilled. This is done by imposing the Ansatz
+.. math:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">U_</span><span class="p">{</span><span class="n">sp</span><span class="p">}</span>\<span class="n">braket</span><span class="p">{</span><span class="n">n_</span>\<span class="n">uparrow</span><span class="p">}</span>\<span class="n">braket</span><span class="p">{</span><span class="n">n_</span>\<span class="n">downarrow</span><span class="p">}</span> <span class="o">=</span> <span class="n">U</span>\<span class="n">braket</span><span class="p">{</span><span class="n">n_</span>\<span class="n">uparrow</span> <span class="n">n_</span>\<span class="n">downarrow</span><span class="p">}</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>An approximation to the self-energy is obtained through
+.. math:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>\<span class="n">Sigma_</span>\<span class="n">sigma</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">=</span> <span class="n">Un_</span><span class="p">{</span><span class="o">-</span>\<span class="n">sigma</span><span class="p">}</span> <span class="o">+</span> \<span class="n">frac</span><span class="p">{</span><span class="n">U</span><span class="p">}{</span><span class="mi">8</span><span class="p">}</span>\<span class="n">frac</span><span class="p">{</span><span class="n">T</span><span class="p">}{</span><span class="n">N</span><span class="p">}</span>\<span class="n">sum_</span><span class="p">{</span><span class="n">q</span><span class="p">}{</span>
+\<span class="n">left</span><span class="p">[</span><span class="mi">3</span><span class="n">U_</span><span class="p">{</span><span class="n">sp</span><span class="p">}</span>\<span class="n">chi_</span><span class="p">{</span><span class="n">sp</span><span class="p">}(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="n">U_</span><span class="p">{</span><span class="n">ch</span><span class="p">}</span>\<span class="n">chi_</span><span class="p">{</span><span class="n">ch</span><span class="p">}(</span><span class="n">k</span><span class="p">)</span>\<span class="n">right</span><span class="p">]</span><span class="n">G_</span><span class="p">{</span><span class="mi">0</span>\<span class="n">sigma</span><span class="p">}(</span><span class="n">k</span><span class="o">+</span><span class="n">q</span><span class="p">)}</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>Determining the single-particle Green’s function and self-energy,
+as well as the charge and spin susceptibilities.</p>
+<p>[1] Y.M. Vilk, A.-M.S. Tremblay, J. Phys. I France, v7, no 11, pp 1309-1368 (1997)
+<a class="reference external" href="https://doi.org/10.1051/jp1:1997135" rel="noopener noreferrer" target="_blank">https://doi.org/10.1051/jp1:1997135</a> and <a class="reference external" href="https://arxiv.org/abs/cond-mat/9702188" rel="noopener noreferrer" target="_blank">https://arxiv.org/abs/cond-mat/9702188</a></p>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#triqs_tprf.tpsc_solver.tpsc_solver.get_GG0_bubble_chi2_wk" title="triqs_tprf.tpsc_solver.tpsc_solver.get_GG0_bubble_chi2_wk"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_GG0_bubble_chi2_wk</span></code></a>()</p></td>
+<td><p>Calculates the partially dressed susceptibility</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#triqs_tprf.tpsc_solver.tpsc_solver.get_sigma" title="triqs_tprf.tpsc_solver.tpsc_solver.get_sigma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_sigma</span></code></a>()</p></td>
+<td><p>Calculates the full second-level TPSC approximation to the self-energy.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#triqs_tprf.tpsc_solver.tpsc_solver.get_sigma_tpsc_dynamic" title="triqs_tprf.tpsc_solver.tpsc_solver.get_sigma_tpsc_dynamic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_sigma_tpsc_dynamic</span></code></a>()</p></td>
+<td><p>Calculates the dynamic part of the second-level TPSC approximation of the self-energy.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#triqs_tprf.tpsc_solver.tpsc_solver.get_sigma_tpsc_dynamic_numpy" title="triqs_tprf.tpsc_solver.tpsc_solver.get_sigma_tpsc_dynamic_numpy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_sigma_tpsc_dynamic_numpy</span></code></a>()</p></td>
+<td><p>Calculates the dynamic part of the second-level TPSC approximation of the self-energy.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#triqs_tprf.tpsc_solver.tpsc_solver.solve" title="triqs_tprf.tpsc_solver.tpsc_solver.solve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">solve</span></code></a>([calc_sigma, calc_g, Usp_tol, ...])</p></td>
+<td><p>Run the TPSC-calculation on the given model determining the screened spin and charge vertices <cite>Usp</cite> and <cite>Uch</cite>, respectively.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><strong>vprint</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="triqs_tprf.tpsc_solver.tpsc_solver.get_GG0_bubble_chi2_wk">
+<span class="sig-name descname"><span class="pre">get_GG0_bubble_chi2_wk</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/triqs_tprf/tpsc_solver.html#tpsc_solver.get_GG0_bubble_chi2_wk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#triqs_tprf.tpsc_solver.tpsc_solver.get_GG0_bubble_chi2_wk" title="Link to this definition"></a></dt>
+<dd><blockquote>
+<div><p>Calculates the partially dressed susceptibility
+.. math:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">chi_2</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">=</span> <span class="o">-</span>
+</pre></div>
+</div>
+</div></blockquote>
+<dl>
+<dt>rac{T}{N}sum_{q}{left[</dt><dd><p><a href="#id1"><span class="problematic" id="id2">G_</span></a>sigma^{TPSC}(q)G_{0sigma}(q+k) + <a href="#id3"><span class="problematic" id="id4">G_</span></a>sigma^{TPSC}(q+k)G_{0sigma}(q)</p>
+</dd>
+<dt>ight]}</dt><dd><p>used in the TPSC+ calculation [2]</p>
+<p>[2] C. Gauvin-Ndiaye, C. Lahaie, Y.M. Vilk, A.-M.S. Tremblay Phys.Rev.B 108, 075144, 2023
+<a class="reference external" href="https://doi.org/10.1103/PhysRevB.108.075144" rel="noopener noreferrer" target="_blank">https://doi.org/10.1103/PhysRevB.108.075144</a> and <a class="reference external" href="https://doi.org/10.48550/arXiv.2305.19219" rel="noopener noreferrer" target="_blank">https://doi.org/10.48550/arXiv.2305.19219</a></p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>chi2_wk</strong><span class="classifier">Gf</span></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="triqs_tprf.tpsc_solver.tpsc_solver.get_sigma">
+<span class="sig-name descname"><span class="pre">get_sigma</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/triqs_tprf/tpsc_solver.html#tpsc_solver.get_sigma"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#triqs_tprf.tpsc_solver.tpsc_solver.get_sigma" title="Link to this definition"></a></dt>
+<dd><blockquote>
+<div><p>Calculates the full second-level TPSC approximation to the self-energy.
+.. math:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>\<span class="n">Sigma_</span>\<span class="n">sigma</span><span class="o">^</span><span class="p">{</span><span class="n">TPSC</span><span class="p">}(</span><span class="n">k</span><span class="p">)</span> <span class="o">=</span> <span class="n">Un_</span><span class="p">{</span><span class="o">-</span>\<span class="n">sigma</span><span class="p">}</span> 
+</pre></div>
+</div>
+</div></blockquote>
+<p>rac{U}{8}
+rac{T}{N}sum_{q}{</p>
+<blockquote>
+<div><p>left[3U_{sp}chi_{sp}(k) + U_{ch}chi_{ch}(k)</p>
+</div></blockquote>
+<p>ight]G_{0sigma}(k+q)}</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>sigma_wk</strong><span class="classifier">Gf</span></dt><dd><p>TPSC-self energy</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="triqs_tprf.tpsc_solver.tpsc_solver.get_sigma_tpsc_dynamic">
+<span class="sig-name descname"><span class="pre">get_sigma_tpsc_dynamic</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/triqs_tprf/tpsc_solver.html#tpsc_solver.get_sigma_tpsc_dynamic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#triqs_tprf.tpsc_solver.tpsc_solver.get_sigma_tpsc_dynamic" title="Link to this definition"></a></dt>
+<dd><blockquote>
+<div><p>Calculates the dynamic part of the second-level TPSC approximation of the self-energy.
+.. math:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>\<span class="n">Sigma_</span>\<span class="n">sigma</span><span class="o">^</span><span class="p">{</span><span class="n">dyn</span><span class="p">,</span> <span class="n">TPSC</span><span class="p">}(</span><span class="n">k</span><span class="p">)</span> <span class="o">=</span> 
+</pre></div>
+</div>
+</div></blockquote>
+<p>rac{U}{8}
+rac{T}{N}sum_{q}{</p>
+<blockquote>
+<div><p>left[3U_{sp}chi_{sp}(k) + U_{ch}chi_{ch}(k)</p>
+</div></blockquote>
+<p>ight]G_{0sigma}(k+q)}</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>sigma_wk</strong><span class="classifier">Gf</span></dt><dd><p>dynamic TPSC-self energy</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="triqs_tprf.tpsc_solver.tpsc_solver.get_sigma_tpsc_dynamic_numpy">
+<span class="sig-name descname"><span class="pre">get_sigma_tpsc_dynamic_numpy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/triqs_tprf/tpsc_solver.html#tpsc_solver.get_sigma_tpsc_dynamic_numpy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#triqs_tprf.tpsc_solver.tpsc_solver.get_sigma_tpsc_dynamic_numpy" title="Link to this definition"></a></dt>
+<dd><blockquote>
+<div><p>Calculates the dynamic part of the second-level TPSC approximation of the self-energy.
+.. math:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>\<span class="n">Sigma_</span>\<span class="n">sigma</span><span class="o">^</span><span class="p">{</span><span class="n">dyn</span><span class="p">,</span> <span class="n">TPSC</span><span class="p">}(</span><span class="n">k</span><span class="p">)</span> <span class="o">=</span> 
+</pre></div>
+</div>
+</div></blockquote>
+<p>rac{U}{8}
+rac{T}{N}sum_{q}{</p>
+<blockquote>
+<div><p>left[3U_{sp}chi_{sp}(k) + U_{ch}chi_{ch}(k)</p>
+</div></blockquote>
+<p>ight]G_{0sigma}(k+q)}</p>
+<blockquote>
+<div><p>Uses numpy-arrays instead of built-in TRIQS functionality.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>sigma_wk</strong><span class="classifier">Gf</span></dt><dd><p>dynamic TPSC-self energy</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="triqs_tprf.tpsc_solver.tpsc_solver.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">calc_sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calc_g</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Usp_tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2e-12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Uch_tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2e-12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Uch_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chi0_wk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/triqs_tprf/tpsc_solver.html#tpsc_solver.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#triqs_tprf.tpsc_solver.tpsc_solver.solve" title="Link to this definition"></a></dt>
+<dd><p>Run the TPSC-calculation on the given model determining the screened
+spin and charge vertices <cite>Usp</cite> and <cite>Uch</cite>, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>calc_sigma</strong><span class="classifier">bool, optional</span></dt><dd><p>Enable the TPSC-self-energy calculation (default: <cite>False</cite>)</p>
+</dd>
+<dt><strong>calc_g</strong><span class="classifier">bool, optional</span></dt><dd><p>Enable the lattice Green’s function calculation (default: <cite>False</cite>)</p>
+</dd>
+<dt><strong>Usp_tol</strong><span class="classifier">double, optional</span></dt><dd><p>Tolerance for spin vertex <cite>Usp</cite> solution (default: 2e-12)</p>
+</dd>
+<dt><strong>Uch_tol</strong><span class="classifier">double, optional</span></dt><dd><p>Tolerance for charge vertex <cite>Uch</cite> solution (default: 2e-12)</p>
+</dd>
+<dt><strong>Uch_max</strong><span class="classifier">double, optional</span></dt><dd><p>maximum value of the charge vertex <cite>Uch</cite> to consider
+in numerical search (default: 100.)</p>
+</dd>
+<dt><strong>chi0_wk</strong><span class="classifier">Gf, optional</span></dt><dd><p>Enables passing of a partially dressed susceptibility (default: None)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 <section id="linearized-eliashberg-equation">
 <h1>Linearized Eliashberg equation<a class="headerlink" href="#linearized-eliashberg-equation" title="Link to this heading"></a></h1>
