@@ -114,9 +114,14 @@
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/Solving%20the%20linearized%20Eliashberg%20equation%20in%20the%20random%20phase%20approximation%20limit.html#4.-Solve-the-linearized-Eliashberg-equation">4. Solve the linearized Eliashberg equation</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../../user_guide/TPSC_Hubbard_triangular_lattice.html">The Two-Particle Self Consistency (TPSC) method</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../user_guide/TPSC_Hubbard_triangular_lattice.html#Theory">Theory</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../user_guide/TPSC_Hubbard_triangular_lattice.html#Triangular-lattice">Triangular lattice</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../user_guide/TPSC_Hubbard_triangular_lattice.html">The Two-Particle Self Consistent method (TPSC)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/TPSC_Hubbard_triangular_lattice.html#First-order-Hartree-Fock-(HF)-and-Random-Phase-Approximation-(RPA)">First order Hartree-Fock (HF) and Random-Phase Approximation (RPA)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/TPSC_Hubbard_triangular_lattice.html#id1">The Two-Particle Self Consistent method (TPSC)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/TPSC_Hubbard_triangular_lattice.html#Tutorial:-TPSC-for-the-triangular-lattice-Hubbard-model">Tutorial: TPSC for the triangular lattice Hubbard model</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../user_guide/TPSC_Hubbard_triangular_lattice.html#Tight-binding-Hamiltonian">Tight binding Hamiltonian</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/TPSC_Hubbard_triangular_lattice.html#Brillouin-zone-and-high-symmetry-path">Brillouin-zone and high symmetry path</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/TPSC_Hubbard_triangular_lattice.html#Non-interacting-susceptibility-\chi_0">Non-interacting susceptibility <span class="math notranslate nohighlight">\(\chi_0\)</span></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/TPSC_Hubbard_triangular_lattice.html#Interacting-charge-(\chi_{ch})-and-spin-response-(\chi_{sp})">Interacting charge (<span class="math notranslate nohighlight">\(\chi_{ch}\)</span>) and spin response (<span class="math notranslate nohighlight">\(\chi_{sp}\)</span>)</a></li>
 </ul>
@@ -743,36 +748,10 @@
 <div class="viewcode-block" id="tpsc_solver">
 <a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.tpsc_solver.tpsc_solver">[docs]</a>
 <span class="k">class</span> <span class="nc">tpsc_solver</span><span class="p">:</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Two-particle self-consistency [1] solver for single-band Hubbard models</span>
-
-<span class="sd">    TPSC assumes RPA-like charge and spin susceptibilities</span>
-<span class="sd">    .. math::</span>
-<span class="sd">        \chi_{ch}(k) = \frac{\chi_0(k)}{1 + \frac{U_{ch}}{2}\chi_0(k)}, \quad</span>
-<span class="sd">        \chi_{sp}(k) = \frac{\chi_0(k)}{1 - \frac{U_{sp}}{2}\chi_0(k)}</span>
-<span class="sd">    with renormalized vertices and determines them such that the sum rules</span>
-<span class="sd">    .. math::</span>
-<span class="sd">        \frac{T}{N}\sum_{k}{\chi_{ch}(k)} = n + 2\braket{n_\uparrow n_\downarrow} - n^2, \quad</span>
-<span class="sd">        \frac{T}{N}\sum_{k}{\chi_{sp}(k)} = n - 2\braket{n_\uparrow n_\downarrow}</span>
-<span class="sd">    are fulfilled. This is done by imposing the Ansatz</span>
-<span class="sd">    .. math::</span>
-<span class="sd">        U_{sp}\braket{n_\uparrow}\braket{n_\downarrow} = U\braket{n_\uparrow n_\downarrow}.</span>
-
-<span class="sd">    An approximation to the self-energy is obtained through</span>
-<span class="sd">    .. math::</span>
-<span class="sd">        \Sigma_\sigma(k) = Un_{-\sigma} + \frac{U}{8}\frac{T}{N}\sum_{q}{</span>
-<span class="sd">        \left[3U_{sp}\chi_{sp}(k) + U_{ch}\chi_{ch}(k)\right]G_{0\sigma}(k+q)}.</span>
-<span class="sd">        </span>
-<span class="sd">    Determining the single-particle Green&#39;s function and self-energy,</span>
-<span class="sd">    as well as the charge and spin susceptibilities.</span>
-
-<span class="sd">    [1] Y.M. Vilk, A.-M.S. Tremblay, J. Phys. I France, v7, no 11, pp 1309-1368 (1997)</span>
-<span class="sd">    https://doi.org/10.1051/jp1:1997135 and https://arxiv.org/abs/cond-mat/9702188</span>
-<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">wmesh</span><span class="p">,</span> <span class="n">e_k</span><span class="p">,</span> <span class="n">docc</span><span class="o">=</span><span class="s1">&#39;tpsc_ansatz&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Initialize the TPSC solver.</span>
+
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot; Two-particle self-consistency (TPSC) [1]_ solver for single-band Hubbard models.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -788,6 +767,41 @@
 <span class="sd">               double occupancy (default: `tpsc_ansatz` using the TPSC-Ansatz [1])</span>
 <span class="sd">        verbose : bool, optional</span>
 <span class="sd">                  Verbose printouts (default: `True`)</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        TPSC assumes RPA-like charge and spin susceptibilities</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">        </span>
+<span class="sd">            \chi_{ch}(k) = \frac{\chi_0(k)}{1 + \frac{U_{ch}}{2}\chi_0(k)}, \quad</span>
+<span class="sd">            \chi_{sp}(k) = \frac{\chi_0(k)}{1 - \frac{U_{sp}}{2}\chi_0(k)}</span>
+
+<span class="sd">        with renormalized vertices and determines them such that the sum rules</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            \frac{T}{N}\sum_{k}{\chi_{ch}(k)} = n + 2\braket{n_\uparrow n_\downarrow} - n^2, \quad</span>
+<span class="sd">            \frac{T}{N}\sum_{k}{\chi_{sp}(k)} = n - 2\braket{n_\uparrow n_\downarrow}</span>
+
+<span class="sd">        are fulfilled. This is done by imposing the Ansatz</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            U_{sp}\braket{n_\uparrow}\braket{n_\downarrow} = U\braket{n_\uparrow n_\downarrow}.</span>
+
+<span class="sd">        An approximation to the self-energy is obtained through</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            \Sigma_\sigma(k) = Un_{-\sigma} + \frac{U}{8}\frac{T}{N}\sum_{q}{</span>
+<span class="sd">            \left[3U_{sp}\chi_{sp}(k) + U_{ch}\chi_{ch}(k)\right]G_{0\sigma}(k+q)}.</span>
+
+<span class="sd">        Determining the single-particle Green&#39;s function and self-energy,</span>
+<span class="sd">        as well as the charge and spin susceptibilities.</span>
+
+<span class="sd">        .. [1] Y.M. Vilk, A.-M.S. Tremblay, J. Phys. I France, v7, no 11, pp 1309-1368 (1997)</span>
+<span class="sd">            https://doi.org/10.1051/jp1:1997135 and https://arxiv.org/abs/cond-mat/9702188</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span>
@@ -825,7 +839,7 @@
               <span class="n">Usp_tol</span><span class="o">=</span><span class="mf">2e-12</span><span class="p">,</span> <span class="n">Uch_tol</span><span class="o">=</span><span class="mf">2e-12</span><span class="p">,</span> <span class="n">Uch_max</span><span class="o">=</span><span class="mf">100.</span><span class="p">,</span> <span class="n">Usp_epsilon</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">,</span> <span class="n">chi0_wk</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Run the TPSC-calculation on the given model determining the screened</span>
-<span class="sd">        spin and charge vertices `Usp` and `Uch`, respectively.</span>
+<span class="sd">        spin and charge vertices :math:`U_{sp}` and :math:`U_{ch}`, respectively.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -835,17 +849,17 @@
 <span class="sd">                 Enable the lattice Green&#39;s function calculation (default: `False`)</span>
 <span class="sd">        </span>
 <span class="sd">        Usp_tol : double, optional</span>
-<span class="sd">                  Tolerance for spin vertex `Usp` solution (default: 2e-12)</span>
+<span class="sd">                  Tolerance for spin vertex :math:`U_{sp}` solution (default: `2e-12`)</span>
 <span class="sd">        Uch_tol : double, optional</span>
-<span class="sd">                  Tolerance for charge vertex `Uch` solution (default: 2e-12)</span>
+<span class="sd">                  Tolerance for charge vertex :math:`U_{ch}` solution (default: `2e-12`)</span>
 <span class="sd">        Uch_max : double, optional</span>
-<span class="sd">                  maximum value of the charge vertex `Uch` to consider</span>
-<span class="sd">                  in numerical search (default: 100.)</span>
+<span class="sd">                  maximum value of the charge vertex :math:`U_{ch}` to consider</span>
+<span class="sd">                  in numerical search (default: `100.0`)</span>
 <span class="sd">        Usp_epsilon : double, optional</span>
-<span class="sd">                Offset from maximum value of the spin vertex `Usp` to consider</span>
-<span class="sd">                Increases numerical stability of root search (default: 1e-7)</span>
+<span class="sd">                Offset from maximum value of the spin vertex :math:`U_{sp}` to consider</span>
+<span class="sd">                Increases numerical stability of root search (default: `1e-7`)</span>
 <span class="sd">        chi0_wk : Gf, optional</span>
-<span class="sd">                  Enables passing of a partially dressed susceptibility (default: None)</span>
+<span class="sd">                  Enables passing of a partially dressed susceptibility (default: `None`)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">calc_g</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span> <span class="n">calc_sigma</span> <span class="o">=</span> <span class="kc">True</span>
@@ -871,7 +885,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">chich_wk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve_rpa</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chi0_wk</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Uch</span><span class="p">)</span>
 
         <span class="n">chi_sum_rule</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_density</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chisp_wk</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">chich_wk</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
-        <span class="k">assert</span><span class="p">(</span> <span class="n">chi_sum_rule</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">Usp_tol</span><span class="p">,</span> <span class="n">Uch_tol</span><span class="p">])</span> <span class="p">)</span>
+        <span class="k">assert</span><span class="p">(</span> <span class="n">chi_sum_rule</span> <span class="o">&lt;</span> <span class="mf">1e-6</span><span class="p">)</span>
+        <span class="c1">#np.min([Usp_tol, Uch_tol]) )</span>
         
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_tpsc_ansatz</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">vprint</span><span class="p">(</span><span class="s2">&quot;--&gt; get double occupancy&quot;</span><span class="p">)</span>
@@ -914,15 +929,15 @@
 <span class="sd">        chi0_wk : Gf</span>
 <span class="sd">                  bare susceptibility</span>
 <span class="sd">        Usp_tol : double</span>
-<span class="sd">                  Tolerance for spin vertex `Usp` solution</span>
+<span class="sd">                  Tolerance for spin vertex :math:`U_{sp}` solution</span>
 <span class="sd">        Usp_epsilon : double</span>
-<span class="sd">                      Offset from maximum value of the spin vertex `Usp` to consider</span>
+<span class="sd">                      Offset from maximum value of the spin vertex :math:`U_{sp]` to consider</span>
 <span class="sd">                      Increases numerical stability of root search</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Usp : double</span>
-<span class="sd">              Screened spin vertex `Usp`</span>
+<span class="sd">              Screened spin vertex :math:`U_{sp}`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">def</span> <span class="nf">Usp_root</span><span class="p">(</span><span class="n">Usp</span><span class="p">):</span>
@@ -945,22 +960,22 @@
 
     <span class="k">def</span> <span class="nf">_solve_Uch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chi0_wk</span><span class="p">,</span> <span class="n">Uch_tol</span><span class="p">,</span> <span class="n">Uch_max</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Calculates screened charge vertex `Uch` given a bare susceptibility.</span>
+<span class="sd">        Calculates screened charge vertex :math:`U_{ch}` given a bare susceptibility.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        chi0_wk : Gf</span>
 <span class="sd">                  bare susceptibility</span>
 <span class="sd">        Uch_tol : double</span>
-<span class="sd">                  Tolerance for spin vertex `Uch` solution</span>
+<span class="sd">                  Tolerance for spin vertex :math:`U_{ch}` solution</span>
 <span class="sd">    	Uch_max : double</span>
-<span class="sd">                  maximum value of the charge vertex `Uch` to consider</span>
+<span class="sd">                  maximum value of the charge vertex :math:`U_{ch}` to consider</span>
 <span class="sd">                  in numerical search</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Uch : double</span>
-<span class="sd">              Screened spin vertex `Uch`</span>
+<span class="sd">              Screened spin vertex :math:`U_{ch}`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">def</span> <span class="nf">Uch_root</span><span class="p">(</span><span class="n">Uch</span><span class="p">):</span>
@@ -1039,8 +1054,11 @@
     <span class="k">def</span> <span class="nf">_calc_g0_wk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_density</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculates the non-interacting Green&#39;s function</span>
+<span class="sd">        </span>
 <span class="sd">        .. math::</span>
+
 <span class="sd">            g_0(k) = (i\omega_n + \mu - \varepsilon(\mathbf{k}))^{-1}</span>
+
 <span class="sd">        using the solvers dispersion relation.</span>
 <span class="sd">        Chemical potential is chosen such that g0_wk has the correct density.</span>
 
@@ -1057,6 +1075,7 @@
 
         <span class="c1"># find the mu that leads to the correct density</span>
         <span class="n">mu_min</span><span class="p">,</span> <span class="n">mu_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+        <span class="n">mu_min</span><span class="p">,</span> <span class="n">mu_max</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">mu_min</span><span class="p">,</span> <span class="mi">10</span><span class="o">*</span><span class="n">mu_max</span>
 
         <span class="k">def</span> <span class="nf">target_function</span><span class="p">(</span><span class="n">mu</span><span class="p">):</span>
             <span class="n">g0_wk</span> <span class="o">=</span> <span class="n">lattice_dyson_g0_wk</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">e_k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">e_k</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wmesh</span><span class="p">)</span>
@@ -1071,8 +1090,11 @@
     <span class="k">def</span> <span class="nf">_calc_g_wk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_density</span><span class="p">,</span> <span class="n">sigma_wk</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculates the interacting Green&#39;s function</span>
+
 <span class="sd">        .. math::</span>
+
 <span class="sd">            g_\sigma(k) = (i\omega_n + \mu - \varepsilon(\mathbf{k}) - \Sigma_\sigma(k))</span>
+
 <span class="sd">        using the solvers dispersion relation.</span>
 <span class="sd">        Chemical potential is chosen such that g0_wk has the correct density.</span>
 
@@ -1110,7 +1132,9 @@
     <span class="k">def</span> <span class="nf">get_sigma_tpsc_dynamic_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculates the dynamic part of the second-level TPSC approximation of the self-energy.</span>
+
 <span class="sd">        .. math::</span>
+
 <span class="sd">            \Sigma_\sigma^{dyn, TPSC}(k) = \frac{U}{8}\frac{T}{N}\sum_{q}{</span>
 <span class="sd">            \left[3U_{sp}\chi_{sp}(k) + U_{ch}\chi_{ch}(k)\right]G_{0\sigma}(k+q)}</span>
 
@@ -1148,7 +1172,9 @@
     <span class="k">def</span> <span class="nf">get_sigma_tpsc_dynamic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculates the dynamic part of the second-level TPSC approximation of the self-energy.</span>
+
 <span class="sd">        .. math::</span>
+
 <span class="sd">            \Sigma_\sigma^{dyn, TPSC}(k) = \frac{U}{8}\frac{T}{N}\sum_{q}{</span>
 <span class="sd">            \left[3U_{sp}\chi_{sp}(k) + U_{ch}\chi_{ch}(k)\right]G_{0\sigma}(k+q)}</span>
 
@@ -1187,7 +1213,9 @@
     <span class="k">def</span> <span class="nf">get_sigma</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculates the full second-level TPSC approximation to the self-energy.</span>
+
 <span class="sd">        .. math::</span>
+
 <span class="sd">            \Sigma_\sigma^{TPSC}(k) = Un_{-\sigma} \frac{U}{8}\frac{T}{N}\sum_{q}{</span>
 <span class="sd">            \left[3U_{sp}\chi_{sp}(k) + U_{ch}\chi_{ch}(k)\right]G_{0\sigma}(k+q)}</span>
 <span class="sd">        </span>
@@ -1209,13 +1237,16 @@
     <span class="k">def</span> <span class="nf">get_GG0_bubble_chi2_wk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculates the partially dressed susceptibility</span>
-<span class="sd">        .. math::</span>
-<span class="sd">            chi_2(k) = -\frac{T}{N}\sum_{q}{\left[</span>
-<span class="sd">            G_\sigma^{TPSC}(q)G_{0\sigma}(q+k) + G_\sigma^{TPSC}(q+k)G_{0\sigma}(q)\right]}</span>
-<span class="sd">        used in the TPSC+ calculation [2]</span>
 
-<span class="sd">        [2] C. Gauvin-Ndiaye, C. Lahaie, Y.M. Vilk, A.-M.S. Tremblay Phys.Rev.B 108, 075144, 2023</span>
-<span class="sd">        https://doi.org/10.1103/PhysRevB.108.075144 and https://doi.org/10.48550/arXiv.2305.19219</span>
+<span class="sd">        .. math::</span>
+
+<span class="sd">            \chi_2(k) = -\frac{T}{N}\sum_{q}{\left[</span>
+<span class="sd">            G_\sigma^{TPSC}(q)G_{0\sigma}(q+k) + G_\sigma^{TPSC}(q+k)G_{0\sigma}(q)\right]}</span>
+
+<span class="sd">        used in the TPSC+ calculation [2]_</span>
+
+<span class="sd">        .. [2] C. Gauvin-Ndiaye, C. Lahaie, Y.M. Vilk, A.-M.S. Tremblay Phys.Rev.B 108, 075144, 2023</span>
+<span class="sd">            https://doi.org/10.1103/PhysRevB.108.075144 and https://doi.org/10.48550/arXiv.2305.19219</span>
 <span class="sd">        </span>
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>

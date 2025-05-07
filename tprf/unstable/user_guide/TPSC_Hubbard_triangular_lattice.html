@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The Two-Particle Self Consistency (TPSC) method &mdash; triqs_tprf  documentation</title>
+  <title>The Two-Particle Self Consistent method (TPSC) &mdash; triqs_tprf  documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
       <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=f7f783a0" />
       <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
@@ -119,9 +119,14 @@
 <li class="toctree-l4"><a class="reference internal" href="Solving%20the%20linearized%20Eliashberg%20equation%20in%20the%20random%20phase%20approximation%20limit.html#4.-Solve-the-linearized-Eliashberg-equation">4. Solve the linearized Eliashberg equation</a></li>
 </ul>
 </li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">The Two-Particle Self Consistency (TPSC) method</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#Theory">Theory</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#Triangular-lattice">Triangular lattice</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">The Two-Particle Self Consistent method (TPSC)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#First-order-Hartree-Fock-(HF)-and-Random-Phase-Approximation-(RPA)">First order Hartree-Fock (HF) and Random-Phase Approximation (RPA)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id1">The Two-Particle Self Consistent method (TPSC)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Tutorial:-TPSC-for-the-triangular-lattice-Hubbard-model">Tutorial: TPSC for the triangular lattice Hubbard model</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#Tight-binding-Hamiltonian">Tight binding Hamiltonian</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#Brillouin-zone-and-high-symmetry-path">Brillouin-zone and high symmetry path</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#Non-interacting-susceptibility-\chi_0">Non-interacting susceptibility <span class="math notranslate nohighlight">\(\chi_0\)</span></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#Interacting-charge-(\chi_{ch})-and-spin-response-(\chi_{sp})">Interacting charge (<span class="math notranslate nohighlight">\(\chi_{ch}\)</span>) and spin response (<span class="math notranslate nohighlight">\(\chi_{sp}\)</span>)</a></li>
 </ul>
@@ -686,7 +691,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../documentation.html">Documentation</a></li>
-      <li class="breadcrumb-item active">The Two-Particle Self Consistency (TPSC) method</li>
+      <li class="breadcrumb-item active">The Two-Particle Self Consistent method (TPSC)</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/user_guide/TPSC_Hubbard_triangular_lattice.ipynb.txt" rel="nofollow"> View page source</a>
       </li>
@@ -988,64 +993,90 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<section id="The-Two-Particle-Self-Consistency-(TPSC)-method">
-<h1>The Two-Particle Self Consistency (TPSC) method<a class="headerlink" href="#The-Two-Particle-Self-Consistency-(TPSC)-method" title="Link to this heading"></a></h1>
-<p>The Two-Particle Self Consistent (TPSC) method is an approach to solving the single-band Hubbard Model first introduced by Vilk and Tremblay (<a class="reference external" href="https://arxiv.org/abs/cond-mat/9702188" rel="noopener noreferrer" target="_blank">https://arxiv.org/abs/cond-mat/9702188</a>).</p>
-<section id="Theory">
-<h2>Theory<a class="headerlink" href="#Theory" title="Link to this heading"></a></h2>
-<p>Among the simplest approximations to self-energy and susceptibilities are the <strong>Hartree-Fock (HF)</strong> and <strong>Random-Phase-Approximation (RPA)</strong>, which, in the single-band Hubbard model are</p>
+<section id="The-Two-Particle-Self-Consistent-method-(TPSC)">
+<h1>The Two-Particle Self Consistent method (TPSC)<a class="headerlink" href="#The-Two-Particle-Self-Consistent-method-(TPSC)" title="Link to this heading"></a></h1>
+<p>The Two-Particle Self Consistent method (TPSC) is a non-perturbative modification of the first order interaction expansion for single-particle and two-particle quantities of the Hubbard model introduced by Vilk and Tremblay, see <a class="reference external" href="https://arxiv.org/abs/cond-mat/9702188" rel="noopener noreferrer" target="_blank">ArXiV:9702188</a>. Compared to simpler approximations it has the essential feature of obeying the <a class="reference external" href="https://en.wikipedia.org/wiki/Mermin%E2%80%93Wagner_theorem" rel="noopener noreferrer" target="_blank">Mermin-Wagner theorem</a> forbidding symmetry breaking at finite
+temperatures in two dimensions.</p>
+<section id="First-order-Hartree-Fock-(HF)-and-Random-Phase-Approximation-(RPA)">
+<h2>First order Hartree-Fock (HF) and Random-Phase Approximation (RPA)<a class="headerlink" href="#First-order-Hartree-Fock-(HF)-and-Random-Phase-Approximation-(RPA)" title="Link to this heading"></a></h2>
+<p>The first order approximation for single-particle Green’s function is the <strong>Hartree-Fock (HF)</strong> approximation, which in the Hubbard model gives a static and momentum independent single-particle self-energy</p>
 <div class="math notranslate nohighlight">
-\[\Sigma^\text{HF}_\sigma(i\omega_n, \mathbf{k}) = U \langle n_{-\sigma}\rangle\]</div>
+\[\Sigma^\text{HF}_\sigma(i\omega_n, \mathbf{k}) = U \langle n_{-\sigma}\rangle \, .\]</div>
+<p>The two-particle response in terms of the charge- (<span class="math notranslate nohighlight">\(\chi_{\text{ch}}\)</span>) and spin-susceptibility (<span class="math notranslate nohighlight">\(\chi_{\text{sp}}\)</span>) are to first order in the interaction <span class="math notranslate nohighlight">\(U\)</span> given by the <strong>Random-Phase-Approximation (RPA)</strong></p>
 <div class="math notranslate nohighlight">
-\[\chi^\text{RPA}_\text{sp}(i\omega_n, \mathbf{k}) = \frac{\chi_0(i\omega_n, \mathbf{k})}{1 - \frac{U}{2}\chi_0(i\omega_n, \mathbf{k})}, \qquad
-\chi^\text{RPA}_\text{ch}(i\omega_n, \mathbf{k}) = \frac{\chi_0(i\omega_n, \mathbf{k})}{1 + \frac{U}{2}\chi_0(i\omega_n, \mathbf{k})}\]</div>
-<p>The HF-self-energy has the immediate disadvantage of being constant and thus absorbed in the chemical potential.</p>
-<p>For the susceptibilities, there exist two sum rules</p>
+\[\begin{split}\chi_\text{sp}(i\omega_n, \mathbf{k}) \approx
+\chi^\text{RPA}_\text{sp}(i\omega_n, \mathbf{k}) = \frac{\chi_0(i\omega_n, \mathbf{k})}{1 - \frac{U}{2}\chi_0(i\omega_n, \mathbf{k})}
+\, \\
+\chi_\text{ch}(i\omega_n, \mathbf{k}) \approx
+\chi^\text{RPA}_\text{ch}(i\omega_n, \mathbf{k}) = \frac{\chi_0(i\omega_n, \mathbf{k})}{1 + \frac{U}{2}\chi_0(i\omega_n, \mathbf{k})}
+\, .\end{split}\]</div>
+<p>The differing signs in the denominators cause the charge- and spin-response to behave very differently. Due to the negaitve sign in the denominator of the spin-response the RPA response diverges at some interaction, in violation of the Mermin-Wagner theorem.</p>
+<p>The problem with unpysical ordering in RPA can be connected to the violation of the two sum rules</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}\begin{align}
-\frac{T}{N}\sum_{i\omega_n, \mathbf{k}}{\chi_\text{sp}(i\omega_n, \mathbf{k})} &amp;= n - 2\langle n_\uparrow n_\downarrow\rangle \\
-\frac{T}{N}\sum_{i\omega_n, \mathbf{k}}{\chi_\text{ch}(i\omega_n, \mathbf{k})} &amp;= n + 2\langle n_\uparrow n_\downarrow\rangle - n^2
+\frac{T}{N}\sum_{i\omega_n, \mathbf{k}}{\chi_\text{sp}(i\omega_n, \mathbf{k})} &amp;= n - 2\langle n_\uparrow n_\downarrow\rangle \, ,\\
+\frac{T}{N}\sum_{i\omega_n, \mathbf{k}}{\chi_\text{ch}(i\omega_n, \mathbf{k})} &amp;= n + 2\langle n_\uparrow n_\downarrow\rangle - n^2 \, ,
 \end{align}\end{split}\]</div>
-<p>which are violated by the RPA-approximations. Also, since the denominator of <span class="math notranslate nohighlight">\(\chi_\text{sp}\)</span> can vanish, RPA predicts a magnetically ordered phase, which, in two dimensions is prohibited by the <strong>Mermin-Wagner theorem</strong>.</p>
-<p>To fix this, TPSC introduces <em>RPA-like</em> susceptibilities with screened interaction vertices <span class="math notranslate nohighlight">\(U_\text{ch}\)</span> and <span class="math notranslate nohighlight">\(U_\text{sp}\)</span></p>
+<p>the charge- and spin-susceptibility.</p>
+</section>
+<section id="id1">
+<h2>The Two-Particle Self Consistent method (TPSC)<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<p>The central idea with the Two-Particle Self Consistent method (TPSC) is to retain the simple mathematical form of RPA</p>
 <div class="math notranslate nohighlight">
-\[\chi^\text{TPSC}_\text{sp}(i\omega_n, \mathbf{k}) = \frac{\chi_0(i\omega_n, \mathbf{k})}{1 - \frac{U_\text{sp}}{2}\chi_0(i\omega_n, \mathbf{k})}, \qquad
-\chi^\text{TPSC}_\text{ch}(i\omega_n, \mathbf{k}) = \frac{\chi_0(i\omega_n, \mathbf{k})}{1 + \frac{U_\text{ch}}{2}\chi_0(i\omega_n, \mathbf{k})}\]</div>
-<p><span class="math notranslate nohighlight">\(U_\text{ch}\)</span> and <span class="math notranslate nohighlight">\(U_\text{sp}\)</span> are chosen such that the sum rules are fulfilled; for this to work, we need to now the <strong>double occupancy</strong> <span class="math notranslate nohighlight">\(\langle n_\uparrow n_\downarrow\rangle\)</span> for which TPSC makes the <em>Ansatz</em></p>
+\[\chi^\text{TPSC}_\text{sp}(i\omega_n, \mathbf{k}) = \frac{\chi_0(i\omega_n, \mathbf{k})}{1 - \frac{U_\text{sp}}{2}\chi_0(i\omega_n, \mathbf{k})} \, , \qquad
+\chi^\text{TPSC}_\text{ch}(i\omega_n, \mathbf{k}) = \frac{\chi_0(i\omega_n, \mathbf{k})}{1 + \frac{U_\text{ch}}{2}\chi_0(i\omega_n, \mathbf{k})}
+\, ,\]</div>
+<p>while fulfilling the two sum rules using by introducing screened static effective interactions <span class="math notranslate nohighlight">\(U_{\text{sp}}\)</span> and <span class="math notranslate nohighlight">\(U_{\text{ch}}\)</span>. The screened interactions are in turn self-consistently tuned as to fulfill the two sum rules.</p>
+<p>It is the resulting screening of the spin-vertex <span class="math notranslate nohighlight">\(U_{\text{sp}}\)</span> that reinstates the the <a class="reference external" href="https://en.wikipedia.org/wiki/Mermin%E2%80%93Wagner_theorem" rel="noopener noreferrer" target="_blank">Mermin-Wagner theorem</a>, reducing <span class="math notranslate nohighlight">\(U_{\text{sp}}\)</span> so that the denominator in <span class="math notranslate nohighlight">\(\chi^{\text{TPSC}}_\text{sp}\)</span> never goes to zero (at finite temperature).</p>
+<p>To get a closed set of equations we require the expectation value of the double occupancy <span class="math notranslate nohighlight">\(\langle n_\uparrow n_\downarrow\rangle\)</span>, and in is original form this is obtained in TPSC using the <em>Ansatz</em></p>
 <div class="math notranslate nohighlight">
-\[U_\text{sp} \langle n_\uparrow\rangle\langle n_\downarrow\rangle = U \langle n_\uparrow n_\downarrow\rangle\]</div>
-<p>Having obtained the renormalized vertices and susceptibilities, TPSC then approximates the self-energy as</p>
+\[U_\text{sp} \langle n_\uparrow\rangle\langle n_\downarrow\rangle = U \langle n_\uparrow n_\downarrow\rangle
+\, .\]</div>
+<p>However, there are extensions of TPSC that use higher order methods (like DMFT) to get a better approximation for the double occupancy.</p>
+<p>Once the TPSC spin- and charge-response is known it is also possible to compute an improved approximation of the single-particle self energy using first order shell-diagrams with the effective spin- and charge-interaction</p>
 <div class="math notranslate nohighlight">
 \[\Sigma^\text{TPSC}_\sigma(i\omega_n, \mathbf{k}) = U \langle n_{-\sigma}\rangle + \frac{U}{8}\frac{T}{N}\sum_{i\nu_m, \mathbf{q}}{\left[
 3 U_\text{sp}\chi_\text{sp}(i\nu_m, \mathbf{q}) + U_\text{ch}\chi_\text{ch}(i\nu_m, \mathbf{q})
-\right] G_{0\sigma}(i\nu_m+i\omega_n, \mathbf{q}+\mathbf{k})}\]</div>
+\right] G_{0\sigma}(i\nu_m+i\omega_n, \mathbf{q}+\mathbf{k})}
+\, .\]</div>
+<p>The resulting self-energy is momentum dependent and in this form TPSC was the first approximation that captures the cold- and hot-spots along the Fermi surface in the half-filled Hubbard model on the square lattice [REF?].</p>
 </section>
-<section id="Triangular-lattice">
-<h2>Triangular lattice<a class="headerlink" href="#Triangular-lattice" title="Link to this heading"></a></h2>
-<p>In the following, we apply the TPSC method to a triangular two-dimensional Hubbard model. The triangular lattice in 2 dimensions is spanned by the primitive lattice vectors</p>
+<section id="Tutorial:-TPSC-for-the-triangular-lattice-Hubbard-model">
+<h2>Tutorial: TPSC for the triangular lattice Hubbard model<a class="headerlink" href="#Tutorial:-TPSC-for-the-triangular-lattice-Hubbard-model" title="Link to this heading"></a></h2>
+<p>In this tutorial we use the TPSC solver <code class="docutils literal notranslate"><span class="pre">triqs_trpf.tpsc_solver</span></code> to determine the properties of the Hubbard model on the triangular lattice</p>
+<div class="math notranslate nohighlight">
+\[H = H_{t} + H_U =
+-t \sum_{\langle i, j \rangle, \sigma} c^\dagger_{i \sigma} c_{j\sigma}
++ U \sum_{i} c^\dagger_{i\uparrow} c_{i\uparrow} c^\dagger_{i \downarrow} c_{i\downarrow}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\langle i, j \rangle\)</span> denote nearest neighbous, <span class="math notranslate nohighlight">\(t\)</span> is the nearest neighbour hopping, <span class="math notranslate nohighlight">\(U\)</span> the local Hubbard interaction, and <span class="math notranslate nohighlight">\(\sigma \in \{\uparrow, \downarrow\}\)</span>.</p>
+<p>The hopping <span class="math notranslate nohighlight">\(t\)</span> will be used as the unit of energy and set to unity (<span class="math notranslate nohighlight">\(t = 1\)</span>) and the chemical potential <span class="math notranslate nohighlight">\(\mu = 2t\)</span> will be used.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">t</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="c1"># Nearest-neighbour hopping strength</span>
+
+<span class="n">mu</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="c1"># Chemical potential</span>
+</pre></div>
+</div>
+</div>
+<section id="Tight-binding-Hamiltonian">
+<h3>Tight binding Hamiltonian<a class="headerlink" href="#Tight-binding-Hamiltonian" title="Link to this heading"></a></h3>
+<p>The triangular lattice is two-dimensional and is spanned by the primitive lattice vectors</p>
 <div class="math notranslate nohighlight">
 \[\mathbf{a}_1 = a\hat{x}, \qquad \mathbf{a}_2 = \frac{a}{2} \hat{x} + \frac{\sqrt{3}a}{2}\hat{y}\]</div>
-<p>For simplicity, we set <span class="math notranslate nohighlight">\(a = 1\)</span>; in TRIQS we can create such a lattice as follows:</p>
+<p>where <span class="math notranslate nohighlight">\(a\)</span> is the lattice spacing which we set to unity (<span class="math notranslate nohighlight">\(a=1\)</span>), for simplicity. In TRIQS the hopping part <span class="math notranslate nohighlight">\(H_t\)</span> of the Hamiltonian can be represented by a tight-binding lattice instance (<code class="docutils literal notranslate"><span class="pre">TBLattice</span></code>) according to</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs.lattice.tight_binding</span> <span class="kn">import</span> <span class="n">TBLattice</span>
 
-<span class="n">t</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
-<span class="n">mu</span> <span class="o">=</span> <span class="o">-</span><span class="mf">2.0</span>
+<span class="n">H_t</span> <span class="o">=</span> <span class="n">TBLattice</span><span class="p">(</span>
+    <span class="n">units</span><span class="o">=</span><span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span>
+    <span class="n">hoppings</span> <span class="o">=</span> <span class="p">{</span> <span class="n">coord</span> <span class="p">:</span> <span class="p">[[</span><span class="o">-</span><span class="n">t</span><span class="p">]]</span> <span class="k">for</span> <span class="n">coord</span> <span class="ow">in</span> <span class="p">[(</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="o">+</span><span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">+</span><span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="o">+</span><span class="mi">0</span><span class="p">,</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="o">+</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">+</span><span class="mi">1</span><span class="p">)]})</span>
 
-<span class="n">units</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
-
-<span class="n">hoppings</span> <span class="o">=</span> <span class="p">{(</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="o">+</span><span class="mi">0</span><span class="p">)</span> <span class="p">:</span> <span class="p">[[</span><span class="n">t</span><span class="p">]],</span>
-            <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">+</span><span class="mi">0</span><span class="p">)</span> <span class="p">:</span> <span class="p">[[</span><span class="n">t</span><span class="p">]],</span>
-            <span class="p">(</span><span class="o">+</span><span class="mi">0</span><span class="p">,</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="p">:</span> <span class="p">[[</span><span class="n">t</span><span class="p">]],</span>
-            <span class="p">(</span><span class="o">+</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">:</span> <span class="p">[[</span><span class="n">t</span><span class="p">]],</span>
-            <span class="p">(</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">:</span> <span class="p">[[</span><span class="n">t</span><span class="p">]],</span>
-            <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="p">:</span> <span class="p">[[</span><span class="n">t</span><span class="p">]],</span>
-            <span class="p">(</span><span class="o">+</span><span class="mi">0</span><span class="p">,</span><span class="o">+</span><span class="mi">0</span><span class="p">)</span> <span class="p">:</span> <span class="p">[[</span><span class="n">mu</span><span class="p">]]}</span>
-
-<span class="n">H</span> <span class="o">=</span> <span class="n">TBLattice</span><span class="p">(</span><span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">,</span> <span class="n">hoppings</span><span class="o">=</span><span class="n">hoppings</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">H_t</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1055,6 +1086,23 @@ div.rendered_html tbody tr:hover {
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Warning: could not identify MPI environment!
+Tight Binding Hamiltonian on Bravais Lattice with dimension 2, units
+[[1,0,0]
+ [0.5,0.866025,0]
+ [0,0,1]], n_orbitals 1
+with hoppings [
+   [1,0] :
+[[(-1,0)]]
+   [-1,0] :
+[[(-1,0)]]
+   [0,1] :
+[[(-1,0)]]
+   [0,-1] :
+[[(-1,0)]]
+   [1,-1] :
+[[(-1,0)]]
+   [-1,1] :
+[[(-1,0)]] ]
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1062,37 +1110,66 @@ Warning: could not identify MPI environment!
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Starting serial run at: 2025-04-09 11:27:10.617834
+Starting serial run at: 2025-04-30 08:35:58.634136
 </pre></div></div>
 </div>
-<p>TRIQS also allows us to calculate the dispersion relation and store it in an object e_k. We can plot this dispersion along high symmetry lines:</p>
+<p>Fourier transforming the hopping Hamiltonian <span class="math notranslate nohighlight">\(H_t\)</span> to momentum-space gives the diagonal representation</p>
+<div class="math notranslate nohighlight">
+\[H_t = \sum_{\mathbf{k}\sigma} \epsilon(\mathbf{k}) \, c^\dagger_{\mathbf{k} \sigma} c_{\mathbf{k} \sigma}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\epsilon(\mathbf{k})\)</span> is the so called <em>dispersion relation</em>.</p>
+<p>In TRIQS the dispersion relation can be obtained from the tight binding Hamiltonian as a Green’s function object e_k with a single k-space mesh.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">kmesh</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">get_kmesh</span><span class="p">(</span><span class="n">n_k</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">kmesh</span> <span class="o">=</span> <span class="n">H_t</span><span class="o">.</span><span class="n">get_kmesh</span><span class="p">(</span><span class="n">n_k</span><span class="o">=</span><span class="mi">96</span><span class="p">)</span>
+<span class="n">e_k</span> <span class="o">=</span> <span class="n">H_t</span><span class="o">.</span><span class="n">fourier</span><span class="p">(</span><span class="n">kmesh</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">e_k</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Greens Function  with mesh Brillouin Zone Mesh with linear dimensions (96 96 1)
+ -- units =
+[[0.0654498,-0.0377875,0]
+ [0,0.075575,0]
+ [0,0,6.28319]]
+ -- brillouin_zone: Brillouin Zone with 2 dimensions and reciprocal matrix
+[[6.28319,-3.6276,0]
+ [0,7.2552,0]
+ [0,0,6.28319]] and target_shape (1, 1):
 
-<span class="n">e_k</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">fourier</span><span class="p">(</span><span class="n">kmesh</span><span class="p">)</span>
+</pre></div></div>
+</div>
+<p>The dispersion <span class="math notranslate nohighlight">\(\epsilon(\mathbf{k})\)</span> can be visualized by plotting its value along the high symmetry path <span class="math notranslate nohighlight">\(\Gamma\)</span> - <span class="math notranslate nohighlight">\(M\)</span> - <span class="math notranslate nohighlight">\(K\)</span> - <span class="math notranslate nohighlight">\(\Gamma\)</span> in the Brillouin zone.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs_tprf.lattice_utils</span> <span class="kn">import</span> <span class="n">k_space_path</span>
 
-<span class="c1"># define the high-symmetry points of the triangular lattice</span>
+<span class="c1"># High-symmetry points of the triangular lattice</span>
 <span class="n">G</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
 <span class="n">M</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
 <span class="n">K</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
 
-<span class="n">paths</span> <span class="o">=</span> <span class="p">[(</span><span class="n">G</span><span class="p">,</span> <span class="n">M</span><span class="p">),</span> <span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">K</span><span class="p">),</span> <span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">G</span><span class="p">)]</span>
+<span class="n">high_symmetry_path</span> <span class="o">=</span> <span class="p">[(</span><span class="n">G</span><span class="p">,</span> <span class="n">M</span><span class="p">),</span> <span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">K</span><span class="p">),</span> <span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">G</span><span class="p">)]</span>
+<span class="n">k_vecs</span><span class="p">,</span> <span class="n">k_plot</span><span class="p">,</span> <span class="n">k_ticks</span> <span class="o">=</span> <span class="n">k_space_path</span><span class="p">(</span>
+    <span class="n">high_symmetry_path</span><span class="p">,</span> <span class="n">bz</span><span class="o">=</span><span class="n">H_t</span><span class="o">.</span><span class="n">bz</span><span class="p">,</span> <span class="n">relative_coordinates</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-<span class="kn">from</span> <span class="nn">triqs_tprf.lattice_utils</span> <span class="kn">import</span> <span class="n">k_space_path</span>
-<span class="n">k_vecs</span><span class="p">,</span> <span class="n">k_plot</span><span class="p">,</span> <span class="n">k_ticks</span> <span class="o">=</span> <span class="n">k_space_path</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">bz</span><span class="o">=</span><span class="n">H</span><span class="o">.</span><span class="n">bz</span><span class="p">,</span> <span class="n">relative_coordinates</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="n">k_vecs_rel</span><span class="p">,</span> <span class="n">k_plot</span><span class="p">,</span> <span class="n">k_ticks</span> <span class="o">=</span> <span class="n">k_space_path</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">bz</span><span class="o">=</span><span class="n">H</span><span class="o">.</span><span class="n">bz</span><span class="p">,</span> <span class="n">relative_coordinates</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-<span class="n">e_k_interp_ref</span> <span class="o">=</span> <span class="p">[</span> <span class="n">H</span><span class="o">.</span><span class="n">tb</span><span class="o">.</span><span class="n">fourier</span><span class="p">(</span><span class="n">k</span><span class="p">)[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">k_vecs_rel</span><span class="p">]</span>
 <span class="n">e_k_interp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="k">lambda</span> <span class="n">k</span> <span class="p">:</span> <span class="n">e_k</span><span class="p">(</span><span class="n">k</span><span class="p">)[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">signature</span><span class="o">=</span><span class="s1">&#39;(n)-&gt;()&#39;</span><span class="p">)</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">k_plot</span><span class="p">,</span> <span class="n">e_k_interp</span><span class="p">(</span><span class="n">k_vecs</span><span class="p">))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">k_plot</span><span class="p">,</span> <span class="n">e_k_interp_ref</span><span class="p">,</span> <span class="s1">&#39;--&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">k_plot</span><span class="p">,</span> <span class="n">mu</span> <span class="o">+</span> <span class="mi">0</span><span class="o">*</span><span class="n">k_plot</span><span class="p">,</span> <span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;Chemical potential $\mu$&#39;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">k_ticks</span><span class="p">,</span> <span class="p">[</span><span class="sa">r</span><span class="s1">&#39;$\Gamma$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$M$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$K$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$\Gamma$&#39;</span><span class="p">])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\epsilon(\mathbf</span><span class="si">{k}</span><span class="s1">)$&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Dispersion relation $\epsilon(\mathbf</span><span class="si">{k}</span><span class="s1">)$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Momentum high-symmetry path&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;best&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>
@@ -1100,71 +1177,145 @@ Starting serial run at: 2025-04-09 11:27:10.617834
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/user_guide_TPSC_Hubbard_triangular_lattice_6_0.svg" src="../_images/user_guide_TPSC_Hubbard_triangular_lattice_6_0.svg" /></div>
+<img alt="../_images/user_guide_TPSC_Hubbard_triangular_lattice_11_0.svg" src="../_images/user_guide_TPSC_Hubbard_triangular_lattice_11_0.svg" /></div>
 </div>
-<p>Since it is a triangular lattice, the dispersion is not particle-hole symmetric. As we can see, this dispersion has a saddle point at the Fermi-level. In 2D, this will lead to a logarithmic divergence in the density of states, called a <strong>van Hove-singularity</strong>. The density of states can be calculated with the dos function:</p>
+<p>In contrast to the square lattice the triangular lattice is not particle-hole symmetric around <span class="math notranslate nohighlight">\(\epsilon(\mathbf{k}) = 0\)</span>. However, it still has a saddle point at the <span class="math notranslate nohighlight">\(M\)</span> point which generates a <strong>van Hove singularity</strong> at the energy <span class="math notranslate nohighlight">\(\epsilon = 2\)</span>. (In anticipation of this we perviously selected a chemical potential <span class="math notranslate nohighlight">\(\mu = 2\)</span> tuned to this very van Hove singularity.)</p>
+<p>The singularit is more prominently seen as a logarithmic divergence in the density of states (DOS) <span class="math notranslate nohighlight">\(\rho(\epsilon)\)</span> as a function of energy <span class="math notranslate nohighlight">\(\epsilon\)</span>. The density of states is defined as</p>
+<div class="math notranslate nohighlight">
+\[\rho(\epsilon) = \frac{1}{N_k} \sum_{\mathbf{k}} \delta( \epsilon(\mathbf{k}) - \epsilon )\]</div>
+<p>where <span class="math notranslate nohighlight">\(\delta(\cdot)\)</span> is the Dirac delta function.</p>
+<p>For a TRIQS tight binding object the DOS can be computed using the dos function:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs.lattice.tight_binding</span> <span class="kn">import</span> <span class="n">dos</span>
 
-<span class="n">DOS</span> <span class="o">=</span> <span class="n">dos</span><span class="p">(</span><span class="n">tight_binding</span><span class="o">=</span><span class="n">H</span><span class="o">.</span><span class="n">tb</span><span class="p">,</span> <span class="n">n_kpts</span><span class="o">=</span><span class="mi">2</span><span class="o">**</span><span class="mi">10</span><span class="p">,</span> <span class="n">n_eps</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;dos&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">DOS</span><span class="o">.</span><span class="n">eps</span><span class="p">,</span> <span class="n">DOS</span><span class="o">.</span><span class="n">rho</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">varepsilon$&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">rho(</span><span class="se">\\</span><span class="s1">varepsilon)$&#39;</span><span class="p">)</span>
+<span class="n">DOS</span> <span class="o">=</span> <span class="n">dos</span><span class="p">(</span><span class="n">tight_binding</span><span class="o">=</span><span class="n">H_t</span><span class="o">.</span><span class="n">tb</span><span class="p">,</span> <span class="n">n_kpts</span><span class="o">=</span><span class="mi">2</span><span class="o">**</span><span class="mi">10</span><span class="p">,</span> <span class="n">n_eps</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;dos&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">mu</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">],</span> <span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Chemical potential $\mu$&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">DOS</span><span class="o">.</span><span class="n">eps</span><span class="p">,</span> <span class="n">DOS</span><span class="o">.</span><span class="n">rho</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">DOS</span><span class="o">.</span><span class="n">eps</span><span class="p">,</span> <span class="n">DOS</span><span class="o">.</span><span class="n">rho</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;best&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">([</span><span class="o">-</span><span class="mi">7</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="n">bottom</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="mf">0.6</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Energy $</span><span class="se">\\</span><span class="s1">varepsilon$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Density of states $</span><span class="se">\\</span><span class="s1">rho(</span><span class="se">\\</span><span class="s1">varepsilon)$&#39;</span><span class="p">);</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Text(0, 0.5, &#39;$\\rho(\\varepsilon)$&#39;)
-</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/user_guide_TPSC_Hubbard_triangular_lattice_8_1.svg" src="../_images/user_guide_TPSC_Hubbard_triangular_lattice_8_1.svg" /></div>
+<img alt="../_images/user_guide_TPSC_Hubbard_triangular_lattice_13_0.svg" src="../_images/user_guide_TPSC_Hubbard_triangular_lattice_13_0.svg" /></div>
 </div>
+</section>
+</section>
+<section id="Brillouin-zone-and-high-symmetry-path">
+<h2>Brillouin-zone and high symmetry path<a class="headerlink" href="#Brillouin-zone-and-high-symmetry-path" title="Link to this heading"></a></h2>
 <p>To get a better feeling for the dispersion, we can plot it as a function of <span class="math notranslate nohighlight">\(\mathbf{k}\)</span> within the first Brillouin-Zone. This also allows us to visualize the Fermi-Surface, which in this case is a hexagon (dashed lines):</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">e_k</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">fourier</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">get_kmesh</span><span class="p">(</span><span class="n">n_k</span><span class="o">=</span><span class="mi">512</span><span class="p">))</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">plot_high_symmetry_path</span><span class="p">(</span><span class="n">linecolor</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Plot high symmetry points coordinates and path (G-K-M-G) &quot;&quot;&quot;</span>
+
+    <span class="n">g_abs</span> <span class="o">=</span> <span class="n">H_t</span><span class="o">.</span><span class="n">bz</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">G</span>
+    <span class="n">k_abs</span> <span class="o">=</span> <span class="n">H_t</span><span class="o">.</span><span class="n">bz</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">K</span>
+    <span class="n">m_abs</span> <span class="o">=</span> <span class="n">H_t</span><span class="o">.</span><span class="n">bz</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">M</span>
+
+    <span class="n">abs_path</span> <span class="o">=</span> <span class="p">[</span> <span class="n">g_abs</span><span class="p">,</span> <span class="n">k_abs</span><span class="p">,</span> <span class="n">m_abs</span><span class="p">,</span> <span class="n">g_abs</span> <span class="p">]</span>
+
+    <span class="n">K_X</span> <span class="o">=</span> <span class="p">[</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">abs_path</span> <span class="p">]</span>
+    <span class="n">K_Y</span> <span class="o">=</span> <span class="p">[</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">abs_path</span> <span class="p">]</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">K_X</span><span class="p">,</span> <span class="n">K_Y</span><span class="p">,</span> <span class="s1">&#39;-.&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">linecolor</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">g_abs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">g_abs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;co&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;G&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">k_abs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">k_abs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;ro&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;K&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">m_abs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">m_abs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;mo&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;M&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">plot_brillouin_zone</span><span class="p">(</span><span class="n">shifts</span><span class="o">=</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]):</span>
+
+    <span class="n">g_abs</span> <span class="o">=</span> <span class="n">H_t</span><span class="o">.</span><span class="n">bz</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">G</span>
+    <span class="n">k_abs</span> <span class="o">=</span> <span class="n">H_t</span><span class="o">.</span><span class="n">bz</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">K</span>
+    <span class="n">m_abs</span> <span class="o">=</span> <span class="n">H_t</span><span class="o">.</span><span class="n">bz</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">M</span>
+
+    <span class="n">k1</span> <span class="o">=</span> <span class="n">k_abs</span>
+    <span class="n">k2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">k1</span>
+    <span class="n">k3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">k1</span><span class="p">),</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">k4</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">k1</span>
+    <span class="n">k5</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">k1</span>
+    <span class="n">k6</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">k1</span><span class="p">),</span> <span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">ks</span> <span class="o">=</span> <span class="p">[</span><span class="n">k1</span><span class="p">,</span> <span class="n">k2</span><span class="p">,</span> <span class="n">k3</span><span class="p">,</span> <span class="n">k4</span><span class="p">,</span> <span class="n">k5</span><span class="p">,</span> <span class="n">k6</span><span class="p">,</span> <span class="n">k1</span><span class="p">]</span>
+
+    <span class="n">kx</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ks</span><span class="p">]</span>
+    <span class="n">ky</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ks</span><span class="p">]</span>
+
+    <span class="n">style</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">lw</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">shift</span> <span class="ow">in</span> <span class="n">shifts</span><span class="p">:</span>
+        <span class="n">kx_s</span><span class="p">,</span> <span class="n">ky_s</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">H_t</span><span class="o">.</span><span class="n">bz</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">shift</span>
+        <span class="c1">#for k in ks: plt.plot(k[0] + kx_s, k[1] + ky_s, &#39;xr&#39;)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">kx</span> <span class="o">+</span> <span class="n">kx_s</span><span class="p">,</span> <span class="n">ky</span> <span class="o">+</span> <span class="n">ky_s</span><span class="p">,</span> <span class="o">**</span><span class="n">style</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Brillouin</span><span class="se">\n</span><span class="s1">zone&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">style</span><span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plot_brillouin_zone</span><span class="p">()</span>
+<span class="n">plot_high_symmetry_path</span><span class="p">(</span><span class="n">linecolor</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;best&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;square&#39;</span><span class="p">);</span> <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">([</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">]);</span> <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$k_x$&#39;</span><span class="p">);</span> <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$k_y$&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/user_guide_TPSC_Hubbard_triangular_lattice_16_0.svg" src="../_images/user_guide_TPSC_Hubbard_triangular_lattice_16_0.svg" /></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Two dimensional interpolation of the dispersion</span>
+
 <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span> <span class="o">*</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
 <span class="n">Kx</span><span class="p">,</span> <span class="n">Ky</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
 
-<span class="n">e_k_interp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="k">lambda</span> <span class="n">kx</span><span class="p">,</span> <span class="n">ky</span> <span class="p">:</span> <span class="n">e_k</span><span class="p">([</span><span class="n">kx</span><span class="p">,</span> <span class="n">ky</span><span class="p">,</span> <span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
-<span class="n">e_k_interp</span> <span class="o">=</span> <span class="n">e_k_interp</span><span class="p">(</span><span class="n">Kx</span><span class="p">,</span> <span class="n">Ky</span><span class="p">)</span>
+<span class="n">e_k_interp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="k">lambda</span> <span class="n">kx</span><span class="p">,</span> <span class="n">ky</span> <span class="p">:</span> <span class="n">e_k</span><span class="p">([</span><span class="n">kx</span><span class="p">,</span> <span class="n">ky</span><span class="p">,</span> <span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">)(</span><span class="n">Kx</span><span class="p">,</span> <span class="n">Ky</span><span class="p">)</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
 
-<span class="n">g_abs</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">bz</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">G</span>
-<span class="n">k_abs</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">bz</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">K</span>
-<span class="n">m_abs</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">bz</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">M</span>
+<span class="n">plot_brillouin_zone</span><span class="p">()</span>
 
-<span class="n">abs_path</span> <span class="o">=</span> <span class="p">[</span> <span class="n">g_abs</span><span class="p">,</span> <span class="n">k_abs</span><span class="p">,</span> <span class="n">m_abs</span><span class="p">,</span> <span class="n">g_abs</span> <span class="p">]</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">Kx</span><span class="p">,</span> <span class="n">Ky</span><span class="p">,</span> <span class="n">e_k_interp</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="p">[</span><span class="n">mu</span><span class="p">],</span> <span class="n">linestyles</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([],</span> <span class="p">[],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Fermi</span><span class="se">\n</span><span class="s1">surface&#39;</span><span class="p">)</span>
 
-<span class="n">K_X</span> <span class="o">=</span> <span class="p">[</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">abs_path</span> <span class="p">]</span>
-<span class="n">K_Y</span> <span class="o">=</span> <span class="p">[</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">abs_path</span> <span class="p">]</span>
-
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">K_X</span><span class="p">,</span> <span class="n">K_Y</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">)</span>
-
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">g_abs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">g_abs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;co&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;G&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">k_abs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">k_abs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;ro&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;K&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">m_abs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">m_abs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;mo&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;M&#39;</span><span class="p">)</span>
+<span class="n">plot_high_symmetry_path</span><span class="p">()</span>
 
 <span class="n">extent</span> <span class="o">=</span> <span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">k</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">k</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">k</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">e_k_interp</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;RdBu&#39;</span><span class="p">),</span>
-           <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">Kx</span><span class="p">,</span> <span class="n">Ky</span><span class="p">,</span> <span class="n">e_k_interp</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">linestyles</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">)</span>
+           <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=-</span><span class="mi">6</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;$\epsilon(\mathbf</span><span class="si">{k}</span><span class="s1">)$&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;square&#39;</span><span class="p">);</span> <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">([</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">]);</span> <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">([</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">])</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$k_x$&#39;</span><span class="p">);</span> <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$k_y$&#39;</span><span class="p">);</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">);</span>
 </pre></div>
@@ -1174,7 +1325,7 @@ Text(0, 0.5, &#39;$\\rho(\\varepsilon)$&#39;)
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/user_guide_TPSC_Hubbard_triangular_lattice_10_0.svg" src="../_images/user_guide_TPSC_Hubbard_triangular_lattice_10_0.svg" /></div>
+<img alt="../_images/user_guide_TPSC_Hubbard_triangular_lattice_17_0.svg" src="../_images/user_guide_TPSC_Hubbard_triangular_lattice_17_0.svg" /></div>
 </div>
 <p>Here, the Fermi-Surface is indicated by dashed lines. In this case, it is hexagonal; this will lead to pronounced Fermi-Surface-Nesting, as described below.</p>
 </section>
@@ -1182,13 +1333,14 @@ Text(0, 0.5, &#39;$\\rho(\\varepsilon)$&#39;)
 <h2>Non-interacting susceptibility <span class="math notranslate nohighlight">\(\chi_0\)</span><a class="headerlink" href="#Non-interacting-susceptibility-\chi_0" title="Link to this heading"></a></h2>
 <p>TRIQS TPRF offers functions to calculate non-interacting Green’s functions and susceptibilities from a known dispersion e_k. Here, we calculate the static susceptibility <span class="math notranslate nohighlight">\(\chi_0(i\omega_n=0, \mathbf{k})\)</span>:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs_tprf.lattice</span> <span class="kn">import</span> <span class="n">lattice_dyson_g0_wk</span>
 <span class="kn">from</span> <span class="nn">triqs_tprf.lattice_utils</span> <span class="kn">import</span> <span class="n">imtime_bubble_chi0_wk</span>
 
-<span class="n">beta</span> <span class="o">=</span> <span class="mf">100.</span>
+<span class="c1">#beta = 100.</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="mf">20.</span>
 
 <span class="n">wmesh</span> <span class="o">=</span> <span class="n">MeshDLRImFreq</span><span class="p">(</span>
     <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;Fermion&#39;</span><span class="p">,</span>
@@ -1196,10 +1348,16 @@ Text(0, 0.5, &#39;$\\rho(\\varepsilon)$&#39;)
     <span class="n">w_max</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="c1"># Tune to energy range in problem</span>
     <span class="p">)</span>
 
-<span class="n">g0_wk</span> <span class="o">=</span> <span class="n">lattice_dyson_g0_wk</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">e_k</span><span class="o">=</span><span class="n">e_k</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="n">wmesh</span><span class="p">)</span>
+<span class="n">g0_wk</span> <span class="o">=</span> <span class="n">lattice_dyson_g0_wk</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">e_k</span><span class="o">=</span><span class="n">e_k</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="n">wmesh</span><span class="p">)</span>
+
+<span class="n">g0_w</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">g0_wk</span><span class="o">.</span><span class="n">mesh</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">target_shape</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">g0_w</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">g0_wk</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">g0_wk</span><span class="o">.</span><span class="n">mesh</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">n</span> <span class="o">=</span> <span class="n">density</span><span class="p">(</span><span class="n">g0_w</span><span class="p">)[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;n = </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
 <span class="n">chi0_wk</span> <span class="o">=</span> <span class="n">imtime_bubble_chi0_wk</span><span class="p">(</span><span class="n">g0_wk</span><span class="p">,</span> <span class="n">nw</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">iw0</span> <span class="o">=</span> <span class="n">chi0_wk</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># get zero Matsubara point to evaluate later</span>
+<span class="n">iw0</span> <span class="o">=</span> <span class="n">chi0_wk</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="c1"># get zero Matsubara point to evaluate later</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">iw0</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1208,28 +1366,30 @@ Text(0, 0.5, &#39;$\\rho(\\varepsilon)$&#39;)
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
+n = 0.7502298504996923
 
 ╔╦╗╦═╗╦╔═╗ ╔═╗  ┌┬┐┌─┐┬─┐┌─┐
  ║ ╠╦╝║║═╬╗╚═╗   │ ├─┘├┬┘├┤
  ╩ ╩╚═╩╚═╝╚╚═╝   ┴ ┴  ┴└─└
 Two-Particle Response Function tool-box
 
-beta  = 100.0
-nk    = 262144
-nw    = 32
+beta  = 20.0
+nk    = 9216
+nw    = 25
 norb  = 1
 
-Approx. Memory Utilization: 0.38 GB
+Approx. Memory Utilization: 0.01 GB
 
 --&gt; fourier_wk_to_wr
 --&gt; fourier_wr_to_tr
 --&gt; chi0_w0r_from_grt_PH (bubble in tau &amp; r)
 --&gt; chi_wk_from_chi_wr (r-&gt;k)
+MatsubaraFreq(n: 0, beta: 20.0, statistic: Boson)
 </pre></div></div>
 </div>
 <p>We can now plot the static susceptibility:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">chi0_k_interp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="k">lambda</span> <span class="n">kx</span><span class="p">,</span> <span class="n">ky</span> <span class="p">:</span> <span class="n">chi0_wk</span><span class="p">(</span><span class="n">Idx</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="p">[</span><span class="n">kx</span><span class="p">,</span> <span class="n">ky</span><span class="p">,</span> <span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
@@ -1238,30 +1398,24 @@ Approx. Memory Utilization: 0.38 GB
 <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
 
 <span class="n">extent</span> <span class="o">=</span> <span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">k</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">k</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">k</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">chi0_k_interp</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;RdBu&#39;</span><span class="p">),</span>
-           <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">chi0_k_interp</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;YlOrRd&#39;</span><span class="p">),</span>
+           <span class="n">extent</span><span class="o">=</span><span class="n">extent</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">Kx</span><span class="p">,</span> <span class="n">Ky</span><span class="p">,</span> <span class="n">e_k_interp</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">linestyles</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$k_x$&#39;</span><span class="p">);</span> <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$k_y$&#39;</span><span class="p">);</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">contour</span><span class="p">(</span><span class="n">Kx</span><span class="p">,</span> <span class="n">Ky</span><span class="p">,</span> <span class="n">e_k_interp</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="p">[</span><span class="n">mu</span><span class="p">],</span> <span class="n">linestyles</span><span class="o">=</span><span class="s1">&#39;dashed&#39;</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+
 <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="s1">&#39;o&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$k_x$&#39;</span><span class="p">);</span> <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$k_y$&#39;</span><span class="p">);</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-[&lt;matplotlib.lines.Line2D at 0x7f419c4cdb10&gt;]
-</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/user_guide_TPSC_Hubbard_triangular_lattice_15_1.svg" src="../_images/user_guide_TPSC_Hubbard_triangular_lattice_15_1.svg" /></div>
+<img alt="../_images/user_guide_TPSC_Hubbard_triangular_lattice_22_0.svg" src="../_images/user_guide_TPSC_Hubbard_triangular_lattice_22_0.svg" /></div>
 </div>
 <p>The analytic form of this quantity is known:</p>
 <div class="math notranslate nohighlight">
@@ -1274,7 +1428,7 @@ Approx. Memory Utilization: 0.38 GB
 <p>The broadening of the peaks can be understood by noticing that if one slightly tilts its nesting vector, the resulting <span class="math notranslate nohighlight">\(\mathbf{k}\)</span>-vector will still map part of the fermi surface to another.</p>
 <p>To get an even better feel for this, we can plot the static susceptibility along the high-symmetry paths in the 1. BZ:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">chi0_stat_k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">chi0_wk</span><span class="p">(</span><span class="n">Idx</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">k</span><span class="p">)[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">k_vecs</span><span class="p">])</span>
@@ -1287,6 +1441,7 @@ Approx. Memory Utilization: 0.38 GB
 <span class="n">axes</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">mathbf</span><span class="si">{k}</span><span class="s1">$&#39;</span><span class="p">)</span>
 <span class="n">axes</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">chi_0(i</span><span class="se">\\</span><span class="s1">omega_n=0, </span><span class="se">\\</span><span class="s1">mathbf</span><span class="si">{k}</span><span class="s1">)$&#39;</span><span class="p">)</span>
 <span class="n">axes</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">axes</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">bottom</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 <span class="n">axes</span><span class="o">.</span><span class="n">set_box_aspect</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1295,20 +1450,20 @@ Approx. Memory Utilization: 0.38 GB
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/user_guide_TPSC_Hubbard_triangular_lattice_17_0.svg" src="../_images/user_guide_TPSC_Hubbard_triangular_lattice_17_0.svg" /></div>
+<img alt="../_images/user_guide_TPSC_Hubbard_triangular_lattice_24_0.svg" src="../_images/user_guide_TPSC_Hubbard_triangular_lattice_24_0.svg" /></div>
 </div>
 </section>
 <section id="Interacting-charge-(\chi_{ch})-and-spin-response-(\chi_{sp})">
 <h2>Interacting charge (<span class="math notranslate nohighlight">\(\chi_{ch}\)</span>) and spin response (<span class="math notranslate nohighlight">\(\chi_{sp}\)</span>)<a class="headerlink" href="#Interacting-charge-(\chi_{ch})-and-spin-response-(\chi_{sp})" title="Link to this heading"></a></h2>
 <p>TRIQS TPRF has a tpsc_solver-class that can be used to do TPSC-calculations for one-band Hubbard models. The solver has to be supplied with the target density, the strength of the Hubbard interaction, an imaginary frequency mesh and a dispersion relation. We will run the calculation at half-filling, <span class="math notranslate nohighlight">\(n=1\)</span>, because there the Hubbard-Model becomes anti-ferromagnetic, which will be visible in the spin susceptibility.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs_tprf.tpsc_solver</span> <span class="kn">import</span> <span class="n">tpsc_solver</span>
 
 <span class="n">U</span> <span class="o">=</span> <span class="mf">2.0</span>
-<span class="n">S</span> <span class="o">=</span> <span class="n">tpsc_solver</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">U</span><span class="o">=</span><span class="n">U</span><span class="p">,</span> <span class="n">wmesh</span><span class="o">=</span><span class="n">wmesh</span><span class="p">,</span> <span class="n">e_k</span><span class="o">=</span><span class="n">e_k</span><span class="p">)</span>
+<span class="n">S</span> <span class="o">=</span> <span class="n">tpsc_solver</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="p">,</span> <span class="n">U</span><span class="o">=</span><span class="n">U</span><span class="p">,</span> <span class="n">wmesh</span><span class="o">=</span><span class="n">wmesh</span><span class="p">,</span> <span class="n">e_k</span><span class="o">=</span><span class="n">e_k</span><span class="p">)</span>
 
 <span class="n">S</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
 </pre></div>
@@ -1327,74 +1482,148 @@ Two-Particle Self-Consistent method
 
 Using the TPSC-Ansatz for the double occupancy.
 
-len(wmesh) = 32
-nk = 262144
-beta = 100.0
-n = 1
+len(wmesh) = 25
+nk = 9216
+beta = 20.0
+n = 1.5004597009993845
 U = 2.0
 
 --&gt; lattice_dyson_g0_wk
-
 --&gt; imtime_bubble_chi0_wk
-
 --&gt; get Usp
-
 --&gt; get Uch
-
 --&gt; get chisp_wk and chich_wk
-
 --&gt; get double occupancy
 
 Summary first level approximation:
-    Usp = 1.662732184900791, Uch = 2.9234160464925343
-    &lt;n_up*n_down&gt; = 0.20784152311259887
+    Usp = 1.812973918322872, Uch = 5.879471273152401
+    &lt;n_up*n_down&gt; = 0.5102114971399406
+
 </pre></div></div>
 </div>
 <p>FIXME need custom function to make chi DLR (target_shape!)</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">make_chi_dlr</span><span class="p">(</span><span class="n">chi_wk</span><span class="p">):</span>
-    <span class="n">temp</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">chi_wk</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
-    <span class="n">temp</span><span class="o">.</span><span class="n">data</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">chi_wk</span><span class="o">.</span><span class="n">data</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">return</span> <span class="n">make_gf_dlr</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_zero_frequency</span><span class="p">(</span><span class="n">chi_wk</span><span class="p">):</span>
+
+    <span class="c1">#chi_wk_scalar = Gf(mesh=chi_wk.mesh, target_shape=[])</span>
+    <span class="c1">#chi_wk_scalar.data[:] = chi_wk.data[:,:,0,0,0,0]</span>
+    <span class="c1">#chi_Dk_scalar = make_gf_dlr(chi_wk_scalar)</span>
+
+    <span class="c1">#chi_k_scalar = chi_Dk_scalar(Idx(0), all)</span>
+
+    <span class="n">kmesh</span> <span class="o">=</span> <span class="n">chi_wk</span><span class="o">.</span><span class="n">mesh</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">chi_k</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">kmesh</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="n">chi_wk</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kmesh</span><span class="p">:</span>
+        <span class="n">chi_k</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">make_gf_dlr</span><span class="p">(</span><span class="n">chi_wk</span><span class="p">[:,</span> <span class="n">k</span><span class="p">])(</span><span class="n">iw0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">chi_k</span>
 </pre></div>
 </div>
 </div>
 <p>We now plot the non-interacting, and the TPSC-charge- and spin-susceptibilities along high-symmetry paths in the 1. BZ. This allows us to easily compare them:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">chi0_stat_k</span> <span class="o">=</span> <span class="n">make_chi_dlr</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">chi0_wk</span><span class="p">)(</span><span class="n">iw0</span><span class="p">,</span> <span class="nb">all</span><span class="p">)</span>
-<span class="n">chi0_stat_k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">chi0_stat_k</span><span class="p">(</span><span class="n">k</span><span class="p">)[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">k_vecs_rel</span><span class="p">])</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">iw0</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">chi0_wk</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">chi0_wk</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+<span class="n">chi0_stat_k</span> <span class="o">=</span> <span class="n">get_zero_frequency</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">chi0_wk</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">chi0_stat_k</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+0j
+Greens Function  with mesh DLR imfreq mesh of size 25 with beta = 20, statistic = Boson, w_max = 10, eps = 1e-06, Brillouin Zone Mesh with linear dimensions (96 96 1)
+ -- units =
+[[0.0654498,-0.0377875,0]
+ [0,0.075575,0]
+ [0,0,6.28319]]
+ -- brillouin_zone: Brillouin Zone with 2 dimensions and reciprocal matrix
+[[6.28319,-3.6276,0]
+ [0,7.2552,0]
+ [0,0,6.28319]] and target_shape (1, 1, 1, 1):
 
-<span class="n">chich_stat_k</span> <span class="o">=</span> <span class="n">make_chi_dlr</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">chich_wk</span><span class="p">)(</span><span class="n">iw0</span><span class="p">,</span> <span class="nb">all</span><span class="p">)</span>
-<span class="n">chich_stat_k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">chich_stat_k</span><span class="p">(</span><span class="n">k</span><span class="p">)[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">k_vecs_rel</span><span class="p">])</span>
+DLR imfreq mesh of size 25 with beta = 20, statistic = Boson, w_max = 10, eps = 1e-06, Brillouin Zone Mesh with linear dimensions (96 96 1)
+ -- units =
+[[0.0654498,-0.0377875,0]
+ [0,0.075575,0]
+ [0,0,6.28319]]
+ -- brillouin_zone: Brillouin Zone with 2 dimensions and reciprocal matrix
+[[6.28319,-3.6276,0]
+ [0,7.2552,0]
+ [0,0,6.28319]]
+Greens Function  with mesh Brillouin Zone Mesh with linear dimensions (96 96 1)
+ -- units =
+[[0.0654498,-0.0377875,0]
+ [0,0.075575,0]
+ [0,0,6.28319]]
+ -- brillouin_zone: Brillouin Zone with 2 dimensions and reciprocal matrix
+[[6.28319,-3.6276,0]
+ [0,7.2552,0]
+ [0,0,6.28319]] and target_shape (1, 1, 1, 1):
 
-<span class="n">chisp_stat_k</span> <span class="o">=</span> <span class="n">make_chi_dlr</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">chisp_wk</span><span class="p">)(</span><span class="n">iw0</span><span class="p">,</span> <span class="nb">all</span><span class="p">)</span>
-<span class="n">chisp_stat_k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">chisp_stat_k</span><span class="p">(</span><span class="n">k</span><span class="p">)[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">k_vecs_rel</span><span class="p">])</span>
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#chi0_stat_k = make_chi_dlr(S.chi0_wk)</span>
+<span class="c1">#chi0_stat_k = np.array([chi0_stat_k(k).real for k in k_vecs])</span>
 
-<span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="n">chi0_k</span> <span class="o">=</span> <span class="n">get_zero_frequency</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">chi0_wk</span><span class="p">)</span>
+<span class="n">chi0_k_interp</span> <span class="o">=</span> <span class="p">[</span><span class="n">chi0_k</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">real</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">k_vecs</span><span class="p">]</span>
 
-<span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">k_plot</span><span class="p">,</span> <span class="n">chi0_stat_k</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">chi_0$&#39;</span><span class="p">)</span>
-<span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">k_plot</span><span class="p">,</span> <span class="n">chich_stat_k</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">chi_</span><span class="si">{ch}</span><span class="s1">$&#39;</span><span class="p">)</span>
-<span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">k_plot</span><span class="p">,</span> <span class="n">chisp_stat_k</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">chi_</span><span class="si">{sp}</span><span class="s1">$&#39;</span><span class="p">)</span>
+<span class="n">chi_ch_k</span> <span class="o">=</span> <span class="n">get_zero_frequency</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">chich_wk</span><span class="p">)</span>
+<span class="n">chi_ch_k_interp</span> <span class="o">=</span> <span class="p">[</span><span class="n">chi_ch_k</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">real</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">k_vecs</span><span class="p">]</span>
+
+<span class="n">chi_sp_k</span> <span class="o">=</span> <span class="n">get_zero_frequency</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">chisp_wk</span><span class="p">)</span>
+<span class="n">chi_sp_k_interp</span> <span class="o">=</span> <span class="p">[</span><span class="n">chi_sp_k</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">real</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">k_vecs</span><span class="p">]</span>
+
+<span class="c1">#chisp_stat_k = make_chi_dlr(S.chisp_wk)</span>
+<span class="c1">#chisp_stat_k = np.array([chisp_stat_k(k).real for k in k_vecs])</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[42]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><br/><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+
+<span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">k_plot</span><span class="p">,</span> <span class="n">chi0_k_interp</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">chi_0$&#39;</span><span class="p">)</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">k_plot</span><span class="p">,</span> <span class="n">chi_ch_k_interp</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">chi_</span><span class="si">{ch}</span><span class="s1">$&#39;</span><span class="p">)</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">k_plot</span><span class="p">,</span> <span class="n">chi_sp_k_interp</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">chi_</span><span class="si">{sp}</span><span class="s1">$&#39;</span><span class="p">)</span>
+<span class="c1">#axes[0].semilogy([], [])</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">bottom</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Absolute comparison&#39;</span><span class="p">)</span>
 <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
 <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">k_ticks</span><span class="p">,</span> <span class="p">[</span><span class="sa">r</span><span class="s1">&#39;$\Gamma$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$M$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$K$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$\Gamma$&#39;</span><span class="p">])</span>
 <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">mathbf</span><span class="si">{k}</span><span class="s1">$&#39;</span><span class="p">)</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Re[$\chi(i\omega = 0, </span><span class="se">\\</span><span class="s1">mathbf</span><span class="si">{k}</span><span class="s1">$]&#39;</span><span class="p">)</span>
 <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_box_aspect</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
-<span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">k_plot</span><span class="p">,</span> <span class="n">chi0_stat_k</span> <span class="o">-</span> <span class="n">chi0_stat_k</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">chi_0$&#39;</span><span class="p">)</span>
-<span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">k_plot</span><span class="p">,</span> <span class="n">chich_stat_k</span> <span class="o">-</span> <span class="n">chich_stat_k</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">chi_</span><span class="si">{ch}</span><span class="s1">$&#39;</span><span class="p">)</span>
-<span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">k_plot</span><span class="p">,</span> <span class="n">chisp_stat_k</span> <span class="o">-</span> <span class="n">chisp_stat_k</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">chi_</span><span class="si">{sp}</span><span class="s1">$&#39;</span><span class="p">)</span>
-<span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Relative comparison&#39;</span><span class="p">)</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">k_plot</span><span class="p">,</span> <span class="n">chi0_k_interp</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">chi_0$&#39;</span><span class="p">)</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">k_plot</span><span class="p">,</span> <span class="n">chi_ch_k_interp</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">chi_</span><span class="si">{ch}</span><span class="s1">$&#39;</span><span class="p">)</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">k_plot</span><span class="p">,</span> <span class="n">chi_sp_k_interp</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">chi_</span><span class="si">{sp}</span><span class="s1">$&#39;</span><span class="p">)</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">semilogy</span><span class="p">([],</span> <span class="p">[])</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="mf">1e-1</span><span class="p">,</span> <span class="mf">1e1</span><span class="p">])</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Absolute comparison&#39;</span><span class="p">)</span>
 <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
 <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">k_ticks</span><span class="p">,</span> <span class="p">[</span><span class="sa">r</span><span class="s1">&#39;$\Gamma$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$M$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$K$&#39;</span><span class="p">,</span><span class="sa">r</span><span class="s1">&#39;$\Gamma$&#39;</span><span class="p">])</span>
 <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">mathbf</span><span class="si">{k}</span><span class="s1">$&#39;</span><span class="p">)</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Re[$\chi(i\omega = 0, </span><span class="se">\\</span><span class="s1">mathbf</span><span class="si">{k}</span><span class="s1">$]&#39;</span><span class="p">)</span>
 <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_box_aspect</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
@@ -1406,11 +1635,19 @@ Summary first level approximation:
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/user_guide_TPSC_Hubbard_triangular_lattice_23_0.svg" src="../_images/user_guide_TPSC_Hubbard_triangular_lattice_23_0.svg" /></div>
+<img alt="../_images/user_guide_TPSC_Hubbard_triangular_lattice_32_0.svg" src="../_images/user_guide_TPSC_Hubbard_triangular_lattice_32_0.svg" /></div>
 </div>
 <p>In the left image, we have plotted the absolute values of the susceptibilities; this shows that, when compared to the bare bubble, the spin fluctuations are increased in the interacting system, whereas charge fluctuations are reduced.</p>
 <p>In the right figure, we have plotted all three susceptibilities on the same scale; this shows as that the spin susceptibility has the strongest peak, whereas charge fluctuations are much more uniform across the 1. BZ. This is, of course, exactly what we should expect in an anti-ferromagnetic system.</p>
 <p>At the same time, the pronounced peak at the M-point due to Fermi-surface nesting is still visible in all three susceptibilities. It is important to note that the TPSC method respects the Mermin-Wagner theorem which forbids magnetic order in 2D systems; we see that this is indeed the case by noticing that the TPSC susceptibilities do not introduce additional peaks when compared to the bare bubble.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
 </section>
 </section>
 
