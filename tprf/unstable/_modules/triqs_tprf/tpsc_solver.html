@@ -749,60 +749,61 @@
 <a class="viewcode-back" href="../../reference/python_reference.html#triqs_tprf.tpsc_solver.tpsc_solver">[docs]</a>
 <span class="k">class</span> <span class="nc">tpsc_solver</span><span class="p">:</span>
 
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot; Two-particle self-consistency (TPSC) [1]_ solver for single-band Hubbard models.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : double</span>
+<span class="sd">        total electron density (spin up and down combined)</span>
+<span class="sd">    U : double</span>
+<span class="sd">        Hubbard interaction</span>
+<span class="sd">    wmesh : MeshImFreq or MeshDLRImFreq</span>
+<span class="sd">            imaginary frequency mesh</span>
+<span class="sd">    e_k : Gf</span>
+<span class="sd">          dispersion relation (excluding spin DOFs)</span>
+<span class="sd">    docc : double, optional</span>
+<span class="sd">           double occupancy (default: `tpsc_ansatz` using the TPSC-Ansatz [1])</span>
+<span class="sd">    verbose : bool, optional</span>
+<span class="sd">              Verbose printouts (default: `True`)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    TPSC assumes RPA-like charge and spin susceptibilities</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \chi_{ch}(k) = \frac{\chi_0(k)}{1 + \frac{U_{ch}}{2}\chi_0(k)}, \quad</span>
+<span class="sd">        \chi_{sp}(k) = \frac{\chi_0(k)}{1 - \frac{U_{sp}}{2}\chi_0(k)}</span>
+
+<span class="sd">    with renormalized vertices and determines them such that the sum rules</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \frac{T}{N}\sum_{k}{\chi_{ch}(k)} = n + 2\braket{n_\uparrow n_\downarrow} - n^2, \quad</span>
+<span class="sd">        \frac{T}{N}\sum_{k}{\chi_{sp}(k)} = n - 2\braket{n_\uparrow n_\downarrow}</span>
+
+<span class="sd">    are fulfilled. This is done by imposing the Ansatz</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        U_{sp}\braket{n_\uparrow}\braket{n_\downarrow} = U\braket{n_\uparrow n_\downarrow}.</span>
+
+<span class="sd">    An approximation to the self-energy is obtained through</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \Sigma_\sigma(k) = Un_{-\sigma} + \frac{U}{8}\frac{T}{N}\sum_{q}{</span>
+<span class="sd">        \left[3U_{sp}\chi_{sp}(k) + U_{ch}\chi_{ch}(k)\right]G_{0\sigma}(k+q)}.</span>
+
+<span class="sd">    Determining the single-particle Green&#39;s function and self-energy,</span>
+<span class="sd">    as well as the charge and spin susceptibilities.</span>
+
+<span class="sd">    .. [1] Y.M. Vilk, A.-M.S. Tremblay, J. Phys. I France, v7, no 11, pp 1309-1368 (1997)</span>
+<span class="sd">        https://doi.org/10.1051/jp1:1997135 and https://arxiv.org/abs/cond-mat/9702188</span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+
+    
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">wmesh</span><span class="p">,</span> <span class="n">e_k</span><span class="p">,</span> <span class="n">docc</span><span class="o">=</span><span class="s1">&#39;tpsc_ansatz&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot; Two-particle self-consistency (TPSC) [1]_ solver for single-band Hubbard models.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        n : double</span>
-<span class="sd">            total electron density (spin up and down combined)</span>
-<span class="sd">        U : double</span>
-<span class="sd">            Hubbard interaction</span>
-<span class="sd">        wmesh : MeshImFreq or MeshDLRImFreq</span>
-<span class="sd">                imaginary frequency mesh</span>
-<span class="sd">        e_k : Gf</span>
-<span class="sd">              dispersion relation (excluding spin DOFs)</span>
-<span class="sd">        docc : double, optional</span>
-<span class="sd">               double occupancy (default: `tpsc_ansatz` using the TPSC-Ansatz [1])</span>
-<span class="sd">        verbose : bool, optional</span>
-<span class="sd">                  Verbose printouts (default: `True`)</span>
-
-<span class="sd">        Notes</span>
-<span class="sd">        -----</span>
-<span class="sd">        TPSC assumes RPA-like charge and spin susceptibilities</span>
-
-<span class="sd">        .. math::</span>
-<span class="sd">        </span>
-<span class="sd">            \chi_{ch}(k) = \frac{\chi_0(k)}{1 + \frac{U_{ch}}{2}\chi_0(k)}, \quad</span>
-<span class="sd">            \chi_{sp}(k) = \frac{\chi_0(k)}{1 - \frac{U_{sp}}{2}\chi_0(k)}</span>
-
-<span class="sd">        with renormalized vertices and determines them such that the sum rules</span>
-
-<span class="sd">        .. math::</span>
-
-<span class="sd">            \frac{T}{N}\sum_{k}{\chi_{ch}(k)} = n + 2\braket{n_\uparrow n_\downarrow} - n^2, \quad</span>
-<span class="sd">            \frac{T}{N}\sum_{k}{\chi_{sp}(k)} = n - 2\braket{n_\uparrow n_\downarrow}</span>
-
-<span class="sd">        are fulfilled. This is done by imposing the Ansatz</span>
-
-<span class="sd">        .. math::</span>
-
-<span class="sd">            U_{sp}\braket{n_\uparrow}\braket{n_\downarrow} = U\braket{n_\uparrow n_\downarrow}.</span>
-
-<span class="sd">        An approximation to the self-energy is obtained through</span>
-
-<span class="sd">        .. math::</span>
-
-<span class="sd">            \Sigma_\sigma(k) = Un_{-\sigma} + \frac{U}{8}\frac{T}{N}\sum_{q}{</span>
-<span class="sd">            \left[3U_{sp}\chi_{sp}(k) + U_{ch}\chi_{ch}(k)\right]G_{0\sigma}(k+q)}.</span>
-
-<span class="sd">        Determining the single-particle Green&#39;s function and self-energy,</span>
-<span class="sd">        as well as the charge and spin susceptibilities.</span>
-
-<span class="sd">        .. [1] Y.M. Vilk, A.-M.S. Tremblay, J. Phys. I France, v7, no 11, pp 1309-1368 (1997)</span>
-<span class="sd">            https://doi.org/10.1051/jp1:1997135 and https://arxiv.org/abs/cond-mat/9702188</span>
-<span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">U</span> <span class="o">=</span> <span class="n">U</span>
