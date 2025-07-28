@@ -180,8 +180,26 @@
            <div itemprop="articleBody">
              
   <h1>Source code for triqs_soehyb.triqs_solver</h1><div class="highlight"><pre>
-<span></span>
-
+<span></span><span class="c1">################################################################################</span>
+<span class="c1">#</span>
+<span class="c1"># triqs_soehyb: Sum-Of-Exponentials bold HYBridization expansion impurity solver</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (C) 2025 by H. U.R. Strand</span>
+<span class="c1">#</span>
+<span class="c1"># triqs_soehyb is free software: you can redistribute it and/or modify it under the</span>
+<span class="c1"># terms of the GNU General Public License as published by the Free Software</span>
+<span class="c1"># Foundation, either version 3 of the License, or (at your option) any later</span>
+<span class="c1"># version.</span>
+<span class="c1">#</span>
+<span class="c1"># triqs_soehyb is distributed in the hope that it will be useful, but WITHOUT ANY</span>
+<span class="c1"># WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS</span>
+<span class="c1"># FOR A PARTICULAR PURPOSE. See the GNU General Public License for more</span>
+<span class="c1"># details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License along with</span>
+<span class="c1"># triqs_soehyb. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1">################################################################################</span>
 
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -190,7 +208,8 @@
 <span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">MeshDLR</span><span class="p">,</span> <span class="n">MeshDLRImTime</span><span class="p">,</span> <span class="n">BlockGf</span>
 <span class="kn">from</span> <span class="nn">triqs.operators</span> <span class="kn">import</span> <span class="n">c</span><span class="p">,</span> <span class="n">Operator</span>
 
-<span class="kn">from</span> <span class="nn">triqs_soehyb.solver</span> <span class="kn">import</span> <span class="n">Solver</span>
+
+<span class="kn">from</span> <span class="nn">triqs_soehyb.solver</span> <span class="kn">import</span> <span class="n">Solver</span><span class="p">,</span> <span class="n">is_root</span>
 
 
 <div class="viewcode-block" id="TriqsSolver">
@@ -199,34 +218,31 @@
 
 <div class="viewcode-block" id="TriqsSolver.__init__">
 <a class="viewcode-back" href="../../_autosummary/triqs_soehyb.triqs_solver.TriqsSolver.__init__.html#triqs_soehyb.triqs_solver.TriqsSolver.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">gf_struct</span><span class="p">,</span> <span class="n">eps</span><span class="p">,</span> <span class="n">w_max</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">gf_struct</span><span class="p">,</span> <span class="n">eps</span><span class="p">,</span> <span class="n">w_max</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct</span> <span class="o">=</span> <span class="n">gf_struct</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
         
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;--&gt; triqs_soehyb.triqs_solver.TriqsSolver&quot;</span><span class="p">)</span>
-
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct</span> <span class="o">=</span> <span class="n">gf_struct</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eps</span> <span class="o">=</span> <span class="n">eps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w_max</span> <span class="o">=</span> <span class="n">w_max</span>
+        
         <span class="bp">self</span><span class="o">.</span><span class="n">dmesh</span> <span class="o">=</span> <span class="n">MeshDLR</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;Fermion&#39;</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="n">eps</span><span class="p">,</span> <span class="n">w_max</span><span class="o">=</span><span class="n">w_max</span><span class="p">)</span>        
         <span class="bp">self</span><span class="o">.</span><span class="n">tmesh</span> <span class="o">=</span> <span class="n">MeshDLRImTime</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;Fermion&#39;</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="n">eps</span><span class="p">,</span> <span class="n">w_max</span><span class="o">=</span><span class="n">w_max</span><span class="p">)</span>        
 
         <span class="bp">self</span><span class="o">.</span><span class="n">Delta_tau</span> <span class="o">=</span> <span class="n">BlockGf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tmesh</span><span class="p">,</span> <span class="n">gf_struct</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gf_struct</span><span class="p">)</span>
         
         <span class="c1"># gf_struct -&gt; fundamental_operators</span>
-
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;gf_struct = </span><span class="si">{</span><span class="n">gf_struct</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         
         <span class="n">fundamental_operators</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">gf_struct</span><span class="p">:</span>
             <span class="n">fundamental_operators</span> <span class="o">+=</span> <span class="p">[</span> <span class="n">c</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="p">]</span>
             
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;fundamental_operators = </span><span class="si">{</span><span class="n">fundamental_operators</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-        
         <span class="n">H_loc</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">*</span> <span class="n">Operator</span><span class="p">()</span>
-
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;H_loc = </span><span class="si">{</span><span class="n">H_loc</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         
         <span class="n">lamb</span> <span class="o">=</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">w_max</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">S</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">lamb</span><span class="p">,</span> <span class="n">eps</span><span class="p">,</span> <span class="n">H_loc</span><span class="p">,</span> <span class="n">fundamental_operators</span><span class="p">)</span>
-
+        <span class="bp">self</span><span class="o">.</span><span class="n">S</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">lamb</span><span class="p">,</span> <span class="n">eps</span><span class="p">,</span> <span class="n">H_loc</span><span class="p">,</span> <span class="n">fundamental_operators</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+        
         <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_array_almost_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dmesh</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">dlr_rf</span><span class="p">)</span>
         <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_array_almost_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tmesh</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">tau_i</span><span class="p">)</span></div>
 
@@ -236,6 +252,11 @@
 <a class="viewcode-back" href="../../_autosummary/triqs_soehyb.triqs_solver.TriqsSolver.solve.html#triqs_soehyb.triqs_solver.TriqsSolver.solve">[docs]</a>
     <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h_int</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
+        <span class="k">if</span> <span class="n">is_root</span><span class="p">():</span>
+            <span class="n">order_n_diags</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">fd</span><span class="o">.</span><span class="n">number_of_diagrams</span><span class="p">(</span><span class="n">o</span><span class="p">))</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="p">]</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;max_order = </span><span class="si">{</span><span class="n">order</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;(Order, N_Diags) = </span><span class="si">{</span><span class="n">order_n_diags</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        
         <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">=</span> <span class="n">order</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">h_int</span> <span class="o">=</span> <span class="n">h_int</span>
         
@@ -247,8 +268,11 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">g_iaa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">calc_spgf</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>        
-        <span class="bp">self</span><span class="o">.</span><span class="n">G_tau</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__from_array_to_blockgf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g_iaa</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">g_iaa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">calc_spgf</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G_tau</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__from_array_to_blockgf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g_iaa</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">is_root</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">();</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">write</span><span class="p">()</span>      </div>
 
 
                 
@@ -284,8 +308,38 @@
             <span class="n">g</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">g_iaa</span><span class="p">[:,</span> <span class="n">sidx</span><span class="p">:</span><span class="n">sidx</span><span class="o">+</span><span class="n">size</span><span class="p">,</span> <span class="n">sidx</span><span class="p">:</span><span class="n">sidx</span><span class="o">+</span><span class="n">size</span><span class="p">]</span>
             <span class="n">sidx</span> <span class="o">+=</span> <span class="n">size</span>
 
-        <span class="k">return</span> <span class="n">G</span></div>
+        <span class="k">return</span> <span class="n">G</span>
 
+
+    <span class="k">def</span> <span class="nf">__skip_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+
+    <span class="k">def</span> <span class="nf">__reduce_to_dict__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__skip_keys</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span> <span class="k">del</span> <span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">d</span>
+
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">__factory_from_dict__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="n">arg_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;beta&#39;</span><span class="p">,</span> <span class="s1">&#39;gf_struct&#39;</span><span class="p">,</span> <span class="s1">&#39;eps&#39;</span><span class="p">,</span> <span class="s1">&#39;w_max&#39;</span><span class="p">]</span>
+        <span class="n">argv_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]</span>
+        <span class="n">verbose</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]</span>
+        <span class="n">d</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span> <span class="c1"># -- Suppress printouts on reconstruction from dict</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="o">*</span><span class="p">[</span> <span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">arg_keys</span> <span class="p">],</span>
+                  <span class="o">**</span><span class="p">{</span> <span class="n">key</span> <span class="p">:</span> <span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">argv_keys</span> <span class="p">})</span>
+        <span class="n">ret</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="k">return</span> <span class="n">ret</span></div>
+
+
+
+<span class="c1"># -- Register Solver in Triqs formats</span>
+
+<span class="kn">from</span> <span class="nn">h5.formats</span> <span class="kn">import</span> <span class="n">register_class</span>
+<span class="n">register_class</span><span class="p">(</span><span class="n">TriqsSolver</span><span class="p">)</span>
 </pre></div>
 
            </div>
