@@ -14,7 +14,7 @@ var searchData=
   ['gf_5fsupp_2ehpp_11',['gf_supp.hpp',['../gf__supp_8hpp.html',1,'']]],
   ['gimp_5ffreq_5flist_12',['Gimp_freq_list',['../structtriqs_1_1modest_1_1iteration__data.html#a99c87450dfd8f390ec2035b10984879e',1,'triqs::modest::iteration_data']]],
   ['gimp_5ftime_5flist_13',['Gimp_time_list',['../structtriqs_1_1modest_1_1iteration__data.html#a03a2d0e4d5010408b3a00d12c3d6b4c7',1,'triqs::modest::iteration_data']]],
-  ['gloc_14',['gloc',['../group__gloc__fixed.html#ga47cd3c4dd464591e6b9a7541d9406daf',1,'triqs::modest::gloc(Mesh const &amp;mesh, one_body_elements_on_grid const &amp;obe, double mu)'],['../group__gloc__fixed.html#ga18c163ce4f67607f9b0111c12f3fc604',1,'triqs::modest::gloc(one_body_elements_on_grid const &amp;obe, double mu, block2_gf&lt; Mesh, matrix_valued &gt; const &amp;Sigma_dynamic, nda::array&lt; nda::matrix&lt; dcomplex &gt;, 2 &gt; const &amp;Sigma_hartree)']]],
+  ['gloc_14',['gloc',['../group__gloc__fixed.html#ga47cd3c4dd464591e6b9a7541d9406daf',1,'triqs::modest::gloc(Mesh const &amp;mesh, one_body_elements_on_grid const &amp;obe, double mu)'],['../group__gloc__fixed.html#gaf5f211f8017d4719cd61d70c58993d17',1,'triqs::modest::gloc(one_body_elements_on_grid const &amp;obe, double mu, block2_gf&lt; Mesh, matrix_valued &gt; const &amp;Sigma_dynamic, nda::array&lt; nda::matrix&lt; dcomplex &gt;, 2 &gt; const &amp;Sigma_static)']]],
   ['gloc_5ffixed_5fgrid_2ehpp_15',['gloc_fixed_grid.hpp',['../gloc__fixed__grid_8hpp.html',1,'']]],
   ['graph_5falgo_2ehpp_16',['graph_algo.hpp',['../graph__algo_8hpp.html',1,'']]],
   ['green_20s_20function_17',['green s function',['../group__gloc.html',1,'Local Green&apos;s function'],['../documentation.html#autotoc_md3',1,'Local Green&apos;s function']]],
