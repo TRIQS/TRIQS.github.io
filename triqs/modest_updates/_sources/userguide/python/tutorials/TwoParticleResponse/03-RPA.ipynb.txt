@@ -1,0 +1,191 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# The random phase approximation (RPA)\n",
+    "\n",
+    "\n",
+    "The bare susceptibility $\\chi_0$ is the exact linear response in the non-interacting limit. For interacting systems the susceptibility $\\chi$ is given by the Bethe-Salpeter equation\n",
+    "\n",
+    "$$ \\chi = \\chi_0 + \\chi_0 \\Gamma \\chi \\, ,$$\n",
+    "\n",
+    "where $\\Gamma$ is an irreducible vertex function, containing all diagrams with insertions of the interaction that can not be separated by cutting a pair of (particle-hole) single-particle propagators $G G$. The first order contribution to the vertex $\\Gamma$ is the bare interaction $U$ and the approximation\n",
+    "\n",
+    "$$ \\Gamma = U/2 \\, $$\n",
+    "\n",
+    "gives the so-called random phase approximation (RPA) for $\\chi$, i.e.\n",
+    "\n",
+    "$$ \\chi_{RPA} = \\chi_0 + \\chi_0 \\frac{U}{2} \\chi_{RPA} \\, , $$\n",
+    "\n",
+    "and solving for $\\chi_{RPA}$ gives\n",
+    "\n",
+    "$$ \\chi_{RPA} = \\frac{\\chi_0}{1 - \\frac{U}{2} \\chi_0} \\, . $$\n",
+    "\n",
+    "Note that the denominator of this equation can go to zero, whereby the susceptibility $\\chi_{RPA}$ diverges. This behaviour is a signature of an instability of the system towards symmetry breaking, like anti-ferromagnetism or charge order.\n",
+    "\n",
+    "As an example we compute $\\chi_{RPA}$ for the square lattice with local Hubbard interaction, and study the enhancement of the $\\mathbf{q} = (\\pi, \\pi)$ peak as a function of the Hubbard interaction $U$.\n",
+    "\n",
+    "RPA predicts a phase transition to an antiferromagnetic state at *finite temperatures*. In two dimensions this is unphysical since the Mermin Wagner theorem constrains the phase transition to occur only at zero temperature. \n",
+    "\n",
+    "We will later see how to remedy this shortcoming of RPA using the two-particle self consistent approach (TPSC)."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%matplotlib inline\n",
+    "%config InlineBackend.figure_format = 'svg'\n",
+    "from triqs.plot.mpl_interface import plt, oplot\n",
+    "\n",
+    "import numpy as np\n",
+    "from triqs.gf import *"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## RPA solver\n",
+    "\n",
+    "In general the RPA equation is a tensor equation in the four indices of the two-particle susceptibility. However, in our simple example the RPA equation is scalar valued and we account for spin by extra factors of 2 and 1/2 in the formulas.\n",
+    "\n",
+    "The RPA solver in TPRF `triqs_tprf.lattice.solve_rpa_PH` is designed to handle the general rank four case and can be readily used for multi orbital problems. Here we will apply it to the scalar case. Here is an example that computes $\\chi_{RPA}$:\n",
+    "\n",
+    "```python\n",
+    "from triqs_tprf.lattice import solve_rpa_PH\n",
+    "I = np.ones([1, 1, 1, 1], dtype=complex) # One element rank 4 tensor to comply with the general implementation\n",
+    "chi_wk = solve_rpa_PH(chi0_wk, U/2 * I)\n",
+    "```\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### <i class=\"fa fa-gear fa-x\" style=\"color: #186391\"></i> Exercise 1 \n",
+    "\n",
+    "Read `chi0_wk` from disk and use it to calculate $\\chi_{RPA}$ for $U = 2.7$ and call the result `chi_wk`.\n",
+    "\n",
+    "Plot `chi_wk` for zero frequency in the entire Brillouin zone, and compare the result with the plot for `chi0_wk` in the previous notebook."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Write your code here\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**Questions**\n",
+    "\n",
+    "- What is the difference in magnitude of the response at $\\mathbf{Q}=(\\pi, \\pi)$ between $\\chi_{RPA}$ and $\\chi_0$?"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### <i class=\"fa fa-gear fa-x\" style=\"color: #186391\"></i> Exercise 2\n",
+    "\n",
+    "To see how the incommensurate response changes with the interaction $U$ plot $\\chi_{RPA}$ along the high symmetry path $\\Gamma \\rightarrow X \\rightarrow M \\rightarrow \\Gamma$ for a few values of $U = 0, 1, 2$. Use the visualization code from the previous notebook as a starting point."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Write your code here\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**Questions**\n",
+    "\n",
+    "- How does the static RPA susceptibility change with $U$?\n",
+    "- Is the amplitude change even across the Brillouin zone?"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### <i class=\"fa fa-gear fa-x\" style=\"color: #186391\"></i> Exercise 3:  Critical $U$\n",
+    "\n",
+    "At some critical value of the interaction $U = U_c$ the RPA susceptibility diverges\n",
+    "\n",
+    "$$\\chi_{RPA} \\rightarrow \\infty \\, .$$\n",
+    "\n",
+    "To determine $U_c$ we can study the root of the inverse susceptibility $\\chi_{RPA}^{-1}$.\n",
+    "\n",
+    "For the square lattice it is sufficient to study the response at $\\mathbf{Q}_{AF}= (\\pi, \\pi)$ since this is the momentum vector where the response diverges. Analytically this occurs when the denominator is zero $1 - \\frac{U}{2} \\chi_0(\\mathbf{Q}_{AF}, 0) = 0$, i.e.\n",
+    "\n",
+    "$$ U_c^{(RPA)} = \\frac{2}{\\chi_0(\\mathbf{Q}_{AF}, 0)} $$\n",
+    "\n",
+    "Note that $U_c^{(RPA)}$ only depends on $\\chi_0$ (not $\\chi_{RPA}$).\n",
+    "\n",
+    "Plot $\\chi_{RPA}^{-1} (\\mathbf{Q}_{AF}, 0)$ vs $U$ to numerically determine the critical $U$ in the RPA approximation and compare to a direct calculation of $U_c^{(RPA)}$.\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Write your code here\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**Questions**\n",
+    "\n",
+    "- What symmetry broken phase do you think the system has a phase transition to at $U_c$?\n",
+    "- What does the Mermin Wagner theorem say about the phase transition?\n",
+    "- How does the RPA approximation compare with the exact result?"
+   ]
+  }
+ ],
+ "metadata": {
+  "@webio": {
+   "lastCommId": null,
+   "lastKernelId": null
+  },
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.11"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
