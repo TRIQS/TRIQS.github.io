@@ -1,4 +1,6 @@
 var searchData=
 [
-  ['methods_0',['Emebdding methods',['../group__embedding__methods.html',1,'']]]
+  ['post_20processing_0',['Post processing',['../group__post.html',1,'']]],
+  ['potentials_1',['Densities and Chemical Potentials',['../group__mu.html',1,'']]],
+  ['processing_2',['Post processing',['../group__post.html',1,'']]]
 ];

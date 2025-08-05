@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['h_0',['h',['../structtriqs_1_1modest_1_1one__body__elements__on__grid.html#a7fba5d323a16a219e5149e6e73d1105d',1,'triqs::modest::one_body_elements_on_grid::H'],['../structtriqs_1_1modest_1_1band__dispersion.html#af08a0a58cdae2c1cdd2dea8f38fae32b',1,'triqs::modest::band_dispersion::H()']]],
+  ['h_0',['h',['../structtriqs_1_1modest_1_1one__body__elements__on__grid.html#a7fba5d323a16a219e5149e6e73d1105d',1,'triqs::modest::one_body_elements_on_grid::H'],['../structtriqs_1_1modest_1_1one__body__elements__tb.html#a817964253b1ce486b3c0f281e89996cc',1,'triqs::modest::one_body_elements_tb::H'],['../structtriqs_1_1modest_1_1band__dispersion.html#af08a0a58cdae2c1cdd2dea8f38fae32b',1,'triqs::modest::band_dispersion::H()']]],
   ['h5_1',['h5',['../namespaceh5.html',1,'']]],
   ['h5_2ecpp_2',['h5.cpp',['../h5_8cpp.html',1,'']]],
   ['h5_5fproxy_2ecpp_3',['h5_proxy.cpp',['../h5__proxy_8cpp.html',1,'']]],
@@ -13,6 +13,7 @@ var searchData=
   ['hamiltonians_2ehpp_10',['hamiltonians.hpp',['../hamiltonians_8hpp.html',1,'']]],
   ['has_5fgroup_11',['has_group',['../classh5_1_1proxy.html#a6bd3b6a86ecdf2fd6f2e4e1a882edde5',1,'h5::proxy']]],
   ['hk_12',['Hk',['../namespacetriqs_1_1modest.html#ae8092f1e5bdfaf796970405554c5467aaf0e9786cc26fbeacec181934a90f5cb6',1,'triqs::modest']]],
-  ['hubbard_20kanamori_13',['Hubbard-Kanamori',['../group__hubb__kan.html',1,'']]],
-  ['hybridization_20function_14',['hybridization function',['../group__hybridization.html',1,'Hybridization function'],['../documentation.html#autotoc_md4',1,'Hybridization function']]]
+  ['hloc_13',['Hloc',['../namespacetriqs_1_1modest.html#a084835e38d00f232ed60d970d8bceda0',1,'triqs::modest']]],
+  ['hybridization_14',['hybridization',['../group__hybridization.html#ga30c80e9757d3e96b020e912854379271',1,'triqs::modest::hybridization(std::vector&lt; nda::matrix&lt; dcomplex &gt; &gt; const &amp;epsilon_levels, block_gf&lt; Mesh, matrix_valued &gt; const &amp;Gloc, block_gf&lt; Mesh, matrix_valued &gt; const &amp;Sigma_dynamic, std::vector&lt; nda::matrix&lt; dcomplex &gt; &gt; const &amp;Sigma_static)'],['../group__hybridization.html#ga62f388bbe894af3feda6b7be2ecd5d1e',1,'triqs::modest::hybridization(std::vector&lt; nda::matrix&lt; dcomplex &gt; &gt; const &amp;epsilon_levels, block_gf&lt; Mesh, matrix_valued &gt; const &amp;Gloc)']]],
+  ['hybridization_20function_15',['hybridization function',['../group__hybridization.html',1,'Atomic levels and Hybridization function'],['../documentation.html#autotoc_md4',1,'Hybridization function']]]
 ];

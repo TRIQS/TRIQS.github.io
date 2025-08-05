@@ -31,35 +31,16 @@ var NAVTREE =
       [ "Example 1: Test example", "ex1.html", null ]
     ] ],
     [ "API Documentation", "documentation.html", [
-      [ "One-body elements", "group__one__body__elements.html", [
-        [ "Components", "group__obe__components.html", [
-          [ "Local space", "group__local__space.html", null ],
-          [ "Band dispersion", "group__band__dispersion.html", null ],
-          [ "Downfolding projector", "group__downfolding__projector.html", null ],
-          [ "IBZ symmetry operations", "group__ibz__symmetry__ops.html", null ]
-        ] ],
-        [ "Factories", "group__obe__factories.html", null ]
-      ] ],
-      [ "Embedding", "group__embedding.html", [
-        [ "Factories", "group__embedding__factories.html", null ],
-        [ "Operations", "group__embedding__ops.html", null ],
-        [ "Methods", "group__embedding__methods.html", null ]
-      ] ],
-      [ "Local Green's function", "group__gloc.html", [
-        [ "Fixed grid", "group__gloc__fixed.html", null ]
-      ] ],
-      [ "Hybridization function", "group__hybridization.html", null ],
+      [ "One-body elements", "group__one__body__elements.html", null ],
+      [ "Embedding", "group__embedding.html", null ],
+      [ "Local Green's function", "group__gloc.html", null ],
+      [ "Atomic levels and Hybridization", "group__hybridization.html", null ],
       [ "Densities and Chemical Potentials", "group__mu.html", null ],
-      [ "Interaction Hamiltonians", "group__hamiltonian.html", [
-        [ "Density-density", "group__den__den.html", null ],
-        [ "Hubbard-Kanamori", "group__hubb__kan.html", null ],
-        [ "Slater", "group__slater.html", null ],
-        [ "Coulomb tensors", "group__Utensor.html", null ]
-      ] ],
-      [ "Double counting", "group__double__counting.html", null ],
+      [ "Interaction Hamiltonians", "group__hamiltonian.html", null ],
       [ "Post-processing", "group__post.html", null ],
-      [ "File I/O", "group__checkpoint.html", null ],
       [ "Utilities", "group__utils.html", [
+        [ "Double counting", "group__double__counting.html", null ],
+        [ "File I/O", "group__checkpoint.html", null ],
         [ "Root finders", "group__root.html", null ],
         [ "Green's function analysis", "group__deg.html", null ]
       ] ]

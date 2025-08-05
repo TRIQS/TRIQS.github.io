@@ -28,30 +28,16 @@ var menudata={children:[
 {text:"Examples",url:"examples.html",children:[
 {text:"Example 1: Test example",url:"ex1.html"}]},
 {text:"API Documentation",url:"documentation.html",children:[
-{text:"One-body elements",url:"group__one__body__elements.html",children:[
-{text:"Components",url:"group__obe__components.html",children:[
-{text:"Local space",url:"group__local__space.html"},
-{text:"Band dispersion",url:"group__band__dispersion.html"},
-{text:"Downfolding projector",url:"group__downfolding__projector.html"},
-{text:"IBZ symmetry operations",url:"group__ibz__symmetry__ops.html"}]},
-{text:"Factories",url:"group__obe__factories.html"}]},
-{text:"Embedding",url:"group__embedding.html",children:[
-{text:"Factories",url:"group__embedding__factories.html"},
-{text:"Operations",url:"group__embedding__ops.html"},
-{text:"Methods",url:"group__embedding__methods.html"}]},
-{text:"Local Green's function",url:"group__gloc.html",children:[
-{text:"Fixed grid",url:"group__gloc__fixed.html"}]},
-{text:"Hybridization function",url:"group__hybridization.html"},
+{text:"One-body elements",url:"group__one__body__elements.html"},
+{text:"Embedding",url:"group__embedding.html"},
+{text:"Local Green's function",url:"group__gloc.html"},
+{text:"Atomic levels and Hybridization",url:"group__hybridization.html"},
 {text:"Densities and Chemical Potentials",url:"group__mu.html"},
-{text:"Interaction Hamiltonians",url:"group__hamiltonian.html",children:[
-{text:"Density-density",url:"group__den__den.html"},
-{text:"Hubbard-Kanamori",url:"group__hubb__kan.html"},
-{text:"Slater",url:"group__slater.html"},
-{text:"Coulomb tensors",url:"group__Utensor.html"}]},
-{text:"Double counting",url:"group__double__counting.html"},
+{text:"Interaction Hamiltonians",url:"group__hamiltonian.html"},
 {text:"Post-processing",url:"group__post.html"},
-{text:"File I/O",url:"group__checkpoint.html"},
 {text:"Utilities",url:"group__utils.html",children:[
+{text:"Double counting",url:"group__double__counting.html"},
+{text:"File I/O",url:"group__checkpoint.html"},
 {text:"Root finders",url:"group__root.html"},
 {text:"Green's function analysis",url:"group__deg.html"}]}]},
 {text:"Changelog",url:"@ref changelog"},

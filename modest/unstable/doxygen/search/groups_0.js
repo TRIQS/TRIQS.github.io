@@ -1,6 +1,7 @@
 var searchData=
 [
-  ['a_20fixed_20k_20grid_0',['Local Green&apos;s function on a fixed k-grid',['../group__gloc__fixed.html',1,'']]],
-  ['analyze_20green_20s_20functions_1',['Analyze Green&apos;s functions',['../group__deg.html',1,'']]],
-  ['and_20chemical_20potentials_2',['Densities and Chemical Potentials',['../group__mu.html',1,'']]]
+  ['analyze_20green_20s_20functions_0',['Analyze Green&apos;s functions',['../group__deg.html',1,'']]],
+  ['and_20chemical_20potentials_1',['Densities and Chemical Potentials',['../group__mu.html',1,'']]],
+  ['and_20hybridization_20function_2',['Atomic levels and Hybridization function',['../group__hybridization.html',1,'']]],
+  ['atomic_20levels_20and_20hybridization_20function_3',['Atomic levels and Hybridization function',['../group__hybridization.html',1,'']]]
 ];
