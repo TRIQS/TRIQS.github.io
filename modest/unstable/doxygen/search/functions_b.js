@@ -9,6 +9,6 @@ var searchData=
   ['make_5fembedding_5fwith_5fno_5fequivalences_6',['make_embedding_with_no_equivalences',['../group__embedding.html#ga2f0bd115146437728b4c32dfaac295ee',1,'triqs::modest']]],
   ['make_5fkanamori_7',['make_kanamori',['../group__hamiltonian.html#gafc2f795f80bf0933f16286daf3d28316',1,'triqs']]],
   ['make_5fmatrix_5ffrom_5fpermutation_8',['make_matrix_from_permutation',['../namespacenda.html#a9f59d1081a34daeea9a0677b7e3c25c2',1,'nda']]],
-  ['make_5fobe_5ffrom_5ftb_9',['make_obe_from_tb',['../namespacetriqs_1_1modest.html#a568a7886bd356b9cab968c9813afb876',1,'triqs::modest']]],
+  ['make_5fobe_5ffrom_5ftb_9',['make_obe_from_tb',['../namespacetriqs_1_1modest.html#a5c5c1954076f0c201956a05f7a4d7408',1,'triqs::modest']]],
   ['make_5fslater_10',['make_slater',['../group__hamiltonian.html#ga50200e7ffe12e263b2f046a1d1e0574f',1,'triqs']]]
 ];
