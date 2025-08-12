@@ -12,13 +12,14 @@ var searchData=
   ['initial_5fdata_9',['initial_data',['../classtriqs_1_1modest_1_1checkpoint.html#a08eb6373903049e9cb9ab4264385b5b3',1,'triqs::modest::checkpoint::initial_data()'],['../structtriqs_1_1modest_1_1initial__data.html',1,'triqs::modest::initial_data']]],
   ['installation_10',['Installation',['../installation.html',1,'']]],
   ['installation_2emd_11',['installation.md',['../installation_8md.html',1,'']]],
-  ['integration_20in_20c_20projects_12',['Integration in C++ projects',['../integration.html',1,'']]],
-  ['integration_2emd_13',['integration.md',['../integration_8md.html',1,'']]],
-  ['interaction_20hamiltonians_14',['Interaction Hamiltonians',['../documentation.html#autotoc_md6',1,'']]],
-  ['is_15',['is',['../classh5_1_1proxy.html#a8a1291a8a909057d5f1c8554fe76e110',1,'h5::proxy']]],
-  ['is_5fdiagonal_16',['is_diagonal',['../namespacenda.html#ab68d4189cf1348e0aeb96ee89b641d6c',1,'nda']]],
-  ['is_5fgroup_17',['is_group',['../classh5_1_1proxy.html#a5830e4a439c46e1b9e0f9d995e274120',1,'h5::proxy']]],
-  ['issues_18',['Issues',['../issues.html',1,'']]],
-  ['issues_2emd_19',['issues.md',['../issues_8md.html',1,'']]],
-  ['iteration_5fdata_20',['iteration_data',['../structtriqs_1_1modest_1_1iteration__data.html',1,'triqs::modest']]]
+  ['instantiate_12',['instantiate',['../embedding_8hpp.html#ad1ff9c10b53594c421810eaec1edc972',1,'INSTANTIATE:&#160;embedding.hpp'],['../namespacetriqs_1_1modest.html#a935b4855b02b249113bf5b537284648d',1,'triqs::modest::INSTANTIATE(imfreq)'],['../namespacetriqs_1_1modest.html#a78415eb360ce935d351c2e6182f61532',1,'triqs::modest::INSTANTIATE(refreq)'],['../namespacetriqs_1_1modest.html#a376827b5d29efe2fda29d9b964cefcf9',1,'triqs::modest::INSTANTIATE(dlr_imfreq)']]],
+  ['integration_20in_20c_20projects_13',['Integration in C++ projects',['../integration.html',1,'']]],
+  ['integration_2emd_14',['integration.md',['../integration_8md.html',1,'']]],
+  ['interaction_20hamiltonians_15',['Interaction Hamiltonians',['../documentation.html#autotoc_md6',1,'']]],
+  ['is_16',['is',['../classh5_1_1proxy.html#a8a1291a8a909057d5f1c8554fe76e110',1,'h5::proxy']]],
+  ['is_5fdiagonal_17',['is_diagonal',['../namespacenda.html#ab68d4189cf1348e0aeb96ee89b641d6c',1,'nda']]],
+  ['is_5fgroup_18',['is_group',['../classh5_1_1proxy.html#a5830e4a439c46e1b9e0f9d995e274120',1,'h5::proxy']]],
+  ['issues_19',['Issues',['../issues.html',1,'']]],
+  ['issues_2emd_20',['issues.md',['../issues_8md.html',1,'']]],
+  ['iteration_5fdata_21',['iteration_data',['../structtriqs_1_1modest_1_1iteration__data.html',1,'triqs::modest']]]
 ];

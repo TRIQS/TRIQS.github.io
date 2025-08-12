@@ -6,7 +6,7 @@ var searchData=
   ['checkpoint_3',['checkpoint',['../classtriqs_1_1modest_1_1checkpoint.html#a34d61a3d23fe2b50ec4ef87cd5c8e328',1,'triqs::modest::checkpoint::checkpoint(std::string dirname)'],['../classtriqs_1_1modest_1_1checkpoint.html#adf2aae12b31dc991adcf471d50029057',1,'triqs::modest::checkpoint::checkpoint(std::string dirname, InitialData const &amp;initial_data)'],['../classtriqs_1_1modest_1_1checkpoint.html',1,'triqs::modest::checkpoint&lt; InitialData, IterationData &gt;']]],
   ['checkpoint_2ehpp_4',['checkpoint.hpp',['../checkpoint_8hpp.html',1,'']]],
   ['chemical_20potentials_5',['chemical potentials',['../documentation.html#autotoc_md5',1,'Densities and Chemical Potentials'],['../group__mu.html',1,'Densities and Chemical Potentials']]],
-  ['cls_5fidx_6',['cls_idx',['../structtriqs_1_1modest_1_1atomic__shell__t.html#aca9f67c4065314cdd4f8b9813495b875',1,'triqs::modest::atomic_shell_t']]],
+  ['cls_5fidx_6',['cls_idx',['../structtriqs_1_1modest_1_1atomic__orbs.html#a942c1c49cfa0defce872c5d93b2746e2',1,'triqs::modest::atomic_orbs']]],
   ['cmat_5ft_7',['cmat_t',['../namespacetriqs.html#afc10b20f3ff1c922287a1181b63e8420',1,'triqs']]],
   ['cmat_5fvt_8',['cmat_vt',['../namespacetriqs.html#ae5aa74fdfd533471ffd1e6abedd7e2d4',1,'triqs']]],
   ['compiling_20the_20examples_9',['Compiling the examples',['../examples.html#compiling',1,'']]],
