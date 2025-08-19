@@ -435,11 +435,12 @@ div.rendered_html tbody tr:hover {
 <h1>Step-by-step guide<a class="headerlink" href="#Step-by-step-guide" title="Link to this heading"></a></h1>
 <section id="Step-1---Spawn-solver-instance">
 <h2>Step 1 - Spawn solver instance<a class="headerlink" href="#Step-1---Spawn-solver-instance" title="Link to this heading"></a></h2>
+<p>The first step in using <code class="docutils literal notranslate"><span class="pre">soehyb</span></code> is to instantiate an instance of the <code class="docutils literal notranslate"><span class="pre">triqs_soehyb.Solver</span></code> class.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs_soehyb.triqs_solver</span> <span class="kn">import</span> <span class="n">TriqsSolver</span> <span class="k">as</span> <span class="n">Solver</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs_soehyb</span> <span class="kn">import</span> <span class="n">Solver</span>
 
 <span class="n">norb</span> <span class="o">=</span> <span class="mi">3</span>
 
@@ -447,7 +448,7 @@ div.rendered_html tbody tr:hover {
     <span class="n">beta</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
     <span class="n">gf_struct</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span> <span class="n">norb</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;do&#39;</span><span class="p">,</span> <span class="n">norb</span><span class="p">)],</span>
     <span class="n">eps</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span> <span class="n">w_max</span><span class="o">=</span><span class="mf">50.0</span><span class="p">)</span>
-<br/></pre></div>
+</pre></div>
 </div>
 </div>
 <div class="nboutput docutils container">
@@ -476,7 +477,7 @@ H_loc = 0
 Starting serial run at: 2025-08-19 11:38:46.470781
 </pre></div></div>
 </div>
-<p>The solver class takes the input</p>
+<p>The solver constructor takes the input</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">beta</span></code>: inverse temperature</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">gf_struct</span></code>: Green’s function structure 1st index: name, 2nd index: dimension of subspace</p></li>
@@ -486,8 +487,12 @@ Starting serial run at: 2025-08-19 11:38:46.470781
 </section>
 <section id="Step-2---Impurity-many-body-Hamiltonian">
 <h2>Step 2 - Impurity many-body Hamiltonian<a class="headerlink" href="#Step-2---Impurity-many-body-Hamiltonian" title="Link to this heading"></a></h2>
+<p>We also have to construct the local many-body Hamiltonian (<code class="docutils literal notranslate"><span class="pre">h_int</span></code>) of the Anderson impurity model we want to solve.</p>
 <section id="Examples">
 <h3>Examples<a class="headerlink" href="#Examples" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>For the <strong>single band Hubbard model</strong> the interaction is density-density only and can be constructed using the Triqs second-quantization operators found in <code class="docutils literal notranslate"><span class="pre">triqs.operators.*</span></code>.</p></li>
+</ul>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
@@ -495,7 +500,7 @@ Starting serial run at: 2025-08-19 11:38:46.470781
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs.operators</span> <span class="kn">import</span> <span class="n">n</span>
 
 <span class="n">U</span> <span class="o">=</span> <span class="mf">2.0</span>
-<span class="n">mu</span> <span class="o">=</span> <span class="n">U</span> <span class="o">/</span> <span class="mi">2</span>
+<span class="n">mu</span> <span class="o">=</span> <span class="n">U</span> <span class="o">/</span> <span class="mi">2</span> <span class="c1"># Chemical potential for half-filling</span>
 <span class="n">h_int</span> <span class="o">=</span> <span class="n">U</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;do&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="n">mu</span> <span class="o">*</span> <span class="p">(</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;do&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">h_int</span><span class="p">)</span>
@@ -510,6 +515,9 @@ Starting serial run at: 2025-08-19 11:38:46.470781
 -1*c_dag(&#39;do&#39;,0)*c(&#39;do&#39;,0) + -1*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0) + 2*c_dag(&#39;do&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;do&#39;,0)
 </pre></div></div>
 </div>
+<ul class="simple">
+<li><p>For multi-orbital models one often use the <strong>Kanamori interaction</strong> which can be built using tools in <code class="docutils literal notranslate"><span class="pre">triqs.operators.util.*</span></code> as follows.</p></li>
+</ul>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
@@ -550,8 +558,10 @@ Starting serial run at: 2025-08-19 11:38:46.470781
 </section>
 <section id="Step-3---Hybridization-function">
 <h2>Step 3 - Hybridization function<a class="headerlink" href="#Step-3---Hybridization-function" title="Link to this heading"></a></h2>
+<p>To fully specify the Anderson impurity model we also have to supply the hybridization function <span class="math notranslate nohighlight">\(\Delta(\tau)\)</span> that describes the retarded fluctuation of electrons to the environment. The solver instance <code class="docutils literal notranslate"><span class="pre">S</span></code> sets up the hybridization function container available as <code class="docutils literal notranslate"><span class="pre">S.Delta_tau</span></code> and we need to explicitly set its value.</p>
 <section id="id1">
 <h3>Examples<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<p>Here is a simple example with a Hybridization function <span class="math notranslate nohighlight">\(\Delta(\tau)\)</span> comprised of a <strong>single discrete pole/state</strong>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
@@ -566,6 +576,7 @@ Starting serial run at: 2025-08-19 11:38:46.470781
 </pre></div>
 </div>
 </div>
+<p>Another common test case is a spin- and orbital-diagonal hybridzation function with a <strong>semi-circular density of states</strong>.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
@@ -583,6 +594,7 @@ Starting serial run at: 2025-08-19 11:38:46.470781
 </section>
 <section id="Step-4---Self-consistent-solution">
 <h2>Step 4 - Self-consistent solution<a class="headerlink" href="#Step-4---Self-consistent-solution" title="Link to this heading"></a></h2>
+<p>Combining the hybridization fucntion <code class="docutils literal notranslate"><span class="pre">S.Delta_tau</span></code> and the local many-body interaction <code class="docutils literal notranslate"><span class="pre">h_int</span></code> the Anderson impurity model is fully specified and we can call the <code class="docutils literal notranslate"><span class="pre">S.solve(...)</span></code> method to obtain the pseudo-particle self-consistent solution at a given expansion <code class="docutils literal notranslate"><span class="pre">order</span></code>.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
@@ -628,6 +640,7 @@ Total:                                        207.696 100.0%
 </section>
 <section id="Step-5---Single-particle-response-function">
 <h2>Step 5 - Single particle response function<a class="headerlink" href="#Step-5---Single-particle-response-function" title="Link to this heading"></a></h2>
+<p>After convergence the solver computes the diagrammatic series for the single particle Green’s function that is available as the member <code class="docutils literal notranslate"><span class="pre">S.G_tau</span></code> of the solver class instance <code class="docutils literal notranslate"><span class="pre">S</span></code>.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
@@ -652,6 +665,7 @@ Green Function G composed of 2 blocks:
 </section>
 <section id="Step-6---Store-solver-to-disk">
 <h2>Step 6 - Store solver to disk<a class="headerlink" href="#Step-6---Store-solver-to-disk" title="Link to this heading"></a></h2>
+<p>The solver is hdf5 serializable and can be written to disk using the <code class="docutils literal notranslate"><span class="pre">h5</span></code> module.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
@@ -667,6 +681,7 @@ Green Function G composed of 2 blocks:
 </section>
 <section id="Step-7---Read-result-from-disk">
 <h2>Step 7 - Read result from disk<a class="headerlink" href="#Step-7---Read-result-from-disk" title="Link to this heading"></a></h2>
+<p>For later visualization we can now read the solver and its data from disk.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
@@ -679,6 +694,7 @@ Green Function G composed of 2 blocks:
 </section>
 <section id="Step-7---Postprocessing-and-visualization">
 <h2>Step 7 - Postprocessing and visualization<a class="headerlink" href="#Step-7---Postprocessing-and-visualization" title="Link to this heading"></a></h2>
+<p>The single particle Green’s function can now be visualized using the standard Triqs plotting tools.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
@@ -694,7 +710,7 @@ Green Function G composed of 2 blocks:
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/user_guide_Step_by_step_22_0.svg" src="../_images/user_guide_Step_by_step_22_0.svg" /></div>
+<img alt="../_images/user_guide_Step_by_step_24_0.svg" src="../_images/user_guide_Step_by_step_24_0.svg" /></div>
 </div>
 </section>
 </section>
