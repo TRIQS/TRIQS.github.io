@@ -68,23 +68,20 @@
 </li>
 <li class="toctree-l2 current"><a class="reference internal" href="../documentation.html#user-guide">User guide</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Step-by-step guide</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#Step-1---Spawn-solver-instance">Step 1 - Spawn solver instance</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Step-1---Spawn-solver-instance">Step 1 - Spawn solver instance</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Step-2---Impurity-many-body-Hamiltonian">Step 2 - Impurity many-body Hamiltonian</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#Examples">Examples</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="#Step-2---Impurity-many-body-Hamiltonian">Step 2 - Impurity many-body Hamiltonian</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="#examples-1">Examples</a></li>
-</ul>
-</li>
 <li class="toctree-l4"><a class="reference internal" href="#Step-3---Hybridization-function">Step 3 - Hybridization function</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="#examples-2">Examples</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#id1">Examples</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="#Step-4---Self-consistent-solution">Step 4 - Self-consistent solution</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="#examples-3">Examples</a></li>
-</ul>
-</li>
+<li class="toctree-l4"><a class="reference internal" href="#Step-4---Self-consistent-solution">Step 4 - Self-consistent solution</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#Step-5---Single-particle-response-function">Step 5 - Single particle response function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Step-6---Store-solver-to-disk">Step 6 - Store solver to disk</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Step-7---Read-result-from-disk">Step 7 - Read result from disk</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Step-7---Postprocessing-and-visualization">Step 7 - Postprocessing and visualization</a></li>
 </ul>
 </li>
 </ul>
@@ -162,6 +159,261 @@
              
   
 <style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars and line breaks on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+    white-space: pre;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt .copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+.jp-RenderedHTMLCommon thead,
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+.jp-RenderedHTMLCommon th,
+div.rendered_html th {
+  font-weight: bold;
+}
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+.jp-RenderedHTMLCommon tbody tr:hover,
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+
 /* CSS overrides for sphinx_rtd_theme */
 
 /* 24px margin */
@@ -188,30 +440,267 @@
 <h1>Step-by-step guide<a class="headerlink" href="#Step-by-step-guide" title="Link to this heading"></a></h1>
 <section id="Step-1---Spawn-solver-instance">
 <h2>Step 1 - Spawn solver instance<a class="headerlink" href="#Step-1---Spawn-solver-instance" title="Link to this heading"></a></h2>
-<section id="Examples">
-<h3>Examples<a class="headerlink" href="#Examples" title="Link to this heading"></a></h3>
-</section>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs_soehyb.triqs_solver</span> <span class="kn">import</span> <span class="n">TriqsSolver</span> <span class="k">as</span> <span class="n">Solver</span>
+
+<span class="n">norb</span> <span class="o">=</span> <span class="mi">3</span>
+
+<span class="n">S</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span>
+    <span class="n">beta</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
+    <span class="n">gf_struct</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span> <span class="n">norb</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;do&#39;</span><span class="p">,</span> <span class="n">norb</span><span class="p">)],</span>
+    <span class="n">eps</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span> <span class="n">w_max</span><span class="o">=</span><span class="mf">50.0</span><span class="p">)</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Warning: could not identify MPI environment!
+  ___      ___    _  ___   _____
+ / __| ___| __|__| || \ \ / / _ )
+ \__ \/ _ \ _|___| __ |\ V /| _ \
+ |___/\___/___|  |_||_| |_| |___/  [github.com/TRIQS/soehyb]
+
+beta = 5.0, lamb = 2.50E+02, eps = 1.00E-08, N_DLR = 32
+fundamental_operators = [1*c(&#39;up&#39;,0), 1*c(&#39;up&#39;,1), 1*c(&#39;up&#39;,2), 1*c(&#39;do&#39;,0), 1*c(&#39;do&#39;,1), 1*c(&#39;do&#39;,2)]
+H_mat.shape = (64, 64)
+H_loc = 0
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Starting serial run at: 2025-08-19 11:38:46.470781
+</pre></div></div>
+</div>
+<p>The solver class takes the input</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">beta</span></code>: inverse temperature</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gf_struct</span></code>: Green’s function structure 1st index: name, 2nd index: dimension of subspace</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">eps</span></code>: Accuracy of Discrete Lehmann Representation (DLR) used for imaginary time response functions</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">w_max</span></code>: DLR freqiency cut-off (the spectrum of the model must be in the range <code class="docutils literal notranslate"><span class="pre">[-w_max,</span> <span class="pre">+w_max]</span></code></p></li>
+</ul>
 </section>
 <section id="Step-2---Impurity-many-body-Hamiltonian">
 <h2>Step 2 - Impurity many-body Hamiltonian<a class="headerlink" href="#Step-2---Impurity-many-body-Hamiltonian" title="Link to this heading"></a></h2>
-<section id="examples-1">
-<span id="id1"></span><h3>Examples<a class="headerlink" href="#examples-1" title="Link to this heading"></a></h3>
+<section id="Examples">
+<h3>Examples<a class="headerlink" href="#Examples" title="Link to this heading"></a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs.operators</span> <span class="kn">import</span> <span class="n">n</span>
+
+<span class="n">U</span> <span class="o">=</span> <span class="mf">2.0</span>
+<span class="n">mu</span> <span class="o">=</span> <span class="n">U</span> <span class="o">/</span> <span class="mi">2</span>
+<span class="n">h_int</span> <span class="o">=</span> <span class="n">U</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;do&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="n">mu</span> <span class="o">*</span> <span class="p">(</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;up&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">n</span><span class="p">(</span><span class="s1">&#39;do&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">h_int</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+-1*c_dag(&#39;do&#39;,0)*c(&#39;do&#39;,0) + -1*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0) + 2*c_dag(&#39;do&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;do&#39;,0)
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">spin_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">,</span> <span class="s1">&#39;do&#39;</span><span class="p">]</span>
+
+<span class="n">U</span> <span class="o">=</span> <span class="mf">4.6</span>
+<span class="n">J</span> <span class="o">=</span> <span class="mf">0.8</span>
+
+<span class="kn">from</span> <span class="nn">triqs.operators.util.U_matrix</span> <span class="kn">import</span> <span class="n">U_matrix_kanamori</span>
+
+<span class="n">KanMat1</span><span class="p">,</span> <span class="n">KanMat2</span> <span class="o">=</span> <span class="n">U_matrix_kanamori</span><span class="p">(</span><span class="n">norb</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">J</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">triqs.operators.util.hamiltonians</span> <span class="kn">import</span> <span class="n">h_int_kanamori</span>
+
+<span class="n">h_int</span> <span class="o">=</span> <span class="n">h_int_kanamori</span><span class="p">(</span><span class="n">spin_names</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">KanMat1</span><span class="p">,</span> <span class="n">KanMat2</span><span class="p">,</span> <span class="n">J</span><span class="p">,</span> <span class="n">off_diag</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">h_int</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
+<span class="n">N</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span> <span class="n">n</span><span class="p">(</span><span class="n">spin</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span> <span class="k">for</span> <span class="n">spin</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="n">spin_names</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">norb</span><span class="p">))</span> <span class="p">])</span>
+
+<span class="n">mu</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="mi">5</span><span class="o">*</span><span class="n">U</span> <span class="o">-</span> <span class="mi">10</span><span class="o">*</span><span class="n">J</span><span class="p">)</span>
+
+<span class="n">h_int</span> <span class="o">-=</span> <span class="n">mu</span> <span class="o">*</span> <span class="n">N</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+2.2*c_dag(&#39;do&#39;,0)*c_dag(&#39;do&#39;,1)*c(&#39;do&#39;,1)*c(&#39;do&#39;,0) + 2.2*c_dag(&#39;do&#39;,0)*c_dag(&#39;do&#39;,2)*c(&#39;do&#39;,2)*c(&#39;do&#39;,0) + 0.8*c_dag(&#39;do&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,2)*c(&#39;do&#39;,2) + 0.8*c_dag(&#39;do&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;do&#39;,1) + 4.6*c_dag(&#39;do&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;do&#39;,0) + 3*c_dag(&#39;do&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;do&#39;,0) + 0.8*c_dag(&#39;do&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;do&#39;,1) + 3*c_dag(&#39;do&#39;,0)*c_dag(&#39;up&#39;,2)*c(&#39;up&#39;,2)*c(&#39;do&#39;,0) + 0.8*c_dag(&#39;do&#39;,0)*c_dag(&#39;up&#39;,2)*c(&#39;up&#39;,0)*c(&#39;do&#39;,2) + 2.2*c_dag(&#39;do&#39;,1)*c_dag(&#39;do&#39;,2)*c(&#39;do&#39;,2)*c(&#39;do&#39;,1) + 0.8*c_dag(&#39;do&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;do&#39;,0) + 3*c_dag(&#39;do&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;do&#39;,1) + 0.8*c_dag(&#39;do&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,2)*c(&#39;do&#39;,2) + 4.6*c_dag(&#39;do&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;do&#39;,1) + 0.8*c_dag(&#39;do&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;do&#39;,0) + 3*c_dag(&#39;do&#39;,1)*c_dag(&#39;up&#39;,2)*c(&#39;up&#39;,2)*c(&#39;do&#39;,1) + 0.8*c_dag(&#39;do&#39;,1)*c_dag(&#39;up&#39;,2)*c(&#39;up&#39;,1)*c(&#39;do&#39;,2) + 0.8*c_dag(&#39;do&#39;,2)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,2)*c(&#39;do&#39;,0) + 3*c_dag(&#39;do&#39;,2)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;do&#39;,2) + 0.8*c_dag(&#39;do&#39;,2)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,2)*c(&#39;do&#39;,1) + 3*c_dag(&#39;do&#39;,2)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;do&#39;,2) + 4.6*c_dag(&#39;do&#39;,2)*c_dag(&#39;up&#39;,2)*c(&#39;up&#39;,2)*c(&#39;do&#39;,2) + 0.8*c_dag(&#39;do&#39;,2)*c_dag(&#39;up&#39;,2)*c(&#39;up&#39;,1)*c(&#39;do&#39;,1) + 0.8*c_dag(&#39;do&#39;,2)*c_dag(&#39;up&#39;,2)*c(&#39;up&#39;,0)*c(&#39;do&#39;,0) + 2.2*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0) + 2.2*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,2)*c(&#39;up&#39;,2)*c(&#39;up&#39;,0) + 2.2*c_dag(&#39;up&#39;,1)*c_dag(&#39;up&#39;,2)*c(&#39;up&#39;,2)*c(&#39;up&#39;,1)
+</pre></div></div>
+</div>
 </section>
 </section>
 <section id="Step-3---Hybridization-function">
 <h2>Step 3 - Hybridization function<a class="headerlink" href="#Step-3---Hybridization-function" title="Link to this heading"></a></h2>
-<section id="examples-2">
-<span id="id2"></span><h3>Examples<a class="headerlink" href="#examples-2" title="Link to this heading"></a></h3>
+<section id="id1">
+<h3>Examples<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">make_gf_dlr_imtime</span><span class="p">,</span> <span class="n">make_gf_dlr_imfreq</span>
+<span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">inverse</span><span class="p">,</span> <span class="n">iOmega_n</span>
+
+<span class="k">for</span> <span class="n">bidx</span><span class="p">,</span> <span class="n">delta_tau</span> <span class="ow">in</span> <span class="n">S</span><span class="o">.</span><span class="n">Delta_tau</span><span class="p">:</span>
+    <span class="n">delta_w</span> <span class="o">=</span> <span class="n">make_gf_dlr_imfreq</span><span class="p">(</span><span class="n">delta_tau</span><span class="p">)</span>
+    <span class="n">delta_w</span> <span class="o">&lt;&lt;</span> <span class="n">inverse</span><span class="p">(</span><span class="n">iOmega_n</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">delta_tau</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">make_gf_dlr_imtime</span><span class="p">(</span><span class="n">delta_w</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">make_gf_dlr_imtime</span><span class="p">,</span> <span class="n">make_gf_dlr_imfreq</span><span class="p">,</span> <span class="n">SemiCircular</span>
+
+<span class="k">for</span> <span class="n">bidx</span><span class="p">,</span> <span class="n">delta_tau</span> <span class="ow">in</span> <span class="n">S</span><span class="o">.</span><span class="n">Delta_tau</span><span class="p">:</span>
+    <span class="n">delta_w</span> <span class="o">=</span> <span class="n">make_gf_dlr_imfreq</span><span class="p">(</span><span class="n">delta_tau</span><span class="p">)</span>
+    <span class="n">delta_w</span> <span class="o">&lt;&lt;</span> <span class="n">SemiCircular</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
+    <span class="n">delta_tau</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">make_gf_dlr_imtime</span><span class="p">(</span><span class="n">delta_w</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
 </section>
 </section>
 <section id="Step-4---Self-consistent-solution">
 <h2>Step 4 - Self-consistent solution<a class="headerlink" href="#Step-4---Self-consistent-solution" title="Link to this heading"></a></h2>
-<section id="examples-3">
-<span id="id3"></span><h3>Examples<a class="headerlink" href="#examples-3" title="Link to this heading"></a></h3>
-</section>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">S</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">h_int</span><span class="o">=</span><span class="n">h_int</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+AdaPol: Hybridization fit accuracy 1.31E-07, using 5 poles.
+(Order, N_Diags) = [(1, 1), (2, 60)]
+max_order = 2
+
+ iter |   conv   |    Z-1
+------+----------+-----------
+    1 | 1.95E-01 | +2.22E-16
+    2 | 3.68E-02 | +1.11E-15
+    3 | 2.64E-02 | +2.22E-16
+    4 | 3.25E-03 | -3.33E-16
+    5 | 1.83E-03 | -2.22E-16
+    6 | 6.63E-04 | +2.22E-16
+    7 | 6.22E-05 | +2.22E-16
+    8 | 6.54E-05 | -9.99E-16
+    9 | 1.34E-05 | +2.22E-16
+   10 | 3.23E-06 | +0.00E+00
+
+Timing:                               incl.     excl.
+------------------------------------------------------------
+Dyson equation:                      17.747    17.747   8.5% |--|
+Hybridization compression (AAA):      0.245     0.245   0.1% |
+Pseudo-particle self-energy:        171.026   171.026  82.3% |--------------------------------|
+Single particle Green&#39;s function:    15.046    15.046   7.2% |--|
+Other:                                3.631     3.631   1.7% ||
+------------------------------------------------------------
+Total:                                        207.696 100.0%
+
+</pre></div></div>
+</div>
 </section>
 <section id="Step-5---Single-particle-response-function">
 <h2>Step 5 - Single particle response function<a class="headerlink" href="#Step-5---Single-particle-response-function" title="Link to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">G_tau</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Green Function G composed of 2 blocks:
+ Greens Function G_up with mesh DLR imaginary time mesh of size 32 with beta = 5, statistics = Fermion, w_max = 50, eps = 1e-08 and target_shape (3, 3):
+
+ Greens Function G_do with mesh DLR imaginary time mesh of size 32 with beta = 5, statistics = Fermion, w_max = 50, eps = 1e-08 and target_shape (3, 3):
+
+
+</pre></div></div>
+</div>
+</section>
+<section id="Step-6---Store-solver-to-disk">
+<h2>Step 6 - Store solver to disk<a class="headerlink" href="#Step-6---Store-solver-to-disk" title="Link to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">h5</span> <span class="kn">import</span> <span class="n">HDFArchive</span>
+
+<span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;data_soehyb_result.h5&#39;</span>
+<span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">A</span><span class="p">:</span>
+    <span class="n">A</span><span class="p">[</span><span class="s1">&#39;S&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Step-7---Read-result-from-disk">
+<h2>Step 7 - Read result from disk<a class="headerlink" href="#Step-7---Read-result-from-disk" title="Link to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">A</span><span class="p">:</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="s1">&#39;S&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Step-7---Postprocessing-and-visualization">
+<h2>Step 7 - Postprocessing and visualization<a class="headerlink" href="#Step-7---Postprocessing-and-visualization" title="Link to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">triqs.plot.mpl_interface</span> <span class="kn">import</span> <span class="n">plt</span><span class="p">,</span> <span class="n">oplot</span><span class="p">,</span> <span class="n">oplotr</span><span class="p">,</span> <span class="n">oploti</span>
+
+<span class="n">oplotr</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">G_tau</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$G(\tau)$&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/user_guide_Step_by_step_22_0.svg" src="../_images/user_guide_Step_by_step_22_0.svg" /></div>
+</div>
 </section>
 </section>
 
