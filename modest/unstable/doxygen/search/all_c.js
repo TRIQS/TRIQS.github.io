@@ -4,7 +4,7 @@ var searchData=
   ['make_5fblock2_5fgf_1',['make_block2_gf',['../namespacetriqs_1_1gfs.html#aa36d4f190a3a83137ed14a18c234f56d',1,'triqs::gfs']]],
   ['make_5fdensity_5fdensity_2',['make_density_density',['../group__hamiltonian.html#ga49f093228f4f94b94dbb6a20372eef1e',1,'triqs']]],
   ['make_5fembedding_3',['make_embedding',['../group__embedding.html#ga33869c3fa45b7419f7e7d22d04541726',1,'triqs::modest']]],
-  ['make_5fembedding_5fwith_5fclusters_4',['make_embedding_with_clusters',['../namespacetriqs_1_1modest.html#a2eeb6a1688926f08b0f0bed310b53398',1,'triqs::modest']]],
+  ['make_5fembedding_5fwith_5fclusters_4',['make_embedding_with_clusters',['../group__embedding.html#ga2eeb6a1688926f08b0f0bed310b53398',1,'triqs::modest']]],
   ['make_5fembedding_5fwith_5fequivalences_5',['make_embedding_with_equivalences',['../namespacetriqs_1_1modest.html#a9e00bc14349ff74cb106864c21db01a1',1,'triqs::modest']]],
   ['make_5fembedding_5fwith_5fno_5fequivalences_6',['make_embedding_with_no_equivalences',['../namespacetriqs_1_1modest.html#a6a509bcc45e91b6d5045cd1a3bf58f38',1,'triqs::modest']]],
   ['make_5fkanamori_7',['make_kanamori',['../group__hamiltonian.html#gafc2f795f80bf0933f16286daf3d28316',1,'triqs']]],
