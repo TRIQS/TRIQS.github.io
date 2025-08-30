@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['u_5fmatrix_5fin_5flocal_5fbasis_0',['U_matrix_in_local_basis',['../group__hamiltonian.html#ga6f959c22f2c17ab9d0ad25c4ba6de3f2',1,'triqs']]],
-  ['u_5fmatrix_5fin_5fspherical_5fbasis_1',['U_matrix_in_spherical_basis',['../group__hamiltonian.html#gaed06bfa010eb8a30a879a02a96a01021',1,'triqs']]],
-  ['utilities_2',['utilities',['../group__utils.html',1,'Utilities'],['../documentation.html#autotoc_md8',1,'Utilities']]]
+  ['value_5fformatter_0',['value_formatter',['../structfmt_1_1formatter_3_01nda_1_1matrix_3_01U_01_4_01_4.html#ae2712cf11d8b4bb630acdce7ae0b868d',1,'fmt::formatter&lt; nda::matrix&lt; U &gt; &gt;']]],
+  ['vasp_1',['VASP',['../namespacetriqs_1_1modest.html#ae8092f1e5bdfaf796970405554c5467aae99753a8203cfe3bdda481961b33a17e',1,'triqs::modest']]],
+  ['vasp_2ecpp_2',['Vasp.cpp',['../Vasp_8cpp.html',1,'']]]
 ];

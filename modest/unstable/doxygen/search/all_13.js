@@ -1,14 +1,6 @@
 var searchData=
 [
-  ['test_20example_0',['Example 1: Test example',['../ex1.html',1,'']]],
-  ['the_20examples_1',['Compiling the examples',['../examples.html#compiling',1,'']]],
-  ['thetaprojectors_2',['ThetaProjectors',['../namespacetriqs_1_1modest.html#ad7047b4cbbeb3d29caf7b84820e2b53ea94b40f4fbc32376720168ffd984a2980',1,'triqs::modest']]],
-  ['to_20start_3',['Where to start?',['../index.html#start',1,'']]],
-  ['to_5fvector_4',['to_vector',['../namespacetriqs.html#afc88476a1fae03e94e537eb6e10744f6',1,'triqs']]],
-  ['to_5fvector_2ehpp_5',['to_vector.hpp',['../to__vector_8hpp.html',1,'']]],
-  ['total_6',['total',['../structtriqs_1_1modest_1_1spectral__function__w.html#acde67d6bb20d54fb53947a5e3f8cfe57',1,'triqs::modest::spectral_function_w']]],
-  ['triqs_7',['triqs',['../namespacetriqs.html',1,'']]],
-  ['triqs_3a_3agfs_8',['gfs',['../namespacetriqs_1_1gfs.html',1,'triqs']]],
-  ['triqs_3a_3amodest_9',['modest',['../namespacetriqs_1_1modest.html',1,'triqs']]],
-  ['triqs_3a_3amodest_3a_3adft_5fcode_10',['dft_code',['../namespacetriqs_1_1modest_1_1dft__code.html',1,'triqs::modest']]]
+  ['u_5fmatrix_5fin_5flocal_5fbasis_0',['U_matrix_in_local_basis',['../group__hamiltonian.html#ga6f959c22f2c17ab9d0ad25c4ba6de3f2',1,'triqs']]],
+  ['u_5fmatrix_5fin_5fspherical_5fbasis_1',['U_matrix_in_spherical_basis',['../group__hamiltonian.html#gaed06bfa010eb8a30a879a02a96a01021',1,'triqs']]],
+  ['utilities_2',['utilities',['../group__utils.html',1,'Utilities'],['../documentation.html#autotoc_md8',1,'Utilities']]]
 ];

@@ -25,28 +25,35 @@
 var NAVTREE =
 [
   [ "TRIQS/triqs_modest", "index.html", [
-    [ "Overview", "index.html", "index" ],
-    [ "Installation", "installation.html", null ],
-    [ "Examples", "examples.html", [
-      [ "Example 1: Test example", "ex1.html", null ]
-    ] ],
+    [ "Overview", "index.html", null ],
     [ "API Documentation", "documentation.html", [
-      [ "One-body elements", "group__one__body__elements.html", null ],
-      [ "Embedding", "group__embedding.html", null ],
+      [ "One-body elements", "group__one__body__elements.html", [
+        [ "band_dispersion", "structtriqs_1_1modest_1_1band__dispersion.html", null ],
+        [ "downfolding_projector", "structtriqs_1_1modest_1_1downfolding__projector.html", null ],
+        [ "ibz_symmetry_ops", "structtriqs_1_1modest_1_1ibz__symmetry__ops.html", null ],
+        [ "local_space", "classtriqs_1_1modest_1_1local__space.html", null ],
+        [ "one_body_elements_on_grid", "structtriqs_1_1modest_1_1one__body__elements__on__grid.html", null ],
+        [ "one_body_elements_tb", "structtriqs_1_1modest_1_1one__body__elements__tb.html", null ]
+      ] ],
+      [ "Embedding", "group__embedding.html", [
+        [ "embedding", "classtriqs_1_1modest_1_1embedding.html", null ]
+      ] ],
       [ "Local Green's function", "group__gloc.html", null ],
       [ "Atomic levels and Hybridization", "group__hybridization.html", null ],
       [ "Densities and Chemical Potentials", "group__mu.html", null ],
       [ "Interaction Hamiltonians", "group__hamiltonian.html", null ],
       [ "Post-processing", "group__post.html", null ],
       [ "Utilities", "group__utils.html", [
-        [ "Double counting", "group__double__counting.html", null ],
-        [ "File I/O", "group__checkpoint.html", null ],
+        [ "Double counting", "group__double__counting.html", [
+          [ "dc_solver", "classtriqs_1_1modest_1_1dc__solver.html", null ]
+        ] ],
+        [ "File I/O", "group__checkpoint.html", [
+          [ "checkpoint", "classtriqs_1_1modest_1_1checkpoint.html", null ]
+        ] ],
         [ "Root finders", "group__root.html", null ],
         [ "Green's function analysis", "group__deg.html", null ]
       ] ]
     ] ],
-    [ "Changelog", "@ref changelog", null ],
-    [ "Issues", "issues.html", null ],
     [ "Main homepage", "../index.html", null ]
   ] ]
 ];

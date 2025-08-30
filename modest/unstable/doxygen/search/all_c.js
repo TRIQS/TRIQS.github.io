@@ -1,19 +1,17 @@
 var searchData=
 [
-  ['make_5fblock2_5fdlr_5fgf_0',['make_block2_dlr_gf',['../namespacetriqs_1_1gfs.html#ac12abb3588b662f1bd46a1771e29ba90',1,'triqs::gfs']]],
-  ['make_5fblock2_5fgf_1',['make_block2_gf',['../namespacetriqs_1_1gfs.html#aa36d4f190a3a83137ed14a18c234f56d',1,'triqs::gfs']]],
-  ['make_5fdensity_5fdensity_2',['make_density_density',['../group__hamiltonian.html#ga49f093228f4f94b94dbb6a20372eef1e',1,'triqs']]],
-  ['make_5fembedding_3',['make_embedding',['../group__embedding.html#ga33869c3fa45b7419f7e7d22d04541726',1,'triqs::modest']]],
-  ['make_5fembedding_5fwith_5fclusters_4',['make_embedding_with_clusters',['../group__embedding.html#ga2eeb6a1688926f08b0f0bed310b53398',1,'triqs::modest']]],
-  ['make_5fembedding_5fwith_5fequivalences_5',['make_embedding_with_equivalences',['../namespacetriqs_1_1modest.html#a9e00bc14349ff74cb106864c21db01a1',1,'triqs::modest']]],
-  ['make_5fembedding_5fwith_5fno_5fequivalences_6',['make_embedding_with_no_equivalences',['../namespacetriqs_1_1modest.html#a6a509bcc45e91b6d5045cd1a3bf58f38',1,'triqs::modest']]],
-  ['make_5fkanamori_7',['make_kanamori',['../group__hamiltonian.html#gafc2f795f80bf0933f16286daf3d28316',1,'triqs']]],
-  ['make_5fmatrix_5ffrom_5fpermutation_8',['make_matrix_from_permutation',['../namespacenda.html#a9f59d1081a34daeea9a0677b7e3c25c2',1,'nda']]],
-  ['make_5fobe_5ffrom_5ftb_9',['make_obe_from_tb',['../namespacetriqs_1_1modest.html#a391bd6b2030a8c225bcc670735ea54b4',1,'triqs::modest']]],
-  ['make_5fslater_10',['make_slater',['../group__hamiltonian.html#ga50200e7ffe12e263b2f046a1d1e0574f',1,'triqs']]],
-  ['make_5fzero_5fimp_5fself_5fenergies_11',['make_zero_imp_self_energies',['../classtriqs_1_1modest_1_1embedding.html#ab23a74d05b6f706cc8776c52fc5e5243',1,'triqs::modest::embedding']]],
-  ['matrix_5fvalued_12',['matrix_valued',['../structtriqs_1_1modest_1_1band__dispersion.html#a33508921764a55709cffa89ffe19e651',1,'triqs::modest::band_dispersion']]],
-  ['maybe_20even_20more_20details_13',['Maybe even more details',['../ex1.html#ex1_p2',1,'']]],
-  ['more_20details_14',['more details',['../ex1.html#ex1_p2',1,'Maybe even more details'],['../ex1.html#ex1_p1',1,'More details']]],
-  ['mu_15',['mu',['../structtriqs_1_1modest_1_1iteration__data.html#a19c1d97c6c35068fc1456b9c691d27ce',1,'triqs::modest::iteration_data']]]
+  ['n_5falpha_0',['n_alpha',['../classtriqs_1_1modest_1_1embedding.html#a7870d4ad3f266f748d3dd18d7ac7168d',1,'triqs::modest::embedding']]],
+  ['n_5fatoms_1',['n_atoms',['../classtriqs_1_1modest_1_1local__space.html#ab35b5fcd1fbba6d1c07c650f97798190',1,'triqs::modest::local_space']]],
+  ['n_5fbands_5fper_5fk_2',['n_bands_per_k',['../structtriqs_1_1modest_1_1band__dispersion.html#a36005fa4518f20766e28bc33fd6b240f',1,'triqs::modest::band_dispersion::n_bands_per_k'],['../structtriqs_1_1modest_1_1downfolding__projector.html#a6789a4cab326442094efe1768554e81f',1,'triqs::modest::downfolding_projector::n_bands_per_k']]],
+  ['n_5fgamma_3',['n_gamma',['../classtriqs_1_1modest_1_1embedding.html#a3adb9202d2c26396c7cba7ea7a9120a8',1,'triqs::modest::embedding']]],
+  ['n_5fimpurities_4',['n_impurities',['../classtriqs_1_1modest_1_1embedding.html#a33ecaeea0a5a8e2ca229de1537e9d340',1,'triqs::modest::embedding']]],
+  ['n_5fk_5',['n_k',['../structtriqs_1_1modest_1_1band__dispersion.html#a6e8078b9fb47768556a9f2985deb712b',1,'triqs::modest::band_dispersion']]],
+  ['n_5fnu_6',['N_nu',['../structtriqs_1_1modest_1_1band__dispersion.html#aac2dd2d047753fca9c54801f0d4e833d',1,'triqs::modest::band_dispersion']]],
+  ['n_5fsigma_7',['n_sigma',['../classtriqs_1_1modest_1_1embedding.html#a3f471effeb4f0f9640effdefe6196fb6',1,'triqs::modest::embedding::n_sigma()'],['../classtriqs_1_1modest_1_1local__space.html#a4080dffd64ff57f118694a3311c122c2',1,'triqs::modest::local_space::n_sigma()']]],
+  ['names_8',['names',['../structtriqs_1_1gfs_1_1gf__struct2__t.html#ab6f5d2e7107b07b352d6691d8ea7a53a',1,'triqs::gfs::gf_struct2_t']]],
+  ['nda_9',['nda',['../namespacenda.html',1,'']]],
+  ['nda_5fpretty_5fprinter_2ehpp_10',['nda_pretty_printer.hpp',['../nda__pretty__printer_8hpp.html',1,'']]],
+  ['nda_5fsupp_2ehpp_11',['nda_supp.hpp',['../nda__supp_8hpp.html',1,'']]],
+  ['noncolinear_12',['NonColinear',['../namespacetriqs_1_1modest.html#a4ef5a7738a760ba4eeba1650ddd849b1a18d9f0c49667b2c9c2982ed6aa7a248c',1,'triqs::modest']]],
+  ['nonpolarized_13',['NonPolarized',['../namespacetriqs_1_1modest.html#a4ef5a7738a760ba4eeba1650ddd849b1a01cb1c7977867d71c3734e326c54572c',1,'triqs::modest']]]
 ];
