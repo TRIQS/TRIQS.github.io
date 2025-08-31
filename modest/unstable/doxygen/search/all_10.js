@@ -10,7 +10,7 @@ var searchData=
   ['read_5fspin_5fkind_7',['read_spin_kind',['../namespacetriqs_1_1modest.html#aa083ec80b54be26addfe22235d62aac7',1,'triqs::modest']]],
   ['readmode_8',['ReadMode',['../namespacetriqs_1_1modest.html#ad7047b4cbbeb3d29caf7b84820e2b53e',1,'triqs::modest']]],
   ['replace_9',['replace',['../classtriqs_1_1modest_1_1embedding.html#ac873a8e039221a7b5300229e33eef0e3',1,'triqs::modest::embedding']]],
-  ['root_20finders_10',['root finders',['../group__root.html',1,'Root finders'],['../documentation.html#autotoc_md10',1,'Root finders']]],
+  ['root_20finders_10',['Root finders',['../group__root.html',1,'']]],
   ['root_5ffinder_11',['root_finder',['../namespacetriqs.html#a9b8b50ef8bb488fe2f3e709eecbc437f',1,'triqs']]],
   ['root_5ffinder_2ehpp_12',['root_finder.hpp',['../root__finder_8hpp.html',1,'']]],
   ['rotate_5flocal_5fbasis_13',['rotate_local_basis',['../structtriqs_1_1modest_1_1downfolding__projector.html#a8fdb25d7ef841d2d93eaa9f52aa1d6c7',1,'triqs::modest::downfolding_projector::rotate_local_basis()'],['../namespacetriqs_1_1modest.html#a331c103d7182924b874064ce368fdb03',1,'triqs::modest::rotate_local_basis(nda::array&lt; nda::matrix&lt; dcomplex &gt;, 2 &gt; const &amp;U, one_body_elements_on_grid const &amp;x)'],['../namespacetriqs_1_1modest.html#abb025b8248cbfba3054b9dd560b93451',1,'triqs::modest::rotate_local_basis(nda::array&lt; nda::matrix&lt; dcomplex &gt;, 2 &gt; const &amp;U, ibz_symmetry_ops const &amp;x)']]],

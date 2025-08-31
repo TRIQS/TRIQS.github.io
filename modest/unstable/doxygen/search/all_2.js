@@ -9,5 +9,5 @@ var searchData=
   ['cmat_5ft_6',['cmat_t',['../namespacetriqs.html#afc10b20f3ff1c922287a1181b63e8420',1,'triqs']]],
   ['cmat_5fvt_7',['cmat_vt',['../namespacetriqs.html#ae5aa74fdfd533471ffd1e6abedd7e2d4',1,'triqs']]],
   ['correlated_8',['Correlated',['../namespacetriqs_1_1modest.html#ad7047b4cbbeb3d29caf7b84820e2b53ea6139ad1a1a89a915abbcf0f6f8f400c8',1,'triqs::modest']]],
-  ['counting_9',['counting',['../group__double__counting.html',1,'Double Counting'],['../documentation.html#autotoc_md12',1,'Double counting']]]
+  ['counting_9',['Double Counting',['../group__double__counting.html',1,'']]]
 ];

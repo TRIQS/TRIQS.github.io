@@ -109,84 +109,92 @@ $(document).ready(function(){initNavTree('documentation.html',''); initResizable
 <ul><ul><li class="level2"><a href="#autotoc_md1">One-body elements</a></li>
 <li class="level2"><a href="#autotoc_md2">Embedding</a></li>
 <li class="level2"><a href="#autotoc_md3">Local Green&#39;s function</a></li>
-<li class="level2"><a href="#autotoc_md4">Hybridization function</a></li>
+<li class="level2"><a href="#autotoc_md4">Atomic levels and Hybridization</a></li>
 <li class="level2"><a href="#autotoc_md5">Densities and Chemical Potentials</a></li>
 <li class="level2"><a href="#autotoc_md6">Interaction Hamiltonians</a></li>
 <li class="level2"><a href="#autotoc_md7">Post-processing</a></li>
-<li class="level2"><a href="#autotoc_md8">Utilities</a><ul><li class="level3"><a href="#autotoc_md9">File I/O</a></li>
-<li class="level3"><a href="#autotoc_md10">Root finders</a></li>
-<li class="level3"><a href="#autotoc_md11">Green&#39;s function symmetries</a></li>
-<li class="level3"><a href="#autotoc_md12">Double counting</a></li>
-</ul>
-</li>
+<li class="level2"><a href="#autotoc_md8">Utilities</a></li>
 </ul>
 </ul>
 </div>
 <div class="textblock"><p>The Modular Electronic Structure Toolkit (ModEST) provides the necessary tooling to perform DMFT-type calculations in the context of electronic structure including density-functional theory (DFT) and many-body perturbation theory (MBPT).</p>
-<p>Modularity is achieved through four key abstractions</p><ul>
+<p>Modularity is achieved through four key abstractions</p>
+<ul>
 <li>one-body elements,</li>
 <li>embedding,</li>
 <li>k-summation</li>
 </ul>
-<p>These abstractions let you describe complex DMFT problems &ndash; from simple single-site DMFT to multi-impurity, spin-orbit, or cluster DMFT &ndash;in a clean and modular way.</p>
+<p>These abstractions let you describe complex DMFT problems &ndash; from simple single-site DMFT to multi-impurity, spin-orbit, or cluster DMFT &ndash; in a clean and modular way.</p>
 <p>Efficiency and performance are achieved via a modern C++ implementation, and all functionality is fully exposed in Python, making it possible to prototype and run production calculations in either language.</p>
 <p>If you are looking for a specific function, class, etc., try using the search bar in the top left corner.</p>
 <hr  />
 <h2><a class="anchor" id="autotoc_md1"></a>
 One-body elements</h2>
-<p><a class="el" href="group__one__body__elements.html">One-body elements</a> (obe for short) contains all of the one-body data that is typically converted from a density-functional theory (DFT) calculation or Wannier90 calculation. The one-body elements struct contains four components (obe_components) :</p>
+<p><a class="el" href="group__one__body__elements.html">One-body elements</a> (obe for short) contains all of the one-body data that is typically converted from a density-functional theory (DFT) calculation or Wannier90 calculation. The one-body elements struct contains four components:</p>
 <ul>
-<li>local_space defines the local correlated subspace to be solved within DMFT.</li>
-<li>band_dispersion contains the band dispersion \(\varepsilon(k, \nu, \sigma)\) where \(\varepsilon\) is the energy at momentum k, band index \(\sigma\), and spin \(\sigma\).</li>
-<li>downfolding_projector contains the projector which downfolds from Bloch space 𝓑 (indexed by \(\nu\)) to the correlated space (index by \(m\)). <br  />
-</li>
-<li>ibz_symmetry_ops contains the operations to symmetrize observables over the full Brillouin zone.</li>
+<li><a class="el" href="classtriqs_1_1modest_1_1local__space.html">triqs::modest::local_space</a> defines the local correlated subspace to be solved within DMFT.</li>
+<li><a class="el" href="structtriqs_1_1modest_1_1band__dispersion.html">triqs::modest::band_dispersion</a> contains the band dispersion \(\varepsilon(k, \nu, \sigma)\) where \(\varepsilon\) is the energy at momentum k, band index \(\sigma\), and spin \(\sigma\).</li>
+<li><a class="el" href="structtriqs_1_1modest_1_1downfolding__projector.html">triqs::modest::downfolding_projector</a> contains the projector which downfolds from Bloch space \( \mathcal{B} \) (indexed by \(\nu\)) to the correlated space (index by \(m\)).</li>
+<li><a class="el" href="structtriqs_1_1modest_1_1ibz__symmetry__ops.html">triqs::modest::ibz_symmetry_ops</a> contains the operations to symmetrize observables over the full Brillouin zone.</li>
 </ul>
 <p>To make it easy to build this object, ModEST provides factory functions that convert raw DFT data (from codes like VASP, Wien2k, or Wannier90) into fully prepared OBE objects ready for DMFT.</p>
 <h2><a class="anchor" id="autotoc_md2"></a>
 Embedding</h2>
-<p>The <b>embedding</b> object is the central controller of the DMFT problem: it defines how the correlated subspace ( \(\mathcal{C}\)) is partitioned into impurityies and handles the bookkeeping needed to map back and forth between the lattice and the impurities.</p>
+<p>The <a class="el" href="group__embedding.html">Embedding</a> abstraction is the central controller of the DMFT problem: it defines how the correlated subspace ( \(\mathcal{C}\)) is partitioned into impurities and handles the bookkeeping needed to map back and forth between the lattice and the impurities.</p>
 <p>Typical use cases covered by embedding:</p>
 <ul>
-<li><b>Equivalent atoms</b>: use the same impurity model (i.e. same \(n_{\mathrm{imp}}\)) for different blocks $\alpha$.</li>
-<li><b>Magnetic order</b>: just reverse the spin for some atoms, \(\tau(\sigma) = 1-\sigma\)</li>
-<li><b>Splitting impurity models</b> : Depending on the block structure of the problem, the corresponding impurity model connected to atom $a$ can be <em>split</em>. Different impurity solvers can then be used for each of these split impurity models. The self-energies from both models map back to the a single atom $a$. Or a trivial solver is used to obtain zero self-energy (<em>drop</em>).</li>
-<li><b>cluster DMFT</b>: re-group a subset of atoms $a$ into a larger <em>super atom</em> which will be treated as a cluster DMFT problem.</li>
+<li><b>Equivalent atoms</b>: Use the same impurity model (i.e. same \(n_{\mathrm{imp}}\)) for different blocks \( \alpha \).</li>
+<li><b>Magnetic order</b>: Just reverse the spin for some atoms, \(\tau(\sigma) = 1-\sigma\).</li>
+<li><b>Splitting impurity models</b>: Depending on the block structure of the problem, the corresponding impurity model connected to atom \(a\) can be <em>split</em>. Different impurity solvers can then be used for each of these split impurity models. The self-energies from both models map back to the a single atom \(a\). Or a trivial solver is used to obtain zero self-energy (<em>drop</em>).</li>
+<li><b>cluster DMFT</b>: Re-group a subset of atoms \(a\) into a larger <em>super atom</em> which will be treated as a cluster DMFT problem.</li>
 </ul>
-<p>The embedding object provides:</p><ul>
-<li>embedding_factories &ndash; convenient ways to construct common embeddings.</li>
-<li>embedding_ops &ndash; operations to adapt and modify an embedding (e.g., split, drop, etc.).</li>
-<li>embedding_methods &ndash; methods to map data between impurity and embed spaces.</li>
+<p>The embedding object provides:</p>
+<ul>
+<li>Factory functions to conveniently construct common embeddings.</li>
+<li>Operations to adapt and modify an embedding (e.g., split, drop, etc.).</li>
+<li>Methods to map data between impurity and embed spaces.</li>
 </ul>
 <p>This abstrction simplifies the DMFT loop, making it easy to construct arbitrary embedding scenarios.</p>
 <h2><a class="anchor" id="autotoc_md3"></a>
 Local Green's function</h2>
-<p>A central quantity of the DMFT self-consistency condition &ndash; the local Green's function defined as $$ [ G_{\mathrm{loc}}^{\sigma} ]_{m m'} = \sum_{\mathbf{k}} P_{m\nu}^{\sigma}(\mathbf{k}) \Big [ (\omega + \mu)\delta_{\nu\nu'} - H^{\sigma}_{\nu\nu'}(\mathbf{k}) - [P_{m\nu}^{\sigma}]^{\dagger}\Sigma_{\mathrm{embed}}P_{m'\nu'}^{\sigma}(\mathbf{k}) \Big ]^{-1} [P_{m'\nu'}^{\sigma}]^{\dagger},$$ where \(\omega\) is a frequency (either real- or Matsubra), \(\mu\) is the chemical potential, \(H(\mathbf{k})\) is the one-body Hamiltonian, \(P(\mathbf{k})\) are the projectors from the band to the orbital basis, and \(\Sigma_{\mathrm{embed}}\) is the embedded self-energy.</p>
+<p>A central quantity of the DMFT self-consistency condition &ndash; the <a class="el" href="group__gloc.html">Local Green's function</a> is defined as  </p><p class="formulaDsp">
+\[
+  [ G_{\mathrm{loc}}^{\sigma} ]_{m m&#39;} = \sum_{\mathbf{k}} P_{m\nu}^{\sigma}(\mathbf{k}) \Big [ (\omega + \mu)\delta_{\nu\nu&#39;} -
+  H^{\sigma}_{\nu\nu&#39;}(\mathbf{k}) - [P_{m\nu}^{\sigma}]^{\dagger} \Sigma_{\mathrm{embed}}P_{m&#39;\nu&#39;}^{\sigma}(\mathbf{k}) \Big ]^{-1}
+  [P_{m&#39;\nu&#39;}^{\sigma}]^{\dagger},
+\]
+</p>
+<p> where \(\omega\) is a frequency (either real- or Matsubra), \(\mu\) is the chemical potential, \(H(\mathbf{k})\) is the one-body Hamiltonian, \(P(\mathbf{k})\) are the projectors from the band to the orbital basis, and \(\Sigma_{\mathrm{embed}}\) is the embedded self-energy.</p>
 <p>ModEST computes this efficiently:</p>
 <ul>
-<li><b>Woodbury</b>: reduces the cost of matrix inversion from cubic in the number of bands to linear.</li>
-<li><b>Adaptive Brillouin zone integration</b>: for tight-binding models, allows you to specify desired integration accuracy, improving predictions of transport properties.</li>
+<li><b>Woodbury</b>: Reduces the cost of matrix inversion from cubic in the number of bands to linear.</li>
+<li><b>Adaptive Brillouin zone integration</b>: For tight-binding models, allows you to specify desired integration accuracy, improving predictions of transport properties.</li>
 </ul>
 <h2><a class="anchor" id="autotoc_md4"></a>
-Hybridization function</h2>
-<p>The hybridization function \(\Delta(\omega)\) is a key input to TRIQS impurity solvers. It describes the coupling of each impurity to the bath:</p>
-<p>$$ [\Delta^{\sigma}(\omega)]_{mm'} = \omega - \tilde{\varepsilon} - G_{\mathrm{loc}}^{-1}(\omega) - \Sigma_{\mathrm{imp}}(\omega),$$</p>
-<p>where \(\tilde{\varepsilon} = \varepsilon - \mu - \Sigma_{\mathrm{DC}}\).</p>
+Atomic levels and Hybridization</h2>
+<p>The hybridization function \(\Delta(\omega)\) is a key input to TRIQS impurity solvers. It describes the coupling of each impurity to the bath:  </p><p class="formulaDsp">
+\[
+  [\Delta^{\sigma}(\omega)]_{mm&#39;} = \omega - \tilde{\varepsilon} - G_{\mathrm{loc}}^{-1}(\omega) - \Sigma_{\mathrm{imp}}(\omega),
+\]
+</p>
+<p> where \(\tilde{\varepsilon} = \varepsilon - \mu - \Sigma_{\mathrm{DC}}\).</p>
 <h2><a class="anchor" id="autotoc_md5"></a>
 Densities and Chemical Potentials</h2>
-<p>Calculate the total electronic density from the lattice Green's function and search for the chemical potential \(\mu\) that gives a target electorn count. We provide several algorithms optimized for speed and robusness. Due to the modularity you can also leverage exteranl root finding routines to write a custom chemical potential search.</p>
+<p>Calculate the total electronic density from the lattice Green's function and search for the chemical potential \(\mu\) that gives a target electron count. We provide several algorithms optimized for speed and robustness. Due to the modularity you can also leverage external root finding routines to write a custom chemical potential search.</p>
 <h2><a class="anchor" id="autotoc_md6"></a>
 Interaction Hamiltonians</h2>
-<p>To describe local interactions, ModEST provides tools to construct standard interaction Hamiltonians:</p><ul>
-<li>hubb_kan &ndash; Hubbard-Kanamori with density-density, spin-flip, and pair-hopping terms.</li>
-<li>slater &ndash; full rotationally invariant Slater Hamiltonian.</li>
-<li>den_den &ndash; density-density only Hamiltonian.</li>
+<p>To describe local interactions, ModEST provides tools to construct standard interaction <a class="el" href="group__hamiltonian.html">Hamiltonians</a> :</p>
+<ul>
+<li><a class="el" href="group__hamiltonian.html#gafc2f795f80bf0933f16286daf3d28316">triqs::make_kanamori</a> &ndash; Hubbard-Kanamori with density-density, spin-flip, and pair-hopping terms.</li>
+<li><a class="el" href="group__hamiltonian.html#ga50200e7ffe12e263b2f046a1d1e0574f">triqs::make_slater</a> &ndash; full rotationally invariant Slater Hamiltonian.</li>
+<li><a class="el" href="group__hamiltonian.html#ga49f093228f4f94b94dbb6a20372eef1e">triqs::make_density_density</a> &ndash; density-density only Hamiltonian.</li>
 </ul>
 <p>All built using TRIQS many-body operators.</p>
 <p>This design makes it easier to swap and test different double counting schemes.</p>
 <h2><a class="anchor" id="autotoc_md7"></a>
 Post-processing</h2>
-<p>Compute spectral functions and related quantities:</p><ul>
+<p>Compute spectral functions and related quantities:</p>
+<ul>
 <li>\(k\)-resolved spectral functions \(A(k, \omega)\).</li>
 <li>orbital- and atom-resolved \(k\)-summed spectral function \(A_{mm&#39;}(\omega)\).</li>
 </ul>
@@ -194,19 +202,12 @@ Post-processing</h2>
 <h2><a class="anchor" id="autotoc_md8"></a>
 Utilities</h2>
 <p>Extra tools that make life easier:</p>
-<h3><a class="anchor" id="autotoc_md9"></a>
-File I/O</h3>
-<p>No more boilerplated HDF5 code.</p>
-<p>The checkpoint object saved DMFT calculation data (Green's functions, self-energies, etc.) in a clean, standardized HDF5 layout &ndash; automatically organized by iteration.</p>
-<h3><a class="anchor" id="autotoc_md10"></a>
-Root finders</h3>
-<p><a class="el" href="group__root.html">Root finders</a></p>
-<h3><a class="anchor" id="autotoc_md11"></a>
-Green's function symmetries</h3>
-<p><a class="el" href="group__deg.html">Analyze Green's functions</a> analyze and symmetrize degenerate Green's function blocks.</p>
-<h3><a class="anchor" id="autotoc_md12"></a>
-Double counting</h3>
-<p><a class="el" href="group__double__counting.html">Double Counting</a> DFT+DMFT requires subtracting a "double counting" term \(\Sigma_{\mathrm{DC}}\) to avoid counting static correlations twice. ModEST abstracts this into a dedicated solver that computes \(\Sigma_{\mathrm{DC}}\) based on dirrect formulas. </p>
+<ul>
+<li><a class="el" href="group__checkpoint.html">File I/O</a> - No more boilerplated HDF5 code. The checkpoint object saves DMFT calculation data (Green's functions, self-energies, etc.) in a clean, standardized HDF5 layout &ndash; automatically organized by iteration.</li>
+<li><a class="el" href="group__root.html">Root finders</a></li>
+<li><a class="el" href="group__deg.html">Analyze Green's functions</a> - Analyze and symmetrize degenerate Green's function blocks.</li>
+<li><a class="el" href="group__double__counting.html">Double Counting</a> - DFT+DMFT requires subtracting a "double counting" term \(\Sigma_{\mathrm{DC}}\) to avoid counting static correlations twice. ModEST abstracts this into a dedicated solver that computes \(\Sigma_{\mathrm{DC}}\) based on direct formulas. </li>
+</ul>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
