@@ -239,7 +239,7 @@
 
 <div class="viewcode-block" id="TriqsSolver.solve">
 <a class="viewcode-back" href="../../documentation.html#triqs_soehyb.triqs_solver.TriqsSolver.solve">[docs]</a>
-    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h_int</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h_int</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">compress_hybridization</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot; Self-consistent solution of the pseudo-particle Green&#39;s function</span>
 <span class="sd">        and pseudo-particle self-energy.</span>
@@ -252,6 +252,10 @@
 
 <span class="sd">        order : int</span>
 <span class="sd">            Expansion order of the bold hybridization expansion</span>
+
+<span class="sd">        compress_hybridization : bool, optional</span>
+<span class="sd">            Use AAA compression of the hybridization function (default: `True`)</span>
+<span class="sd">            (If `False` the DLR basis is used to represent the hybridization function.)</span>
 
 <span class="sd">        tol : float, optional</span>
 <span class="sd">            Pseudo-particle self-consistency convergence tolerance (default: `1e-9`)</span>
@@ -276,7 +280,8 @@
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="s1">&#39;verbose&#39;</span><span class="p">):</span>
             <span class="n">verbose</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">verbose</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">verbose</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">=</span> <span class="n">order</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">h_int</span> <span class="o">=</span> <span class="n">h_int</span>
@@ -285,7 +290,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">G_iaa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">G0_iaa</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="c1"># Fixme: use S.__setup_initial_guess?</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">delta_iaa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__from_blockgf_to_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Delta_tau</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">set_hybridization</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delta_iaa</span><span class="p">,</span> <span class="n">compress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">set_hybridization</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delta_iaa</span><span class="p">,</span> <span class="n">compress</span><span class="o">=</span><span class="n">compress_hybridization</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">is_root</span><span class="p">()</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="s1">&#39;verbose&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
             <span class="n">order_n_diags</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">fd</span><span class="o">.</span><span class="n">number_of_diagrams</span><span class="p">(</span><span class="n">o</span><span class="p">))</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="p">]</span>
