@@ -282,7 +282,28 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">verbose</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">verbose</span>
-        
+
+        <span class="k">if</span> <span class="n">is_root</span><span class="p">()</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;max_order = </span><span class="si">{</span><span class="n">order</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">n_hybcomb</span><span class="p">(</span><span class="n">order</span><span class="p">):</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot; Number of hybridization function combinations at a given expansion order. &quot;&quot;&quot;</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">fd</span><span class="o">.</span><span class="n">number_of_diagrams</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">n_topologies</span><span class="p">(</span><span class="n">order</span><span class="p">):</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot; Number of diagram topologies for a given expansion order, &quot;&quot;&quot;</span>
+                <span class="kn">from</span> <span class="nn">.diag</span> <span class="kn">import</span> <span class="n">all_connected_pairings</span>
+                <span class="n">num</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">for</span> <span class="n">sign</span><span class="p">,</span> <span class="n">diag</span> <span class="ow">in</span> <span class="n">all_connected_pairings</span><span class="p">(</span><span class="n">order</span><span class="p">):</span>
+                    <span class="n">num</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">return</span> <span class="n">num</span>
+
+            <span class="c1"># -- Display number of topologies and hybridization combinations per order</span>
+
+            <span class="n">order_n_diags</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">n_topologies</span><span class="p">(</span><span class="n">o</span><span class="p">),</span> <span class="n">n_hybcomb</span><span class="p">(</span><span class="n">o</span><span class="p">))</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="p">]</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;(Order, N_Topo, N_HybComb) = </span><span class="si">{</span><span class="n">order_n_diags</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">=</span> <span class="n">order</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">h_int</span> <span class="o">=</span> <span class="n">h_int</span>
         
@@ -291,11 +312,6 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">delta_iaa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__from_blockgf_to_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Delta_tau</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">set_hybridization</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delta_iaa</span><span class="p">,</span> <span class="n">compress</span><span class="o">=</span><span class="n">compress_hybridization</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">is_root</span><span class="p">()</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="s1">&#39;verbose&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
-            <span class="n">order_n_diags</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">fd</span><span class="o">.</span><span class="n">number_of_diagrams</span><span class="p">(</span><span class="n">o</span><span class="p">))</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="p">]</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;(Order, N_Diags) = </span><span class="si">{</span><span class="n">order_n_diags</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;max_order = </span><span class="si">{</span><span class="n">order</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
