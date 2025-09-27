@@ -13,6 +13,7 @@ var searchData=
   ['precision_10',['precision',['../structfmt_1_1formatter_3_01nda_1_1matrix_3_01std_1_1complex_3_01T_01_4_01_4_01_4.html#a969ded922eae134474cda0c7ddf2f893',1,'fmt::formatter&lt; nda::matrix&lt; std::complex&lt; T &gt; &gt; &gt;']]],
   ['printing_2ecpp_11',['printing.cpp',['../printing_8cpp.html',1,'']]],
   ['processing_12',['processing',['../group__post.html',1,'Post processing'],['../documentation.html#autotoc_md7',1,'Post-processing']]],
-  ['projected_5fspectral_5ffunction_13',['projected_spectral_function',['../group__post.html#ga8e95f4b7a0ff6610ebdff9e8d8ba0097',1,'triqs::modest']]],
-  ['proxy_14',['proxy',['../classh5_1_1proxy.html#a1fe27f4ec87a55293faaa68f5eca2050',1,'h5::proxy::proxy()'],['../classh5_1_1proxy.html',1,'h5::proxy']]]
+  ['proj_5fdata_13',['proj_data',['../structtriqs_1_1modest_1_1spectral__function__kw.html#af80762382b366fcfc82e6e362a820b0e',1,'triqs::modest::spectral_function_kw']]],
+  ['projected_5fspectral_5ffunction_14',['projected_spectral_function',['../group__post.html#ga8e95f4b7a0ff6610ebdff9e8d8ba0097',1,'triqs::modest']]],
+  ['proxy_15',['proxy',['../classh5_1_1proxy.html#a1fe27f4ec87a55293faaa68f5eca2050',1,'h5::proxy::proxy()'],['../classh5_1_1proxy.html',1,'h5::proxy']]]
 ];
