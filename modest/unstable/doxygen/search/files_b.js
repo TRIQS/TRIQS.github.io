@@ -1,5 +1,7 @@
 var searchData=
 [
-  ['range_5fsupp_2ehpp_0',['range_supp.hpp',['../range__supp_8hpp.html',1,'']]],
-  ['root_5ffinder_2ehpp_1',['root_finder.hpp',['../root__finder_8hpp.html',1,'']]]
+  ['scoped_5ftimer_2ehpp_0',['scoped_timer.hpp',['../scoped__timer_8hpp.html',1,'']]],
+  ['spherical_5frotation_2ecpp_1',['spherical_rotation.cpp',['../qe_2spherical__rotation_8cpp.html',1,'(Global Namespace)'],['../vasp_2spherical__rotation_8cpp.html',1,'(Global Namespace)'],['../wien2k_2spherical__rotation_8cpp.html',1,'(Global Namespace)']]],
+  ['spherical_5frotation_2ehpp_2',['spherical_rotation.hpp',['../spherical__rotation_8hpp.html',1,'']]],
+  ['streams_2ehpp_3',['streams.hpp',['../streams_8hpp.html',1,'']]]
 ];

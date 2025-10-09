@@ -10,7 +10,7 @@ var searchData=
   ['density_5fnk_7',['density_nk',['../namespacetriqs_1_1modest.html#a17904f7c075e2031baca5af446030097',1,'triqs::modest']]],
   ['density_5fnk_5fmatrix_5fvalued_5fimpl_8',['density_nk_matrix_valued_impl',['../namespacetriqs_1_1modest.html#adc9e7d5e82735742ba5a8d9de3a09d21',1,'triqs::modest']]],
   ['description_9',['description',['../classtriqs_1_1modest_1_1embedding.html#a9809d6751e848c8798ac92874a2b70eb',1,'triqs::modest::embedding']]],
-  ['dft_5fcode_5fto_5fenum_10',['dft_code_to_enum',['../namespacetriqs_1_1modest_1_1dft__code.html#ad50b3abb53f15bb18c1615cb107d3adf',1,'triqs::modest::dft_code']]],
+  ['dft_5fcode_5fto_5fenum_10',['dft_code_to_enum',['../namespacetriqs_1_1modest_1_1dft__tools.html#ab523f2b961de9cf3e2c2c26b16389d85',1,'triqs::modest::dft_tools']]],
   ['dichotomy_11',['dichotomy',['../group__root.html#ga2d68da3ee83e1be108e9a31c36e91f80',1,'triqs']]],
   ['dim_12',['dim',['../classtriqs_1_1modest_1_1local__space.html#a9443b33042665dc40937d9f60da48951',1,'triqs::modest::local_space']]],
   ['dirname_13',['dirname',['../classtriqs_1_1modest_1_1checkpoint.html#abf75f1ddc83dd3ef2b71014e856b7d61',1,'triqs::modest::checkpoint']]],
