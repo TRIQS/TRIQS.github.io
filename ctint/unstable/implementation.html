@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Derivation and implementation notes &mdash; TRIQS Interaction Expansion Solver  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=f7f783a0" />
+      <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+
+  
+    <link rel="shortcut icon" href="_static/triqs_favicon.ico"/>
+  
+        <script src="_static/jquery.js?v=8dae8fb0"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=default"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Reporting issues" href="issues.html" />
+    <link rel="prev" title="triqs_ctint.version.show_version" href="_autosummary/triqs_ctint.version.show_version.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #7E588A" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            TRIQS Interaction Expansion Solver
+          </a>
+              <div class="version">
+                3.3.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Install CTINT</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="install.html#compiling-ctint-from-source">Compiling CTINT from source</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="install.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="install.html#installation-steps">Installation steps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="install.html#version-compatibility">Version compatibility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="install.html#custom-cmake-options">Custom CMake options</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="documentation.html">Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#c-reference-manual">C++ reference manual</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="cpp2rst_generated/triqs_ctint/solver_core.html">triqs_ctint::solver_core</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cpp2rst_generated/triqs_ctint/solver_core.html#public-members">Public members</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cpp2rst_generated/triqs_ctint/solver_core.html#member-functions">Member functions</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="cpp2rst_generated/triqs_ctint/solver_core/constructor.html">triqs_ctint::solver_core::constructor</a></li>
+<li class="toctree-l5"><a class="reference internal" href="cpp2rst_generated/triqs_ctint/solver_core/solve.html">triqs_ctint::solver_core::solve</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#python-reference-manual">Python reference manual</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/triqs_ctint.html">triqs_ctint</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/triqs_ctint.post_process.html">triqs_ctint.post_process</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="_autosummary/triqs_ctint.post_process.F_from_G2c.html">triqs_ctint.post_process.F_from_G2c</a></li>
+<li class="toctree-l5"><a class="reference internal" href="_autosummary/triqs_ctint.post_process.Fph_from_G2ph_conn.html">triqs_ctint.post_process.Fph_from_G2ph_conn</a></li>
+<li class="toctree-l5"><a class="reference internal" href="_autosummary/triqs_ctint.post_process.Fpp_from_G2pp_conn.html">triqs_ctint.post_process.Fpp_from_G2pp_conn</a></li>
+<li class="toctree-l5"><a class="reference internal" href="_autosummary/triqs_ctint.post_process.G2_conn_from_M4.html">triqs_ctint.post_process.G2_conn_from_M4</a></li>
+<li class="toctree-l5"><a class="reference internal" href="_autosummary/triqs_ctint.post_process.G2_from_G2c.html">triqs_ctint.post_process.G2_from_G2c</a></li>
+<li class="toctree-l5"><a class="reference internal" href="_autosummary/triqs_ctint.post_process.G2ph_conn_from_M4ph.html">triqs_ctint.post_process.G2ph_conn_from_M4ph</a></li>
+<li class="toctree-l5"><a class="reference internal" href="_autosummary/triqs_ctint.post_process.G2ph_from_G2ph_conn.html">triqs_ctint.post_process.G2ph_from_G2ph_conn</a></li>
+<li class="toctree-l5"><a class="reference internal" href="_autosummary/triqs_ctint.post_process.G2pp_conn_from_M4pp.html">triqs_ctint.post_process.G2pp_conn_from_M4pp</a></li>
+<li class="toctree-l5"><a class="reference internal" href="_autosummary/triqs_ctint.post_process.G2pp_from_G2pp_conn.html">triqs_ctint.post_process.G2pp_from_G2pp_conn</a></li>
+<li class="toctree-l5"><a class="reference internal" href="_autosummary/triqs_ctint.post_process.chi2_conn_from_M3_PH.html">triqs_ctint.post_process.chi2_conn_from_M3_PH</a></li>
+<li class="toctree-l5"><a class="reference internal" href="_autosummary/triqs_ctint.post_process.chi2_conn_from_M3_PP.html">triqs_ctint.post_process.chi2_conn_from_M3_PP</a></li>
+<li class="toctree-l5"><a class="reference internal" href="_autosummary/triqs_ctint.post_process.chi2_from_chi2_conn_PH.html">triqs_ctint.post_process.chi2_from_chi2_conn_PH</a></li>
+<li class="toctree-l5"><a class="reference internal" href="_autosummary/triqs_ctint.post_process.chi2_from_chi2_conn_PP.html">triqs_ctint.post_process.chi2_from_chi2_conn_PP</a></li>
+<li class="toctree-l5"><a class="reference internal" href="_autosummary/triqs_ctint.post_process.chi3_from_M3_PH.html">triqs_ctint.post_process.chi3_from_M3_PH</a></li>
+<li class="toctree-l5"><a class="reference internal" href="_autosummary/triqs_ctint.post_process.chi3_from_M3_PP.html">triqs_ctint.post_process.chi3_from_M3_PP</a></li>
+<li class="toctree-l5"><a class="reference internal" href="_autosummary/triqs_ctint.post_process.chiAB_from_chi2_PH.html">triqs_ctint.post_process.chiAB_from_chi2_PH</a></li>
+<li class="toctree-l5"><a class="reference internal" href="_autosummary/triqs_ctint.post_process.chiAB_from_chi2_PP.html">triqs_ctint.post_process.chiAB_from_chi2_PP</a></li>
+<li class="toctree-l5"><a class="reference internal" href="_autosummary/triqs_ctint.post_process.chi_tilde_ph_from_G2ph_conn.html">triqs_ctint.post_process.chi_tilde_ph_from_G2ph_conn</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/triqs_ctint.post_process_desc.html">triqs_ctint.post_process_desc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/triqs_ctint.solver.html">triqs_ctint.solver</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="_autosummary/triqs_ctint.solver.mpi_print.html">triqs_ctint.solver.mpi_print</a></li>
+<li class="toctree-l5"><a class="reference internal" href="_autosummary/triqs_ctint.solver.Solver.html">triqs_ctint.solver.Solver</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/triqs_ctint.solver_core.html">triqs_ctint.solver_core</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="_autosummary/triqs_ctint.solver_core.SolverCore.html">triqs_ctint.solver_core.SolverCore</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/triqs_ctint.solver_core_desc.html">triqs_ctint.solver_core_desc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="_autosummary/triqs_ctint.version.html">triqs_ctint.version</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="_autosummary/triqs_ctint.version.show_git_hash.html">triqs_ctint.version.show_git_hash</a></li>
+<li class="toctree-l5"><a class="reference internal" href="_autosummary/triqs_ctint.version.show_version.html">triqs_ctint.version.show_version</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Derivation and implementation notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#the-ctint-algorithm">The CTINT algorithm</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#action-with-static-density-density-interaction">Action with static density-density interaction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#interaction-expansion">Interaction expansion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-alpha-function-and-the-auxiliary-spin">The <span class="math notranslate nohighlight">\(\alpha\)</span> function and the auxiliary spin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#general-dynamic-interactions">General dynamic interactions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dynamic-density-density-and-spin-exchange-interactions">Dynamic density-density and spin-exchange interactions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#monte-carlo-algorithm">Monte-Carlo algorithm</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#correlation-functions-and-measurements">Correlation functions and measurements</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#single-particle-greens-function-g">Single-particle Green’s function <span class="math notranslate nohighlight">\(G\)</span></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#imaginary-time-measurement">Imaginary time measurement</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#frequency-measurement">Frequency measurement</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#two-particle-greens-function-chi-4">Two-particle Green’s function <span class="math notranslate nohighlight">\(\chi^4\)</span></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#connected-four-point-function">Connected four-point function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fully-reducible-vertex">Fully reducible vertex</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#imaginary-time-measurement-of-m-4">Imaginary time measurement of <span class="math notranslate nohighlight">\(M^4\)</span></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#frequency-measurement-of-m-4">Frequency measurement of <span class="math notranslate nohighlight">\(M^4\)</span></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#equal-time-correlation-functions-chi-3">Equal-time correlation functions <span class="math notranslate nohighlight">\(\chi^3\)</span></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#frequency-measurement-of-m-3-r">Frequency measurement of <span class="math notranslate nohighlight">\(M^{3,r}\)</span></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#constructing-chi-3-r-from-m-3-r">Constructing <span class="math notranslate nohighlight">\(\chi^{3,r}\)</span> from <span class="math notranslate nohighlight">\(M^{3,r}\)</span></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mixed-fermion-boson-notation">Mixed fermion-boson notation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#equal-time-correlation-functions-chi-2">Equal-time correlation functions <span class="math notranslate nohighlight">\(\chi^2\)</span></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#constructing-chi-2-r-from-m-2-r">Constructing <span class="math notranslate nohighlight">\(\chi^{2,r}\)</span> from <span class="math notranslate nohighlight">\(M^{2,r}\)</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="issues.html">Reporting issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ChangeLog.html">Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ChangeLog.html#version-3-1-0">Version 3.1.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ChangeLog.html#general">General</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ChangeLog.html#doc">doc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ChangeLog.html#cmake">cmake</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ChangeLog.html#gh-actions">gh-actions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ChangeLog.html#version-3-0-1">Version 3.0.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ChangeLog.html#version-3-0-0">Version 3.0.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ChangeLog.html#version-2-2-0">Version 2.2.0</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">Authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html#license">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #7E588A" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">TRIQS Interaction Expansion Solver</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Derivation and implementation notes</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/implementation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="derivation-and-implementation-notes">
+<h1>Derivation and implementation notes<a class="headerlink" href="#derivation-and-implementation-notes" title="Link to this heading"></a></h1>
+<section id="the-ctint-algorithm">
+<h2>The CTINT algorithm<a class="headerlink" href="#the-ctint-algorithm" title="Link to this heading"></a></h2>
+<p>The following section describes the CTINT algorithm and its derivation.
+We first present it for the case of static density-density interactions,
+and present the extension to general dynamical interactions thereafter.
+For notations and conventions used throughout these notes, the reader is
+referred to the attached document (which we will refer to as “vertex
+conventions”).</p>
+<section id="action-with-static-density-density-interaction">
+<span id="static-dens"></span><h3>Action with static density-density interaction<a class="headerlink" href="#action-with-static-density-density-interaction" title="Link to this heading"></a></h3>
+<p>Let us begin by considering the example of an impurity system with
+static density-density interaction. The action can then be written as</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{S}=\mathcal{S}_0 + S_{\mathrm{int}}\]</div>
+<p>with</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{S}_0 = -\bar{c}_{\bar{\alpha}} \mathcal{G}_{\bar{\alpha}\beta}^{-1} c_\beta\]</div>
+<p>and</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{S}_{\mathrm{int}} = \sum_{ab} U_{ab} \int_\tau n_a(\tau) n_b(\tau).\]</div>
+</section>
+<section id="interaction-expansion">
+<h3>Interaction expansion<a class="headerlink" href="#interaction-expansion" title="Link to this heading"></a></h3>
+<p>In CT-INT we proceed by expanding the partition function</p>
+<div class="math notranslate nohighlight" id="equation-partition-function-def">
+<span class="eqno">(1)<a class="headerlink" href="#equation-partition-function-def" title="Link to this equation"></a></span>\[Z\equiv\int\mathcal{D}[\bar{c},c]e^{\bar{c}_{\bar{\alpha}}\mathcal{G}_{\bar{\alpha}\beta}^{-1}c_\beta-\mathcal{S}_{\mathrm{int}}}\]</div>
+<p>in powers of <span class="math notranslate nohighlight">\(\mathcal{S}_{\mathrm{int}}\)</span>. One obtains</p>
+<div class="math notranslate nohighlight" id="equation-z-full">
+<span class="eqno">(2)<a class="headerlink" href="#equation-z-full" title="Link to this equation"></a></span>\[Z=Z_0\sum_{k=0}^\infty\frac{(-1)^k}{k!}\sum_{\mathbf{a},\mathbf{b}}\left(\prod_{i=1}^k U_{a_i b_i}\right)\int_{\boldsymbol{\tau}}\langle n_{a_1}(\tau_1)\dots n_{a_k}(\tau_k)n_{b_1}(\tau_1)\dots n_{b_k}(\tau_k)\rangle_0,\]</div>
+<p>where here, and in the following, bold symbols denote vectors. Note that
+in practice one typically orders the integral times, which allows to
+cancel the <span class="math notranslate nohighlight">\(1/k!\)</span> prefactor. Using the Wick theorem we can write
+the non-interacting expectation value in the equation above compactly
+using a determinant</p>
+<div class="math notranslate nohighlight">
+\[Z=Z_0\sum_{k=0}^\infty\frac{(-1)^k}{k!}\sum_{\mathbf{a},\mathbf{b}}\left(\prod_{i=1}^k U_{a_i b_i}\right)\int_{\boldsymbol{\tau}}\det\hat{\mathcal{G}}_k,\]</div>
+<p>Here we have introduced the <span class="math notranslate nohighlight">\(2k\times2k\)</span> matrix</p>
+<div class="math notranslate nohighlight">
+\[[\hat{\mathcal{G}}_k]_{ij}=\mathcal{G}_{x_i\bar{y}_j}.\]</div>
+<p>with vectors</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\boldsymbol{x}[\mathbf{a},\mathbf{b},\boldsymbol{\tau}] &amp; \equiv[(c_1,\tau_1),\ldots,(c_{2k},\tau_{2k})]\equiv[(a_1,\tau_1),\ldots,(a_k,\tau_k),(b_1,\tau_1),\ldots,(b_k,\tau_k)],\\
+\bar{\boldsymbol{y}}[\mathbf{a},\mathbf{b},\boldsymbol{\tau}] &amp; \equiv[(\bar{c}_1,\tau_1),\ldots,(\bar{c}_{2k},\tau_{2k})]\equiv[(a_1,\tau_1),\ldots,(a_k,\tau_k),(b_1,\tau_1),\ldots,(b_k,\tau_k)].\end{split}\]</div>
+<p>In summary we can write</p>
+<div class="math notranslate nohighlight" id="equation-z-as-z0xi">
+<span class="eqno">(3)<a class="headerlink" href="#equation-z-as-z0xi" title="Link to this equation"></a></span>\[Z = Z_0\Xi\]</div>
+<p>with</p>
+<div class="math notranslate nohighlight" id="equation-xi-def">
+<span class="eqno">(4)<a class="headerlink" href="#equation-xi-def" title="Link to this equation"></a></span>\[\Xi\equiv\sum_{k=0}^\infty\sum_{\mathbf{a},\mathbf{b}}\int_{\boldsymbol{\tau}}A_k[\mathbf{a},\mathbf{b}]\times\det\hat{\mathcal{G}}_k[\mathbf{a},\mathbf{b},\boldsymbol{\tau}]\]</div>
+<p>and</p>
+<div class="math notranslate nohighlight">
+\[A_k[\mathbf{a},\mathbf{b}]=\frac{(-1)^k}{k!}\left(\prod_{i=1}^k U_{a_i b_i}\right)\]</div>
+<p>Note that <span class="math notranslate nohighlight">\(A_k\)</span> is dependent on the interaction <span class="math notranslate nohighlight">\(U\)</span>, while
+the determinant is dependent on the bare propagator <span class="math notranslate nohighlight">\(\mathcal{G}\)</span>.</p>
+</section>
+<section id="the-alpha-function-and-the-auxiliary-spin">
+<h3>The <span class="math notranslate nohighlight">\(\alpha\)</span> function and the auxiliary spin<a class="headerlink" href="#the-alpha-function-and-the-auxiliary-spin" title="Link to this heading"></a></h3>
+<p>In order to handle the trivial sign problem originating from the
+minus-signs associated with the expansion of each static interaction
+vertex we shift the quartic part of the action
+<span class="math notranslate nohighlight">\(\mathcal{S}_{\mathrm{int}}\rightarrow\mathcal{\tilde{S}}_{\mathrm{int}}\)</span>
+with</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\tilde{\mathcal{S}}_{\mathrm{int}}
+&amp;= \sum_l U_l \int_\tau
+\bar{c}_{\bar{a}_l}(\tau) c_{b_l}(\tau) \bar{c}_{\bar{c}_l}(\tau) c_{d_l}(\tau) -
+n_{\bar{a}_l b_l}(\tau) \alpha_{11}^l - n_{\bar{c}_l d_l}(\tau) \alpha_{00}^l +
+n_{\bar{a}_l d_l}(\tau) \alpha_{10}^l + n_{\bar{c}_l b_l}(\tau) \alpha_{01}^l \\
+&amp;= \sum_l U_l \int_\tau
+\left( n_{\bar{a}_l b_l}(\tau) - \alpha_{00}^l \right)
+\left( n_{\bar{c}_l d_l}(\tau) - \alpha_{11}^l \right) +
+n_{\bar{a}_l d_l}(\tau) \alpha_{10}^l + n_{\bar{c}_l b_l}(\tau) \alpha_{01}^l +
+\mathrm{const} \\
+&amp;= \sum_l U_l \int_\tau
+- \left( n_{\bar{a}_l d_l}(\tau) - \alpha_{01}^l \right)
+  \left( n_{\bar{c}_l b_l}(\tau) - \alpha_{10}^l \right)
+- n_{\bar{a}_l b_l}(\tau) \alpha_{11}^l
+- n_{\bar{c}_l d_l}(\tau) \alpha_{00}^l
++ \mathrm{const}\end{split}\]</div>
+<p>This quadratic shift has to be accounted for in both the kinetic and the
+interaction term of the action such that the overall action remains
+unchanged, i.e.</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{S}=\tilde{\mathcal{S}}_0+\tilde{\mathcal{S}}_{\mathrm{int}},\]</div>
+<p>with</p>
+<div class="math notranslate nohighlight">
+\[\tilde{\mathcal{S}}_0=-\bar{c}_{\bar{\alpha}}\tilde{\mathcal{G}}_{\bar{\alpha}\beta}^{-1}c_\beta.\]</div>
+<p>Here we introduced the non-interacting propagator by the quadratic cross
+terms of the product above</p>
+<div class="math notranslate nohighlight">
+\[\tilde{\mathcal{G}}_{\bar{e}f}^{-1}(i\omega)\equiv\mathcal{G}_{\bar{e}f}^{-1}(i\omega)-\sum_l U_l\left(\delta_{\bar{e},\bar{a}_l}\delta_{f,b_l}\alpha_{11}^l+\delta_{\bar{e},\bar{c}_l}\delta_{f,d_l}\alpha_{00}^l-\delta_{\bar{e},\bar{a}_l}\delta_{f,d_l}\alpha_{10}^l-\delta_{\bar{e}\bar{c}_l}\delta_{fb_l}\alpha_{01}^l\right)\]</div>
+<p>The path-integral of <span class="math notranslate nohighlight">\(Z\)</span> has to be adjusted accordingly</p>
+<div class="math notranslate nohighlight">
+\[Z=Z_0\sum_{k=0}^\infty\frac{(-1)^k}{k!}\sum_{\mathbf{l}}\left(\prod_{i=1}^k U_{l_i}\right)\int_{\boldsymbol{\tau}}\det\hat{\mathcal{G}}_{\mathbf{l}}[\boldsymbol{\tau}],\]</div>
+<p>with matrix</p>
+<div class="math notranslate nohighlight" id="equation-det-alpha">
+<span class="eqno">(5)<a class="headerlink" href="#equation-det-alpha" title="Link to this equation"></a></span>\[\begin{split}\hat{\mathcal{G}}_{\mathbf{l}}[\boldsymbol{\tau}]=\begin{pmatrix}\tilde{G}_{\mathbf{b_l\bar{a}_l}}[\boldsymbol{\tau}]-\operatorname{diag}(\boldsymbol{\alpha_{00}^{\mathbf{l}}}) &amp;  &amp; \tilde{G}_{\mathbf{b_l\bar{c}_l}}[\boldsymbol{\tau}]-\operatorname{diag}(\boldsymbol{\alpha}_{\mathbf{10}}^{\mathbf{l}})\\
+\tilde{G}_{\mathbf{d_l\bar{a}_l}}[\boldsymbol{\tau}]-\operatorname{diag}(\boldsymbol{\alpha}_{\mathbf{01}}^{\mathbf{l}}) &amp;  &amp; \tilde{G}_{\mathbf{d_l\bar{c}_l}}[\boldsymbol{\tau}]-\operatorname{diag}(\boldsymbol{\alpha_{11}^l})
+\end{pmatrix}\end{split}\]</div>
+<p>To see this, one has to rewrite an expectation value of the kind
+<span class="math notranslate nohighlight">\(\langle\tilde{n}_{a_{l_1}}(\tau_1)\dots\tilde{n}_{b_{l_k}}(\tau_k)\rangle\)</span>
+into a determinant. This procedure is again based on the Wick theorem,
+and leads to the matrix in Eq. <a class="reference internal" href="#equation-det-alpha">(5)</a>, as
+can be easily proven, starting from the expression
+<span class="math notranslate nohighlight">\(\langle n_{a_{l_k}}(\tau_1)\dots n_{b_{l_k}}(\tau_k)\rangle\)</span>,
+by successive replacements <span class="math notranslate nohighlight">\(n\rightarrow\tilde{n}\)</span>. We then get</p>
+<div class="math notranslate nohighlight">
+\[\Xi\equiv\sum_{k=0}^\infty\sum_{\mathbf{l}}\int_{\boldsymbol{\tau}}A_{\mathbf{l}}\times\det\hat{\mathcal{G}}_{\mathbf{l}}[\boldsymbol{\tau}]\]</div>
+<p>and</p>
+<div class="math notranslate nohighlight">
+\[A_{\mathbf{l}}=\frac{(-1)^k}{k!}\left(\prod_{i=1}^k U_{l_i}\right)\]</div>
+<p>We solve the following set of equations self-consistently</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\tilde{\mathcal{G}}_{b_l\bar{a}_l}[\hat{\alpha}^{\mathbf{l}}] &amp; =\alpha_{00}^l\\
+\tilde{\mathcal{G}}_{b_l\bar{c}_l}[\hat{\alpha}^{\mathbf{l}}] &amp; =\alpha_{10}^l\\
+\tilde{\mathcal{G}}_{d_l\bar{a}_l}[\hat{\alpha}^{\mathbf{l}}] &amp; =\alpha_{01}^l\\
+\tilde{\mathcal{G}}_{d_l\bar{d}_l}[\hat{\alpha}^{\mathbf{l}}] &amp; =\alpha_{11}^l\end{split}\]</div>
+<p>in order to determine alpha based off of the self-consistent Hartree
+Fock solution. We finally introduce a small term-wise assymetry to cope
+with the trivial part of the sign problem</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\hat{\alpha}_l\rightarrow\hat{\alpha}_l+\begin{pmatrix}\delta &amp; \delta\\
+\delta &amp; -\delta
+\end{pmatrix}\end{split}\]</div>
+</section>
+<section id="general-dynamic-interactions">
+<h3>General dynamic interactions<a class="headerlink" href="#general-dynamic-interactions" title="Link to this heading"></a></h3>
+<p>Let us now consider an interaction of the most general form</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathcal{S}_{\mathrm{int}} &amp; =\mathop{\sum\int}_{\bar{\alpha}\beta\bar{\gamma}\delta}U_{\bar{\alpha}\beta\bar{\gamma}\delta}\,\bar{c}_\alpha c_\beta \bar{c}_\gamma c_\delta\\
+ &amp; =\sum_{\bar{a}b\bar{c}d}\int_{\boldsymbol{\tau}}U_{\bar{a}b\bar{c}d}(\tau_a,\tau_b,\tau_c,\tau_d)\times\bar{c}_a(\tau_a)c_b(\tau_b)\bar{c}_c(\tau_c)c_d(\tau_d).\end{split}\]</div>
+<p>In this case the expansion of the partition function takes the form</p>
+<div class="math notranslate nohighlight">
+\[Z=Z_0\sum_{k=0}^\infty\frac{(-1)^k}{k!}\mathop{\sum\int}_{\bar{\boldsymbol{\alpha}}\boldsymbol{\beta}\bar{\boldsymbol{\gamma}}\boldsymbol{\delta}}\left(\prod_{i=1}^k U_{\bar{\alpha}_i\beta_i\bar{\gamma}_i\delta_i}\right)\langle\bar{c}_{\alpha_1}c_{\beta_1}\bar{c}_{\gamma_1}c_{\delta_1}\ldots\bar{c}_{\alpha_k}c_{\beta_k}\bar{c}_{\gamma_k}c_{\delta_k}\rangle_0,\]</div>
+<p>which again, using the Wick theorem, takes the compact form</p>
+<div class="math notranslate nohighlight">
+\[Z=Z_0\sum_{k=0}^\infty\frac{(-1)^k}{k!}\mathop{\sum\int}_{\bar{\boldsymbol{\alpha}}\boldsymbol{\beta}\bar{\boldsymbol{\gamma}}\boldsymbol{\delta}}\left(\prod_{i=1}^k U_{\bar{\alpha}_i\beta_i\bar{\gamma}_i\delta_i}\right)\det\hat{\mathcal{G}}_k,\]</div>
+<p>with a matrix</p>
+<div class="math notranslate nohighlight">
+\[[\hat{\mathcal{G}}_k]_{ij}=\mathcal{G}_{x_i\bar{y}_j},\]</div>
+<p>that now has indices</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{x}[\boldsymbol{\beta},\boldsymbol{\delta}]\equiv[{\beta_1}{\delta_1}\ldots{\beta_k}{\delta_k}],\qquad\bar{\boldsymbol{y}}[\bar{\boldsymbol{\alpha}},\bar{\boldsymbol{\gamma}}]\equiv[\bar{\alpha}_1\bar{\gamma}_1\ldots\bar{\alpha}_k\bar{\gamma}_k].\]</div>
+<p>In summary we find that</p>
+<div class="math notranslate nohighlight" id="equation-qmc-sum">
+<span class="eqno">(6)<a class="headerlink" href="#equation-qmc-sum" title="Link to this equation"></a></span>\[\Xi=\frac{Z}{Z_0}=\sum_{k=0}^\infty\mathop{\sum\int}_{\bar{\boldsymbol{\alpha}}\boldsymbol{\beta}\bar{\boldsymbol{\gamma}}\boldsymbol{\delta}}A_k[\boldsymbol{\alpha},\boldsymbol{\beta},\boldsymbol{\gamma},\boldsymbol{\delta}]\times\det\hat{\mathcal{G}}_k[\boldsymbol{\alpha},\boldsymbol{\beta},\boldsymbol{\gamma},\boldsymbol{\delta},\boldsymbol{s}]\]</div>
+<p>with</p>
+<div class="math notranslate nohighlight">
+\[A_k[\boldsymbol{\alpha},\boldsymbol{\beta},\boldsymbol{\gamma},\boldsymbol{\delta}]=\frac{(-1)^k}{k!}\left(\prod_{i=1}^k U_{\bar{\alpha}_i\beta_i\bar{\gamma}_i\delta_i}\right).\]</div>
+<p>Eq. <a class="reference internal" href="#equation-qmc-sum">(6)</a> can be understood as a sum over
+weights <span class="math notranslate nohighlight">\(w_{\mathcal{C}}\)</span> for all configurations <span class="math notranslate nohighlight">\(\mathcal{C}\)</span></p>
+<div class="math notranslate nohighlight">
+\[\sum_{\mathcal{C}}w_{\mathcal{C}}\]</div>
+</section>
+<section id="dynamic-density-density-and-spin-exchange-interactions">
+<h3>Dynamic density-density and spin-exchange interactions<a class="headerlink" href="#dynamic-density-density-and-spin-exchange-interactions" title="Link to this heading"></a></h3>
+<p>Let us now consider retarded interactions of both the density-density
+(<span class="math notranslate nohighlight">\(\mathcal{D}\)</span>) and the spin-exchange
+(<span class="math notranslate nohighlight">\(\mathcal{J}^\perp\)</span>) type. In this case the interacting part of
+the action reads</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathcal{S}_{\mathrm{int}} &amp;= \frac{1}{N_s}\iint_{\tau,\tau'}\sum_{abs}\mathcal{D}_{ab}(\tau-\tau')\tilde{n}_{as}(\tau)\tilde{n}_{bs}(\tau')\\
+&amp; +\frac{1}{2}\iint_{\tau,\tau'}\sum_{uv}\mathcal{J}_{uv}^\perp(\tau-\tau')\left[s_u^+(\tau)s_v^-(\tau')+s_u^-(\tau)s_v^+(\tau')\right]\end{split}\]</div>
+<p>with</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}s_u^+(\tau) &amp; =\bar{c}_{u,\uparrow}(\tau)c_{u,\downarrow}(\tau),\\
+s_u^-(\tau) &amp; =\bar{c}_{u,\downarrow}(\tau)c_{u,\uparrow}(\tau).\end{split}\]</div>
+<p>As done already in Sec. <a class="reference internal" href="#static-dens"><span class="std std-ref">Action with static density-density interaction</span></a>, we have to adjust
+the non-interacting propagator due to the use of the shifted densities
+<span class="math notranslate nohighlight">\(\tilde{n}\)</span></p>
+<div class="math notranslate nohighlight" id="equation-gtilde-def">
+<span class="eqno">(7)<a class="headerlink" href="#equation-gtilde-def" title="Link to this equation"></a></span>\[\tilde{\mathcal{G}}_{\bar{a}b}^{-1}(i\omega)\equiv\mathcal{G}_{\bar{a}b}^{-1}(i\omega)-\delta_{\bar{a},b}\sum_c\frac{1}{N_s}\left[\mathcal{D}_{bc}(i\Omega=0)+\mathcal{D}_{cb}(i\Omega=0)\right]\sum_s\alpha_{cs}.\]</div>
+</section>
+<section id="monte-carlo-algorithm">
+<h3>Monte-Carlo algorithm<a class="headerlink" href="#monte-carlo-algorithm" title="Link to this heading"></a></h3>
+<p>The sum in Eq. <a class="reference internal" href="#equation-xi-def">(4)</a> is evaluated using the
+Metropolis-Hastings algorithm. It can be understood as a sum over
+configurations
+<span class="math notranslate nohighlight">\(\mathcal{C}\equiv(k,\mathbf{a},\mathbf{b},\boldsymbol{\tau})\)</span>
+(and possibly <span class="math notranslate nohighlight">\({\bf s}\)</span>) with different probabilities
+<span class="math notranslate nohighlight">\(|w_{\mathcal{C}}|\)</span>, i.e.</p>
+<div class="math notranslate nohighlight">
+\[\Xi=\sum_{\mathcal{C}}w_{\mathcal{C}}=\sum_{\mathcal{C}}|w_{\mathcal{C}}|\operatorname{sign}(\mathcal{C}).\]</div>
+<p>The weights <span class="math notranslate nohighlight">\(|w_{\mathcal{C}}|\)</span> are used to construct a Markov chain
+of configurations satisfying detailed balance and ergodicity. Under
+these conditions, the expectation value of an observable <span class="math notranslate nohighlight">\(\hat{O}\)</span>
+can be computed as:</p>
+<div class="math notranslate nohighlight" id="equation-mc-average-def">
+<span class="eqno">(8)<a class="headerlink" href="#equation-mc-average-def" title="Link to this equation"></a></span>\[\langle\hat{O}\rangle=\frac{\sum_{\mathcal{C}}|w_{\mathcal{C}}|\operatorname{sign}(\mathcal{C})\hat{O}_{\mathcal{C}}}{\sum_{\mathcal{C}}|w_{\mathcal{C}}|\operatorname{sign}(\mathcal{C})}=\frac{\langle\operatorname{sign}\hat{O}\rangle_{\mathrm{MC}}}{\langle\operatorname{sign}\rangle_{\mathrm{MC}}}\]</div>
+<p>where we have defined</p>
+<div class="math notranslate nohighlight" id="equation-mc-avg-def">
+<span class="eqno">(9)<a class="headerlink" href="#equation-mc-avg-def" title="Link to this equation"></a></span>\[\langle\hat{A}\rangle_{\mathrm{MC}}\equiv\sum_{\mathcal{C}}|w_{\mathcal{C}}|\hat{A}_{\mathcal{C}}.\]</div>
+<p>Here, <span class="math notranslate nohighlight">\(\hat{A}_{\mathcal{C}}\)</span> is the value of observable
+<span class="math notranslate nohighlight">\(\hat{A}\)</span> when evaluated in the MC configuration
+<span class="math notranslate nohighlight">\(\mathcal{C}\)</span>.</p>
+</section>
+</section>
+<section id="correlation-functions-and-measurements">
+<h2>Correlation functions and measurements<a class="headerlink" href="#correlation-functions-and-measurements" title="Link to this heading"></a></h2>
+<p>In this section we discuss the measurement of different correlation
+functions in CTInt. Note that in the following we will not explicitly
+denote that the propagator has been shifted using a
+<span class="math notranslate nohighlight">\(\tilde{\mathcal{G}}\)</span>, but we will rather use the symbol
+<span class="math notranslate nohighlight">\(\mathcal{G}\)</span>.</p>
+<section id="single-particle-greens-function-g">
+<h3>Single-particle Green’s function <span class="math notranslate nohighlight">\(G\)</span><a class="headerlink" href="#single-particle-greens-function-g" title="Link to this heading"></a></h3>
+<p>From Eq. <a class="reference internal" href="#equation-partition-function-def">(1)</a> we
+see that
+<span class="math notranslate nohighlight">\(\frac{\partial Z}{\partial\mathcal{G}_{\bar{\beta}\alpha}^{-1}}=Z\langle\bar{c}_{\bar{\beta}}c_\alpha\rangle\)</span>,
+i.e.</p>
+<div class="math notranslate nohighlight" id="equation-g-as-derivative-of-z">
+<span class="eqno">(10)<a class="headerlink" href="#equation-g-as-derivative-of-z" title="Link to this equation"></a></span>\[G_{\alpha\bar{\beta}}=\frac{1}{Z}\frac{\partial Z}{\partial\mathcal{G}_{\bar{\beta}\alpha}^{-1}}\]</div>
+<p>Using
+Eqs. <a class="reference internal" href="#equation-g-as-derivative-of-z">(10)</a>, <a class="reference internal" href="#equation-z-as-z0xi">(3)</a>
+and <a class="reference internal" href="#equation-xi-def">(4)</a> this can be further evaluated to</p>
+<div class="math notranslate nohighlight" id="equation-g-interm">
+<span class="eqno">(11)<a class="headerlink" href="#equation-g-interm" title="Link to this equation"></a></span>\[G_{\alpha\bar{\beta}}=\frac{1}{Z}\left[\frac{\partial Z_0}{\partial\mathcal{G}_{\bar{\beta}\alpha}^{-1}}\Xi+Z_0\frac{\partial\Xi}{\partial\mathcal{G}_{\bar{\beta}\alpha}^{-1}}\right]=\frac{1}{Z}\left[\mathcal{G}_{\alpha\bar{\beta}}Z_0\Xi-Z_0\Xi\mathcal{G}_{\alpha\bar{\delta}}\frac{1}{\Xi}\frac{\partial\Xi}{\partial\mathcal{G}_{\gamma\bar{\delta}}}\mathcal{G}_{\gamma\bar{\beta}}\right].\]</div>
+<p>Hence</p>
+<div class="math notranslate nohighlight" id="equation-g-vs-m">
+<span class="eqno">(12)<a class="headerlink" href="#equation-g-vs-m" title="Link to this equation"></a></span>\[G_{\alpha\bar{\beta}}=\mathcal{G}_{\alpha\bar{\beta}}+\mathcal{G}_{\alpha\bar{\delta}}M_{\bar{\delta}\gamma}\mathcal{G}_{\gamma\bar{\beta}},\]</div>
+<p>with</p>
+<div class="math notranslate nohighlight" id="equation-m-def">
+<span class="eqno">(13)<a class="headerlink" href="#equation-m-def" title="Link to this equation"></a></span>\[M_{\bar{\alpha}\beta}\equiv-\frac{1}{\Xi}\frac{\partial\Xi}{\partial\mathcal{G}_{\beta\bar{\alpha}}}.\]</div>
+<p>Instead of measuring <span class="math notranslate nohighlight">\(G\)</span> directly, one typically measures the
+quantity <span class="math notranslate nohighlight">\(M_{\bar{\alpha}\beta}\)</span> instead, as is done in the CTINT
+code of TRIQS. Let us see how it can be written by means of a
+Monte-Carlo average. Eq. <a class="reference internal" href="#equation-xi-def">(4)</a> gives</p>
+<div class="math notranslate nohighlight">
+\[M_{\bar{\alpha}\beta}=-\frac{1}{\Xi}\sum_{k=0}^\infty\sum_{\mathbf{a},\mathbf{b},\mathbf{s}}\int_{\boldsymbol{\tau}}A_k\frac{\partial\det\hat{\mathcal{G}}_k}{\partial\mathcal{G}_{\beta\bar{\alpha}}}.\]</div>
+<p>Using the chain rule</p>
+<div class="math notranslate nohighlight">
+\[\frac{\partial\det\hat{\mathcal{G}}_k}{\partial\mathcal{G}_{\beta\bar{\alpha}}}=\sum_{ij}\frac{\partial\det\hat{\mathcal{G}}_k}{\partial[\mathcal{\hat{G}}_k]_{ij}}\frac{\partial[\hat{\mathcal{G}}_k]_{ij}}{\partial\mathcal{G}_{\beta\bar{\alpha}}}=\det\hat{\mathcal{G}}_k\sum_{ij}[\hat{\mathcal{G}}_k^{-1}]_{ji}\delta_{x_i\beta}\delta_{\bar{y}_i\bar{\alpha}}\]</div>
+<p>we obtain</p>
+<div class="math notranslate nohighlight" id="equation-m-mc-final">
+<span class="eqno">(14)<a class="headerlink" href="#equation-m-mc-final" title="Link to this equation"></a></span>\[\begin{split}M_{\bar{\alpha}\beta} &amp; =-\frac{1}{\Xi}\sum_{k=0}^\infty\sum_{\mathbf{a},\mathbf{b},\mathbf{s}}\int_{\boldsymbol{\tau}}A_k\frac{\partial\det\hat{\mathcal{G}}_k}{\partial\mathcal{G}_{\beta\bar{\alpha}}}\nonumber \\
+ &amp; =-\frac{1}{\Xi}\sum_{\mathcal{C}}w_{\mathcal{C}}\left\{ \sum_{ij}\delta_{\bar{y}_i\bar{\alpha}}\delta_{x_i\beta}[\hat{\mathcal{G}}_k^{-1}]_{ji}\right\} \nonumber \\
+ &amp; =\frac{\Big\langle-\sum_{ij}\delta_{\bar{y}_i\bar{\alpha}}\delta_{x_i\beta}[\hat{\mathcal{G}}_k^{-1}]_{ji}\,\operatorname{sign}(\mathcal{C})\Big\rangle_{\mathrm{MC}}}{\Big\langle\operatorname{sign}(\mathcal{C})\Big\rangle_{\mathrm{MC}}}.\end{split}\]</div>
+<section id="imaginary-time-measurement">
+<h4>Imaginary time measurement<a class="headerlink" href="#imaginary-time-measurement" title="Link to this heading"></a></h4>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line">Just like the Green function, <span class="math notranslate nohighlight">\(M_{\bar{\alpha}\beta}\)</span> depends
+only on the time-difference
+<span class="math notranslate nohighlight">\(\tau=\tau_{\bar{\alpha}}-\tau_\beta\)</span>, which, in practice, is
+chosen from a discrete set of points <span class="math notranslate nohighlight">\(\{\tau_l\}\)</span>. They are
+determined by binning the interval <span class="math notranslate nohighlight">\([0,\beta)\)</span> equidistantly,
+such that grid points are seperated by <span class="math notranslate nohighlight">\(\Delta\tau\)</span>. We thus
+define</div>
+</div>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[M_{\bar{a}b}^{\Delta\tau}(\tau_l)=-\frac{1}{\beta\langle\operatorname{sign}(\mathcal{C})\rangle_{\mathrm{MC}}}\left\langle \sum_{ij}\delta_{\bar{c}_j\bar{a}}\delta_{c_i b}\left[\delta_{\Delta\tau}(\tau_l-\tau_j+\tau_i)-\delta_{\Delta\tau}(\tau_l-\beta-\tau_j+\tau_i)\right][\hat{\mathcal{G}}_k^{-1}]_{ji}\operatorname{sign}(\mathcal{C})\right\rangle _{\mathrm{MC}}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\delta_{\Delta\tau}\)</span> is the broadened delta function</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\delta_{\Delta\tau}(\tau)\equiv\begin{cases}
+\frac{1}{\Delta\tau} &amp; 0&lt;\tau&lt;\Delta\tau\\
+0 &amp; \tau\leq0\quad\mathrm{or}\quad\tau\geq\Delta\tau,
+\end{cases}\end{split}\]</div>
+<p>and a factor <span class="math notranslate nohighlight">\(1/\beta\)</span> should be introduced when making use of
+time-translational invariance
+<span class="math notranslate nohighlight">\((\tau_{\bar{\alpha}},\tau_\beta)\rightarrow\tau=\tau_{\bar{\alpha}}-\tau_\beta\)</span>.
+The second <span class="math notranslate nohighlight">\(\delta\)</span> function with the minus sign takes care of
+shifting negative time-differences
+<span class="math notranslate nohighlight">\(\tau_{\bar{\alpha}}-\tau_\beta\)</span> to the interval
+<span class="math notranslate nohighlight">\([0,\beta)\)</span> using the antiperiodicity of <span class="math notranslate nohighlight">\(M\)</span>. As
+<span class="math notranslate nohighlight">\(M_{\bar{u}v}(\tau_l)=\lim_{\Delta\tau\rightarrow0}{M}_{\bar{u}v}^{\Delta\tau}(\tau_l)\)</span>
+we can approximate
+<span class="math notranslate nohighlight">\(M_{\bar{u}v}(\tau_l)\approx M_{\bar{u}v}^{\Delta\tau}(\tau_l)\)</span>
+for a sufficiently small <span class="math notranslate nohighlight">\(\Delta\tau\)</span>.</p>
+</div></blockquote>
+</section>
+<section id="frequency-measurement">
+<h4>Frequency measurement<a class="headerlink" href="#frequency-measurement" title="Link to this heading"></a></h4>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line">Alternatively, we can measure <span class="math notranslate nohighlight">\(M\)</span> directly in frequency space,
+i.e.</div>
+</div>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[M_{\bar{a}b}(i\omega_n)=-\frac{1}{\beta\langle\operatorname{sign}(\mathcal{C})\rangle_{\mathrm{MC}}}\left\langle \sum_{ij}\delta_{\bar{c}_j\bar{a}}\delta_{c_i b}e^{i\omega_n(\tau_j-\tau_i)}[\hat{\mathcal{G}}_k^{-1}]_{ji}\operatorname{sign}(\mathcal{C})\right\rangle _{\mathrm{MC}}\]</div>
+<p>Here, we can avoid the binning, while a factor <span class="math notranslate nohighlight">\(1/\beta\)</span> has to
+be introduced as before. To evaluate this measure, we can make use of
+the NFFT library. To make this more obvious we rewrite</p>
+<div class="math notranslate nohighlight">
+\[e^{i\omega_n(\tau_j-\tau_i)}=e^{i\pi(2n+1)\left(\frac{\tau_j-\tau_i}{\beta}-\frac{1}{2}+\frac{1}{2}\right)}=e^{2\pi inx}e^{i\pi\left(n+x+\frac{1}{2}\right)}\]</div>
+<p>with
+<span class="math notranslate nohighlight">\(x\equiv\left(\frac{\tau_j-\tau_i}{\beta}-\frac{1}{2}\right)\in[-0.5,0.5)\)</span>
+and <span class="math notranslate nohighlight">\(n\in\mathbb{Z}\)</span>, as is required by the interface of the
+library.</p>
+</div></blockquote>
+</section>
+</section>
+<section id="two-particle-greens-function-chi-4">
+<h3>Two-particle Green’s function <span class="math notranslate nohighlight">\(\chi^4\)</span><a class="headerlink" href="#two-particle-greens-function-chi-4" title="Link to this heading"></a></h3>
+<p>The same idea can be pursued when considering two-particle Green
+functions. From
+Eq. <a class="reference internal" href="#equation-partition-function-def">(1)</a> we
+can directly see that
+<span class="math notranslate nohighlight">\(\frac{\partial Z}{\partial\mathcal{G}_{\bar{\alpha}\beta}^{-1}\partial\mathcal{G}_{\bar{\gamma}\delta}^{-1}}=Z\langle\bar{c}_\alpha c_\beta \bar{c}_\gamma c_\delta\rangle\)</span>
+i.e</p>
+<div class="math notranslate nohighlight" id="equation-chi4-as-derivative-of-z">
+<span class="eqno">(15)<a class="headerlink" href="#equation-chi4-as-derivative-of-z" title="Link to this equation"></a></span>\[\chi_{\bar{\alpha}\beta\bar{\gamma}\delta}^4=\langle\bar{c}_\alpha c_\beta \bar{c}_\gamma c_\delta\rangle=\frac{1}{Z}\frac{\partial Z}{\partial\mathcal{G}_{\bar{\alpha}\beta}^{-1}\partial\mathcal{G}_{\bar{\gamma}\delta}^{-1}}\]</div>
+<p>Starting from Eqs. <a class="reference internal" href="#equation-chi4-as-derivative-of-z">(15)</a> and <a class="reference internal" href="#equation-g-as-derivative-of-z">(10)</a>
+we first note:</p>
+<div class="math notranslate nohighlight" id="equation-chi4-interm">
+<span class="eqno">(16)<a class="headerlink" href="#equation-chi4-interm" title="Link to this equation"></a></span>\[\chi_{\bar{\alpha}\beta\bar{\eta}\kappa}^4=\frac{1}{Z}\frac{\partial(ZG_{\beta\bar{\alpha}})}{\partial\mathcal{G}_{\bar{\eta}\kappa}^{-1}}=-\frac{1}{Z}\mathcal{G}_{\mu\bar{\eta}}\frac{\partial(ZG_{\beta\bar{\alpha}})}{\partial\mathcal{G}_{\mu\bar{\nu}}}\mathcal{G}_{\kappa\bar{\nu}}\]</div>
+<p>Let us now evaluate
+<span class="math notranslate nohighlight">\(\frac{\partial(ZG_{\beta\bar{\alpha}})}{\partial\mathcal{G}_{\mu\bar{\nu}}}\)</span>
+using <a class="reference internal" href="#equation-g-interm">(11)</a>. We have</p>
+<div class="math notranslate nohighlight" id="equation-chi4-interm-2">
+<span class="eqno">(17)<a class="headerlink" href="#equation-chi4-interm-2" title="Link to this equation"></a></span>\[\begin{split}\frac{\partial(ZG_{\beta\bar{\alpha}})}{\partial\mathcal{G}_{\mu\bar{\nu}}} &amp; =\frac{\partial}{\partial\mathcal{G}_{\mu\bar{\nu}}}\left[\mathcal{G}_{\beta\bar{\alpha}}Z_0\Xi-Z_0\mathcal{G}_{\gamma\bar{\alpha}}\frac{\partial\Xi}{\partial\mathcal{G}_{\gamma\bar{\delta}}}\mathcal{G}_{\beta\bar{\delta}}\right]\nonumber \\
+ &amp; =\delta_{\beta\mu}\delta_{\bar{\nu}\bar{\alpha}}Z_0\Xi+\mathcal{G}_{\beta\bar{\alpha}}\frac{\partial Z_0}{\partial\mathcal{G}_{\mu\bar{\nu}}}\Xi+\mathcal{G}_{\beta\bar{\alpha}}Z_0\frac{\partial\Xi}{\partial\mathcal{G}_{\mu\bar{\nu}}}\nonumber \\
+ &amp; \;\;-\frac{\partial Z_0}{\partial\mathcal{G}_{\mu\bar{\nu}}}\mathcal{G}_{\gamma\bar{\alpha}}\frac{\partial\Xi}{\partial\mathcal{G}_{\gamma\bar{\delta}}}\mathcal{G}_{\beta\bar{\delta}}-Z_0\delta_{\mu\gamma}\delta_{\bar{\alpha}\bar{\nu}}\frac{\partial\Xi}{\partial\mathcal{G}_{\gamma\bar{\delta}}}\mathcal{G}_{\beta\bar{\delta}}-Z_0\mathcal{G}_{\gamma\bar{\alpha}}\frac{\partial\Xi}{\partial\mathcal{G}_{\mu\bar{\nu}}\partial\mathcal{G}_{\gamma\bar{\delta}}}\mathcal{G}_{\beta\bar{\delta}}-Z_0\mathcal{G}_{\gamma\bar{\alpha}}\frac{\partial\Xi}{\partial\mathcal{G}_{\gamma\bar{\delta}}}\delta_{\beta\mu}\delta_{\bar{\delta}\bar{\nu}}\nonumber \\
+ &amp; =\delta_{\beta\mu}\delta_{\bar{\nu}\bar{\alpha}}Z_0\Xi-\mathcal{G}_{\beta\bar{\alpha}}\mathcal{G}_{\bar{\nu}\mu}^{-1}Z_0\Xi-\mathcal{G}_{\beta\bar{\alpha}}Z_0\Xi M_{\bar{\nu}\mu}\nonumber \\
+ &amp; \;\;-\mathcal{G}_{\bar{\nu}\mu}^{-1}Z_0\mathcal{G}_{\gamma\bar{\alpha}}\Xi M_{\bar{\delta}\gamma}\mathcal{G}_{\beta\bar{\delta}}+\Xi Z_0\delta_{\mu\gamma}\delta_{\bar{\alpha}\bar{\nu}}M_{\bar{\delta}\gamma}\mathcal{G}_{\beta\bar{\delta}}-Z_0\mathcal{G}_{\gamma\bar{\alpha}}\Xi M_{\bar{\nu}\mu\bar{\delta}\gamma}^4\mathcal{G}_{\beta\bar{\delta}}+Z_0\mathcal{G}_{\gamma\bar{\alpha}}\Xi M_{\bar{\delta}\gamma}\delta_{\beta\mu}\delta_{\bar{\delta}\bar{\nu}}\nonumber \\
+ &amp; =Z\Big\{\delta_{\beta\mu}\delta_{\bar{\nu}\bar{\alpha}}-\mathcal{G}_{\beta\bar{\alpha}}\mathcal{G}_{\bar{\nu}\mu}^{-1}-\mathcal{G}_{\beta\bar{\alpha}}M_{\bar{\nu}\mu}-\mathcal{G}_{\bar{\nu}\mu}^{-1}\mathcal{G}_{\gamma\bar{\alpha}}M_{\bar{\delta}\gamma}\mathcal{G}_{\beta\bar{\delta}}\nonumber \\
+ &amp; \;\;\;+\delta_{\bar{\alpha}\bar{\nu}}M_{\bar{\delta}\mu}\mathcal{G}_{\beta\bar{\delta}}-\mathcal{G}_{\gamma\bar{\alpha}}M_{\mu\bar{\nu}\gamma\bar{\delta}}^4\mathcal{G}_{\beta\bar{\delta}}+\mathcal{G}_{\gamma\bar{\alpha}}M_{\bar{\nu}\gamma}\delta_{\beta\mu}\Big\}\end{split}\]</div>
+<p>where we have defined</p>
+<div class="math notranslate nohighlight" id="equation-m4-def">
+<span class="eqno">(18)<a class="headerlink" href="#equation-m4-def" title="Link to this equation"></a></span>\[M_{\mu\bar{\nu}\gamma\bar{\delta}}^4\equiv\frac{1}{\Xi}\frac{\partial\Xi}{\partial\mathcal{G}_{\mu\bar{\nu}}\partial\mathcal{G}_{\gamma\bar{\delta}}}.\]</div>
+<p>Plugging <a class="reference internal" href="#equation-chi4-interm-2">(17)</a> into
+<a class="reference internal" href="#equation-chi4-interm">(16)</a>, we obtain</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\chi_{\bar{\alpha}\beta\bar{\eta}\kappa}^4 &amp; =-\mathcal{G}_{\beta\bar{\eta}}\mathcal{G}_{\kappa\bar{\alpha}}+\mathcal{G}_{\kappa\bar{\eta}}\mathcal{G}_{\beta\bar{\alpha}}+\mathcal{G}_{\beta\bar{\alpha}}\mathcal{G}_{\kappa\bar{\nu}}M_{\bar{\nu}\mu}\mathcal{G}_{\mu\bar{\eta}}+\mathcal{G}_{\beta\bar{\delta}}M_{\bar{\delta}\gamma}\mathcal{G}_{\gamma\bar{\alpha}}\mathcal{G}_{\kappa\bar{\eta}}\\
+ &amp; \;\;-\mathcal{G}_{\beta\bar{\delta}}M_{\bar{\delta}\mu}\mathcal{G}_{\mu\bar{\eta}}\mathcal{G}_{\kappa\bar{\alpha}}+\mathcal{G}_{\mu\bar{\alpha}}\mathcal{G}_{\beta\bar{\nu}}M_{\mu\bar{\nu}\gamma\bar{\delta}}^4\mathcal{G}_{\gamma\bar{\eta}}\mathcal{G}_{\kappa\bar{\delta}}-\mathcal{G}_{\beta\bar{\eta}}\mathcal{G}_{\kappa\bar{\nu}}M_{\bar{\nu}\gamma}\mathcal{G}_{\gamma\bar{\alpha}}\end{split}\]</div>
+<p>i.e, after relabeling and reordering,</p>
+<div class="math notranslate nohighlight" id="equation-chi4-final">
+<span class="eqno">(19)<a class="headerlink" href="#equation-chi4-final" title="Link to this equation"></a></span>\[\begin{split}\chi_{\bar{\alpha}\beta\bar{\gamma}\delta}^4 &amp; =\mathcal{G}_{\mu\bar{\alpha}}\mathcal{G}_{\beta\bar{\nu}}M_{\mu\bar{\nu}\kappa\bar{\eta}}^4\mathcal{G}_{\kappa\bar{\gamma}}\mathcal{G}_{\delta\bar{\eta}}\nonumber \\
+ &amp; \;\;+\mathcal{G}_{\beta\bar{\alpha}}\mathcal{G}_{\delta\bar{\gamma}}+[\mathcal{G}M\mathcal{G}]_{\beta\bar{\alpha}}\mathcal{G}_{\delta\bar{\gamma}}+\mathcal{G}_{\beta\bar{\alpha}}[\mathcal{G}M\mathcal{G}]_{\delta\bar{\gamma}}\nonumber \\
+ &amp; \;\;-\mathcal{G}_{\beta\bar{\gamma}}\mathcal{G}_{\delta\bar{\alpha}}-[\mathcal{G}M\mathcal{G}]_{\beta\bar{\gamma}}\mathcal{G}_{\delta\bar{\alpha}}-\mathcal{G}_{\beta\bar{\gamma}}[\mathcal{G}M\mathcal{G}]_{\delta\bar{\alpha}}.\end{split}\]</div>
+<p>Thus, in order to compute <span class="math notranslate nohighlight">\(\chi^4\)</span>, one needs to compute
+<span class="math notranslate nohighlight">\(M\)</span> and <span class="math notranslate nohighlight">\(M^4\)</span>.</p>
+<section id="connected-four-point-function">
+<h4>Connected four-point function<a class="headerlink" href="#connected-four-point-function" title="Link to this heading"></a></h4>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line">By inspection of Eq.:eq:<cite>chi4_final</cite> we see that
+the connected part of the two-particle Green function now reads</div>
+</div>
+<blockquote>
+<div><div class="math notranslate nohighlight" id="equation-chi4tilde-conn-final">
+<span class="eqno">(20)<a class="headerlink" href="#equation-chi4tilde-conn-final" title="Link to this equation"></a></span>\[\chi_{\bar{\alpha}\beta\bar{\gamma}\delta}^{4,\mathrm{conn}}=\mathcal{G}_{\mu\bar{\alpha}}\mathcal{G}_{\beta\bar{\nu}}M_{\mu\bar{\nu}\kappa\bar{\eta}}^4\mathcal{G}_{\kappa\bar{\gamma}}\mathcal{G}_{\delta\bar{\eta}}-\left[\mathcal{G}M\mathcal{G}\right]_{\alpha\bar{\beta}}\left[\mathcal{G}M\mathcal{G}\right]_{\gamma\bar{\delta}}+\left[\mathcal{G}M\mathcal{G}\right]_{\alpha\bar{\delta}}\left[\mathcal{G}M\mathcal{G}\right]_{\gamma\bar{\beta}}.\]</div>
+<p>Instead, we can write</p>
+<div class="math notranslate nohighlight">
+\[\chi_{\bar{\alpha}\beta\bar{\gamma}\delta}^{4,\mathrm{conn}}=\mathcal{G}_{\mu\bar{\alpha}}\mathcal{G}_{\beta\bar{\nu}}M_{\mu\bar{\nu}\kappa\bar{\eta}}^{4,\mathrm{conn}}\mathcal{G}_{\kappa\bar{\gamma}}\mathcal{G}_{\delta\bar{\eta}}\]</div>
+<p>with</p>
+<div class="math notranslate nohighlight">
+\[M_{\mu\bar{\nu}\kappa\bar{\eta}}^{4,\mathrm{conn}}\equiv M_{\mu\bar{\nu}\kappa\bar{\eta}}^4-M_{\bar{\nu}\mu}M_{\bar{\eta}\kappa}+M_{\bar{\nu}\kappa}M_{\bar{\eta}\mu}.\]</div>
+</div></blockquote>
+</section>
+<section id="fully-reducible-vertex">
+<h4>Fully reducible vertex<a class="headerlink" href="#fully-reducible-vertex" title="Link to this heading"></a></h4>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line">Using the definition of the fully reducible vertex function <span class="math notranslate nohighlight">\(F\)</span>
+(see vertex conventions), we get</div>
+</div>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[F_{\alpha\bar{\beta}\gamma\bar{\delta}}=\bigl\{ G_{\bar{\beta}\beta}^{-1}\mathcal{G}_{\beta\bar{\nu}}\bigr\}\left\{ G_{\bar{\delta}\delta}^{-1}\mathcal{G}_{\delta\bar{\eta}}\right\} M_{\mu\bar{\nu}\kappa\bar{\eta}}^{4,\mathrm{conn}}\left\{ \mathcal{G}_{\mu\bar{\alpha}}G_{\bar{\alpha}\alpha}^{-1}\right\} \left\{ \mathcal{G}_{\kappa\bar{\gamma}}G_{\bar{\gamma}\gamma}^{-1}\right\} .\]</div>
+<p>With Eq. <a class="reference internal" href="#equation-g-vs-m">(12)</a> we can calculate <span class="math notranslate nohighlight">\(F\)</span>
+directly from <span class="math notranslate nohighlight">\(M^4\)</span> and <span class="math notranslate nohighlight">\(M\)</span></p>
+<div class="math notranslate nohighlight">
+\[F_{\alpha\bar{\beta}\gamma\bar{\delta}}=\left\{ 1+M\mathcal{G}\right\} _{\bar{\beta}\bar{\nu}}^{-1}\left\{ 1+M\mathcal{G}\right\} _{\bar{\delta}\bar{\eta}}^{-1}M_{\mu\bar{\nu}\kappa\bar{\eta}}^{4,\mathrm{conn}}\left\{ 1+M\mathcal{G}\right\} _{\mu\alpha}^{-1}\left\{ 1+M\mathcal{G}\right\} _{\kappa\gamma}^{-1}.\]</div>
+<p>From this expression, one can see that <span class="math notranslate nohighlight">\(F\)</span> and
+<span class="math notranslate nohighlight">\(M^{4,\mathrm{conn}}\)</span> have the same asymptotics.</p>
+</div></blockquote>
+</section>
+<section id="imaginary-time-measurement-of-m-4">
+<h4>Imaginary time measurement of <span class="math notranslate nohighlight">\(M^4\)</span><a class="headerlink" href="#imaginary-time-measurement-of-m-4" title="Link to this heading"></a></h4>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line">In order to write <span class="math notranslate nohighlight">\(M^4\)</span> by means of a Monte-Carlo average we
+have to evaluate</div>
+</div>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[M_{\alpha\bar{\beta}\gamma\bar{\delta}}^4=\frac{1}{\Xi}\frac{\partial\Xi}{\partial\mathcal{G}_{\alpha\bar{\beta}}\partial\mathcal{G}_{\gamma\bar{\delta}}}=-\frac{1}{\Xi}\sum_{k=0}^\infty\sum_{\mathbf{a},\mathbf{b},\mathbf{s}}\int_{\boldsymbol{\tau}}A_k\,\frac{\partial\det\hat{\mathcal{G}}_k}{\partial\mathcal{G}_{\alpha\bar{\beta}}\partial\mathcal{G}_{\gamma\bar{\delta}}}.\]</div>
+<p>This derivative evaluates to (neglecting the <span class="math notranslate nohighlight">\(k\)</span> index for now)</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\frac{\partial\det\hat{\mathcal{G}}}{\partial\mathcal{G}_{\alpha\bar{\beta}}\partial\mathcal{G}_{\gamma\bar{\delta}}} &amp; =\frac{\partial}{\partial\mathcal{G}_{\alpha\bar{\beta}}}\det\hat{\mathcal{G}}\,\sum_{kl}[\hat{\mathcal{G}}^{-1}]_{lk}\delta_{x_k\gamma}\delta_{\bar{y}_l\bar{\delta}}\\
+ &amp; =\det\hat{\mathcal{G}}\,\sum_{ijkl}\left\{ [\hat{\mathcal{G}}^{-1}]_{ji}[\hat{\mathcal{G}}^{-1}]_{lk}-[\hat{\mathcal{G}}^{-1}]_{li}[\hat{\mathcal{G}}^{-1}]_{jk}\right\} \delta_{x_i\alpha}\delta_{\bar{y}_i\bar{\beta}}\delta_{x_k\gamma}\delta_{\bar{y}_l\bar{\delta}},\end{split}\]</div>
+<p>where we had to use that</p>
+<div class="math notranslate nohighlight">
+\[\phantom{=}\frac{\partial}{\partial\mathcal{G}_{\alpha\bar{\beta}}}\sum_{kl}[\hat{\mathcal{G}}^{-1}]_{lk}\delta_{x_k\gamma}\delta_{\bar{y}_l\bar{\delta}}=-\sum_{ijkl}[\hat{\mathcal{G}}^{-1}]_{li}\underbrace{\frac{\partial\hat{\mathcal{G}}_{ij}}{\partial\mathcal{G}_{\alpha\bar{\beta}}}}_{\delta_{x_i\alpha}\delta_{\bar{y}_i\bar{\beta}}}[\hat{\mathcal{G}}^{-1}]_{jk}\delta_{x_k\gamma}\delta_{\bar{y}_l\bar{\delta}}.\]</div>
+<p>The Monte-Carlo average for <span class="math notranslate nohighlight">\(M^4\)</span> thus takes the form</p>
+<div class="math notranslate nohighlight" id="equation-measure-m4">
+<span class="eqno">(21)<a class="headerlink" href="#equation-measure-m4" title="Link to this equation"></a></span>\[M_{\alpha\bar{\beta}\gamma\bar{\delta}}^4=\frac{1}{\langle\operatorname{sign}(\mathcal{C})\rangle_{\mathrm{MC}}}\Bigg\langle\sum_{ijkl}\left\{ [\hat{\mathcal{G}}^{-1}]_{ji}[\hat{\mathcal{G}}^{-1}]_{lk}-[\hat{\mathcal{G}}^{-1}]_{li}[\hat{\mathcal{G}}^{-1}]_{jk}\right\} \delta_{x_i\alpha}\delta_{\bar{y}_j\bar{\beta}}\delta_{x_k\gamma}\delta_{\bar{y}_l\bar{\delta}}\operatorname{sign}(\mathcal{C})\Bigg\rangle_{\mathrm{MC}}.\]</div>
+<p>Using the intermediate scattering matrix</p>
+<div class="math notranslate nohighlight">
+\[\bar{M}_{\bar{\beta}\alpha}\equiv\sum_{ij}[\hat{\mathcal{G}}^{-1}]_{ji}\delta_{x_i\alpha}\delta_{\bar{y}_j\bar{\beta}}\]</div>
+<p>it takes the compact form</p>
+<div class="math notranslate nohighlight">
+\[M_{\alpha\bar{\beta}\gamma\bar{\delta}}^4=\frac{1}{\langle\operatorname{sign}(\mathcal{C})\rangle_{\mathrm{MC}}}\Big\langle\left(\bar{M}_{\bar{\beta}\alpha}\bar{M}_{\bar{\delta}\gamma}-\bar{M}_{\bar{\delta}\alpha}\bar{M}_{\bar{\beta}\gamma}\right)\operatorname{sign}(\mathcal{C})\Big\rangle_{\mathrm{MC}}.\]</div>
+<p>This factorization is directly used in our implementation.</p>
+</div></blockquote>
+</section>
+<section id="frequency-measurement-of-m-4">
+<h4>Frequency measurement of <span class="math notranslate nohighlight">\(M^4\)</span><a class="headerlink" href="#frequency-measurement-of-m-4" title="Link to this heading"></a></h4>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line">Just like <span class="math notranslate nohighlight">\(M\)</span>, we can measure <span class="math notranslate nohighlight">\(M^4\)</span> also directly in
+Matsubara frequencies <a class="footnote-reference brackets" href="#id2" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a></div>
+</div>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[\begin{split}\begin{split}M_{a\bar{b}c\bar{d}}^4(i\omega_a,i\omega_{\bar{b}},i\omega_c) &amp; =\frac{1}{\beta\langle\operatorname{sign}(\mathcal{C})\rangle_{\mathrm{MC}}}\Bigg\langle\left(\bar{M}_{\bar{\beta}\alpha}\bar{M}_{\bar{\delta}\gamma}-\bar{M}_{\bar{\delta}\alpha}\bar{M}_{\bar{\beta}\gamma}\right)\\
+ &amp; \hspace{2cm}\times e^{-i\omega_a(\tau_a-\tau_d)}\,e^{i\omega_{\bar{b}}(\tau_b-\tau_d)}\,e^{-i\omega_c(\tau_c-\tau_d)}\operatorname{sign}(\mathcal{C})\Bigg\rangle_{\mathrm{MC}}\\
+ &amp; =\frac{1}{\beta\langle\operatorname{sign}(\mathcal{C})\rangle_{\mathrm{MC}}}\Bigg\langle\Big[\bar{M}_{\bar{b}a}(\omega_b,\omega_a)\bar{M}_{\bar{d}c}(\omega_a+\omega_c-\omega_b,\omega_c)\\
+ &amp; \hspace{2cm}-\bar{M}_{\bar{d}a}(\underbrace{\omega_a+\omega_c-\omega_b}_{\omega_d},\omega_a)\bar{M}_{\bar{b}c}(\omega_b,\omega_c)\Big]\operatorname{sign}(\mathcal{C})\Bigg\rangle_{\mathrm{MC}}.
+\end{split}\end{split}\]</div>
+<p>Here we have defined the intermediate scattering matrix in the
+Matsubara domain</p>
+<div class="math notranslate nohighlight">
+\[\bar{M}_{\bar{b}a}(\omega_b,\omega_a)\equiv\sum_{ij}[\hat{\mathcal{G}}^{-1}]_{ji}\delta_{c_i a}\delta_{\bar{c}_j\bar{b}}\times\,e^{i\omega_b\tau_j}e^{-i\omega_a\tau_i}.\]</div>
+<p>In the implementation we precompute this intermediate scattering
+matrix, which allows us to reduce the effort from
+<span class="math notranslate nohighlight">\(\mathcal{O}(k^4\log(k))\)</span> down to
+<span class="math notranslate nohighlight">\(\mathcal{O}(k^2\log(k))\)</span>.</p>
+</div></blockquote>
+</section>
+</section>
+<section id="equal-time-correlation-functions-chi-3">
+<h3>Equal-time correlation functions <span class="math notranslate nohighlight">\(\chi^3\)</span><a class="headerlink" href="#equal-time-correlation-functions-chi-3" title="Link to this heading"></a></h3>
+<p>The equal-time correlation functions <span class="math notranslate nohighlight">\(\chi^{3,r}\)</span> can be directly
+calculated from the intermediate quantity <span class="math notranslate nohighlight">\(M^{3,r}\)</span> defined in the
+following. In the first step we define three extensions of the
+intermediate scattering matrix</p>
+<div class="math notranslate nohighlight">
+\[\overline{\mathcal{G}M}_{b\alpha}\equiv\overline{\mathcal{G}M}_{ba}(\tau_a)\equiv\sum_{ij}\mathcal{G}_{b\bar{c}_j}(-\tau_j)[\hat{\mathcal{G}}^{-1}]_{ji}\delta_{x_i\alpha}=-\sum_{ij}\mathcal{G}_{b\bar{c}_j}(\beta-\tau_j)[\hat{\mathcal{G}}^{-1}]_{ji}\delta_{x_i\alpha},\]</div>
+<div class="math notranslate nohighlight">
+\[\overline{M\mathcal{G}}_{\bar{\beta}\bar{a}}\equiv\overline{M\mathcal{G}}_{\bar{b}\bar{a}}(\tau_b)\equiv\sum_{ij}\delta_{y_j\beta}[\hat{\mathcal{G}}^{-1}]_{ji}\mathcal{G}_{c_i\bar{a}}(\tau_i),\]</div>
+<div class="math notranslate nohighlight">
+\[\overline{\mathcal{G}M\mathcal{G}}_{b\bar{a}}\equiv\sum_{ij}\mathcal{G}_{b\bar{c}_j}(-\tau_j)[\hat{\mathcal{G}}^{-1}]_{ji}\mathcal{G}_{c_i\bar{a}}(\tau_i)=-\sum_{ij}\mathcal{G}_{b\bar{c}_j}(\beta-\tau_j)[\hat{\mathcal{G}}^{-1}]_{ji}\mathcal{G}_{c_i\bar{a}}(\tau_i).\]</div>
+<p>Using these, <span class="math notranslate nohighlight">\(M^{3,r}\)</span> is measured as</p>
+<div class="math notranslate nohighlight">
+\[M_{abcd}^{3,pp}(\tau_a,\tau_c)=\frac{1}{\langle\operatorname{sign}(\mathcal{C})\rangle_{\mathrm{MC}}}\Bigg\langle\Big[\overline{\mathcal{G}M}_{ba}(\tau_a)\overline{\mathcal{G}M}_{dc}(\tau_c)-\overline{\mathcal{G}M}_{da}(\tau_a)\overline{\mathcal{G}M}_{bc}(\tau_c)\Big]\operatorname{sign}(\mathcal{C})\Bigg\rangle_{\mathrm{MC}},\]</div>
+<div class="math notranslate nohighlight">
+\[M_{a\bar{b}\bar{c}d}^{3,ph}(\tau_a,\tau_{\bar{b}})=\frac{1}{\langle\operatorname{sign}(\mathcal{C})\rangle_{\mathrm{MC}}}\Bigg\langle\Big[\bar{M}_{\bar{\beta}\alpha}\overline{\mathcal{G}M\mathcal{G}}_{d\bar{c}}-\overline{\mathcal{G}M}_{d\alpha}\overline{M\mathcal{G}}_{\bar{\beta}\bar{c}}\Big]\operatorname{sign}(\mathcal{C})\Bigg\rangle_{\mathrm{MC}}.\]</div>
+<section id="frequency-measurement-of-m-3-r">
+<h4>Frequency measurement of <span class="math notranslate nohighlight">\(M^{3,r}\)</span><a class="headerlink" href="#frequency-measurement-of-m-3-r" title="Link to this heading"></a></h4>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line">Again, we can measure <span class="math notranslate nohighlight">\(M^{3,r}\)</span> also directly in Matsubara
+frequencies. For this we need the scattering matrices</div>
+</div>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[\overline{\mathcal{G}M}_{ba}(\omega_a)\equiv\sum_{ij}\mathcal{G}_{b\bar{c}_j}(-\tau_j)[\hat{\mathcal{G}}^{-1}]_{ji}e^{-i\omega_a\tau_i}\delta_{c_i a}=\sum_{ij}\mathcal{G}_{b\bar{c}_j}(\beta-\tau_j)[\hat{\mathcal{G}}^{-1}]_{ji}e^{i\omega_a(\beta-\tau_i)}\delta_{c_i a},\]</div>
+<div class="math notranslate nohighlight">
+\[\overline{M\mathcal{G}}_{\bar{b}\bar{a}}(\omega_{\bar{b}})\equiv\sum_{ij}e^{i\omega_{\bar{b}}\tau_j}\delta_{\bar{c}_j\bar{b}}[\hat{\mathcal{G}}^{-1}]_{ji}\mathcal{G}_{c_i\bar{a}}(\tau_i),\]</div>
+<div class="math notranslate nohighlight">
+\[\overline{\mathcal{G}M\mathcal{G}}_{b\bar{a}}\equiv\sum_{ij}\mathcal{G}_{b\bar{c}_j}(-\tau_j)[\hat{\mathcal{G}}^{-1}]_{ji}\mathcal{G}_{c_i\bar{a}}(\tau_i)=-\sum_{ij}\mathcal{G}_{b\bar{c}_j}(\beta-\tau_j)[\hat{\mathcal{G}}^{-1}]_{ji}\mathcal{G}_{c_i\bar{a}}(\tau_i),\]</div>
+</div></blockquote>
+<p>Then we can measure</p>
+<div class="math notranslate nohighlight">
+\[M_{abcd}^{3,pp}(\omega_a,\omega_c)=\frac{1}{\langle\operatorname{sign}(\mathcal{C})\rangle_{\mathrm{MC}}}\Bigg\langle\Big[\overline{\mathcal{G}M}_{ba}(\omega_a)\overline{\mathcal{G}M}_{dc}(\omega_c)-\overline{\mathcal{G}M}_{da}(\omega_a)\overline{\mathcal{G}M}_{bc}(\omega_c)\Big]\operatorname{sign}(\mathcal{C})\Bigg\rangle_{\mathrm{MC}},\]</div>
+<div class="math notranslate nohighlight">
+\[M_{a\bar{b}\bar{c}d}^{3,ph}(\omega_a,\omega_{\bar{b}})=\frac{1}{\langle\operatorname{sign}(\mathcal{C})\rangle_{\mathrm{MC}}}\Bigg\langle\Big[\bar{M}_{\bar{b}a}(\omega_{\bar{b}},\omega_a)\overline{\mathcal{G}M\mathcal{G}}_{c\bar{d}}-\overline{\mathcal{G}M}_{ca}(\omega_a)\overline{M\mathcal{G}}_{\bar{b}\bar{d}}(\omega_{\bar{b}})\Big]\operatorname{sign}(\mathcal{C})\Bigg\rangle_{\mathrm{MC}}.\]</div>
+</section>
+<section id="constructing-chi-3-r-from-m-3-r">
+<h4>Constructing <span class="math notranslate nohighlight">\(\chi^{3,r}\)</span> from <span class="math notranslate nohighlight">\(M^{3,r}\)</span><a class="headerlink" href="#constructing-chi-3-r-from-m-3-r" title="Link to this heading"></a></h4>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line">With</div>
+</div>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[M_{abcd}^{3,pp,conn}(\omega_a,\omega_c)=M_{abcd}^{3,pp}(\omega_a,\omega_c)-\overline{\mathcal{G}M}_{ba}(\omega_a)\overline{\mathcal{G}M}_{dc}(\omega_c)+\overline{\mathcal{G}M}_{da}(\omega_a)\overline{\mathcal{G}M}_{bc}(\omega_c),\]</div>
+<div class="math notranslate nohighlight">
+\[M_{a\bar{b}\bar{c}d}^{3,ph,conn}(\omega_a,\omega_{\bar{b}})=M_{a\bar{b}\bar{c}d}^{3,ph}(\omega_a,\omega_{\bar{b}})-\beta\delta_{\omega_a,\omega_{\bar{b}}}\bar{M}_{\bar{b}a}(\omega_a)\overline{\mathcal{G}M\mathcal{G}}_{c\bar{d}}+\overline{\mathcal{G}M}_{ca}(\omega_a)\overline{M\mathcal{G}}_{\bar{b}\bar{d}}(\omega_{\bar{b}}),\]</div>
+<p>we have that</p>
+<div class="math notranslate nohighlight">
+\[\chi_{\bar{a}b\bar{c}d}^{3,pp,conn}(\omega_a,\omega_c)=\mathcal{G}_{\bar{a}i}(\omega_a)\mathcal{G}_{\bar{c}j}(\omega_c)M_{ibjd}^{3,pp,conn}(\omega_a,\omega_c),\]</div>
+<div class="math notranslate nohighlight">
+\[\chi_{\bar{a}b\bar{c}d}^{3,ph,conn}(\omega_{\bar{a}},\omega_b)=\mathcal{G}_{i\bar{a}}(\omega_{\bar{a}})\mathcal{G}_{b\bar{j}}(\omega_b)M_{i\bar{j}\bar{c}d}^{3,ph,conn}(\omega_{\bar{a}},\omega_b).\]</div>
+<p>Note that <span class="math notranslate nohighlight">\(M_{abcd}^{3,pp}(\omega_a,\omega_c)\)</span> and
+<span class="math notranslate nohighlight">\(M_{a\bar{b}\bar{c}d}^{3,ph}(\omega_a,\omega_{\bar{b}})\)</span> can
+be either measured directly in frequencies, or calculated via a
+Fourier transforms</p>
+</div></blockquote>
+<div class="math notranslate nohighlight">
+\[M_{abcd}^{3,pp}(\omega_a,\omega_c)=\int_{\tau_a,\tau_c}e^{-i\tau_a\omega_a}e^{-i\tau_c\omega_c}M_{abcd}^{3,pp}(\tau_a,\tau_c)\]</div>
+<div class="math notranslate nohighlight">
+\[M_{a\bar{b}\bar{c}d}^{3,ph}(\omega_a,\omega_{\bar{b}})=\int_{\tau_a,\tau_{\bar{b}}}e^{-i\tau_a\omega_a}e^{i\tau_{\bar{b}}\omega_{\bar{b}}}M_{a\bar{b}\bar{c}d}^{3,ph}(\tau_a,\tau_{\bar{b}})\]</div>
+</section>
+<section id="mixed-fermion-boson-notation">
+<h4>Mixed fermion-boson notation<a class="headerlink" href="#mixed-fermion-boson-notation" title="Link to this heading"></a></h4>
+<p>Instead of using the frequencies of the fermionic operators, it is often
+convenient to work in a mixed fermion-boson notation. It is defined as</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\tilde{M}_{abcd}^{3,pp}(\omega,\Omega)=M_{abcd}^{3,pp}(\omega,\Omega-\omega)
+ &amp; =\int_{\tau_a,\tau_c}e^{i(\tau_c-\tau_a)\omega}e^{-i\tau_c\Omega}M_{abcd}^{3,pp}(\tau_a,\tau_c)\\
+ &amp; =\int_{-\beta}^0d\tau'\int_0^\beta d\tau_a e^{-i(\tau'+\tau_a)\omega}e^{i\tau'\Omega}M_{abcd}^{3,pp}(\tau_a,-\tau')\\
+ &amp; =-\int_0^\beta d\tau'\int_0^\beta d\tau_a e^{-i(\tau'+\tau_a)\omega}e^{i\tau'\Omega}M_{abcd}^{3,pp}(\tau_a,\beta-\tau')\\
+ &amp; =\int_0^\beta d\tau'\int_{-\tau'}^{-\beta-\tau'}d\tau e^{i\tau\omega}e^{i\tau'\Omega}M_{abcd}^{3,pp}(-\tau-\tau',\beta-\tau')\\
+ &amp; =\int_0^\beta d\tau'\int_{-\tau'}^{\beta-\tau'}d\tau e^{i\tau\omega}e^{i\tau'\Omega}M_{abcd}^{3,pp}(\beta-\tau-\tau',\beta-\tau')\\\end{split}\]</div>
+<div class="math notranslate nohighlight">
+\[\tilde{M}_{a\bar{b}\bar{c}d}^{3,ph}(\omega,\Omega)=M_{a\bar{b}\bar{c}d}^{3,ph}(\omega,\Omega+\omega)=\int_{\tau_a,\tau_{\bar{b}}}e^{i(\tau_{\bar{b}}-\tau_a)\omega}e^{i\tau_{\bar{b}}\Omega}M_{a\bar{b}\bar{c}d}^{3,ph}(\tau_a,\tau_{\bar{b}}),\]</div>
+<p>and accordingly for <span class="math notranslate nohighlight">\(\chi^{3,r}\)</span>.</p>
+</section>
+</section>
+<section id="equal-time-correlation-functions-chi-2">
+<h3>Equal-time correlation functions <span class="math notranslate nohighlight">\(\chi^2\)</span><a class="headerlink" href="#equal-time-correlation-functions-chi-2" title="Link to this heading"></a></h3>
+<p>We now consider the case that two pairs of times are equal. In this case
+we measure in imaginary time, and a Fourier transform is performed in a
+post-processing step. We require again an intermediate object</p>
+<div class="math notranslate nohighlight">
+\[\overline{\mathcal{G}M\mathcal{G}}_{\beta\bar{\alpha}}\equiv\overline{\mathcal{G}M\mathcal{G}}_{b\bar{a}}(\tau_b,\tau_a)\equiv\sum_{ij}\mathcal{G}_{b\bar{c}_j}(\tau_b-\tau_j)[\hat{\mathcal{G}}^{-1}]_{ji}\mathcal{G}_{c_i\bar{a}}(\tau_i-\tau_{\bar{a}}).\]</div>
+<p>The measurements then read</p>
+<div class="math notranslate nohighlight">
+\[M_{\bar{a}b\bar{c}d}^{2,pp}(\tau)=\frac{1}{\langle\operatorname{sign}(\mathcal{C})\rangle_{\mathrm{MC}}}\Bigg\langle\Big[\overline{\mathcal{G}M\mathcal{G}}_{b\bar{a}}(0^+,\tau^+)\overline{\mathcal{G}M\mathcal{G}}_{d\bar{c}}(0,\tau)-\overline{\mathcal{G}M\mathcal{G}}_{d\bar{a}}(0,\tau^+)\overline{\mathcal{G}M\mathcal{G}}_{b\bar{c}}(0^+,\tau)\Big]\operatorname{sign}(\mathcal{C})\Bigg\rangle_{\mathrm{MC}},\]</div>
+<div class="math notranslate nohighlight">
+\[M_{\bar{a}b\bar{c}d}^{2,ph}(\tau)=\frac{1}{\langle\operatorname{sign}(\mathcal{C})\rangle_{\mathrm{MC}}}\Bigg\langle\Big[\overline{\mathcal{G}M\mathcal{G}}_{b\bar{a}}(\tau,\tau^+)\overline{\mathcal{G}M\mathcal{G}}_{d\bar{c}}(0,0^+)-\overline{\mathcal{G}M\mathcal{G}}_{d\bar{a}}(0,\tau^+)\overline{\mathcal{G}M\mathcal{G}}_{b\bar{c}}(\tau,0^+)\Big]\operatorname{sign}(\mathcal{C})\Bigg\rangle_{\mathrm{MC}}.\]</div>
+<section id="constructing-chi-2-r-from-m-2-r">
+<h4>Constructing <span class="math notranslate nohighlight">\(\chi^{2,r}\)</span> from <span class="math notranslate nohighlight">\(M^{2,r}\)</span><a class="headerlink" href="#constructing-chi-2-r-from-m-2-r" title="Link to this heading"></a></h4>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line">We have that</div>
+</div>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[\chi_{\bar{a}b\bar{c}d}^{2,pp,conn}(\tau)=M_{\bar{a}b\bar{c}d}^{2,pp}(\tau)-\overline{\mathcal{G}M\mathcal{G}}_{b\bar{a}}(\beta-\tau)\overline{\mathcal{G}M\mathcal{G}}_{d\bar{c}}(\beta-\tau)+\overline{\mathcal{G}M\mathcal{G}}_{d\bar{a}}(\beta-\tau)\overline{\mathcal{G}M\mathcal{G}}_{b\bar{c}}(\beta-\tau),\]</div>
+<div class="math notranslate nohighlight">
+\[\chi_{\bar{a}b\bar{c}d}^{2,ph,conn}(\tau)=M_{\bar{a}b\bar{c}d}^{2,ph}(\tau)-\overline{\mathcal{G}M\mathcal{G}}_{b\bar{a}}(\beta^-)\overline{\mathcal{G}M\mathcal{G}}_{d\bar{c}}(\beta^-)-\overline{\mathcal{G}M\mathcal{G}}_{d\bar{a}}(\beta-\tau)\overline{\mathcal{G}M\mathcal{G}}_{b\bar{c}}(\tau).\]</div>
+</div></blockquote>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id2" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>Careful: The Fourier conventions for <span class="math notranslate nohighlight">\(M\)</span>-objects are indeed
+reversed, meaning that barred indices are transformed to frequencies
+with <span class="math notranslate nohighlight">\(\int_\tau e^{iw\tau}\)</span>.</p>
+</aside>
+</aside>
+</section>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="_autosummary/triqs_ctint.version.show_version.html" class="btn btn-neutral float-left" title="triqs_ctint.version.show_version" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="issues.html" class="btn btn-neutral float-right" title="Reporting issues" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025--present, The Simons Foundation.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
