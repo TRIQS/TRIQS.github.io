@@ -1198,8 +1198,8 @@
         <span class="c1"># velocities_k: velocity (momentum) matrix elements between all bands in band_window_optics</span>
         <span class="c1">#               and each k-point.</span>
 
-        <span class="c1">#load fortran wrapper module</span>
-        <span class="kn">import</span> <span class="nn">triqs_dft_tools.converters.elktools.elkwrappers.getpmatelk</span> <span class="k">as</span> <span class="nn">et</span>
+        <span class="c1">#load pure Python module to read PMAT.OUT</span>
+        <span class="kn">from</span> <span class="nn">triqs_dft_tools.converters.elktools</span> <span class="kn">import</span> <span class="n">getpmatelk</span>
         <span class="c1">#elk velocities for all bands</span>
         <span class="n">pmat</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">nstsv</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nstsv</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span><span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
 
@@ -1213,10 +1213,8 @@
         <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Reading PMAT.OUT&quot;</span><span class="p">)</span>
         <span class="c1">#read velocities for each k-point</span>
         <span class="k">for</span> <span class="n">ik</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_k</span><span class="p">):</span>
-          <span class="c1">#need to use a fortran array for wrapper</span>
-          <span class="n">f_vkl</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asfortranarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vkl</span><span class="p">[</span><span class="n">ik</span><span class="p">,:])</span>
-          <span class="c1">#read the ik velocity using the wrapper</span>
-          <span class="n">pmat</span><span class="p">[:,:,:]</span><span class="o">=</span><span class="n">et</span><span class="o">.</span><span class="n">getpmatelk</span><span class="p">(</span><span class="n">ik</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nstsv</span><span class="p">,</span><span class="n">f_vkl</span><span class="p">)</span>
+          <span class="c1">#read the ik velocity using pure Python</span>
+          <span class="n">pmat</span><span class="p">[:,:,:]</span><span class="o">=</span><span class="n">getpmatelk</span><span class="p">(</span><span class="n">ik</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nstsv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vkl</span><span class="p">[</span><span class="n">ik</span><span class="p">,:])</span>
           <span class="c1">#loop over spin</span>
           <span class="k">for</span> <span class="n">isp</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_spin_blocks</span><span class="p">):</span>
             <span class="c1">#no. correlated bands at ik</span>
