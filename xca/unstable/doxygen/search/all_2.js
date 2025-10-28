@@ -1,0 +1,26 @@
+var searchData=
+[
+  ['backbone_0',['backbone',['../classBackbone.html',1,'Backbone'],['../classBackbone.html#a8fb93b04d9b89eee599a6ab8c167d4bf',1,'Backbone::Backbone()']]],
+  ['backbone_2ecpp_1',['backbone.cpp',['../backbone_8cpp.html',1,'']]],
+  ['backbone_2ehpp_2',['backbone.hpp',['../backbone_8hpp.html',1,'']]],
+  ['backbonevertex_3',['backbonevertex',['../classBackboneVertex.html',1,'BackboneVertex'],['../classBackboneVertex.html#a15f324fb41f6d0b27998ea2c493807e5',1,'BackboneVertex::BackboneVertex()']]],
+  ['beta_4',['beta',['../classDiagramBlockSparseEvaluator.html#a67c5ead019f142e101236d42554bbb19',1,'DiagramBlockSparseEvaluator::beta'],['../classGreensFunctionDiagramEvaluator.html#a55038c755fe1a70b9e757dba5526126e',1,'GreensFunctionDiagramEvaluator::beta'],['../classDiagramEvaluator.html#aeb60976cce3798b6f4800d329bf20cf1',1,'DiagramEvaluator::beta']]],
+  ['block_5findices_5',['block_indices',['../classBlockOpSymSetBar.html#acfe368758b160cb7feda302477fdf6a0',1,'BlockOpSymSetBar::block_indices'],['../classBlockOp3D.html#a82b720269221f5781aeefe5e1a6ca030',1,'BlockOp3D::block_indices']]],
+  ['block_5fsparse_2ecpp_6',['block_sparse.cpp',['../block__sparse_8cpp.html',1,'']]],
+  ['block_5fsparse_2ehpp_7',['block_sparse.hpp',['../block__sparse_8hpp.html',1,'']]],
+  ['block_5fsparse_5fbackbone_2ecpp_8',['block_sparse_backbone.cpp',['../block__sparse__backbone_8cpp.html',1,'']]],
+  ['block_5fsparse_5fbackbone_2ehpp_9',['block_sparse_backbone.hpp',['../block__sparse__backbone_8hpp.html',1,'']]],
+  ['block_5fsparse_5fmanual_2ecpp_10',['block_sparse_manual.cpp',['../block__sparse__manual_8cpp.html',1,'']]],
+  ['block_5fsparse_5fmanual_2ehpp_11',['block_sparse_manual.hpp',['../block__sparse__manual_8hpp.html',1,'']]],
+  ['block_5fsparse_5fmanual_5fgf_2ecpp_12',['block_sparse_manual_gf.cpp',['../block__sparse__manual__gf_8cpp.html',1,'']]],
+  ['block_5fsparse_5fmanual_5fgf_2ehpp_13',['block_sparse_manual_gf.hpp',['../block__sparse__manual__gf_8hpp.html',1,'']]],
+  ['blockdiagopfun_14',['blockdiagopfun',['../classBlockDiagOpFun.html#a82c1d6fca5ea39762441af95854cbaa8',1,'BlockDiagOpFun::BlockDiagOpFun(int r, nda::vector_const_view&lt; int &gt; block_sizes)'],['../classBlockDiagOpFun.html#a169b84e649ca0b1b75be54630559c457',1,'BlockDiagOpFun::BlockDiagOpFun(std::vector&lt; nda::array&lt; dcomplex, 3 &gt; &gt; blocks, nda::vector_const_view&lt; int &gt; zero_block_indices)'],['../classBlockDiagOpFun.html',1,'BlockDiagOpFun']]],
+  ['blockop_15',['blockop',['../classBlockOp.html#aa6a7858374ae131f968c4878f4bfc5d6',1,'BlockOp::BlockOp()'],['../classBlockOp.html',1,'BlockOp'],['../classBlockOp.html#a5b5eecd483ecea98042faccfbd64bfd8',1,'BlockOp::BlockOp()']]],
+  ['blockop3d_16',['blockop3d',['../classBlockOp3D.html#a572d290b8037c74d68fd7a0b278bba41',1,'BlockOp3D::BlockOp3D()'],['../classBlockOp3D.html',1,'BlockOp3D'],['../classBlockOp3D.html#ad5ebd762bbfced4ce576837613a48cc6',1,'BlockOp3D::BlockOp3D()']]],
+  ['blockopfun_17',['blockopfun',['../classBlockOpFun.html',1,'BlockOpFun'],['../classBlockOpFun.html#a1a151b3a7f72a5bbf88be28dea3d05d1',1,'BlockOpFun::BlockOpFun(nda::vector&lt; int &gt; block_indices, std::vector&lt; nda::array&lt; dcomplex, 3 &gt; &gt; blocks)'],['../classBlockOpFun.html#aef22b193a453e7f18b6e4c61ad1f9dd0',1,'BlockOpFun::BlockOpFun(int r, nda::vector&lt; int &gt; block_indices, nda::array_const_view&lt; int, 2 &gt; block_sizes)']]],
+  ['blockopsymquartet_18',['blockopsymquartet',['../classBlockOpSymQuartet.html#a5d671eb8016cff98c3c0b3bef86f5f48',1,'BlockOpSymQuartet::BlockOpSymQuartet()'],['../classBlockOpSymQuartet.html',1,'BlockOpSymQuartet']]],
+  ['blockopsymset_19',['blockopsymset',['../classBlockOpSymSet.html#a7d663ba7bd5c6cef79d5337bb4eef2a2',1,'BlockOpSymSet::BlockOpSymSet()'],['../classBlockOpSymSet.html',1,'BlockOpSymSet'],['../classBlockOpSymSet.html#a922b8ddbf1ba34e90934fb463b6be039',1,'BlockOpSymSet::BlockOpSymSet()']]],
+  ['blockopsymsetbar_20',['blockopsymsetbar',['../classBlockOpSymSetBar.html',1,'BlockOpSymSetBar'],['../classBlockOpSymSetBar.html#a2688022fadfda8d866d4b55c001481d3',1,'BlockOpSymSetBar::BlockOpSymSetBar(nda::vector&lt; int &gt; block_indices, std::vector&lt; nda::array&lt; dcomplex, 4 &gt; &gt; blocks)'],['../classBlockOpSymSetBar.html#a85d6f13f876a80613c2a16fee27dba1e',1,'BlockOpSymSetBar::BlockOpSymSetBar(int q, int r, nda::vector&lt; int &gt; block_indices, nda::array_const_view&lt; int, 2 &gt; block_sizes)']]],
+  ['blocks_21',['blocks',['../classBlockOp3D.html#a2256c24450917efbf59dbaccba580ac2',1,'BlockOp3D::blocks'],['../classBlockOpSymSetBar.html#ac3d2c6c439e57866271aab941e1dacac',1,'BlockOpSymSetBar::blocks']]],
+  ['boftobdof_22',['boftobdof',['../block__sparse_8cpp.html#a7bf45ebb6fdac2513b064b1549930fab',1,'BOFtoBDOF(BlockOpFun const &amp;A):&#160;block_sparse.cpp'],['../block__sparse_8hpp.html#a7bf45ebb6fdac2513b064b1549930fab',1,'BOFtoBDOF(BlockOpFun const &amp;A):&#160;block_sparse.cpp']]]
+];
