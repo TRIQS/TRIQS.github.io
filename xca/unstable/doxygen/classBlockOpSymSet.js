@@ -1,6 +1,6 @@
 var classBlockOpSymSet =
 [
-    [ "BlockOpSymSet", "classBlockOpSymSet.html#a922b8ddbf1ba34e90934fb463b6be039", null ],
-    [ "BlockOpSymSet", "classBlockOpSymSet.html#a7d663ba7bd5c6cef79d5337bb4eef2a2", null ],
+    [ "BlockOpSymSet", "classBlockOpSymSet.html#abfa7a8c172f6276f334dc4073079ddba", null ],
+    [ "BlockOpSymSet", "classBlockOpSymSet.html#a96f744bc6de1b70d741a52e66680b37d", null ],
     [ "get_size_sym_set", "classBlockOpSymSet.html#a5e51defba014284bdbbcb511c08c9cca", null ]
 ];

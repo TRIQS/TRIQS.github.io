@@ -2,7 +2,6 @@ var block__sparse_8cpp =
 [
     [ "BOFtoBDOF", "block__sparse_8cpp.html#a7bf45ebb6fdac2513b064b1549930fab", null ],
     [ "dagger_bs", "block__sparse_8cpp.html#a9368e27aa3c1453bddc72a885a8f9a02", null ],
-    [ "h5_read", "block__sparse_8cpp.html#a35073a9466a09337791dd2149ad81650", null ],
     [ "h5_write", "block__sparse_8cpp.html#a4d8851b12cbd67843bcbe3f0958d0add", null ],
     [ "nonint_gf_BDOF", "block__sparse_8cpp.html#a92a128cd3d318fc1b32b1bd7a2b0059e", null ],
     [ "operator*", "block__sparse_8cpp.html#a80f95253b117f2307a8faf83c42ed5e3", null ],
