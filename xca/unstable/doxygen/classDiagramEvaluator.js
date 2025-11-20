@@ -1,9 +1,11 @@
 var classDiagramEvaluator =
 [
     [ "DiagramEvaluator", "classDiagramEvaluator.html#ac6e301d7f105334fc7b25e99afbf13ed", null ],
+    [ "~DiagramEvaluator", "classDiagramEvaluator.html#a6214311f4f77f4fcf186758dc161806b", null ],
     [ "compose_with_edge_dense", "classDiagramEvaluator.html#ad381164954f01df812aa9f01c65c2791", null ],
     [ "eval_backbone_fixed_indices_dense", "classDiagramEvaluator.html#ad5ddf6c28f1a3a4c9d4a97408e720990", null ],
     [ "eval_diagram_dense", "classDiagramEvaluator.html#accca5b994f0b4a01d35ce3d9c1ea33fd", null ],
+    [ "multiply_prefactor", "classDiagramEvaluator.html#a77c469fb13bb2447a26a6c3c3d8f40b7", null ],
     [ "multiply_vertex_dense", "classDiagramEvaluator.html#aa39c661314a66b981dc108be506bfa4a", null ],
     [ "multiply_zero_vertex", "classDiagramEvaluator.html#a09da5478e373d70cbe3703b499c4079d", null ],
     [ "reset", "classDiagramEvaluator.html#a3a91b443b1b469e6de6d2af83ecf4a4d", null ],

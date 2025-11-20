@@ -11,7 +11,7 @@ var searchData=
   ['diagramevaluator_8',['diagramevaluator',['../classDiagramEvaluator.html#ac6e301d7f105334fc7b25e99afbf13ed',1,'DiagramEvaluator::DiagramEvaluator()'],['../classDiagramEvaluator.html',1,'DiagramEvaluator']]],
   ['dlr_5fdyson_5fppsc_2ehpp_9',['dlr_dyson_ppsc.hpp',['../dlr__dyson__ppsc_8hpp.html',1,'']]],
   ['dlr_5fif_5fdense_10',['dlr_if_dense',['../classfastdiagram.html#a065319888492d83d1adc8b3f0bcb3405',1,'fastdiagram']]],
-  ['dlr_5fit_11',['dlr_it',['../classDiagramBlockSparseEvaluator.html#a450f0960a03da1a45a3040ee2ff162f2',1,'DiagramBlockSparseEvaluator::dlr_it'],['../classDiagramEvaluator.html#a84061bf613eeec5fad98c3af534bdf83',1,'DiagramEvaluator::dlr_it'],['../classGreensFunctionDiagramEvaluator.html#a536c482e2bdea3e0369cfbc9894d50a8',1,'GreensFunctionDiagramEvaluator::dlr_it']]],
+  ['dlr_5fit_11',['dlr_it',['../classDiagramBlockSparseEvaluator.html#a450f0960a03da1a45a3040ee2ff162f2',1,'DiagramBlockSparseEvaluator::dlr_it'],['../classDiagramEvaluator.html#a84061bf613eeec5fad98c3af534bdf83',1,'DiagramEvaluator::dlr_it']]],
   ['documentation_12',['API Documentation',['../documentation.html',1,'']]],
   ['documentation_2emd_13',['documentation.md',['../documentation_8md.html',1,'']]],
   ['dyson_5fit_5fppsc_14',['dyson_it_ppsc',['../classcppdlr_1_1dyson__it__ppsc.html#a5ab692b118e78e29e3e58e439d11f0e6',1,'cppdlr::dyson_it_ppsc::dyson_it_ppsc()'],['../classcppdlr_1_1dyson__it__ppsc.html',1,'cppdlr::dyson_it_ppsc&lt; Ht, Sh &gt;']]],

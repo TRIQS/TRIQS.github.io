@@ -3,6 +3,11 @@ var annotated_dup =
     [ "cppdlr", "namespacecppdlr.html", [
       [ "dyson_it_ppsc", "classcppdlr_1_1dyson__it__ppsc.html", "classcppdlr_1_1dyson__it__ppsc" ]
     ] ],
+    [ "triqs", "namespacetriqs.html", [
+      [ "atom_diag", "namespacetriqs_1_1atom__diag.html", [
+        [ "atom_diag", "classtriqs_1_1atom__diag_1_1atom__diag.html", null ]
+      ] ]
+    ] ],
     [ "Backbone", "classBackbone.html", "classBackbone" ],
     [ "BackboneVertex", "classBackboneVertex.html", "classBackboneVertex" ],
     [ "BlockDiagOpFun", "classBlockDiagOpFun.html", "classBlockDiagOpFun" ],
@@ -12,12 +17,12 @@ var annotated_dup =
     [ "BlockOpSymQuartet", "classBlockOpSymQuartet.html", "classBlockOpSymQuartet" ],
     [ "BlockOpSymSet", "classBlockOpSymSet.html", "classBlockOpSymSet" ],
     [ "BlockOpSymSetBar", "classBlockOpSymSetBar.html", "classBlockOpSymSetBar" ],
+    [ "CorrelatorBackbone", "classCorrelatorBackbone.html", "classCorrelatorBackbone" ],
+    [ "CorrelatorDiagramEvaluator", "classCorrelatorDiagramEvaluator.html", "classCorrelatorDiagramEvaluator" ],
     [ "DenseFSet", "classDenseFSet.html", "classDenseFSet" ],
     [ "DiagramBlockSparseEvaluator", "classDiagramBlockSparseEvaluator.html", "classDiagramBlockSparseEvaluator" ],
     [ "DiagramEvaluator", "classDiagramEvaluator.html", "classDiagramEvaluator" ],
     [ "fastdiagram", "classfastdiagram.html", "classfastdiagram" ],
-    [ "GreensFunctionBackbone", "classGreensFunctionBackbone.html", "classGreensFunctionBackbone" ],
-    [ "GreensFunctionDiagramEvaluator", "classGreensFunctionDiagramEvaluator.html", "classGreensFunctionDiagramEvaluator" ],
     [ "hyb_decomp", "classhyb__decomp.html", "classhyb__decomp" ],
     [ "hyb_F", "classhyb__F.html", "classhyb__F" ]
 ];

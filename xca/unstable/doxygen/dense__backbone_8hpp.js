@@ -1,5 +1,5 @@
 var dense__backbone_8hpp =
 [
-    [ "DiagramEvaluator", "classDiagramEvaluator.html", "classDiagramEvaluator" ],
-    [ "GreensFunctionDiagramEvaluator", "classGreensFunctionDiagramEvaluator.html", "classGreensFunctionDiagramEvaluator" ]
+    [ "CorrelatorDiagramEvaluator", "classCorrelatorDiagramEvaluator.html", "classCorrelatorDiagramEvaluator" ],
+    [ "DiagramEvaluator", "classDiagramEvaluator.html", "classDiagramEvaluator" ]
 ];

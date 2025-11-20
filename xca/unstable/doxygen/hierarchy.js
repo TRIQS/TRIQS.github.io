@@ -1,7 +1,7 @@
 var hierarchy =
 [
     [ "Backbone", "classBackbone.html", [
-      [ "GreensFunctionBackbone", "classGreensFunctionBackbone.html", null ]
+      [ "CorrelatorBackbone", "classCorrelatorBackbone.html", null ]
     ] ],
     [ "BackboneVertex", "classBackboneVertex.html", null ],
     [ "BlockDiagOpFun", "classBlockDiagOpFun.html", null ],
@@ -15,9 +15,11 @@ var hierarchy =
     [ "cppdlr::dyson_it_ppsc< Ht, Sh >", "classcppdlr_1_1dyson__it__ppsc.html", null ],
     [ "DenseFSet", "classDenseFSet.html", null ],
     [ "DiagramBlockSparseEvaluator", "classDiagramBlockSparseEvaluator.html", null ],
-    [ "DiagramEvaluator", "classDiagramEvaluator.html", null ],
+    [ "DiagramEvaluator", "classDiagramEvaluator.html", [
+      [ "CorrelatorDiagramEvaluator", "classCorrelatorDiagramEvaluator.html", null ]
+    ] ],
     [ "fastdiagram", "classfastdiagram.html", null ],
-    [ "GreensFunctionDiagramEvaluator", "classGreensFunctionDiagramEvaluator.html", null ],
     [ "hyb_decomp", "classhyb__decomp.html", null ],
-    [ "hyb_F", "classhyb__F.html", null ]
+    [ "hyb_F", "classhyb__F.html", null ],
+    [ "triqs::atom_diag::atom_diag< C >", "classtriqs_1_1atom__diag_1_1atom__diag.html", null ]
 ];
