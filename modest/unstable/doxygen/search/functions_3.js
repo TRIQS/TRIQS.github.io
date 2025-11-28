@@ -11,12 +11,11 @@ var searchData=
   ['density_5fnk_5fmatrix_5fvalued_5fimpl_8',['density_nk_matrix_valued_impl',['../namespacetriqs_1_1modest.html#adc9e7d5e82735742ba5a8d9de3a09d21',1,'triqs::modest']]],
   ['description_9',['description',['../classtriqs_1_1modest_1_1embedding.html#a9809d6751e848c8798ac92874a2b70eb',1,'triqs::modest::embedding']]],
   ['dft_5fcode_5fto_5fenum_10',['dft_code_to_enum',['../namespacetriqs_1_1modest_1_1dft__tools.html#ab523f2b961de9cf3e2c2c26b16389d85',1,'triqs::modest::dft_tools']]],
-  ['dichotomy_11',['dichotomy',['../group__root.html#ga2d68da3ee83e1be108e9a31c36e91f80',1,'triqs']]],
-  ['dim_12',['dim',['../classtriqs_1_1modest_1_1local__space.html#a9443b33042665dc40937d9f60da48951',1,'triqs::modest::local_space']]],
-  ['dirname_13',['dirname',['../classtriqs_1_1modest_1_1checkpoint.html#abf75f1ddc83dd3ef2b71014e856b7d61',1,'triqs::modest::checkpoint']]],
-  ['discover_5fsymmetries_14',['discover_symmetries',['../namespacetriqs_1_1modest.html#a887d8ddf78c30355daed85e64506ffe6',1,'triqs::modest']]],
-  ['double_5fcounting_15',['double_counting',['../namespacetriqs_1_1modest.html#ae7d84d677f069f518b9550ebd3cf294f',1,'triqs::modest']]],
-  ['double_5fcounting_5fenergy_5fdc_16',['double_counting_energy_dc',['../namespacetriqs_1_1modest.html#af03e697a874827b00628a661e0f7e2ab',1,'triqs::modest']]],
-  ['double_5fcounting_5fsigma_5fdc_17',['double_counting_sigma_dc',['../namespacetriqs_1_1modest.html#a68d7723d2e4ddbd85fc7a0afc6c1fded',1,'triqs::modest']]],
-  ['drop_18',['drop',['../classtriqs_1_1modest_1_1embedding.html#a9cce2637a5574fe9f9e9c7fef1ca50e2',1,'triqs::modest::embedding']]]
+  ['dim_11',['dim',['../classtriqs_1_1modest_1_1local__space.html#a9443b33042665dc40937d9f60da48951',1,'triqs::modest::local_space']]],
+  ['dirname_12',['dirname',['../classtriqs_1_1modest_1_1checkpoint.html#abf75f1ddc83dd3ef2b71014e856b7d61',1,'triqs::modest::checkpoint']]],
+  ['discover_5fsymmetries_13',['discover_symmetries',['../namespacetriqs_1_1modest.html#a887d8ddf78c30355daed85e64506ffe6',1,'triqs::modest']]],
+  ['double_5fcounting_14',['double_counting',['../namespacetriqs_1_1modest.html#ae7d84d677f069f518b9550ebd3cf294f',1,'triqs::modest']]],
+  ['double_5fcounting_5fenergy_5fdc_15',['double_counting_energy_dc',['../namespacetriqs_1_1modest.html#af03e697a874827b00628a661e0f7e2ab',1,'triqs::modest']]],
+  ['double_5fcounting_5fsigma_5fdc_16',['double_counting_sigma_dc',['../namespacetriqs_1_1modest.html#a68d7723d2e4ddbd85fc7a0afc6c1fded',1,'triqs::modest']]],
+  ['drop_17',['drop',['../classtriqs_1_1modest_1_1embedding.html#a9cce2637a5574fe9f9e9c7fef1ca50e2',1,'triqs::modest::embedding']]]
 ];
