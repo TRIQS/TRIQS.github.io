@@ -1,9 +1,11 @@
 var classDiagramBlockSparseEvaluator =
 [
     [ "DiagramBlockSparseEvaluator", "classDiagramBlockSparseEvaluator.html#a89556806a408801ecf28ec480cd96365", null ],
+    [ "~DiagramBlockSparseEvaluator", "classDiagramBlockSparseEvaluator.html#a90c91b4f28d4e8915a1d3a886d972f56", null ],
     [ "compose_with_edge_block", "classDiagramBlockSparseEvaluator.html#aaacb25c9636ca810cd1af7ba9b8eb03f", null ],
     [ "eval_backbone_fixed_indices_block_sparse", "classDiagramBlockSparseEvaluator.html#a291a4daa95cb2f004ba3eb3685456e10", null ],
     [ "eval_diagram_block_sparse", "classDiagramBlockSparseEvaluator.html#acdb4210a15daefc3641285feb0d81a95", null ],
+    [ "multiply_prefactor", "classDiagramBlockSparseEvaluator.html#ac68b16ded2f497588483ce089c85fccc", null ],
     [ "multiply_vertex_block", "classDiagramBlockSparseEvaluator.html#a87664dc1fb0052f255ab07305d8278b9", null ],
     [ "multiply_zero_vertex_block", "classDiagramBlockSparseEvaluator.html#aa63ca7a2216b916c66040412f756bd2d", null ],
     [ "reset", "classDiagramBlockSparseEvaluator.html#ab47e16d5c89f214b560849734d0076cd", null ],

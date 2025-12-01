@@ -18,6 +18,7 @@ var annotated_dup =
     [ "BlockOpSymSet", "classBlockOpSymSet.html", "classBlockOpSymSet" ],
     [ "BlockOpSymSetBar", "classBlockOpSymSetBar.html", "classBlockOpSymSetBar" ],
     [ "CorrelatorBackbone", "classCorrelatorBackbone.html", "classCorrelatorBackbone" ],
+    [ "CorrelatorDiagramBlockSparseEvaluator", "classCorrelatorDiagramBlockSparseEvaluator.html", "classCorrelatorDiagramBlockSparseEvaluator" ],
     [ "CorrelatorDiagramEvaluator", "classCorrelatorDiagramEvaluator.html", "classCorrelatorDiagramEvaluator" ],
     [ "DenseFSet", "classDenseFSet.html", "classDenseFSet" ],
     [ "DiagramBlockSparseEvaluator", "classDiagramBlockSparseEvaluator.html", "classDiagramBlockSparseEvaluator" ],
