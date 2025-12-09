@@ -13,13 +13,9 @@ var hierarchy =
     [ "BlockOpSymQuartet", "classBlockOpSymQuartet.html", null ],
     [ "BlockOpSymSetBar", "classBlockOpSymSetBar.html", null ],
     [ "cppdlr::dyson_it_ppsc< Ht, Sh >", "classcppdlr_1_1dyson__it__ppsc.html", null ],
+    [ "DenseDiagramEvaluator", "classDenseDiagramEvaluator.html", null ],
     [ "DenseFSet", "classDenseFSet.html", null ],
-    [ "DiagramBlockSparseEvaluator", "classDiagramBlockSparseEvaluator.html", [
-      [ "CorrelatorDiagramBlockSparseEvaluator", "classCorrelatorDiagramBlockSparseEvaluator.html", null ]
-    ] ],
-    [ "DiagramEvaluator", "classDiagramEvaluator.html", [
-      [ "CorrelatorDiagramEvaluator", "classCorrelatorDiagramEvaluator.html", null ]
-    ] ],
+    [ "DiagramEvaluator", "classDiagramEvaluator.html", null ],
     [ "fastdiagram", "classfastdiagram.html", null ],
     [ "hyb_decomp", "classhyb__decomp.html", null ],
     [ "hyb_F", "classhyb__F.html", null ],

@@ -38,9 +38,9 @@ var searchData=
   ['get_5fvertex_5fksign_35',['get_vertex_Ksign',['../classBackbone.html#ab4b0f8bcee5615009798b5ab0bc9c5f1',1,'Backbone']]],
   ['get_5fvertex_5forb_36',['get_vertex_orb',['../classBackbone.html#a532d6c87f82dce6a7a06dedc7e8f0e33',1,'Backbone']]],
   ['get_5fzero_5fblock_5findex_37',['get_zero_block_index',['../classBlockDiagOpFun.html#a221a3be47a0d4b70e56947840b52ed51',1,'BlockDiagOpFun']]],
-  ['gkt_38',['gkt',['../classDiagramBlockSparseEvaluator.html#a00415b69303002697da4f86c2a9daa6f',1,'DiagramBlockSparseEvaluator::GKt'],['../classDiagramEvaluator.html#adbadd2c4c3b80df434351e792efacc12',1,'DiagramEvaluator::GKt']]],
+  ['gkt_38',['gkt',['../classDiagramEvaluator.html#adbadd2c4c3b80df434351e792efacc12',1,'DiagramEvaluator::GKt'],['../classDenseDiagramEvaluator.html#aac4a1f7e0448642d2bf91af16ebddaca',1,'DenseDiagramEvaluator::GKt']]],
   ['group_39',['My Group',['../group__mygroup.html',1,'']]],
   ['grouping_40',['Grouping',['../documentation.html#autotoc_md0',1,'']]],
   ['groups_2edox_41',['groups.dox',['../groups_8dox.html',1,'']]],
-  ['gt_42',['gt',['../classDiagramEvaluator.html#ac6afed11ad6549c1b9686a15a7d2d602',1,'DiagramEvaluator::Gt'],['../classDiagramBlockSparseEvaluator.html#a90b4c7455df7ea4c7943051c0536ca60',1,'DiagramBlockSparseEvaluator::Gt']]]
+  ['gt_42',['gt',['../classDenseDiagramEvaluator.html#ab9f9306c9dd192e68f88200fe3709134',1,'DenseDiagramEvaluator::Gt'],['../classDiagramEvaluator.html#ad10663da2f4584afd5a895cfb6028596',1,'DiagramEvaluator::Gt']]]
 ];

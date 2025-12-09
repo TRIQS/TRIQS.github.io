@@ -7,5 +7,5 @@ var searchData=
   ['installation_2emd_4',['installation.md',['../installation_8md.html',1,'']]],
   ['integration_20in_20c_20projects_5',['Integration in C++ projects',['../integration.html',1,'']]],
   ['integration_2emd_6',['integration.md',['../integration_8md.html',1,'']]],
-  ['itops_7',['itops',['../classDiagramBlockSparseEvaluator.html#a83f3aab581e7433c24072f5a791a5bed',1,'DiagramBlockSparseEvaluator::itops'],['../classDiagramEvaluator.html#a1e4b9719053a38c3d2d719f43756aa30',1,'DiagramEvaluator::itops']]]
+  ['itops_7',['itops',['../classDiagramEvaluator.html#a1e4b9719053a38c3d2d719f43756aa30',1,'DiagramEvaluator::itops'],['../classDenseDiagramEvaluator.html#ab65ff6abf14aabd5dbfc8758f296861b',1,'DenseDiagramEvaluator::itops']]]
 ];

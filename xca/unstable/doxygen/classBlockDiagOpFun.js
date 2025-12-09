@@ -2,6 +2,7 @@ var classBlockDiagOpFun =
 [
     [ "BlockDiagOpFun", "classBlockDiagOpFun.html#a0e52d66f3765ccd5d876ff313a8c3800", null ],
     [ "BlockDiagOpFun", "classBlockDiagOpFun.html#a82c1d6fca5ea39762441af95854cbaa8", null ],
+    [ "BlockDiagOpFun", "classBlockDiagOpFun.html#a33d4dc045f8311659bda2e846aecce39", null ],
     [ "add_block", "classBlockDiagOpFun.html#ade7d493cf2a8949cd7090132053d91d6", null ],
     [ "get_block", "classBlockDiagOpFun.html#ab72add00590b710268b022f7057cf374", null ],
     [ "get_block_size", "classBlockDiagOpFun.html#a3c7e64dbcccc33a12f6313a4ea22be75", null ],

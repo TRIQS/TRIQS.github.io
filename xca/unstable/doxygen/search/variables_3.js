@@ -6,7 +6,7 @@ var searchData=
   ['f_5fix_3',['f_ix',['../classBackbone.html#a528687a86c2a07ac15c6e98093db82de',1,'Backbone']]],
   ['fb_4',['fb',['../classBackbone.html#a8cd1dbf53aeb794ae2a62ee98cdbb70c',1,'Backbone']]],
   ['fb_5fix_5fmax_5',['fb_ix_max',['../classBackbone.html#ab9c7dc488d0ad1ef20d35d930c452501',1,'Backbone']]],
-  ['fq_6',['Fq',['../classDiagramBlockSparseEvaluator.html#a2faa4c5c2914c9d65ee5d4e44cf12d7e',1,'DiagramBlockSparseEvaluator']]],
+  ['fq_6',['Fq',['../classDiagramEvaluator.html#a8b3e29fa3e8e5391b6223d098d97ef29',1,'DiagramEvaluator']]],
   ['fs_7',['fs',['../classDenseFSet.html#a2792b8d6331b241f8807fc7625dc98de',1,'DenseFSet::Fs'],['../classBlockOpSymQuartet.html#a9c36cd8ed75fdd41545a6bd4484d55e5',1,'BlockOpSymQuartet::Fs']]],
-  ['fset_8',['Fset',['../classDiagramEvaluator.html#a625d92c01497cffa68e6e74a4a3287ca',1,'DiagramEvaluator']]]
+  ['fset_8',['Fset',['../classDenseDiagramEvaluator.html#afc27b91b6b1436b9f8562aefbe165b96',1,'DenseDiagramEvaluator']]]
 ];
