@@ -136,6 +136,7 @@
 <li class="toctree-l5"><a class="reference internal" href="../../../_autosummary/triqs_modest.rho_and_mu.find_chemical_potential.html">triqs_modest.rho_and_mu.find_chemical_potential</a></li>
 </ul>
 </li>
+<li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/triqs_modest.solver_interfaces.html">triqs_modest.solver_interfaces</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/triqs_modest.utils.html">triqs_modest.utils</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="../../../_autosummary/triqs_modest.utils.analyze_gfs.html">triqs_modest.utils.analyze_gfs</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../_autosummary/triqs_modest.utils.dc.html">triqs_modest.utils.dc</a></li>
@@ -190,11 +191,12 @@
 <div class="viewcode-block" id="DftDriver">
 <a class="viewcode-back" href="../../../_autosummary/triqs_modest.dft_driver.driver.DftDriver.html#triqs_modest.dft_driver.driver.DftDriver">[docs]</a>
 <span class="k">class</span> <span class="nc">DftDriver</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">DftSpecficDriver</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">DftSpecificDriver</span><span class="p">):</span>
         <span class="n">required_methods</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;run_initial_stage&#39;</span><span class="p">,</span> <span class="s1">&#39;run_update_stage&#39;</span><span class="p">]</span>
-        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">require_methods</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">DftSpecficDriver</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">DftSpecficDriver</span><span class="p">,</span> <span class="n">m</span><span class="p">)):</span>
-                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">DftSpecficDriver</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> must define a callable method </span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">required_methods</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">DftSpecificDriver</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">DftSpecificDriver</span><span class="p">,</span> <span class="n">m</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">DftSpecificDriver</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> must define a callable method </span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">driver</span> <span class="o">=</span> <span class="n">DftSpecificDriver</span>
 
 <div class="viewcode-block" id="DftDriver.one_body_elements_from_dft">
@@ -204,14 +206,10 @@
         <span class="c1"># DFT code specific initial stage</span>
         <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">run_initial_stage</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         
-        <span class="n">target_density</span><span class="p">,</span> <span class="n">obe</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
-            <span class="n">target_density</span><span class="p">,</span> <span class="n">obe</span> <span class="o">=</span> <span class="n">one_body_elements_from_dft_converter</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">seedname</span><span class="si">}</span><span class="s2">.h5&quot;</span><span class="p">,</span> 
-                                  <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span> 
-                                  <span class="n">diagonalize_hloc</span><span class="o">=</span><span class="n">diagonalize_hloc</span>
-                                  <span class="p">)</span>
-        <span class="n">target_density</span><span class="p">,</span> <span class="n">obe</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">target_density</span><span class="p">),</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">obe</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">target_density</span><span class="p">,</span> <span class="n">obe</span></div>
+        <span class="k">return</span> <span class="n">one_body_elements_from_dft_converter</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">seedname</span><span class="si">}</span><span class="s2">.h5&quot;</span><span class="p">,</span> 
+                                <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span> 
+                                <span class="n">diagonalize_hloc</span><span class="o">=</span><span class="n">diagonalize_hloc</span>
+                                <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="DftDriver.update_one_body_elements_with_charge_correction">
@@ -221,14 +219,10 @@
         <span class="c1"># DFT code specific update stage</span>
         <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">run_update_stage</span><span class="p">(</span><span class="n">N_k</span><span class="p">,</span> <span class="n">Eint_m_dc</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-        <span class="n">target_density</span><span class="p">,</span> <span class="n">obe</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
-            <span class="n">target_density</span><span class="p">,</span> <span class="n">obe</span> <span class="o">=</span> <span class="n">one_body_elements_from_dft_converter</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">seedname</span><span class="si">}</span><span class="s2">.h5&quot;</span><span class="p">,</span> 
+        <span class="k">return</span> <span class="n">one_body_elements_from_dft_converter</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">seedname</span><span class="si">}</span><span class="s2">.h5&quot;</span><span class="p">,</span> 
                                   <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span> 
                                   <span class="n">diagonalize_hloc</span><span class="o">=</span><span class="n">diagonalize_hloc</span>
-                                  <span class="p">)</span>
-        <span class="n">target_density</span><span class="p">,</span> <span class="n">obe</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">target_density</span><span class="p">),</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">obe</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">target_density</span><span class="p">,</span> <span class="n">obe</span></div>
+                                  <span class="p">)</span></div>
 </div>
 
 </pre></div>
