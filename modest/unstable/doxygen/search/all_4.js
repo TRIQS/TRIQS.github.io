@@ -14,8 +14,9 @@ var searchData=
   ['end_11',['end',['../classh5_1_1proxy.html#a0413a1110cd59023c857fcedfee93422',1,'h5::proxy']]],
   ['enumerate_5fslice_2ehpp_12',['enumerate_slice.hpp',['../enumerate__slice_8hpp.html',1,'']]],
   ['enumerated_5fsub_5fslices_13',['enumerated_sub_slices',['../namespacetriqs.html#aed9155fbcf46d2071211060bd7dbd81b',1,'triqs']]],
-  ['extract_14',['extract',['../classtriqs_1_1modest_1_1embedding.html#a6e0b19c1b40bcc99a22557b995960ff0',1,'triqs::modest::embedding::extract(block2_matrix_t const &amp;matrix_C) const'],['../classtriqs_1_1modest_1_1embedding.html#a709fc58424508221d78e495b17a0a153',1,'triqs::modest::embedding::extract(block2_gf&lt; Mesh, matrix_valued &gt; const &amp;g_loc) const']]],
-  ['extract_5fijkl_15',['extract_ijkl',['../classtriqs_1_1modest_1_1embedding.html#a77f6b81562decac18e210ac2fc77246c',1,'triqs::modest::embedding']]],
-  ['extract_5fwij_16',['extract_wij',['../classtriqs_1_1modest_1_1embedding.html#ac7019a50d60b2a510d6973ceeb516f6c',1,'triqs::modest::embedding']]],
-  ['extract_5fwijkl_17',['extract_wijkl',['../classtriqs_1_1modest_1_1embedding.html#aab587863fcbc6ba6705cc934e261e0d8',1,'triqs::modest::embedding']]]
+  ['extend_5fto_5fspin_14',['extend_to_spin',['../namespacetriqs_1_1modest.html#abc8b528255cbd83d814d945cee63dff8',1,'triqs::modest']]],
+  ['extract_15',['extract',['../classtriqs_1_1modest_1_1embedding.html#a6e0b19c1b40bcc99a22557b995960ff0',1,'triqs::modest::embedding::extract(block2_matrix_t const &amp;matrix_C) const'],['../classtriqs_1_1modest_1_1embedding.html#a709fc58424508221d78e495b17a0a153',1,'triqs::modest::embedding::extract(block2_gf&lt; Mesh, matrix_valued &gt; const &amp;g_loc) const']]],
+  ['extract_5fijkl_16',['extract_ijkl',['../classtriqs_1_1modest_1_1embedding.html#a77f6b81562decac18e210ac2fc77246c',1,'triqs::modest::embedding']]],
+  ['extract_5fwij_17',['extract_wij',['../classtriqs_1_1modest_1_1embedding.html#ac7019a50d60b2a510d6973ceeb516f6c',1,'triqs::modest::embedding']]],
+  ['extract_5fwijkl_18',['extract_wijkl',['../classtriqs_1_1modest_1_1embedding.html#aab587863fcbc6ba6705cc934e261e0d8',1,'triqs::modest::embedding']]]
 ];

@@ -2,7 +2,8 @@ var searchData=
 [
   ['p_0',['P',['../structtriqs_1_1modest_1_1one__body__elements__on__grid.html#a998a5f5bb13be822f9249db085696a77',1,'triqs::modest::one_body_elements_on_grid']]],
   ['p_5fk_1',['P_k',['../structtriqs_1_1modest_1_1downfolding__projector.html#a2cbfbf558a4b5815132db1eac6386f5b',1,'triqs::modest::downfolding_projector']]],
-  ['per_5ftheta_2',['per_theta',['../structtriqs_1_1modest_1_1spectral__function__w.html#a0369ac74af88a276d067c44668f164a0',1,'triqs::modest::spectral_function_w']]],
-  ['precision_3',['precision',['../structfmt_1_1formatter_3_01nda_1_1matrix_3_01std_1_1complex_3_01T_01_4_01_4_01_4.html#a969ded922eae134474cda0c7ddf2f893',1,'fmt::formatter&lt; nda::matrix&lt; std::complex&lt; T &gt; &gt; &gt;']]],
-  ['proj_5fdata_4',['proj_data',['../structtriqs_1_1modest_1_1spectral__function__kw.html#af80762382b366fcfc82e6e362a820b0e',1,'triqs::modest::spectral_function_kw']]]
+  ['pair_5fhopping_2',['pair_hopping',['../structtriqs_1_1kanamori__params.html#aa7d3165c042fc690ba70970a2159065b',1,'triqs::kanamori_params']]],
+  ['per_5ftheta_3',['per_theta',['../structtriqs_1_1modest_1_1spectral__function__w.html#a0369ac74af88a276d067c44668f164a0',1,'triqs::modest::spectral_function_w']]],
+  ['precision_4',['precision',['../structfmt_1_1formatter_3_01nda_1_1matrix_3_01std_1_1complex_3_01T_01_4_01_4_01_4.html#a969ded922eae134474cda0c7ddf2f893',1,'fmt::formatter&lt; nda::matrix&lt; std::complex&lt; T &gt; &gt; &gt;']]],
+  ['proj_5fdata_5',['proj_data',['../structtriqs_1_1modest_1_1spectral__function__kw.html#af80762382b366fcfc82e6e362a820b0e',1,'triqs::modest::spectral_function_kw']]]
 ];

@@ -10,6 +10,7 @@ var searchData=
   ['make_5fkanamori_7',['make_kanamori',['../group__hamiltonian.html#gafc2f795f80bf0933f16286daf3d28316',1,'triqs']]],
   ['make_5fmatrix_5ffrom_5fpermutation_8',['make_matrix_from_permutation',['../namespacenda.html#a9f59d1081a34daeea9a0677b7e3c25c2',1,'nda']]],
   ['make_5fobe_5ffrom_5ftb_9',['make_obe_from_tb',['../namespacetriqs_1_1modest.html#a391bd6b2030a8c225bcc670735ea54b4',1,'triqs::modest']]],
-  ['make_5fslater_10',['make_slater',['../group__hamiltonian.html#ga50200e7ffe12e263b2f046a1d1e0574f',1,'triqs']]],
-  ['make_5fzero_5fimp_5fself_5fenergies_11',['make_zero_imp_self_energies',['../classtriqs_1_1modest_1_1embedding.html#ab23a74d05b6f706cc8776c52fc5e5243',1,'triqs::modest::embedding']]]
+  ['make_5fop_5fmap_10',['make_op_map',['../namespacetriqs.html#abbbcc5838803077e7e4bf741f8ce13b7',1,'triqs']]],
+  ['make_5fslater_11',['make_slater',['../group__hamiltonian.html#ga50200e7ffe12e263b2f046a1d1e0574f',1,'triqs']]],
+  ['make_5fzero_5fimp_5fself_5fenergies_12',['make_zero_imp_self_energies',['../classtriqs_1_1modest_1_1embedding.html#ab23a74d05b6f706cc8776c52fc5e5243',1,'triqs::modest::embedding']]]
 ];
