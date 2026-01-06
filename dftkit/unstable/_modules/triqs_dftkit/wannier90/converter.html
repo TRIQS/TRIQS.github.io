@@ -1103,6 +1103,7 @@
     <span class="n">nnkp_filename</span> <span class="o">=</span> <span class="n">w90_seed</span> <span class="o">+</span> <span class="s1">&#39;.nnkp&#39;</span>
     <span class="n">locproj_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">w90_seed_dir</span><span class="p">,</span> <span class="s1">&#39;LOCPROJ&#39;</span><span class="p">)</span>
     <span class="n">outcar_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">w90_seed_dir</span><span class="p">,</span> <span class="s1">&#39;OUTCAR&#39;</span><span class="p">)</span>
+    <span class="n">abiout_filename</span> <span class="o">=</span> <span class="n">w90_seed</span> <span class="o">+</span> <span class="s1">&#39;.abinit&#39;</span>
 
     <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">nscf_filename</span><span class="p">):</span>
         <span class="n">read_from</span> <span class="o">=</span> <span class="s1">&#39;qe&#39;</span>
@@ -1110,11 +1111,14 @@
     <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">locproj_filename</span><span class="p">)</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">outcar_filename</span><span class="p">):</span>
         <span class="n">read_from</span> <span class="o">=</span> <span class="s1">&#39;vasp&#39;</span>
         <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Reading DFT band occupations from Vasp output </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">locproj_filename</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">abiout_filename</span><span class="p">):</span>
+        <span class="n">read_from</span> <span class="o">=</span> <span class="s1">&#39;abinit&#39;</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Reading DFT band occupations from ABINIT output </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">abiout_filename</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;seedname.nscf.out or LOCPROJ and OUTCAR required in bloch_basis mode&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;seedname.nscf.out or LOCPROJ and OUTCAR or seedname.abinit required in bloch_basis mode&#39;</span><span class="p">)</span>
 
     <span class="k">assert</span> <span class="n">n_spin_blocks</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;spin-polarized not implemented&#39;</span>
-    <span class="k">assert</span> <span class="n">read_from</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;qe&#39;</span><span class="p">,</span> <span class="s1">&#39;vasp&#39;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">read_from</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;qe&#39;</span><span class="p">,</span> <span class="s1">&#39;vasp&#39;</span><span class="p">,</span> <span class="s1">&#39;abinit&#39;</span><span class="p">)</span>
 
     <span class="n">occupations</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">reading_kpt_basis</span> <span class="o">=</span> <span class="kc">False</span>
@@ -1156,7 +1160,7 @@
             <span class="n">occs</span> <span class="o">=</span> <span class="n">k_block</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">k_block</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
             <span class="n">flattened_occs</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">sublist</span> <span class="ow">in</span> <span class="n">occs</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sublist</span><span class="p">]</span>
             <span class="n">occupations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">flattened_occs</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">read_from</span> <span class="o">==</span> <span class="s1">&#39;vasp&#39;</span><span class="p">:</span>
         <span class="c1"># Reads LOCPROJ</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">locproj_filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
             <span class="n">header</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
@@ -1176,6 +1180,33 @@
                     <span class="n">lines_read_kpt_basis</span> <span class="o">+=</span> <span class="mi">1</span>
                     <span class="k">if</span> <span class="n">lines_read_kpt_basis</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
                         <span class="k">break</span>
+
+    <span class="k">elif</span> <span class="n">read_from</span> <span class="o">==</span> <span class="s1">&#39;abinit&#39;</span><span class="p">:</span>
+        <span class="n">occupations</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">abiout_filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_file</span><span class="p">:</span>
+            <span class="n">out_data</span> <span class="o">=</span> <span class="n">out_file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+
+        <span class="c1">#TODO: are the prints debug or needed?</span>
+        <span class="n">size_block</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">l</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">out_data</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s1">&#39;Fermie&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                <span class="n">fermi_energy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="mf">27.2114079527</span> <span class="c1"># Hartree to eV</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Fermi energy: &quot;</span><span class="p">,</span> <span class="n">fermi_energy</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="s2">&quot;Nkpt&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                <span class="n">n_kpt</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Nkpt: &quot;</span><span class="p">,</span> <span class="n">n_kpt</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="s2">&quot;Nband&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                <span class="n">n_ks</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Nband: &quot;</span><span class="p">,</span> <span class="n">n_ks</span><span class="p">)</span>
+                <span class="n">size_block</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">n_ks</span><span class="o">/</span><span class="mi">12</span><span class="p">))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">size_block</span><span class="p">)</span>
+
+            <span class="c1"># TODO: make explicit variable names</span>
+            <span class="k">if</span> <span class="s2">&quot;k-point&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                <span class="n">k_block</span> <span class="o">=</span> <span class="p">[</span><span class="n">line2</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="k">for</span> <span class="n">line2</span> <span class="ow">in</span> <span class="n">out_data</span><span class="p">[</span><span class="n">l</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">l</span><span class="o">+</span><span class="mi">1</span><span class="o">+</span><span class="n">size_block</span><span class="p">]]</span>
+                <span class="n">occs</span> <span class="o">=</span> <span class="n">k_block</span>
+                <span class="n">occupations</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">item</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span> <span class="k">for</span> <span class="n">sublist</span> <span class="ow">in</span> <span class="n">occs</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sublist</span><span class="p">])</span>
+
 
     <span class="c1"># assume that all bands contribute, then remove from exclude_bands; python indexing</span>
     <span class="n">corr_bands</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_ks</span><span class="p">))</span>
