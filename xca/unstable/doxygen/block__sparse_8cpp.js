@@ -1,5 +1,8 @@
 var block__sparse_8cpp =
 [
+    [ "aaa_coefs2vals", "block__sparse_8cpp.html#ac480a8d5b1ffbfc012f3fe2fe44dd338", null ],
+    [ "aaa_reflect", "block__sparse_8cpp.html#ac20341007fc525327592d3ba1d55ca89", null ],
+    [ "BDOF_to_block_gf", "block__sparse_8cpp.html#acdea5544b1ccbb1871d3a56dc7445789", null ],
     [ "BOFtoBDOF", "block__sparse_8cpp.html#a7bf45ebb6fdac2513b064b1549930fab", null ],
     [ "dagger_bs", "block__sparse_8cpp.html#a9368e27aa3c1453bddc72a885a8f9a02", null ],
     [ "h5_write", "block__sparse_8cpp.html#a4d8851b12cbd67843bcbe3f0958d0add", null ],
