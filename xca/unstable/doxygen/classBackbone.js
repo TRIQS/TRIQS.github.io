@@ -10,6 +10,7 @@ var classBackbone =
     [ "get_prefactor_Kexp", "classBackbone.html#ae9cbd8e7eb25efd75d5735c81a5b3d56", null ],
     [ "get_prefactor_Ksign", "classBackbone.html#a797bb92bcec01d0e031bdd366bcbe9bf", null ],
     [ "get_topology", "classBackbone.html#a2f27f6cf19f49f160dc781b637b071ce", null ],
+    [ "get_vertex_direction", "classBackbone.html#ad07c7a56f1b11e1686131c2c7d1a731f", null ],
     [ "get_vertex_hyb_ind", "classBackbone.html#aa142a6b2de049ea536518c9ca32f0b37", null ],
     [ "get_vertex_Ksign", "classBackbone.html#ab4b0f8bcee5615009798b5ab0bc9c5f1", null ],
     [ "get_vertex_orb", "classBackbone.html#a532d6c87f82dce6a7a06dedc7e8f0e33", null ],

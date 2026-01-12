@@ -1,6 +1,6 @@
 var classBlockOpSymQuartet =
 [
-    [ "BlockOpSymQuartet", "classBlockOpSymQuartet.html#a5d671eb8016cff98c3c0b3bef86f5f48", null ],
+    [ "BlockOpSymQuartet", "classBlockOpSymQuartet.html#a22999aaaf1fa5a499981db5561707914", null ],
     [ "F_bars_refl", "classBlockOpSymQuartet.html#aa6229687183a5ce86d77d4713ebb1964", null ],
     [ "F_dag_bars", "classBlockOpSymQuartet.html#a527fe37808363e2156362e5ee181d378", null ],
     [ "F_dags", "classBlockOpSymQuartet.html#a47769f9bd5328bb9484a13afe75b4a50", null ],
