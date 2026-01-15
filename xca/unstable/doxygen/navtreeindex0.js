@@ -67,6 +67,7 @@ var NAVTREEINDEX0 =
 "block__sparse__backbone_8cpp.html":[1,2,0,2,6],
 "block__sparse__backbone_8cpp_source.html":[1,2,0,2,6],
 "block__sparse__backbone_8hpp.html":[1,2,0,2,7],
+"block__sparse__backbone_8hpp.html#ab2696683bc7713b1ff07f0365bc38195":[1,2,0,2,7,1],
 "block__sparse__backbone_8hpp_source.html":[1,2,0,2,7],
 "block__sparse__manual_8cpp.html":[1,2,0,2,8],
 "block__sparse__manual_8cpp.html#a0e486318510637f1134b2ee1be7e31de":[1,2,0,2,8,7],
@@ -248,6 +249,5 @@ var NAVTREEINDEX0 =
 "classBlockOpSymSetBar.html#a29585922dd364b148ca51ac286b7a419":[1,0,0,10,13],
 "classBlockOpSymSetBar.html#a2aec266d36fa1af376268070dc801772":[1,0,0,10,2],
 "classBlockOpSymSetBar.html#a3718f263e0b5fe23582011d441aa14cb":[1,0,0,10,9],
-"classBlockOpSymSetBar.html#a4383079d09355079f228658cfcc57fe3":[1,0,0,10,8],
-"classBlockOpSymSetBar.html#a58ee07cc3f6f040f39c990ebf60bb010":[1,0,0,10,4]
+"classBlockOpSymSetBar.html#a4383079d09355079f228658cfcc57fe3":[1,0,0,10,8]
 };
