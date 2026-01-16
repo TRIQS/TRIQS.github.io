@@ -3,11 +3,6 @@ var annotated_dup =
     [ "cppdlr", "namespacecppdlr.html", [
       [ "dyson_it_ppsc", "classcppdlr_1_1dyson__it__ppsc.html", "classcppdlr_1_1dyson__it__ppsc" ]
     ] ],
-    [ "triqs", "namespacetriqs.html", [
-      [ "atom_diag", "namespacetriqs_1_1atom__diag.html", [
-        [ "atom_diag", "classtriqs_1_1atom__diag_1_1atom__diag.html", null ]
-      ] ]
-    ] ],
     [ "Backbone", "classBackbone.html", "classBackbone" ],
     [ "BackboneVertex", "classBackboneVertex.html", "classBackboneVertex" ],
     [ "BlockDiagOpFun", "classBlockDiagOpFun.html", "classBlockDiagOpFun" ],

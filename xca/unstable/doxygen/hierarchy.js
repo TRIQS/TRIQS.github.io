@@ -18,6 +18,5 @@ var hierarchy =
     [ "DiagramEvaluator", "classDiagramEvaluator.html", null ],
     [ "fastdiagram", "classfastdiagram.html", null ],
     [ "hyb_decomp", "classhyb__decomp.html", null ],
-    [ "hyb_F", "classhyb__F.html", null ],
-    [ "triqs::atom_diag::atom_diag< C >", "classtriqs_1_1atom__diag_1_1atom__diag.html", null ]
+    [ "hyb_F", "classhyb__F.html", null ]
 ];

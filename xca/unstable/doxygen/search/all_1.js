@@ -5,7 +5,6 @@ var searchData=
   ['ad_5fto_5fatom_5fprop_2',['ad_to_atom_prop',['../atom__diag__utils_8cpp.html#a146616b7fc3796126ee7eb06f13755ac',1,'ad_to_atom_prop(const atom_diag::atom_diag&lt; false &gt; &amp;ad, double beta, imtime_ops &amp;itops):&#160;atom_diag_utils.cpp'],['../atom__diag__utils_8cpp.html#a4b0d09ba85e2d5f8b9903a0041b00c47',1,'ad_to_atom_prop(const atom_diag::atom_diag&lt; false &gt; &amp;ad, double beta, double Lambda, double eps):&#160;atom_diag_utils.cpp'],['../atom__diag__utils_8hpp.html#a146616b7fc3796126ee7eb06f13755ac',1,'ad_to_atom_prop(const atom_diag::atom_diag&lt; false &gt; &amp;ad, double beta, imtime_ops &amp;itops):&#160;atom_diag_utils.cpp'],['../atom__diag__utils_8hpp.html#a4b0d09ba85e2d5f8b9903a0041b00c47',1,'ad_to_atom_prop(const atom_diag::atom_diag&lt; false &gt; &amp;ad, double beta, double Lambda, double eps):&#160;atom_diag_utils.cpp']]],
   ['add_5fblock_3',['add_block',['../classBlockDiagOpFun.html#ade7d493cf2a8949cd7090132053d91d6',1,'BlockDiagOpFun::add_block()'],['../classBlockOpSymSetBar.html#a2aec266d36fa1af376268070dc801772',1,'BlockOpSymSetBar::add_block()']]],
   ['api_20documentation_4',['API Documentation',['../documentation.html',1,'']]],
-  ['atom_5fdiag_5',['atom_diag',['../classtriqs_1_1atom__diag_1_1atom__diag.html',1,'triqs::atom_diag']]],
-  ['atom_5fdiag_5futils_2ecpp_6',['atom_diag_utils.cpp',['../atom__diag__utils_8cpp.html',1,'']]],
-  ['atom_5fdiag_5futils_2ehpp_7',['atom_diag_utils.hpp',['../atom__diag__utils_8hpp.html',1,'']]]
+  ['atom_5fdiag_5futils_2ecpp_5',['atom_diag_utils.cpp',['../atom__diag__utils_8cpp.html',1,'']]],
+  ['atom_5fdiag_5futils_2ehpp_6',['atom_diag_utils.hpp',['../atom__diag__utils_8hpp.html',1,'']]]
 ];

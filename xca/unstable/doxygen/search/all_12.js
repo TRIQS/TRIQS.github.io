@@ -9,7 +9,5 @@ var searchData=
   ['tmu_6',['tmu',['../classDiagramEvaluator.html#a477b12e129b8f3eb0499245c3886102f',1,'DiagramEvaluator::Tmu'],['../classDenseDiagramEvaluator.html#ac0cef68a9c6973c8fd0286004c693d59',1,'DenseDiagramEvaluator::Tmu']]],
   ['to_20start_7',['Where to start?',['../index.html#start',1,'']]],
   ['topology_8',['topology',['../classBackbone.html#ab59da84cb53a88309c5b7606015f8a67',1,'Backbone']]],
-  ['trace_5fmatmul_9',['trace_matmul',['../strong__cpl_8cpp.html#a5f7cb04446cc4ed29d2d22823b670a87',1,'trace_matmul(nda::array_const_view&lt; dcomplex, 2 &gt; M1, nda::array_const_view&lt; dcomplex, 2 &gt; M2):&#160;strong_cpl.cpp'],['../strong__cpl_8hpp.html#a5f7cb04446cc4ed29d2d22823b670a87',1,'trace_matmul(nda::array_const_view&lt; dcomplex, 2 &gt; M1, nda::array_const_view&lt; dcomplex, 2 &gt; M2):&#160;strong_cpl.cpp']]],
-  ['triqs_10',['triqs',['../namespacetriqs.html',1,'']]],
-  ['triqs_3a_3aatom_5fdiag_11',['atom_diag',['../namespacetriqs_1_1atom__diag.html',1,'triqs']]]
+  ['trace_5fmatmul_9',['trace_matmul',['../strong__cpl_8cpp.html#a5f7cb04446cc4ed29d2d22823b670a87',1,'trace_matmul(nda::array_const_view&lt; dcomplex, 2 &gt; M1, nda::array_const_view&lt; dcomplex, 2 &gt; M2):&#160;strong_cpl.cpp'],['../strong__cpl_8hpp.html#a5f7cb04446cc4ed29d2d22823b670a87',1,'trace_matmul(nda::array_const_view&lt; dcomplex, 2 &gt; M1, nda::array_const_view&lt; dcomplex, 2 &gt; M2):&#160;strong_cpl.cpp']]]
 ];
