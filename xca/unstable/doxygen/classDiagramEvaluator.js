@@ -5,6 +5,7 @@ var classDiagramEvaluator =
     [ "~DiagramEvaluator", "classDiagramEvaluator.html#a6214311f4f77f4fcf186758dc161806b", null ],
     [ "compute_self_energy", "classDiagramEvaluator.html#a4e72367f6b7e4b9a1312664ed6b1e189", null ],
     [ "compute_self_energy", "classDiagramEvaluator.html#ac89ebae96f31ae3dafd03763870f5478", null ],
+    [ "eval_correlator", "classDiagramEvaluator.html#a44e1e0b5f74cbe48d1a72da8614402cd", null ],
     [ "get_num_backbones", "classDiagramEvaluator.html#aece312d6f7e2aec5b2c4d0f31d17932e", null ],
     [ "reset", "classDiagramEvaluator.html#a3a91b443b1b469e6de6d2af83ecf4a4d", null ],
     [ "beta", "classDiagramEvaluator.html#aeb60976cce3798b6f4800d329bf20cf1", null ],
