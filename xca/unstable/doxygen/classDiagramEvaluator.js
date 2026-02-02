@@ -1,7 +1,7 @@
 var classDiagramEvaluator =
 [
     [ "DiagramEvaluator", "classDiagramEvaluator.html#a4bdc2d343091058581840f40f9ded2c9", null ],
-    [ "DiagramEvaluator", "classDiagramEvaluator.html#a41e218e9419de234c83651c87f0f09e1", null ],
+    [ "DiagramEvaluator", "classDiagramEvaluator.html#abe67a4b69341bbe45b292869aefa6d47", null ],
     [ "~DiagramEvaluator", "classDiagramEvaluator.html#a6214311f4f77f4fcf186758dc161806b", null ],
     [ "compute_self_energy", "classDiagramEvaluator.html#a4e72367f6b7e4b9a1312664ed6b1e189", null ],
     [ "compute_self_energy", "classDiagramEvaluator.html#ac89ebae96f31ae3dafd03763870f5478", null ],
@@ -12,7 +12,6 @@ var classDiagramEvaluator =
     [ "GKt", "classDiagramEvaluator.html#adbadd2c4c3b80df434351e792efacc12", null ],
     [ "hyb", "classDiagramEvaluator.html#a6c1e0c55fa690ddd2b5e7ff0172b0f9a", null ],
     [ "hyb_poles", "classDiagramEvaluator.html#a0021686b51ec073edd85538491600e5a", null ],
-    [ "hyb_refl", "classDiagramEvaluator.html#ac6d7a48129262506a7cdc366c8d19c17", null ],
     [ "n", "classDiagramEvaluator.html#a4550ce1172c0fc5125052903fc30573a", null ],
     [ "Nmax", "classDiagramEvaluator.html#abfd9f1e3ccfa355673ccf569003ffd6f", null ],
     [ "q", "classDiagramEvaluator.html#abc5f18ae64a157a64578a4573f33634f", null ],
