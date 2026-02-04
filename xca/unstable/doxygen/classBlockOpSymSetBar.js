@@ -13,8 +13,8 @@ var classBlockOpSymSetBar =
     [ "get_size_sym_set", "classBlockOpSymSetBar.html#a110b2ad6785f4796221d2b6c7408887e", null ],
     [ "set_block", "classBlockOpSymSetBar.html#a629d3d95be47dc2e7b02cfd2a39f1500", null ],
     [ "set_block_index", "classBlockOpSymSetBar.html#aeceb49b6eab49a4d3b500c8b90cfcd61", null ],
-    [ "set_block_indices", "classBlockOpSymSetBar.html#a29585922dd364b148ca51ac286b7a419", null ],
-    [ "set_blocks", "classBlockOpSymSetBar.html#add8df50a8400caefa0fa6746c3e21efe", null ],
+    [ "set_block_indices", "classBlockOpSymSetBar.html#a2620e4f6189fbb3745b464b502340be1", null ],
+    [ "set_blocks", "classBlockOpSymSetBar.html#a27917d50e8919cda4c223d9d688c4abd", null ],
     [ "block_indices", "classBlockOpSymSetBar.html#acfe368758b160cb7feda302477fdf6a0", null ],
     [ "blocks", "classBlockOpSymSetBar.html#ac3d2c6c439e57866271aab941e1dacac", null ],
     [ "num_block_cols", "classBlockOpSymSetBar.html#a639f75f49a4224fa30cc9f3774f4d98e", null ]

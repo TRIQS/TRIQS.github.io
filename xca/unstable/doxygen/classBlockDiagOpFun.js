@@ -15,7 +15,7 @@ var classBlockDiagOpFun =
     [ "hdf5_format", "classBlockDiagOpFun.html#ad96bbfade2e002429a922a9d77142245", null ],
     [ "operator+=", "classBlockDiagOpFun.html#a6b17dbe9d3c148769df54e94790c2e40", null ],
     [ "set_block", "classBlockDiagOpFun.html#afb11a51d9019df250ab94ae8695e77ac", null ],
-    [ "set_blocks", "classBlockDiagOpFun.html#ab10b758787407c80a07fc09067fe8a23", null ],
+    [ "set_blocks", "classBlockDiagOpFun.html#ad06dfd14034b77e74cdd3dc88f2f861a", null ],
     [ "set_zero_block_indices", "classBlockDiagOpFun.html#acb988b7b9147ae92c0de6712d5076c5f", null ],
     [ "h5_read", "classBlockDiagOpFun.html#a35073a9466a09337791dd2149ad81650", null ],
     [ "h5_write", "classBlockDiagOpFun.html#a4d8851b12cbd67843bcbe3f0958d0add", null ]

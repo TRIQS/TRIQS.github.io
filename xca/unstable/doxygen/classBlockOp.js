@@ -13,6 +13,6 @@ var classBlockOp =
     [ "operator+=", "classBlockOp.html#aaccd2372c88397e163ad2131223cdb8b", null ],
     [ "set_block", "classBlockOp.html#af788340f21430e43af70469e5532df8d", null ],
     [ "set_block_index", "classBlockOp.html#a527da6d6115daa302c4ebcbd60661a99", null ],
-    [ "set_block_indices", "classBlockOp.html#a93c21d2615bbec450ab278d9e6befb82", null ],
-    [ "set_blocks", "classBlockOp.html#ab5daef61a0a9381f62ae5965891abd55", null ]
+    [ "set_block_indices", "classBlockOp.html#af1ca0e4417dac8354f2f52016214d366", null ],
+    [ "set_blocks", "classBlockOp.html#a0912bd28b9782ff04af9cd55f3ae01fb", null ]
 ];

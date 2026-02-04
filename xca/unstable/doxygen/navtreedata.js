@@ -63,7 +63,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "../ChangeLog.html",
-"classBlockOpSymSetBar.html#a58ee07cc3f6f040f39c990ebf60bb010"
+"classBlockOpSymSetBar.html#a4383079d09355079f228658cfcc57fe3"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
