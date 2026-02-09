@@ -10,6 +10,7 @@ var classBlockOp3D =
     [ "get_block_sizes", "classBlockOp3D.html#a46beadc1adc65171d157885074e9b3ee", null ],
     [ "get_blocks", "classBlockOp3D.html#a36a18c15ad0cf4fcf8e5cb0473e004c0", null ],
     [ "get_num_block_cols", "classBlockOp3D.html#a4f60bd70accc83d66e195801253154cd", null ],
+    [ "print_slice", "classBlockOp3D.html#a4cbedfb3bccfc80ac500a3d8c44c51fd", null ],
     [ "set_block", "classBlockOp3D.html#adf7154c128d4a194060186dbd9b119a4", null ],
     [ "set_block_index", "classBlockOp3D.html#acf295914197d6a2cf38d081abf8aa072", null ],
     [ "set_block_indices", "classBlockOp3D.html#a5f732e46d5b388b00c707979bfc1a013", null ],
