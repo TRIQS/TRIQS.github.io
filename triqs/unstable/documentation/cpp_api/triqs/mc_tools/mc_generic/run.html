@@ -22,8 +22,8 @@
     <link rel="author" title="About these documents" href="../../../../../about.html" />
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" />
-    <link rel="next" title="triqs::mc_tools::mc_generic::collect_results" href="collect_results.html" />
-    <link rel="prev" title="triqs::mc_tools::mc_generic::warmup_and_accumulate" href="warmup_and_accumulate.html" /> 
+    <link rel="next" title="triqs::mc_tools::mc_generic::warmup" href="warmup.html" />
+    <link rel="prev" title="triqs::mc_tools::mc_generic::clear_measures" href="clear_measures.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -523,13 +523,18 @@
 </li>
 <li class="toctree-l3 current"><a class="reference internal" href="../../mc_tools.html">triqs::mc_tools</a><ul class="current">
 <li class="toctree-l4 current"><a class="reference internal" href="../../mc_tools.html#classes">Classes</a><ul class="current">
-<li class="toctree-l5"><a class="reference internal" href="../random_generator.html">triqs::mc_tools::random_generator</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../measure_aux.html">triqs::mc_tools::measure_aux</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../measure_set.html">triqs::mc_tools::measure_set</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../measure.html">triqs::mc_tools::measure</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../move_set.html">triqs::mc_tools::move_set</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../move.html">triqs::mc_tools::move</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../random_generator.html">triqs::mc_tools::random_generator</a></li>
 <li class="toctree-l5 current"><a class="reference internal" href="../mc_generic.html">triqs::mc_tools::mc_generic</a></li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="../../mc_tools.html#functions">Functions</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="../random_generator_names.html">triqs::mc_tools::random_generator_names</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../random_generator_names_list.html">triqs::mc_tools::random_generator_names_list</a></li>
 </ul>
 </li>
 </ul>
@@ -856,6 +861,8 @@
 <li class="toctree-l5"><a class="reference internal" href="../../../../python_api/triqs.gf.meshes.MeshImTime.html">triqs.gf.meshes.MeshImTime</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../../python_api/triqs.gf.meshes.MeshLegendre.html">triqs.gf.meshes.MeshLegendre</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../../python_api/triqs.gf.meshes.MeshReFreq.html">triqs.gf.meshes.MeshReFreq</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../python_api/triqs.gf.meshes.MeshReFreqLog.html">triqs.gf.meshes.MeshReFreqLog</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../python_api/triqs.gf.meshes.MeshReFreqPts.html">triqs.gf.meshes.MeshReFreqPts</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../../python_api/triqs.gf.meshes.MeshReTime.html">triqs.gf.meshes.MeshReTime</a></li>
 </ul>
 </li>
@@ -1825,55 +1832,45 @@
 <p><em>#include &lt;triqs/mc_tools/mc_generic.hpp&gt;</em></p>
 <p><strong>Synopsis</strong></p>
 <blockquote>
-<div><div class="cppsynopsis line-block">
-<div class="line">int <span class="red">run</span> (int64_t <span class="param">n_cycles</span>,</div>
+<div><ol class="arabic cppsynopsis">
+<li><div class="line-block">
+<div class="line">int <span class="red">run</span> (run_param_t const &amp; <span class="param">params</span>)</div>
+</div>
+</li>
+<li><div class="line-block">
+<div class="line">int <span class="red">run</span> (std::int64_t <span class="param">ncycles</span>,</div>
 <div class="line-block">
-<div class="line">int64_t <span class="param">length_cycle</span>,</div>
+<div class="line">std::int64_t <span class="param">cycle_length</span>,</div>
 <div class="line">std::function&lt;bool ()&gt; <span class="param">stop_callback</span>,</div>
-<div class="line">bool <span class="param">do_measure</span>,</div>
-<div class="line"><a class="reference internal" href="../../../mpi/communicator.html#mpi-communicator"><span class="std std-ref">communicator</span></a> <span class="param">c</span> = mpi::communicator{})</div>
+<div class="line">bool <span class="param">enable_measures</span>,</div>
+<div class="line"><a class="reference internal" href="../../../mpi/communicator.html#mpi-communicator"><span class="std std-ref">communicator</span></a> <span class="param">c</span> = mpi::communicator{},</div>
+<div class="line">bool <span class="param">enable_calibration</span> = false)</div>
 </div>
 </div>
+</li>
+</ol>
 </div></blockquote>
-<p>Generic function to run the Monte-Carlo. Used by both warmup and accumulate.</p>
+<p>Documentation</p>
 <section id="parameters">
 <h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h2>
 <blockquote>
 <div><ul class="simple">
-<li><dl class="simple">
-<dt><span class="param">n_cycles</span>         Number of QMC cycles</dt><dd><p>If negative, the accumulation is done until the stop_callback returns true or signal is received.</p>
-</dd>
-</dl>
-</li>
-<li><p><span class="param">length_cycle</span>     Number of QMC move attempts in one cycle</p></li>
-<li><dl class="simple">
-<dt><span class="param">stop_callback</span>    A callback function () -&gt; bool. It is called after each cycle</dt><dd><p>to and the computation stops when it returns true.
-Typically used to set up the time limit, cf doc.</p>
-</dd>
-</dl>
-</li>
-<li><p><span class="param">do_measure</span>       Whether or not to accumulate for each measurement</p></li>
-<li><p><span class="param">c</span>                The mpi communicator [optional]. If not provided use the default-constructed one.</p></li>
+<li><p><span class="param">params</span> User-provided MC simulation parameters (see run_param_t).</p></li>
+<li><p><span class="param">ncycles</span> Number of MC cycles to run (f:math:` &lt; 1 f` to run indefinitely).</p></li>
+<li><p><span class="param">cycle_length</span> Number of MC steps per cycle (f:math:` &gt; 0 f`).</p></li>
+<li><p><span class="param">stop_callback</span> Callback function to check if the simulation should be stopped (returns true to stop).</p></li>
+<li><p><span class="param">enable_measures</span> Enable measurements at the end of each cycle (false during warmup phase).</p></li>
+<li><p><span class="param">c</span> MPI communicator.</p></li>
+<li><p><span class="param">enable_calibration</span> Enable calibration of the moves after each cycle (false during accumulation phase).</p></li>
 </ul>
 </div></blockquote>
 </section>
 <section id="returns">
 <h2>Returns<a class="headerlink" href="#returns" title="Link to this heading"></a></h2>
-<blockquote>
-<div><table class="docutils align-default">
-<tbody>
-<tr class="row-odd"><td><p>0</p></td>
-<td><p>if the computation has run until the end</p></td>
-</tr>
-<tr class="row-even"><td><p>1</p></td>
-<td><p>if it has been stopped by stop_callback</p></td>
-</tr>
-<tr class="row-odd"><td><p>2</p></td>
-<td><p>if it has been stopped by receiving a signal</p></td>
-</tr>
-</tbody>
-</table>
-</div></blockquote>
+<dl class="simple">
+<dt>0 if the simulation has done all requested cycles, 1 if it has been stopped due to <cite>stop_callback()</cite></dt><dd><p>returned true, 2 if it has been stopped due to a signal.</p>
+</dd>
+</dl>
 </section>
 </section>
 
@@ -1881,8 +1878,8 @@ Typically used to set up the time limit, cf doc.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="warmup_and_accumulate.html" class="btn btn-neutral float-left" title="triqs::mc_tools::mc_generic::warmup_and_accumulate" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="collect_results.html" class="btn btn-neutral float-right" title="triqs::mc_tools::mc_generic::collect_results" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="clear_measures.html" class="btn btn-neutral float-left" title="triqs::mc_tools::mc_generic::clear_measures" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="warmup.html" class="btn btn-neutral float-right" title="triqs::mc_tools::mc_generic::warmup" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
