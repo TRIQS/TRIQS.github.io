@@ -11,6 +11,8 @@ var classDiagramEvaluator =
     [ "eval_correlator", "classDiagramEvaluator.html#a22b269b435a14e2ea0b4d30ee1e12cb0", null ],
     [ "get_num_self_energy_backbones", "classDiagramEvaluator.html#a784812dc38130a727b501a648eaa4256", null ],
     [ "get_num_single_ptcle_gf_backbones", "classDiagramEvaluator.html#a11d77a34aa079886ee0e23af08853655", null ],
+    [ "print_self_energy_backbone", "classDiagramEvaluator.html#a94697f11f1b42e8bb14041b1c83945e4", null ],
+    [ "print_single_ptcle_gf_backbone", "classDiagramEvaluator.html#aedae2e3c54e486c5cfd4c983f0141dd3", null ],
     [ "reset", "classDiagramEvaluator.html#a3a91b443b1b469e6de6d2af83ecf4a4d", null ],
     [ "beta", "classDiagramEvaluator.html#aeb60976cce3798b6f4800d329bf20cf1", null ],
     [ "GKt", "classDiagramEvaluator.html#adbadd2c4c3b80df434351e792efacc12", null ],
