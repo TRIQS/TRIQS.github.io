@@ -394,7 +394,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for triqs_dft_tools.converters.plovasp.sc_dmft</h1><div class="highlight"><pre>
-<span></span> 
+<span></span>
 <span class="c1">################################################################################</span>
 <span class="c1">#</span>
 <span class="c1"># TRIQS: a Toolbox for Research in Interacting Quantum Systems</span>
@@ -480,24 +480,28 @@
     <span class="k">return</span> <span class="n">pid_exists</span></div>
 
 
+
 <div class="viewcode-block" id="get_dft_energy">
 <a class="viewcode-back" href="../../../../_python_api/triqs_dft_tools.converters.plovasp.sc_dmft.get_dft_energy.html#triqs_dft_tools.converters.plovasp.sc_dmft.get_dft_energy">[docs]</a>
 <span class="k">def</span> <span class="nf">get_dft_energy</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Reads energy from the last line of OSZICAR.</span>
+<span class="sd">    Reads DFT energy from the last line of Vasp&#39;s OSZICAR or from vasptriqs.h5</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;OSZICAR&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="n">nextline</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
-        <span class="k">while</span> <span class="n">nextline</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
-            <span class="n">line</span> <span class="o">=</span> <span class="n">nextline</span>
-            <span class="n">nextline</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
-<span class="c1">#            print &quot;OSZICAR: &quot;, line[:-1]</span>
+    <span class="n">h5_energy</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="s1">&#39;vaspout.h5&#39;</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="s1">&#39;vaspout.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">h5</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;oszicar&#39;</span> <span class="ow">in</span> <span class="n">h5</span><span class="p">[</span><span class="s1">&#39;intermediate/ion_dynamics&#39;</span><span class="p">]:</span>
+                <span class="n">dft_energy</span> <span class="o">=</span> <span class="n">h5</span><span class="p">[</span><span class="s1">&#39;intermediate/ion_dynamics/oszicar&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">h5_energy</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="k">try</span><span class="p">:</span>
+    <span class="c1"># as backup use OSZICAR file</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">h5_energy</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;OSZICAR&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">nextline</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+            <span class="k">while</span> <span class="n">nextline</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">nextline</span>
+                <span class="n">nextline</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
         <span class="n">dft_energy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">2</span><span class="p">])</span>
-    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Cannot read energy from OSZICAR, setting it to zero&quot;</span><span class="p">)</span>
-        <span class="n">dft_energy</span> <span class="o">=</span> <span class="mf">0.0</span>
 
     <span class="k">return</span> <span class="n">dft_energy</span></div>
 
@@ -512,12 +516,11 @@
     <span class="n">RED</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\033</span><span class="s1">[91m&#39;</span>
     <span class="n">ENDC</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\033</span><span class="s1">[0m&#39;</span></div>
 
-<span class="c1">#</span>
+
 <span class="c1"># Main self-consistent cycle</span>
-<span class="c1">#</span>
 <div class="viewcode-block" id="run_all">
 <a class="viewcode-back" href="../../../../_python_api/triqs_dft_tools.converters.plovasp.sc_dmft.run_all.html#triqs_dft_tools.converters.plovasp.sc_dmft.run_all">[docs]</a>
-<span class="k">def</span> <span class="nf">run_all</span><span class="p">(</span><span class="n">vasp_pid</span><span class="p">,</span> <span class="n">dmft_cycle</span><span class="p">,</span> <span class="n">cfg_file</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">,</span> <span class="n">n_iter_dft</span><span class="p">,</span> <span class="n">vasp_version</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">run_all</span><span class="p">(</span><span class="n">vasp_pid</span><span class="p">,</span> <span class="n">dmft_cycle</span><span class="p">,</span> <span class="n">cfg_file</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">,</span> <span class="n">n_iter_dft</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;  Waiting for VASP lock to appear...&quot;</span><span class="p">)</span>
@@ -533,15 +536,14 @@
         <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
         <span class="k">while</span> <span class="n">is_vasp_lock_present</span><span class="p">():</span>
             <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="c1">#            if debug: print bcolors.YELLOW + &quot; waiting: rank %s&quot;%(mpi.rank) + bcolors.ENDC</span>
+            <span class="k">if</span> <span class="n">debug</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">bcolors</span><span class="o">.</span><span class="n">YELLOW</span> <span class="o">+</span> <span class="s2">&quot; waiting: rank </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">mpi</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span> <span class="o">+</span> <span class="n">bcolors</span><span class="o">.</span><span class="n">ENDC</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">is_vasp_running</span><span class="p">(</span><span class="n">vasp_pid</span><span class="p">):</span>
                 <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;  VASP stopped&quot;</span><span class="p">)</span>
                 <span class="n">vasp_running</span> <span class="o">=</span> <span class="kc">False</span>
                 <span class="k">break</span>
-            
-<span class="c1"># Tell VASP to stop if the maximum number of iterations is reached</span>
-        
-        
+
+        <span class="c1"># Tell VASP to stop if the maximum number of iterations is reached</span>
+
         <span class="k">if</span> <span class="n">debug</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">bcolors</span><span class="o">.</span><span class="n">MAGENTA</span> <span class="o">+</span> <span class="s2">&quot;rank </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">mpi</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span> <span class="o">+</span> <span class="n">bcolors</span><span class="o">.</span><span class="n">ENDC</span><span class="p">)</span>
         <span class="n">err</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">exc</span> <span class="o">=</span> <span class="kc">None</span>
@@ -566,7 +568,7 @@
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  DFT DC: &quot;</span><span class="p">,</span> <span class="n">sum_k</span><span class="o">.</span><span class="n">dc_energ</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="o">*</span><span class="mi">80</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">()</span>
-        
+
         <span class="c1"># check if we should do additional VASP calculations</span>
         <span class="c1"># in the standard VASP version, VASP writes out GAMMA itself</span>
         <span class="c1"># so that if we want to keep GAMMA fixed we have to copy it to</span>
@@ -576,9 +578,7 @@
         <span class="c1"># the hack consists of removing the call of LPRJ_LDApU in VASP src file</span>
         <span class="c1"># electron.F around line 644</span>
         <span class="n">iter_dft</span> <span class="o">=</span> <span class="mi">0</span>
-        
-        <span class="k">if</span> <span class="n">vasp_version</span> <span class="o">==</span> <span class="s1">&#39;standard&#39;</span><span class="p">:</span>
-            <span class="n">copyfile</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="s1">&#39;GAMMA&#39;</span><span class="p">,</span><span class="n">dst</span><span class="o">=</span><span class="s1">&#39;GAMMA_recent&#39;</span><span class="p">)</span>
+
         <span class="k">while</span> <span class="n">iter_dft</span> <span class="o">&lt;</span> <span class="n">n_iter_dft</span><span class="p">:</span>
             <span class="c1"># insert recalculation of GAMMA here</span>
             <span class="c1"># Recalculates the density correction</span>
@@ -595,7 +595,7 @@
 
             <span class="c1"># Writes out GAMMA file</span>
             <span class="n">sum_k</span><span class="o">.</span><span class="n">calc_density_correction</span><span class="p">(</span><span class="n">dm_type</span><span class="o">=</span><span class="s1">&#39;vasp&#39;</span><span class="p">)</span>
-            
+
             <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
                 <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./vasp.lock&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -606,8 +606,6 @@
                     <span class="n">vasp_running</span> <span class="o">=</span> <span class="kc">False</span>
                     <span class="k">break</span>
             <span class="n">iter_dft</span> <span class="o">+=</span> <span class="mi">1</span>
-            <span class="k">if</span> <span class="n">vasp_version</span> <span class="o">==</span> <span class="s1">&#39;standard&#39;</span><span class="p">:</span>
-                <span class="n">copyfile</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="s1">&#39;GAMMA_recent&#39;</span><span class="p">,</span><span class="n">dst</span><span class="o">=</span><span class="s1">&#39;GAMMA&#39;</span><span class="p">)</span>
         <span class="nb">iter</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">if</span> <span class="nb">iter</span> <span class="o">==</span> <span class="n">n_iter</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">  Maximum number of iterations reached.&quot;</span><span class="p">)</span>
@@ -630,9 +628,9 @@
 <div class="viewcode-block" id="main">
 <a class="viewcode-back" href="../../../../_python_api/triqs_dft_tools.converters.plovasp.sc_dmft.main.html#triqs_dft_tools.converters.plovasp.sc_dmft.main">[docs]</a>
 <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-    
+
     <span class="kn">import</span> <span class="nn">importlib</span>
-    
+
     <span class="k">try</span><span class="p">:</span>
         <span class="n">vasp_pid</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
     <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
@@ -646,7 +644,7 @@
         <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR: Number of iterations must be provided as the second argument&quot;</span><span class="p">)</span>
         <span class="k">raise</span>
-        
+
     <span class="k">try</span><span class="p">:</span>
         <span class="n">n_iter_dft</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
     <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
@@ -666,14 +664,7 @@
         <span class="n">cfg_file</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
         <span class="n">cfg_file</span> <span class="o">=</span> <span class="s1">&#39;plo.cfg&#39;</span>
-        
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">vasp_version</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
-    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="n">vasp_version</span> <span class="o">=</span> <span class="s1">&#39;standard&#39;</span>
-    
-    <span class="k">if</span> <span class="n">vasp_version</span> <span class="o">!=</span> <span class="s1">&#39;standard&#39;</span> <span class="ow">and</span> <span class="n">vasp_version</span> <span class="o">!=</span> <span class="s1">&#39;no_gamma_write&#39;</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;vasp_version has to be standard or no_gamma_write&#39;</span><span class="p">)</span>
+
 
 <span class="c1">#    if len(sys.argv) &gt; 1:</span>
 <span class="c1">#        vasp_path = sys.argv[1]</span>
@@ -688,7 +679,7 @@
 
     <span class="n">dmft_mod</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">dmft_script</span><span class="p">)</span>
 
-    <span class="n">run_all</span><span class="p">(</span><span class="n">vasp_pid</span><span class="p">,</span> <span class="n">dmft_mod</span><span class="o">.</span><span class="n">dmft_cycle</span><span class="p">,</span> <span class="n">cfg_file</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">,</span> <span class="n">n_iter_dft</span><span class="p">,</span> <span class="n">vasp_version</span><span class="p">)</span></div>
+    <span class="n">run_all</span><span class="p">(</span><span class="n">vasp_pid</span><span class="p">,</span> <span class="n">dmft_mod</span><span class="o">.</span><span class="n">dmft_cycle</span><span class="p">,</span> <span class="n">cfg_file</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">,</span> <span class="n">n_iter_dft</span><span class="p">)</span></div>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>

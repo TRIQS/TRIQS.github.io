@@ -437,6 +437,7 @@
 
 <span class="sd">    - *natom* (int) : total number of atoms</span>
 <span class="sd">    - *nktot* (int) : total number of `k`-points</span>
+<span class="sd">    - *nkibz* (int) : number of `k`-points in IBZ</span>
 <span class="sd">    - *nband* (int) : total number of bands</span>
 <span class="sd">    - *nspin* (int) : spin-polarization</span>
 <span class="sd">    - *nc_flag* (True/False) : non-collinearity flag</span>
@@ -458,8 +459,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">natom</span> <span class="o">=</span> <span class="n">vasp_data</span><span class="o">.</span><span class="n">poscar</span><span class="o">.</span><span class="n">nq</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">type_of_ion</span> <span class="o">=</span> <span class="n">vasp_data</span><span class="o">.</span><span class="n">poscar</span><span class="o">.</span><span class="n">type_of_ion</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nktot</span> <span class="o">=</span> <span class="n">vasp_data</span><span class="o">.</span><span class="n">kpoints</span><span class="o">.</span><span class="n">nktot</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nkibz</span> <span class="o">=</span> <span class="n">vasp_data</span><span class="o">.</span><span class="n">kpoints</span><span class="o">.</span><span class="n">nkibz</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">kmesh</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;nktot&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">nktot</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kmesh</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;nktot&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">nktot</span><span class="p">,</span> <span class="s1">&#39;nkibz&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">nkibz</span><span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">kmesh</span><span class="p">[</span><span class="s1">&#39;kpoints&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">vasp_data</span><span class="o">.</span><span class="n">kpoints</span><span class="o">.</span><span class="n">kpts</span>
         <span class="c1"># VASP.6.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nc_flag</span> <span class="o">=</span> <span class="n">vasp_data</span><span class="o">.</span><span class="n">plocar</span><span class="o">.</span><span class="n">nc_flag</span>
@@ -486,21 +488,15 @@
 
 <span class="c1"># Check that the number of k-points is the same in all files</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">ns_plo</span><span class="p">,</span> <span class="n">nk_plo</span><span class="p">,</span> <span class="n">nb_plo</span> <span class="o">=</span> <span class="n">vasp_data</span><span class="o">.</span><span class="n">plocar</span><span class="o">.</span><span class="n">plo</span><span class="o">.</span><span class="n">shape</span>
-        <span class="k">assert</span> <span class="n">nk_plo</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">nktot</span><span class="p">,</span> <span class="s2">&quot;PLOCAR is inconsistent with IBZKPT (number of k-points)&quot;</span>
+        <span class="k">assert</span> <span class="n">nk_plo</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">nktot</span><span class="p">,</span> <span class="s2">&quot;PLOCAR is inconsistent with IBZKPT (number of k-points). If you run VASP with symmetry make sure to use the h5 interface of the converter, i.e. have the locproj information written to vaspout.h5&quot;</span>
 
 <span class="c1"># FIXME: Reading from EIGENVAL is obsolete and should be</span>
 <span class="c1">#        removed completely.</span>
-<span class="c1">#        if not vasp_data.eigenval.eigs is None:</span>
-        <span class="k">if</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">vasp_data</span><span class="o">.</span><span class="n">eigenval</span><span class="o">.</span><span class="n">eigs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;eigvals from EIGENVAL&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">eigvals</span> <span class="o">=</span> <span class="n">vasp_data</span><span class="o">.</span><span class="n">eigenval</span><span class="o">.</span><span class="n">eigs</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">ferw</span> <span class="o">=</span> <span class="n">vasp_data</span><span class="o">.</span><span class="n">eigenval</span><span class="o">.</span><span class="n">ferw</span><span class="o">.</span><span class="n">transpose</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-
-            <span class="n">nk_eig</span> <span class="o">=</span> <span class="n">vasp_data</span><span class="o">.</span><span class="n">eigenval</span><span class="o">.</span><span class="n">nktot</span>
-            <span class="k">assert</span> <span class="n">nk_eig</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">nktot</span><span class="p">,</span> <span class="s2">&quot;PLOCAR is inconsistent with EIGENVAL (number of k-points)&quot;</span>
-
-<span class="c1"># Check that the number of band is the same in PROJCAR and EIGENVAL</span>
-            <span class="k">assert</span> <span class="n">nb_plo</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">nband</span><span class="p">,</span> <span class="s2">&quot;PLOCAR is inconsistent with EIGENVAL (number of bands)&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">efermi</span> <span class="o">=</span> <span class="n">vasp_data</span><span class="o">.</span><span class="n">doscar</span><span class="o">.</span><span class="n">efermi</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;eigvals from LOCPROJ&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">eigvals</span> <span class="o">=</span> <span class="n">vasp_data</span><span class="o">.</span><span class="n">plocar</span><span class="o">.</span><span class="n">eigs</span>
@@ -554,7 +550,7 @@
 
 <span class="c1"># Spin factor</span>
         <span class="n">sp_fac</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="k">if</span> <span class="n">ns</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">nc_flag</span> <span class="o">==</span> <span class="kc">False</span> <span class="k">else</span> <span class="mf">1.0</span>
-        
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nc_flag</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
             <span class="n">den_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">ns</span><span class="p">,</span> <span class="n">nproj</span><span class="p">,</span> <span class="n">nproj</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
             <span class="n">overlap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">ns</span><span class="p">,</span> <span class="n">nproj</span><span class="p">,</span> <span class="n">nproj</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
@@ -587,9 +583,9 @@
                         <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;    &quot;</span>
                         <span class="n">out</span> <span class="o">+=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{0:12.7f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">,</span> <span class="n">dov</span><span class="p">))</span>
                         <span class="nb">print</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
-                    
-                    
-                    
+
+
+
         <span class="k">else</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;!! WARNING !! Non Collinear Routine&quot;</span><span class="p">)</span>
             <span class="n">den_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">ns</span><span class="p">,</span> <span class="n">nproj</span><span class="p">,</span> <span class="n">nproj</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>

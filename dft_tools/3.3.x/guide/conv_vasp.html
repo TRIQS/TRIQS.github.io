@@ -429,7 +429,7 @@
 <p>The VASP interface relies on new options introduced since version 5.4.x In
 particular, a new INCAR-option <a class="reference external" href="https://cms.mpi.univie.ac.at/wiki/index.php/LOCPROJ" rel="noopener noreferrer" target="_blank">LOCPROJ</a>, the new <cite>LORBIT</cite> modes
 13 and 14 have been added, and the new <cite>ICHARG</cite> mode 5 for charge
-self-consistent DFT+DMFT calculations have been added.</p>
+self-consistent DFT+DMFT calculations have been added. The VASP interface for charge self-consistent calculations is officially supported as of VASP version 6.5.0 (see <a class="reference external" href="https://www.vasp.at/wiki/index.php/ICHARG" rel="noopener noreferrer" target="_blank">VASP ICHARG=5 documentation</a>). It is highly recommended to compile VASP with hdf5 support enabled (<cite>-DVASP_HDF5</cite>) to enable all features of the interface. This allows to use the interface while symmetries are switched on in VASP, and enables spin-polarized feedback in charge self-consistent calculations to VASP.</p>
 <p>The VASP interface methodologically builds on the so called projection on
 localized orbitals (PLO) scheme, where the resulting KS states from DFT are
 projected on localized orbitals, which defines a basis for setting up a
@@ -437,26 +437,13 @@ Hubbard-like model Hamiltonian. Resulting in lattice object stored in <cite>Sumk
 The implementation is presented in <a class="reference external" href="https://doi.org/10.1088/1361-648X/aae80a" rel="noopener noreferrer" target="_blank">M. Schüler et al. 2018 J. Phys.: Condens.
 Matter 30 475901</a>.</p>
 <p>The interface consists of two parts, <a class="reference internal" href="../_python_api/triqs_dft_tools.converters.plovasp.html#module-triqs_dft_tools.converters.plovasp" title="triqs_dft_tools.converters.plovasp"><code class="xref py py-mod docutils literal notranslate"><span class="pre">PLOVASP</span></code></a>, a collection of
-python classes and functions converting the raw VASP output to proper projector
+python classes and functions converting the VASP output to proper projector
 functions, and the python based <a class="reference internal" href="../_python_api/triqs_dft_tools.converters.vasp.html#module-triqs_dft_tools.converters.vasp" title="triqs_dft_tools.converters.vasp"><code class="xref py py-mod docutils literal notranslate"><span class="pre">VaspConverter</span></code></a>, which
 creates a h5 archive from the <a class="reference internal" href="../_python_api/triqs_dft_tools.converters.plovasp.html#module-triqs_dft_tools.converters.plovasp" title="triqs_dft_tools.converters.plovasp"><code class="xref py py-mod docutils literal notranslate"><span class="pre">PLOVASP</span></code></a> output readable by
 <cite>SumkDFT</cite>. Therefore, the conversion consist always of two steps.</p>
 <p>Here, we will present a guide how the interface <cite>can</cite> be used to create input for a DMFT calculation, using SrVO3 as an example. Full examples can be found in the <a class="reference internal" href="../tutorials.html#tutorials"><span class="std std-ref">tutorial section of DFTTools</span></a>.</p>
-<section id="limitations-of-the-interface">
-<h2>Limitations of the interface<a class="headerlink" href="#limitations-of-the-interface" title="Link to this heading"></a></h2>
-<ul class="simple">
-<li><p>The interface works correctly only if the k-point symmetries
-are turned off during the VASP run (ISYM=-1).</p></li>
-<li><p>Generation of projectors for k-point lines (option <cite>Lines</cite> in KPOINTS)
-needed for Bloch spectral function calculations is not possible at the moment.</p></li>
-<li><p>The interface currently supports only collinear-magnetism calculation
-(this implies no spin-orbit coupling) and spin-polarized projectors have not
-been tested.</p></li>
-<li><p>The converter needs the correct Fermi energy from VASP, which is read from
-the LOCPROJ file. However, VASP by default does not output this information.
-Please see <a class="reference internal" href="#remarks-on-the-vasp-version">Remarks on the VASP version</a>.</p></li>
-</ul>
-</section>
+<p>For VASP version older than 6.5.0 there are a few limitation of the interface as it was not officially supported and only text file based. See <a class="reference internal" href="#remarks-for-vasp-older-than-6-5-0">Remarks for VASP older than 6.5.0</a> for details.</p>
+<p>Generation of projectors for k-point lines (option <cite>Lines</cite> in KPOINTS) needed for Bloch spectral function calculations is not possible at the moment.</p>
 <section id="vasp-generating-raw-projectors">
 <h2>VASP: generating raw projectors<a class="headerlink" href="#vasp-generating-raw-projectors" title="Link to this heading"></a></h2>
 <p>The VASP <strong>INCAR</strong> option <cite>LOCPROJ</cite> selects a set of localized projectors that
@@ -796,15 +783,19 @@ For two correlated sites, one can define the file as follows:</p>
 </section>
 </section>
 </section>
-<section id="remarks-on-the-vasp-version">
-<h2>Remarks on the VASP version<a class="headerlink" href="#remarks-on-the-vasp-version" title="Link to this heading"></a></h2>
-<p>In the current version of the interface the Fermi energy is extracted from the
-DOSCAR. However, if one pursues to do charge self-consistent calculations one
-needs to write the Fermi energy to the projectors (<cite>LOCPROJ</cite> file), as the DOSCAR
-is only updated after a full SCF/NSCF run. The file should contain the Fermi energy
-in the header. One can either copy the Fermi energy manually there after a successful
-VASP run, or modify the VASP source code slightly, by replacing the following line in
-<cite>locproj.F</cite> (around line 695):</p>
+<section id="remarks-for-vasp-older-than-6-5-0">
+<h2>Remarks for VASP older than 6.5.0<a class="headerlink" href="#remarks-for-vasp-older-than-6-5-0" title="Link to this heading"></a></h2>
+<p>The above mentioned interface has some limitations for VASP versions older than 6.5.0:</p>
+<ul class="simple">
+<li><p>The interface works correctly only if the k-point symmetries
+are turned off during the VASP run (ISYM=-1).</p></li>
+<li><p>The interface currently supports only collinear-magnetism calculation
+(this implies no spin-orbit coupling) and spin-polarized projectors have not
+been tested.</p></li>
+<li><p>The converter needs the correct Fermi energy from VASP, which is read from
+the LOCPROJ file. However, VASP by default does not output this information.</p></li>
+</ul>
+<p>For VASP older than 6.5.0 the Fermi level cannot be extracted from the <cite>vaspout.h5</cite> file, then interface falls back to extract the Fermi level from the DOSCAR. However, if one pursues to do charge self-consistent calculations one needs to write the Fermi energy to the projectors (<cite>LOCPROJ</cite> file), as the DOSCAR is only updated after a full SCF/NSCF run. The file should contain the Fermi energy in the header. One can either copy the Fermi energy manually there after a successful VASP run, or modify the VASP source code slightly, by replacing the following line in <cite>locproj.F</cite> (around line 695):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span>   <span class="n">WRITE</span><span class="p">(</span><span class="mi">99</span><span class="p">,</span><span class="s1">&#39;(4I6,&quot;  # of spin, # of k-points, # of bands, # of proj&quot; )&#39;</span><span class="p">)</span> <span class="n">NS</span><span class="p">,</span><span class="n">NK</span><span class="p">,</span><span class="n">NB</span><span class="p">,</span><span class="n">NF</span>
 <span class="o">---</span>
 <span class="o">&gt;</span>   <span class="n">WRITE</span><span class="p">(</span><span class="mi">99</span><span class="p">,</span><span class="s1">&#39;(4I6,F12.7,&quot;  # of spin, # of k-points, # of bands, # of proj, Efermi&quot; )&#39;</span><span class="p">)</span> <span class="n">W</span><span class="o">%</span><span class="n">WDES</span><span class="o">%</span><span class="n">NCDIJ</span><span class="p">,</span><span class="n">NK</span><span class="p">,</span><span class="n">NB</span><span class="p">,</span><span class="n">NF</span><span class="p">,</span><span class="n">EFERMI</span>
