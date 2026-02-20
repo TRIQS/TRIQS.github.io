@@ -14,5 +14,6 @@ var searchData=
   ['hyb_5ff_11',['hyb_f',['../classhyb__F.html#a39b9d8bbcf189e916e60a25d65d153db',1,'hyb_F::hyb_F(int N, int r, int n)'],['../classhyb__F.html#a2a5e1bdfabf282c407908ffc52bc4b44',1,'hyb_F::hyb_F()=delete'],['../classhyb__F.html',1,'hyb_F']]],
   ['hyb_5finit_12',['hyb_init',['../classfastdiagram.html#aa0feca6b7f892353a2c92af5e6a20cb2',1,'fastdiagram']]],
   ['hyb_5fpoles_13',['hyb_poles',['../classDiagramEvaluator.html#a0021686b51ec073edd85538491600e5a',1,'DiagramEvaluator::hyb_poles'],['../classDenseDiagramEvaluator.html#a86d7bd04215b32449ed6f62f7681fc5c',1,'DenseDiagramEvaluator::hyb_poles']]],
-  ['hyb_5frefl_14',['hyb_refl',['../classDenseDiagramEvaluator.html#ab09271a003f8539d444887706da0e774',1,'DenseDiagramEvaluator']]]
+  ['hyb_5frefl_14',['hyb_refl',['../classDenseDiagramEvaluator.html#ab09271a003f8539d444887706da0e774',1,'DenseDiagramEvaluator']]],
+  ['hyb_5freflect_15',['hyb_reflect',['../classDiagramEvaluator.html#a2a4d9b83cc775d65af8b270e23bd6e3a',1,'DiagramEvaluator']]]
 ];

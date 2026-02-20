@@ -18,6 +18,7 @@ var classDiagramEvaluator =
     [ "GKt", "classDiagramEvaluator.html#adbadd2c4c3b80df434351e792efacc12", null ],
     [ "hyb", "classDiagramEvaluator.html#a6c1e0c55fa690ddd2b5e7ff0172b0f9a", null ],
     [ "hyb_poles", "classDiagramEvaluator.html#a0021686b51ec073edd85538491600e5a", null ],
+    [ "hyb_reflect", "classDiagramEvaluator.html#a2a4d9b83cc775d65af8b270e23bd6e3a", null ],
     [ "n", "classDiagramEvaluator.html#a4550ce1172c0fc5125052903fc30573a", null ],
     [ "Nmax", "classDiagramEvaluator.html#abfd9f1e3ccfa355673ccf569003ffd6f", null ],
     [ "q", "classDiagramEvaluator.html#abc5f18ae64a157a64578a4573f33634f", null ],
