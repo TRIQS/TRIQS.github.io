@@ -2625,8 +2625,10 @@
 <span class="sd">                   DFT code to write the density correction for. Options:</span>
 <span class="sd">                   &#39;vasp&#39;, &#39;wien2k&#39;, &#39;elk&#39; or &#39;qe&#39;. Needs to be set for &#39;qe&#39;</span>
 <span class="sd">        spinave : logical</span>
-<span class="sd">                   Elk specific and for magnetic calculations in DMFT only.</span>
-<span class="sd">                   It averages the spin to keep the DFT part non-magnetic.</span>
+<span class="sd">                   For magnetic calculations in DMFT only.</span>
+<span class="sd">                   If True, the density matrix is averaged over spin up/down to</span>
+<span class="sd">                   keep the DFT part non-magnetic (supported for &#39;elk&#39;, &#39;vasp&#39;</span>
+<span class="sd">                   and &#39;qe&#39;).</span>
 <span class="sd">        kpts_to_write : iterable of int</span>
 <span class="sd">                   Indices of k points that are written to file. If None (default),</span>
 <span class="sd">                   all k points are written. Only implemented for dm_type &#39;vasp&#39;</span>
@@ -2645,11 +2647,11 @@
 <span class="sd">                         the corresponing total charge `dens`.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1">#automatically set dm_type if required</span>
+        <span class="c1"># automatically set dm_type if required</span>
         <span class="k">if</span> <span class="n">dm_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">dm_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dft_code</span>
 
-        <span class="k">assert</span> <span class="n">dm_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;vasp&#39;</span><span class="p">,</span> <span class="s1">&#39;wien2k&#39;</span><span class="p">,</span> <span class="s1">&#39;elk&#39;</span><span class="p">,</span> <span class="s1">&#39;qe&#39;</span><span class="p">),</span> <span class="s2">&quot;&#39;dm_type&#39; must be either &#39;vasp&#39;, &#39;wienk&#39;, &#39;elk&#39; or &#39;qe&#39;&quot;</span>
+        <span class="k">assert</span> <span class="n">dm_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;vasp&#39;</span><span class="p">,</span> <span class="s1">&#39;wien2k&#39;</span><span class="p">,</span> <span class="s1">&#39;elk&#39;</span><span class="p">,</span> <span class="s1">&#39;qe&#39;</span><span class="p">),</span> <span class="s2">&quot;&#39;dm_type&#39; must be either &#39;vasp&#39;, &#39;wien2k&#39;, &#39;elk&#39; or &#39;qe&#39;&quot;</span>
         <span class="c1"># default file names</span>
         <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">dm_type</span> <span class="o">==</span> <span class="s1">&#39;wien2k&#39;</span><span class="p">:</span>
@@ -2809,7 +2811,10 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">kpts_to_write</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">kpts_to_write</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_k</span>
 
-            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">SP</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Spin-polarized density matrix is not implemented&quot;</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">spinave</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">SP</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Spin-polarized density matrix is not implemented&quot;</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">SP</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;SumK calc_density_correction: WARNING! Averaging out spin-polarized correction in the density channel&quot;</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
                 <span class="k">if</span> <span class="n">filename</span> <span class="o">==</span> <span class="s1">&#39;vaspgamma.h5&#39;</span><span class="p">:</span>
@@ -2818,8 +2823,13 @@
                         <span class="n">bnd_win_towrite</span> <span class="o">=</span> <span class="p">[</span><span class="n">band_window</span><span class="p">[</span><span class="mi">0</span><span class="p">][:</span><span class="n">n_k_ibz</span><span class="p">,:]]</span>
                         <span class="n">vasp_h5</span><span class="p">[</span><span class="s1">&#39;band_window&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bnd_win_towrite</span>
                         <span class="n">vasp_h5</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s1">&#39;deltaN&#39;</span><span class="p">)</span>
-                        <span class="n">vasp_h5</span><span class="p">[</span><span class="s1">&#39;deltaN&#39;</span><span class="p">][</span><span class="s1">&#39;up&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">deltaN</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][:</span><span class="n">n_k_ibz</span><span class="p">]</span>
-                        <span class="n">vasp_h5</span><span class="p">[</span><span class="s1">&#39;deltaN&#39;</span><span class="p">][</span><span class="s1">&#39;down&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">deltaN</span><span class="p">[</span><span class="s1">&#39;down&#39;</span><span class="p">][:</span><span class="n">n_k_ibz</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="n">spinave</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">SP</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">SO</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">deltaN_ave</span> <span class="o">=</span> <span class="p">[(</span><span class="n">u</span> <span class="o">+</span> <span class="n">d</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="k">for</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">deltaN</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][:</span><span class="n">n_k_ibz</span><span class="p">],</span> <span class="n">deltaN</span><span class="p">[</span><span class="s1">&#39;down&#39;</span><span class="p">][:</span><span class="n">n_k_ibz</span><span class="p">])]</span>
+                            <span class="n">vasp_h5</span><span class="p">[</span><span class="s1">&#39;deltaN&#39;</span><span class="p">][</span><span class="s1">&#39;up&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">deltaN_ave</span>
+                            <span class="n">vasp_h5</span><span class="p">[</span><span class="s1">&#39;deltaN&#39;</span><span class="p">][</span><span class="s1">&#39;down&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">deltaN_ave</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">vasp_h5</span><span class="p">[</span><span class="s1">&#39;deltaN&#39;</span><span class="p">][</span><span class="s1">&#39;up&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">deltaN</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">][:</span><span class="n">n_k_ibz</span><span class="p">]</span>
+                            <span class="n">vasp_h5</span><span class="p">[</span><span class="s1">&#39;deltaN&#39;</span><span class="p">][</span><span class="s1">&#39;down&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">deltaN</span><span class="p">[</span><span class="s1">&#39;down&#39;</span><span class="p">][:</span><span class="n">n_k_ibz</span><span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot; -1  -1  ! Number of k-points, default number of bands</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># % len(kpts_to_write))</span>
@@ -2885,7 +2895,9 @@
                             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="k">elif</span> <span class="n">dm_type</span> <span class="o">==</span> <span class="s1">&#39;qe&#39;</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">SP</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">spinave</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">SP</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Spin-polarized density matrix is not implemented&quot;</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">SP</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;SUMK calc_density_correction: WARNING! Averaging out spin-polarized correction in the density channel&quot;</span><span class="p">)</span>
 
             <span class="n">subgrp</span> <span class="o">=</span> <span class="s1">&#39;dft_update&#39;</span>
