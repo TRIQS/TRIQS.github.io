@@ -1,6 +1,6 @@
 var classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator =
 [
-    [ "DiagramEvaluator", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a810ee47f46d83dab9a860296ddd5609a", null ],
+    [ "DiagramEvaluator", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a636ec579a03ed82b22c2558fa3ef5e58", null ],
     [ "DiagramEvaluator", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a4e39418e0efcf142dd35bb9450163da8", null ],
     [ "~DiagramEvaluator", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#aee8bafd5172fcffd090c7937f9298a1e", null ],
     [ "compute_self_energy", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a58b7e4c956955a26a8b74d5513d6b143", null ],

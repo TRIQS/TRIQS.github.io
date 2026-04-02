@@ -3,7 +3,7 @@ var classtriqs__xca_1_1dense_1_1DenseDiagramEvaluator =
     [ "gf_t", "classtriqs__xca_1_1dense_1_1DenseDiagramEvaluator.html#a1fbd02c3cb42febbfa979f66222b4608", null ],
     [ "gf_vt", "classtriqs__xca_1_1dense_1_1DenseDiagramEvaluator.html#a40c84a8c26bab157a8eb8df632318fa8", null ],
     [ "DenseDiagramEvaluator", "classtriqs__xca_1_1dense_1_1DenseDiagramEvaluator.html#a3b4aa948a0ec9e4335ef69d24262a8db", null ],
-    [ "DenseDiagramEvaluator", "classtriqs__xca_1_1dense_1_1DenseDiagramEvaluator.html#ad6c89e4b771f248c6bcd26f3a173f86e", null ],
+    [ "DenseDiagramEvaluator", "classtriqs__xca_1_1dense_1_1DenseDiagramEvaluator.html#a973af61c994611d5ebdac9ddf2fae36a", null ],
     [ "~DenseDiagramEvaluator", "classtriqs__xca_1_1dense_1_1DenseDiagramEvaluator.html#a7dbb3b1b354311b810178be5464fd5c3", null ],
     [ "compute_self_energy", "classtriqs__xca_1_1dense_1_1DenseDiagramEvaluator.html#a40f8d92b3484c44f9695321d28bc27a0", null ],
     [ "compute_self_energy", "classtriqs__xca_1_1dense_1_1DenseDiagramEvaluator.html#abd0938b7615a1736d9bfc9e36e79ae1e", null ],

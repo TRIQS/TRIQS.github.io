@@ -20,7 +20,7 @@ var namespacetriqs__xca_1_1block__sparse =
     [ "NCA_dense", "namespacetriqs__xca_1_1block__sparse.html#a8f4d466e10eded087fd26c2a15ae7e35", null ],
     [ "NCA_gf_bs", "namespacetriqs__xca_1_1block__sparse.html#a27a192ae3f384f734141448615a73dc4", null ],
     [ "NCA_gf_dense", "namespacetriqs__xca_1_1block__sparse.html#ae6edd27cee2c857369e3d1ae320dcc44", null ],
-    [ "nonint_gf_BDOF", "namespacetriqs__xca_1_1block__sparse.html#ac7c0acb22b92f5f002bc762d010555e4", null ],
+    [ "nonint_gf_BDOF", "namespacetriqs__xca_1_1block__sparse.html#aafdb474dbc7541b8abf328cb6717e192", null ],
     [ "OCA_bs", "namespacetriqs__xca_1_1block__sparse.html#ac614c7e3e90d8a5528ecb2408fc3921f", null ],
     [ "OCA_bs", "namespacetriqs__xca_1_1block__sparse.html#a055dbfdcacfc9035652fe6e355e52e33", null ],
     [ "OCA_bs", "namespacetriqs__xca_1_1block__sparse.html#a28eeefd9eff24eb6f1c3216d73e91cda", null ],

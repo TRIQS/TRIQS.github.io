@@ -12,7 +12,7 @@ var block__sparse_8hpp =
     [ "convolve_ppsc", "block__sparse_8hpp.html#a0ce7c2ba4f17d4298dc3c8c5ee4a08ed", null ],
     [ "dagger_bs", "block__sparse_8hpp.html#a8fe9ed10007d37ff33291dfb43722242", null ],
     [ "expectation_value", "block__sparse_8hpp.html#a84052e0da5bf11d86812581d6c71029b", null ],
-    [ "nonint_gf_BDOF", "block__sparse_8hpp.html#ac7c0acb22b92f5f002bc762d010555e4", null ],
+    [ "nonint_gf_BDOF", "block__sparse_8hpp.html#aafdb474dbc7541b8abf328cb6717e192", null ],
     [ "operator*", "block__sparse_8hpp.html#aa8aff74b063c647d8258e49bcfb88e1d", null ],
     [ "operator*", "block__sparse_8hpp.html#a7908fc130f8154459419742e2301bd10", null ],
     [ "operator*", "block__sparse_8hpp.html#a9c97b0cde99b96f7221c442b3f4475f4", null ],

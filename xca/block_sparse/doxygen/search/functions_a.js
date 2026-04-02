@@ -4,6 +4,6 @@ var searchData=
   ['nca_5fdense_1',['NCA_dense',['../namespacetriqs__xca_1_1block__sparse.html#a8f4d466e10eded087fd26c2a15ae7e35',1,'triqs_xca::block_sparse']]],
   ['nca_5fgf_5fbs_2',['NCA_gf_bs',['../namespacetriqs__xca_1_1block__sparse.html#a27a192ae3f384f734141448615a73dc4',1,'triqs_xca::block_sparse']]],
   ['nca_5fgf_5fdense_3',['NCA_gf_dense',['../namespacetriqs__xca_1_1block__sparse.html#ae6edd27cee2c857369e3d1ae320dcc44',1,'triqs_xca::block_sparse']]],
-  ['nonint_5fgf_5fbdof_4',['nonint_gf_BDOF',['../namespacetriqs__xca_1_1block__sparse.html#ac7c0acb22b92f5f002bc762d010555e4',1,'triqs_xca::block_sparse']]],
+  ['nonint_5fgf_5fbdof_4',['nonint_gf_BDOF',['../namespacetriqs__xca_1_1block__sparse.html#aafdb474dbc7541b8abf328cb6717e192',1,'triqs_xca::block_sparse']]],
   ['number_5fof_5fdiagrams_5',['number_of_diagrams',['../classfastdiagram.html#a9ded7bef5516bf6ec97c79d710fc3313',1,'fastdiagram']]]
 ];

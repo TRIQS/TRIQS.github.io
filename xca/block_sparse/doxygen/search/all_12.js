@@ -12,11 +12,12 @@ var searchData=
   ['topology_9',['topology',['../classtriqs__xca_1_1backbone_1_1Backbone.html#a332b8fd03b98b61b0054ad741af44865',1,'triqs_xca::backbone::Backbone']]],
   ['trace_10',['trace',['../namespacetriqs__xca_1_1block__sparse.html#af79b72ae40cd405110765f73ed506361',1,'triqs_xca::block_sparse']]],
   ['trace_5fmatmul_11',['trace_matmul',['../strong__cpl_8cpp.html#a5f7cb04446cc4ed29d2d22823b670a87',1,'trace_matmul(nda::array_const_view&lt; dcomplex, 2 &gt; M1, nda::array_const_view&lt; dcomplex, 2 &gt; M2):&#160;strong_cpl.cpp'],['../strong__cpl_8hpp.html#a5f7cb04446cc4ed29d2d22823b670a87',1,'trace_matmul(nda::array_const_view&lt; dcomplex, 2 &gt; M1, nda::array_const_view&lt; dcomplex, 2 &gt; M2):&#160;strong_cpl.cpp']]],
-  ['triqs_5fatom_5fdiag_12',['triqs_atom_diag',['../namespacetriqs__xca_1_1atom__diag.html#ae42c4209b38202805ae54df1f8c4961c',1,'triqs_xca::atom_diag']]],
-  ['triqs_5fxca_13',['triqs_xca',['../namespacetriqs__xca.html',1,'']]],
-  ['triqs_5fxca_3a_3aatom_5fdiag_14',['atom_diag',['../namespacetriqs__xca_1_1atom__diag.html',1,'triqs_xca']]],
-  ['triqs_5fxca_3a_3abackbone_15',['backbone',['../namespacetriqs__xca_1_1backbone.html',1,'triqs_xca']]],
-  ['triqs_5fxca_3a_3ablock_5fsparse_16',['block_sparse',['../namespacetriqs__xca_1_1block__sparse.html',1,'triqs_xca']]],
-  ['triqs_5fxca_3a_3adense_17',['dense',['../namespacetriqs__xca_1_1dense.html',1,'triqs_xca']]],
-  ['triqs_5fxca_3a_3ahyb_18',['hyb',['../namespacetriqs__xca_1_1hyb.html',1,'triqs_xca']]]
+  ['triqs_5fatom_5fdiag_12',['triqs_atom_diag',['../namespacetriqs__xca_1_1atom__diag.html#a301e74d046375d936c8b468253061fc6',1,'triqs_xca::atom_diag']]],
+  ['triqs_5fatom_5fdiag_5ft_13',['triqs_atom_diag_t',['../namespacetriqs__xca_1_1atom__diag.html#a9241f6d3e4098a07f6c7efebb321e2ef',1,'triqs_xca::atom_diag']]],
+  ['triqs_5fxca_14',['triqs_xca',['../namespacetriqs__xca.html',1,'']]],
+  ['triqs_5fxca_3a_3aatom_5fdiag_15',['atom_diag',['../namespacetriqs__xca_1_1atom__diag.html',1,'triqs_xca']]],
+  ['triqs_5fxca_3a_3abackbone_16',['backbone',['../namespacetriqs__xca_1_1backbone.html',1,'triqs_xca']]],
+  ['triqs_5fxca_3a_3ablock_5fsparse_17',['block_sparse',['../namespacetriqs__xca_1_1block__sparse.html',1,'triqs_xca']]],
+  ['triqs_5fxca_3a_3adense_18',['dense',['../namespacetriqs__xca_1_1dense.html',1,'triqs_xca']]],
+  ['triqs_5fxca_3a_3ahyb_19',['hyb',['../namespacetriqs__xca_1_1hyb.html',1,'triqs_xca']]]
 ];
