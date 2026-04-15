@@ -666,18 +666,13 @@
 
 
     <span class="k">def</span> <span class="nf">__eval_pseudo_particle_self_energy_topology_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">topology</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
         <span class="n">order</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">topology</span><span class="p">)</span>
-        <span class="n">Sigma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_zero_pseudo_particle_propagator</span><span class="p">()</span>
-
         <span class="n">n_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">get_num_self_energy_backbones</span><span class="p">(</span><span class="n">topology</span><span class="p">)</span>
-        <span class="n">n_vec</span> <span class="o">=</span> <span class="n">scatter_array_over_ranks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_max</span><span class="p">))</span>
+        <span class="n">n_vec</span> <span class="o">=</span> <span class="n">scatter_array_over_ranks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_max</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">))</span>
 
-        <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="n">is_root</span><span class="p">():</span> <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span> <span class="k">as</span> <span class="n">loop</span>
-        <span class="k">else</span><span class="p">:</span> <span class="n">loop</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span>
-
-        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">loop</span><span class="p">(</span><span class="n">n_vec</span><span class="p">):</span> <span class="c1"># FIXME! Pass vector to C++ and let it loop there, to avoid Python overhead in the loop.</span>
-            <span class="n">Sigma</span> <span class="o">+=</span> <span class="nb">pow</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">compute_self_energy</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">topology</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="c1"># FIXME! Sign convention.</span>
-
+        <span class="n">Sigma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_zero_pseudo_particle_propagator</span><span class="p">()</span>
+        <span class="n">Sigma</span> <span class="o">=</span> <span class="nb">pow</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">compute_self_energy</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">topology</span><span class="p">,</span> <span class="n">n_vec</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">bidx</span><span class="p">,</span> <span class="n">sigma_b</span> <span class="ow">in</span> <span class="n">Sigma</span><span class="p">:</span>
             <span class="n">sigma_b</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">all_reduce</span><span class="p">(</span><span class="n">sigma_b</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
 
@@ -731,14 +726,12 @@
 
 
     <span class="k">def</span> <span class="nf">__eval_single_particle_greens_function_topology_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">topology</span><span class="p">):</span>
-        <span class="n">spgf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_zero_single_particle_greens_function</span><span class="p">()</span>
 
         <span class="n">n_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">get_num_single_ptcle_gf_backbones</span><span class="p">(</span><span class="n">topology</span><span class="p">)</span>
-        <span class="n">n_vec</span> <span class="o">=</span> <span class="n">scatter_array_over_ranks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_max</span><span class="p">))</span>
+        <span class="n">n_vec</span> <span class="o">=</span> <span class="n">scatter_array_over_ranks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_max</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">))</span>
 
-        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">n_vec</span><span class="p">:</span>
-            <span class="n">spgf</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">compute_single_ptcle_gf</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">topology</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="c1"># FIXME! return triqs::gfs::gf</span>
-
+        <span class="n">spgf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_zero_single_particle_greens_function</span><span class="p">()</span>
+        <span class="n">spgf</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">compute_single_ptcle_gf</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">topology</span><span class="p">,</span> <span class="n">n_vec</span><span class="p">)</span>
         <span class="n">spgf</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">all_reduce</span><span class="p">(</span><span class="n">spgf</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">spgf</span>

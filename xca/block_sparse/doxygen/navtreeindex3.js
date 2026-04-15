@@ -1,5 +1,13 @@
 var NAVTREEINDEX3 =
 {
+"namespacetriqs__xca_1_1backbone.html#a3bec215b23623937c38855f226108203":[1,1,0,1,1,3],
+"namespacetriqs__xca_1_1block__sparse.html":[1,1,0,1,2],
+"namespacetriqs__xca_1_1block__sparse.html#a055dbfdcacfc9035652fe6e355e52e33":[1,1,0,1,2,22],
+"namespacetriqs__xca_1_1block__sparse.html#a0ce7c2ba4f17d4298dc3c8c5ee4a08ed":[1,1,0,1,2,10],
+"namespacetriqs__xca_1_1block__sparse.html#a0d97056723d4352c65a324a03ba26da3":[1,1,0,1,2,39],
+"namespacetriqs__xca_1_1block__sparse.html#a0e8771eac5433968cbd3802543484024":[1,1,0,1,2,24],
+"namespacetriqs__xca_1_1block__sparse.html#a0f03a761805a1afe4a14f6c6fa55a596":[1,1,0,1,2,36],
+"namespacetriqs__xca_1_1block__sparse.html#a1cc4472b093f61c40a647cce776a503b":[1,1,0,1,2,47],
 "namespacetriqs__xca_1_1block__sparse.html#a1d9ee970cc370689f25821680bec4b1b":[1,1,0,1,2,27],
 "namespacetriqs__xca_1_1block__sparse.html#a2385df440cc4d38f341c49bfc1631310":[1,1,0,1,2,38],
 "namespacetriqs__xca_1_1block__sparse.html#a27a192ae3f384f734141448615a73dc4":[1,1,0,1,2,18],
