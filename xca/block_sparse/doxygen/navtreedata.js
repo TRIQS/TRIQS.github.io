@@ -64,7 +64,7 @@ var NAVTREEINDEX =
 "../ChangeLog.html",
 "classtriqs__xca_1_1backbone_1_1Backbone.html#adb876cda0ae77f49a12b506c68ed6926",
 "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a71bdb7b17e76429bacf2d5afd8e49fa8",
-"namespacetriqs__xca_1_1block__sparse.html#a0ce7c2ba4f17d4298dc3c8c5ee4a08ed"
+"namespacetriqs__xca_1_1atom__diag.html#afd0210a3cd9cbf2f3eb9ad15b4dd430d"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
