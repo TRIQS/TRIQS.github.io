@@ -7,9 +7,8 @@ var indexSectionsWithContent =
   4: "abcdefghkmnoprstu~",
   5: "bcdfghikmnopqrstuvwz",
   6: "dgit",
-  7: "c",
-  8: "gm",
-  9: "1acdeiopt"
+  7: "gm",
+  8: "1acdeiopt"
 };
 
 var indexSectionNames =
@@ -21,9 +20,8 @@ var indexSectionNames =
   4: "functions",
   5: "variables",
   6: "typedefs",
-  7: "defines",
-  8: "groups",
-  9: "pages"
+  7: "groups",
+  8: "pages"
 };
 
 var indexSectionLabels =
@@ -35,8 +33,7 @@ var indexSectionLabels =
   4: "Functions",
   5: "Variables",
   6: "Typedefs",
-  7: "Macros",
-  8: "Modules",
-  9: "Pages"
+  7: "Modules",
+  8: "Pages"
 };
 

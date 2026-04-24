@@ -50,8 +50,7 @@ var NAVTREE =
         [ "File List", "files.html", "files_dup" ],
         [ "File Members", "globals.html", [
           [ "All", "globals.html", null ],
-          [ "Functions", "globals_func.html", null ],
-          [ "Macros", "globals_defs.html", null ]
+          [ "Functions", "globals_func.html", null ]
         ] ]
       ] ]
     ] ],
@@ -63,9 +62,9 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "../ChangeLog.html",
-"classtriqs__xca_1_1backbone_1_1Backbone.html#ad242c780bf4c196044a72ff71e90dcfe",
-"classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a636ec579a03ed82b22c2558fa3ef5e58",
-"namespacetriqs__xca_1_1backbone.html#a3bec215b23623937c38855f226108203"
+"classtriqs__xca_1_1backbone_1_1Backbone.html#adb876cda0ae77f49a12b506c68ed6926",
+"classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a71bdb7b17e76429bacf2d5afd8e49fa8",
+"namespacetriqs__xca_1_1block__sparse.html#a0ce7c2ba4f17d4298dc3c8c5ee4a08ed"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

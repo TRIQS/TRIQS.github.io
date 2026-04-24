@@ -80,7 +80,6 @@ var NAVTREEINDEX0 =
 "block__sparse__backbone_8cpp.html":[1,2,0,2,6],
 "block__sparse__backbone_8cpp_source.html":[1,2,0,2,6],
 "block__sparse__backbone_8hpp.html":[1,2,0,2,7],
-"block__sparse__backbone_8hpp.html#ab2696683bc7713b1ff07f0365bc38195":[1,2,0,2,7,1],
 "block__sparse__backbone_8hpp_source.html":[1,2,0,2,7],
 "block__sparse__manual_8cpp.html":[1,2,0,2,8],
 "block__sparse__manual_8cpp.html#a055dbfdcacfc9035652fe6e355e52e33":[1,2,0,2,8,5],
@@ -197,12 +196,12 @@ var NAVTREEINDEX0 =
 "classtriqs__xca_1_1backbone_1_1Backbone.html#a2946072cd6a74839036ef84a3522eeec":[1,0,0,1,0,0,17],
 "classtriqs__xca_1_1backbone_1_1Backbone.html#a332b8fd03b98b61b0054ad741af44865":[1,0,0,1,0,0,34],
 "classtriqs__xca_1_1backbone_1_1Backbone.html#a332b8fd03b98b61b0054ad741af44865":[1,1,0,1,1,0,34],
-"classtriqs__xca_1_1backbone_1_1Backbone.html#a3bfc7fbae181ed2ead71c573b6716734":[1,0,0,1,0,0,20],
 "classtriqs__xca_1_1backbone_1_1Backbone.html#a3bfc7fbae181ed2ead71c573b6716734":[1,1,0,1,1,0,20],
+"classtriqs__xca_1_1backbone_1_1Backbone.html#a3bfc7fbae181ed2ead71c573b6716734":[1,0,0,1,0,0,20],
 "classtriqs__xca_1_1backbone_1_1Backbone.html#a434db1df64bcc1fcbd9b1824c73ef976":[1,1,0,1,1,0,3],
 "classtriqs__xca_1_1backbone_1_1Backbone.html#a434db1df64bcc1fcbd9b1824c73ef976":[1,0,0,1,0,0,3],
-"classtriqs__xca_1_1backbone_1_1Backbone.html#a527955fb18c6a984d8d64c446f1189df":[1,1,0,1,1,0,30],
 "classtriqs__xca_1_1backbone_1_1Backbone.html#a527955fb18c6a984d8d64c446f1189df":[1,0,0,1,0,0,30],
+"classtriqs__xca_1_1backbone_1_1Backbone.html#a527955fb18c6a984d8d64c446f1189df":[1,1,0,1,1,0,30],
 "classtriqs__xca_1_1backbone_1_1Backbone.html#a549e23079b58fba372ec7590d36b6965":[1,1,0,1,1,0,8],
 "classtriqs__xca_1_1backbone_1_1Backbone.html#a549e23079b58fba372ec7590d36b6965":[1,0,0,1,0,0,8],
 "classtriqs__xca_1_1backbone_1_1Backbone.html#a5b7670f5c20273d56c80a57dab79b50b":[1,1,0,1,1,0,31],
@@ -249,5 +248,6 @@ var NAVTREEINDEX0 =
 "classtriqs__xca_1_1backbone_1_1Backbone.html#ac5724a280b1a3696adafff253a1d2b8a":[1,1,0,1,1,0,2],
 "classtriqs__xca_1_1backbone_1_1Backbone.html#ac5aa5067ee76ef2e95578a22461c012f":[1,0,0,1,0,0,19],
 "classtriqs__xca_1_1backbone_1_1Backbone.html#ac5aa5067ee76ef2e95578a22461c012f":[1,1,0,1,1,0,19],
-"classtriqs__xca_1_1backbone_1_1Backbone.html#ad242c780bf4c196044a72ff71e90dcfe":[1,0,0,1,0,0,22]
+"classtriqs__xca_1_1backbone_1_1Backbone.html#ad242c780bf4c196044a72ff71e90dcfe":[1,0,0,1,0,0,22],
+"classtriqs__xca_1_1backbone_1_1Backbone.html#ad242c780bf4c196044a72ff71e90dcfe":[1,1,0,1,1,0,22]
 };
