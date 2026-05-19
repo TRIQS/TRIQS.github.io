@@ -35,7 +35,7 @@
             triqs_xca
           </a>
               <div class="version">
-                0.0.1
+                0.0.2
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -66,12 +66,18 @@
 <li class="toctree-l5"><a class="reference internal" href="../../user_guide/Step%20by%20step.html#Examples">Examples</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="../../user_guide/Step%20by%20step.html#Step-2---Spawn-solver-instance">Step 2 - Spawn solver instance</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/Step%20by%20step.html#Step-2---Spawn-solver-instance">Step 2 - Spawn solver instance</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../user_guide/Step%20by%20step.html#Using-atomic-symmetries">Using atomic symmetries</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/Step%20by%20step.html#Step-3---Hybridization-function">Step 3 - Hybridization function</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="../../user_guide/Step%20by%20step.html#id1">Examples</a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="../../user_guide/Step%20by%20step.html#Step-4---Self-consistent-solution">Step 4 - Self-consistent solution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../user_guide/Step%20by%20step.html#Step-4---Self-consistent-solution">Step 4 - Self-consistent solution</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../user_guide/Step%20by%20step.html#Hybridization-compression">Hybridization compression</a></li>
+</ul>
+</li>
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/Step%20by%20step.html#Step-5---Single-particle-response-function">Step 5 - Single particle response function</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/Step%20by%20step.html#Step-6---Store-solver-to-disk">Step 6 - Store solver to disk</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../user_guide/Step%20by%20step.html#Step-7---Read-result-from-disk">Step 7 - Read result from disk</a></li>
@@ -115,6 +121,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../issues.html">Reporting issues</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../ChangeLog.html">Changelog</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../ChangeLog.html#version-0-0-1">Version 0.0.1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ChangeLog.html#version-0-0-2">Version 0.0.2</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../about.html">About</a><ul>
@@ -149,7 +156,8 @@
            <div itemprop="articleBody">
              
   <h1>Source code for triqs_xca.block_sparse_solver</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
 
@@ -157,9 +165,6 @@
 
 <span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">Gf</span><span class="p">,</span> <span class="n">MeshDLRImTime</span><span class="p">,</span> <span class="n">BlockGf</span><span class="p">,</span> <span class="n">make_gf_dlr</span><span class="p">,</span> <span class="n">make_gf_dlr_imfreq</span>
 <span class="kn">from</span> <span class="nn">triqs.atom_diag</span> <span class="kn">import</span> <span class="n">AtomDiag</span><span class="p">,</span> <span class="n">AtomDiagReal</span><span class="p">,</span> <span class="n">AtomDiagComplex</span>
-
-<span class="kn">from</span> <span class="nn">adapol.anacont</span> <span class="kn">import</span> <span class="n">anacont_triqs</span>
-<span class="kn">from</span> <span class="nn">adapol.fit_utils_dlr</span> <span class="kn">import</span> <span class="n">polefitting_dlr</span>
 
 <span class="kn">from</span> <span class="nn">.diag</span> <span class="kn">import</span> <span class="n">all_connected_pairings</span>
 
@@ -206,8 +211,8 @@
 <span class="sd">        Triqs style Green&#39;s function structure, e.g. ``[(&#39;up&#39;, 1), (&#39;down&#39;, 1)]``, matching the operator content of ``H_loc``.</span>
 <span class="sd">    conserved_operators : list, optional</span>
 <span class="sd">        List of conserved operators (``triqs.operators.Operator`` instances). </span>
-<span class="sd">        Default is ``automatic`` using the autopartition algorithm of ``triqs.atom_diag``.</span>
-<span class="sd">        To disable symmetries and use the dense solver (``DenseDiagramEvaluator``), pass an empty list ``[]``.</span>
+<span class="sd">        Default is ``&#39;automatic&#39;`` using the autopartition algorithm of ``triqs.atom_diag``.</span>
+<span class="sd">        To disable symmetries and use the dense diagram evaluator (``DenseDiagramEvaluator``), pass an empty list ``[]``.</span>
 <span class="sd">    timer : Timer, optional</span>
 <span class="sd">        Timer for performance measurements. Default: ``None`` (will be setup automatically).</span>
 <span class="sd">    atom_diag : AtomDiag, optional</span>
@@ -229,8 +234,11 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H_loc</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">w_max</span><span class="p">,</span> <span class="n">eps</span><span class="p">,</span> <span class="n">gf_struct</span><span class="p">,</span> <span class="n">conserved_operators</span><span class="o">=</span><span class="s1">&#39;automatic&#39;</span><span class="p">,</span> <span class="n">timer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">atom_diag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H_loc</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">w_max</span><span class="p">,</span> <span class="n">eps</span><span class="p">,</span> <span class="n">gf_struct</span><span class="p">,</span> 
+                 <span class="n">conserved_operators</span><span class="o">=</span><span class="s1">&#39;automatic&#39;</span><span class="p">,</span> <span class="n">dlr_symmetrize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">timer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">atom_diag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">dlr_symmetrize</span> <span class="o">=</span> <span class="n">dlr_symmetrize</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">H_loc</span> <span class="o">=</span> <span class="n">H_loc</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct</span> <span class="o">=</span> <span class="n">gf_struct</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span>
@@ -254,7 +262,7 @@
         
         <span class="bp">self</span><span class="o">.</span><span class="n">eta</span> <span class="o">=</span> <span class="mf">0.</span> <span class="c1"># Pseudo particle chemical potential (shift of the pseudo particle energies).</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span> <span class="o">=</span> <span class="n">MeshDLRImTime</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;Fermion&#39;</span><span class="p">,</span> <span class="n">w_max</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">w_max</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span> <span class="o">=</span> <span class="n">MeshDLRImTime</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;Fermion&#39;</span><span class="p">,</span> <span class="n">w_max</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">w_max</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">eps</span><span class="p">,</span> <span class="n">symmetrize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dlr_symmetrize</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">Delta_tau</span> <span class="o">=</span> <span class="n">BlockGf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="p">,</span> <span class="n">gf_struct</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gf_struct</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Delta_tau&#39;</span><span class="p">)</span>
 
@@ -276,14 +284,18 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="s1">&#39;Dyson&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="s1">&#39;Setup&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">G0</span> <span class="o">=</span> <span class="n">atomic_pseudo_particle_greens_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atom_diag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eta0</span> <span class="o">=</span> <span class="n">atomic_pseudo_particle_greens_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atom_diag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">G0</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_zero_pseudo_particle_propagator</span><span class="p">()</span>
 
         <span class="c1"># FIXME! Get ito from mesh_tau</span>
         <span class="kn">from</span> <span class="nn">.pycppdlr</span> <span class="kn">import</span> <span class="n">build_dlr_rf</span>
         <span class="kn">from</span> <span class="nn">.pycppdlr</span> <span class="kn">import</span> <span class="n">ImTimeOps</span>
-        <span class="n">ito</span> <span class="o">=</span> <span class="n">ImTimeOps</span><span class="p">(</span><span class="n">w_max</span> <span class="o">*</span> <span class="n">beta</span><span class="p">,</span> <span class="n">build_dlr_rf</span><span class="p">(</span><span class="n">w_max</span> <span class="o">*</span> <span class="n">beta</span><span class="p">,</span> <span class="n">eps</span><span class="p">))</span> 
+        <span class="n">ito</span> <span class="o">=</span> <span class="n">ImTimeOps</span><span class="p">(</span><span class="n">w_max</span> <span class="o">*</span> <span class="n">beta</span><span class="p">,</span> <span class="n">build_dlr_rf</span><span class="p">(</span><span class="n">w_max</span> <span class="o">*</span> <span class="n">beta</span><span class="p">,</span> <span class="n">eps</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dlr_symmetrize</span><span class="p">),</span> <span class="n">symmetrize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dlr_symmetrize</span><span class="p">)</span>
+
+        <span class="c1"># Compare DLR meshes</span>
+        <span class="c1">#np.testing.assert_array_almost_equal(np.array([ float(t) for t in self.mesh_tau]), ito.get_itnodes() * beta)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_array_almost_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="o">.</span><span class="n">dlr_freq</span><span class="p">,</span> <span class="n">ito</span><span class="o">.</span><span class="n">get_rfnodes</span><span class="p">())</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">dysons</span> <span class="o">=</span> <span class="p">[</span><span class="n">DysonItPPSC</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="n">ito</span><span class="p">,</span> <span class="n">G0_block</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">G0_block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">G0</span><span class="p">]</span>
     
@@ -292,42 +304,39 @@
 
 
     <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;Adapol hybridization fit&#39;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">fit_hybridization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_polefitting_dlr</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">fit_hybridization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">tol_adapol</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span> <span class="k">if</span> <span class="n">tol</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">tol</span>
 
-        <span class="k">if</span> <span class="n">use_polefitting_dlr</span><span class="p">:</span>
-            <span class="c1">#Delta_dlr = make_gf_dlr(self.Delta_tau)</span>
-            <span class="c1">#Delta_dlr_dense = self.__from_blockgf_to_dense(Delta_dlr)</span>
-            <span class="c1">#w_dlr = np.array([ float(x) for x in Delta_dlr.mesh ])</span>
-            
-            <span class="c1">#pole_weights, poles, fit_error = polefitting_dlr(</span>
-            <span class="c1">#    Delta_dlr_dense.data, w_dlr, self.beta, eps=self.tol_adapol, statistics=&quot;Fermion&quot;, verbose=True)</span>
+        <span class="n">Delta_tau_dense</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__from_blockgf_to_dense</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Delta_tau</span><span class="p">)</span>
 
-            <span class="kn">from</span> <span class="nn">adapol.fit_utils_dlr</span> <span class="kn">import</span> <span class="n">polefitting_dlr_triqs</span>
-            <span class="n">Delta_tau_dense</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__from_blockgf_to_dense</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Delta_tau</span><span class="p">)</span>
-            <span class="n">pole_weights</span><span class="p">,</span> <span class="n">poles</span><span class="p">,</span> <span class="n">fit_error</span> <span class="o">=</span> <span class="n">polefitting_dlr_triqs</span><span class="p">(</span>
-                <span class="n">Delta_tau_dense</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_adapol</span><span class="p">,</span> <span class="n">statistics</span><span class="o">=</span><span class="s2">&quot;Fermion&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">compression</span><span class="p">:</span>
 
-            <span class="n">pole_weights</span> <span class="o">*=</span> <span class="o">-</span><span class="mf">1.</span> <span class="c1"># FIXME! Why is this necessary? Is there a sign convention issue in polefitting_dlr?</span>
+            <span class="kn">from</span> <span class="nn">adapol.triqs_xca</span> <span class="kn">import</span> <span class="n">TriqsDLRCompression</span>
+        
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">tdc</span> <span class="o">=</span> <span class="n">TriqsDLRCompression</span><span class="p">(</span><span class="n">Delta_tau_dense</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_adapol</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span> <span class="ow">and</span> <span class="n">is_root</span><span class="p">())</span>
+                <span class="n">poles</span><span class="p">,</span> <span class="n">pole_weights</span><span class="p">,</span> <span class="n">fit_error</span> <span class="o">=</span> <span class="n">tdc</span><span class="o">.</span><span class="n">poles</span><span class="p">,</span> <span class="n">tdc</span><span class="o">.</span><span class="n">residues</span><span class="p">,</span> <span class="n">tdc</span><span class="o">.</span><span class="n">error</span>
+            <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">fit_error</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">if</span> <span class="n">is_root</span><span class="p">():</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Adapol: WARNING! TriqsDLRCompression failed with error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">. Using direct DLR coefficients instead.&#39;</span><span class="p">)</span>
 
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">Delta_iw</span> <span class="o">=</span> <span class="n">make_gf_dlr_imfreq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Delta_tau</span><span class="p">)</span>
-            <span class="n">Delta_iw_dense</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__from_blockgf_to_dense</span><span class="p">(</span><span class="n">Delta_iw</span><span class="p">)</span>
-            <span class="n">_</span><span class="p">,</span> <span class="n">fit_error</span><span class="p">,</span> <span class="n">poles</span><span class="p">,</span> <span class="n">pole_weights</span> <span class="o">=</span> <span class="n">anacont_triqs</span><span class="p">(</span><span class="n">Delta_iw_dense</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_adapol</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="c1">#_, fit_error, poles_ref, pole_weights_ref = anacont_triqs(Delta_iw_dense, tol=self.tol_adapol, debug=True)</span>
+            <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="n">is_root</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">fit_error</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_adapol</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Adapol: WARNING! Fit error = </span><span class="si">{</span><span class="n">fit_error</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1"> &gt;= tol_adapol = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_adapol</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1">, N_poles = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">poles</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Adapol: Fit error = </span><span class="si">{</span><span class="n">fit_error</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1"> &lt; tol_adapol = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_adapol</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1">, N_poles = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">poles</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
-        <span class="c1">#print(f&#39;poles     = {poles}&#39;)</span>
-        <span class="c1">#print(f&#39;poles_ref = {poles_ref}&#39;)</span>
-        <span class="c1">#print(f&#39;pole_weights     =\n{pole_weights}&#39;)</span>
-        <span class="c1">#print(f&#39;pole_weights_ref =\n{pole_weights_ref}&#39;)</span>
-        <span class="c1">#print(f&#39;tol = {tol}, self.tol_adapol = {self.tol_adapol:2.2E}, fit_error = {fit_error:2.2E}&#39;)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">compression</span> <span class="ow">or</span> <span class="n">fit_error</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 
-        <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="n">is_root</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">fit_error</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol_adapol</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Adapol: WARNING! Fit error = </span><span class="si">{</span><span class="n">fit_error</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1"> &gt;= tol_adapol = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_adapol</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1">, N_poles = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">poles</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Adapol: Fit error = </span><span class="si">{</span><span class="n">fit_error</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1"> &lt; tol_adapol = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tol_adapol</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1">, N_poles = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">poles</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">Delta_dlr_dense</span> <span class="o">=</span> <span class="n">make_gf_dlr</span><span class="p">(</span><span class="n">Delta_tau_dense</span><span class="p">)</span>
+            <span class="n">poles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">Delta_dlr_dense</span><span class="o">.</span><span class="n">mesh</span> <span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span>
+            <span class="n">pole_weights</span> <span class="o">=</span> <span class="n">Delta_dlr_dense</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">fit_error</span> <span class="o">=</span> <span class="n">Delta_dlr_dense</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">eps</span>
+
+            <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="n">is_root</span><span class="p">():</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Hybridization: using DLR expansion with N_poles = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">poles</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">set_hybridization_poles_and_coefficients</span><span class="p">(</span><span class="n">poles</span><span class="p">,</span> <span class="n">pole_weights</span><span class="p">)</span>
 
@@ -388,7 +397,7 @@
 
 <div class="viewcode-block" id="BlockSparseSolver.solve">
 <a class="viewcode-back" href="../../python_api.html#triqs_xca.block_sparse_solver.BlockSparseSolver.solve">[docs]</a>
-    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_order</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">mix</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">delta_tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalization</span><span class="o">=</span><span class="s1">&#39;classic&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_order</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">mix</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">hyb_tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hyb_comp</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">normalization</span><span class="o">=</span><span class="s1">&#39;classic&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Solve the impurity problem using pseudo particle self-consistent perturbation theory.</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters</span>
@@ -401,10 +410,13 @@
 <span class="sd">            Maximum number of iterations.</span>
 <span class="sd">        mix : float, optional</span>
 <span class="sd">            Mixing parameter for the self-consistent iteration.</span>
-<span class="sd">        delta_tol : float, optional</span>
-<span class="sd">            Tolerance for the hybridization function fitting.</span>
+<span class="sd">        hyb_tol : float, optional</span>
+<span class="sd">            Tolerance for the hybridization function compression. Defaults to ``0.1 * tol`` if not provided.</span>
+<span class="sd">        hyb_comp : bool, optional</span>
+<span class="sd">            Whether to compress the hybridization function. Default: ``True``.</span>
+<span class="sd">            When set to ``False``, the hybridization function is represented using the full DLR basis.</span>
 <span class="sd">        normalization : str, optional</span>
-<span class="sd">            Normalization method for the pseudo particle Green&#39;s function. Default: &#39;classic&#39;.</span>
+<span class="sd">            Normalization method for the pseudo particle Green&#39;s function. Default: ``&#39;classic&#39;``.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -426,11 +438,13 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">normalization</span> <span class="o">=</span> <span class="n">normalization</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_order</span> <span class="o">=</span> <span class="n">max_order</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">delta_tol</span> <span class="o">=</span> <span class="n">delta_tol</span> <span class="k">if</span> <span class="n">delta_tol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">tol</span>
-        
-        <span class="c1">#if verbose and is_root(): print(f&#39;delta_tol = {self.delta_tol:2.2E}&#39;)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hyb_tol</span> <span class="o">=</span> <span class="n">hyb_tol</span> <span class="k">if</span> <span class="n">hyb_tol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">tol</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">fit_hybridization</span><span class="p">(</span><span class="n">tol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">delta_tol</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hyb_comp</span> <span class="o">=</span> <span class="n">hyb_comp</span> <span class="k">if</span> <span class="n">max_order</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">False</span> <span class="c1"># Skip hybridization compression for max_order = 1 (NCA) since the pole representation is not used.</span>
+        
+        <span class="c1">#if verbose and is_root(): print(f&#39;hyb_tol = {self.hyb_tol:2.2E}&#39;)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_hybridization</span><span class="p">(</span><span class="n">tol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hyb_tol</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hyb_comp</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">init_diagram_evaluator</span><span class="p">()</span> <span class="c1"># FIXME! Evaluator takes hyb poles and coeffs in constructor</span>
 
         <span class="k">for</span> <span class="nb">iter</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
@@ -473,17 +487,18 @@
                 <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Normalization method </span><span class="si">{</span><span class="n">normalization</span><span class="si">}</span><span class="s1"> not implemented.&#39;</span><span class="p">)</span>
 
             <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">partition_function_from_ppgf</span><span class="p">(</span><span class="n">G_new</span><span class="p">)</span>
+
             <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">diff_G</span> <span class="o">=</span> <span class="n">max_abs_diff_BlockGf</span><span class="p">(</span><span class="n">G_new</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="n">is_root</span><span class="p">():</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;iter = </span><span class="si">{</span><span class="nb">iter</span><span class="si">}</span><span class="s1">, diff_G = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">diff_G</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1">, Z-1 = </span><span class="si">{</span><span class="n">Z</span><span class="o">-</span><span class="mi">1</span><span class="si">:</span><span class="s1">+2.2E</span><span class="si">}</span><span class="s1">, eta = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">eta</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">mix</span> <span class="o">*</span> <span class="n">G_new</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">mix</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span>
-
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">diff_G</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="n">is_root</span><span class="p">():</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Converged after </span><span class="si">{</span><span class="nb">iter</span><span class="si">}</span><span class="s1"> iterations with diff_G = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">diff_G</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1"> &lt; tol = </span><span class="si">{</span><span class="n">tol</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
                 <span class="k">break</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">mix</span> <span class="o">*</span> <span class="n">G_new</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">mix</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span>
 
         <span class="n">G_tau</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_single_particle_greens_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">,</span> <span class="n">max_order</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_order</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">G_tau</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__from_dense_to_blockgf</span><span class="p">(</span><span class="n">G_tau</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct</span><span class="p">)</span>
@@ -564,7 +579,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Partition function :math:`Z` of the impurity model, computed from the pseudo particle Green&#39;s function as</span>
 <span class="sd">        </span>
 <span class="sd">        .. math::</span>
-<span class="sd">            Z = -\\mathrm{Tr}[ G(\\beta) ] \cdot e^{-\\beta \\eta}</span>
+<span class="sd">            Z = -\\mathrm{Tr}[ G(\\beta) ] \\cdot e^{-\\beta \\eta}</span>
 <span class="sd">          </span>
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -615,6 +630,40 @@
 
     
 
+    <span class="k">def</span> <span class="nf">many_body_density_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Get the block sparse many body density matrix :math:`\\rho` from the pseudo particle Green&#39;s function :math:`G`.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        </span>
+<span class="sd">        rho : list of tuples(str, np.ndarray)</span>
+<span class="sd">            List of tuples ``(bidx, rho_b)``, where ``bidx`` is the block index </span>
+<span class="sd">            and ``rho_b`` is the many body density matrix for block ``bidx``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rho</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">bidx</span><span class="p">,</span> <span class="n">g_b</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+            <span class="n">g_b_dlr</span> <span class="o">=</span> <span class="n">make_gf_dlr</span><span class="p">(</span><span class="n">g_b</span><span class="p">)</span>
+            <span class="n">rho_b</span> <span class="o">=</span> <span class="o">-</span><span class="n">g_b_dlr</span><span class="p">(</span><span class="n">g_b</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">beta</span><span class="p">)</span>
+            <span class="n">rho</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">bidx</span><span class="p">,</span> <span class="n">rho_b</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">rho</span>
+    
+
+    <span class="k">def</span> <span class="nf">herm_err</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Compute maximum hermiticity error of a block Green&#39;s function :math:`G` &quot;&quot;&quot;</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="k">for</span> <span class="n">bidx</span><span class="p">,</span> <span class="n">g_b</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+            <span class="n">err_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">g_b</span><span class="o">.</span><span class="n">data</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">g_b</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">))))</span>
+            <span class="n">err</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">err</span><span class="p">,</span> <span class="n">err_b</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">err</span>
+
+
+    <span class="k">def</span> <span class="nf">make_hermitian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Enforce hermiticity of a block Green&#39;s function :math:`G` by symmetrizing it with its conjugate transpose. &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">bidx</span><span class="p">,</span> <span class="n">g_b</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+            <span class="n">g_b</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">g_b</span><span class="o">.</span><span class="n">data</span> <span class="o">+</span> <span class="n">g_b</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">conjugate</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">G</span>
+
+
     <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;Solve&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">solve_dyson</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Sigma</span><span class="p">,</span> <span class="n">eta</span><span class="p">):</span>
 
@@ -626,6 +675,11 @@
             <span class="c1">#if is_root(): print(f&#39;solve_dyson: block {bidx}, sigma_b.data.shape = {sigma_b.data.shape}&#39;)</span>
             <span class="c1">#self.timer.start(f&#39;Dyson block {bidx}&#39;)</span>
             <span class="n">G</span><span class="p">[</span><span class="n">bidx</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">dyson</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">sigma_b</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">eta</span><span class="p">)</span>
+
+            <span class="c1"># The Dyson solver does not enforce hermiticity of the solution, which can lead to numerical issues in the self-consistent iteration.</span>
+            <span class="c1"># Enforce hermiticity explicitly here, which is important for convergence of the self-consistent iteration.</span>
+            <span class="n">G</span><span class="p">[</span><span class="n">bidx</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">bidx</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="o">+</span> <span class="n">G</span><span class="p">[</span><span class="n">bidx</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+
             <span class="c1">#self.timer.stop()</span>
 
         <span class="k">return</span> <span class="n">G</span>
@@ -1178,6 +1232,15 @@
         <span class="k">return</span> <span class="n">d</span>
 
 
+    <span class="k">def</span> <span class="nf">__copy__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__factory_from_dict__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__reduce_to_dict__</span><span class="p">())</span>
+
+    
+    <span class="k">def</span> <span class="nf">__deepcopy__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">memo</span><span class="p">):</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__reduce_to_dict__</span><span class="p">())</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__factory_from_dict__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+
+
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">__factory_from_dict__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
         <span class="n">arg_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;H_loc&#39;</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span><span class="p">,</span> <span class="s1">&#39;w_max&#39;</span><span class="p">,</span> <span class="s1">&#39;eps&#39;</span><span class="p">,</span> <span class="s1">&#39;gf_struct&#39;</span><span class="p">,</span> <span class="s1">&#39;conserved_operators&#39;</span><span class="p">]</span>
@@ -1313,7 +1376,7 @@
         
     <span class="n">G_tau</span> <span class="o">=</span> <span class="n">BlockGf</span><span class="p">(</span><span class="n">block_list</span><span class="o">=</span><span class="n">G_tau_blocks</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">G_tau</span>
+    <span class="k">return</span> <span class="n">G_tau</span><span class="p">,</span> <span class="n">eta0</span>
 
 
 <span class="k">def</span> <span class="nf">print_atom_diag_info</span><span class="p">(</span><span class="n">ad</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
