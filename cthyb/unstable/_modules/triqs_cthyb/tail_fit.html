@@ -222,10 +222,6 @@
 <li class="toctree-l5"><a class="reference internal" href="../../_ref/triqs_cthyb.tail_fit.sigma_high_frequency_moments.html#triqs_cthyb.tail_fit.sigma_high_frequency_moments"><code class="docutils literal notranslate"><span class="pre">sigma_high_frequency_moments()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l4"><a class="reference internal" href="../../_ref/triqs_cthyb.tail_fit.tail_fit.html">triqs_cthyb.tail_fit.tail_fit</a><ul>
-<li class="toctree-l5"><a class="reference internal" href="../../_ref/triqs_cthyb.tail_fit.tail_fit.html#triqs_cthyb.tail_fit.tail_fit"><code class="docutils literal notranslate"><span class="pre">tail_fit()</span></code></a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../../_ref/triqs_cthyb.util.html">triqs_cthyb.util</a><ul>
@@ -383,10 +379,9 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">triqs.gf.gf_fnt</span><span class="w"> </span><span class="kn">import</span> <span class="n">fit_hermitian_tail_on_window</span><span class="p">,</span> <span class="n">replace_by_tail</span>
-
 <span class="kn">from</span><span class="w"> </span><span class="nn">triqs.operators</span><span class="w"> </span><span class="kn">import</span> <span class="n">c</span><span class="p">,</span> <span class="n">c_dag</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">triqs.atom_diag</span><span class="w"> </span><span class="kn">import</span> <span class="n">trace_rho_op</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">triqs.solver_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">tail_fit</span>  <span class="c1"># noqa: F401 -- re-export for backwards compatibility</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_comm</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">):</span> <span class="k">return</span> <span class="n">A</span><span class="o">*</span><span class="n">B</span> <span class="o">-</span> <span class="n">B</span><span class="o">*</span><span class="n">A</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">_anticomm</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">):</span> <span class="k">return</span> <span class="n">A</span><span class="o">*</span><span class="n">B</span> <span class="o">+</span> <span class="n">B</span><span class="o">*</span><span class="n">A</span>
@@ -483,78 +478,6 @@
                 <span class="n">green_moments</span><span class="p">[</span><span class="n">bl</span><span class="p">][</span><span class="mi">2</span><span class="p">,</span><span class="n">orb1</span><span class="p">,</span><span class="n">orb2</span><span class="p">]</span> <span class="o">=</span> <span class="n">trace_rho_op</span><span class="p">(</span><span class="n">density_matrix</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">ad_imp</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">green_moments</span></div>
-
-
-
-
-<div class="viewcode-block" id="tail_fit">
-<a class="viewcode-back" href="../../_ref/triqs_cthyb.tail_fit.tail_fit.html#triqs_cthyb.tail_fit.tail_fit">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">tail_fit</span><span class="p">(</span>
-        <span class="n">Sigma_iw</span><span class="p">,</span>
-        <span class="n">fit_min_n</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fit_max_n</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">fit_min_w</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fit_max_w</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">fit_max_moment</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fit_known_moments</span><span class="o">=</span><span class="kc">None</span>
-        <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Fit a high frequency 1/(iw)^n expansion of Sigma_iw </span>
-<span class="sd">    and replace the high frequency part with the fitted high frequency expansion.</span>
-
-<span class="sd">    Either give frequency window to fit on in terms of matsubara frequencies index </span>
-<span class="sd">    (fit_min_n/fit_max_n) or value (fit_min_w/fit_max_w).</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    Sigma_iw : Gf</span>
-<span class="sd">               Self-energy.</span>
-<span class="sd">    fit_min_n : int, optional, default=int(0.8*len(Sigma_iw.mesh))</span>
-<span class="sd">                Matsubara frequency index from which tail fitting should start.</span>
-<span class="sd">    fit_max_n : int, optional, default=int(len(Sigma_iw.mesh))</span>
-<span class="sd">                Matsubara frequency index at which tail fitting should end.</span>
-<span class="sd">    fit_min_w : float, optional</span>
-<span class="sd">                Matsubara frequency from which tail fitting should start.</span>
-<span class="sd">    fit_max_w : float, optional</span>
-<span class="sd">                Matsubara frequency at which tail fitting should end.</span>
-<span class="sd">    fit_max_moment : int, optional</span>
-<span class="sd">                     Highest moment to fit in the tail of Sigma_iw.</span>
-<span class="sd">    fit_known_moments : ``ndarray.shape[order, Sigma_iw[0].target_shape]``, optional, default = None</span>
-<span class="sd">                        Known moments of Sigma_iw, given as an numpy ndarray</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    Sigma_iw : Gf</span>
-<span class="sd">               Self-energy.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="c1"># Define default tail quantities</span>
-    <span class="k">if</span> <span class="n">fit_min_w</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="n">fit_min_n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">fit_min_w</span><span class="o">*</span><span class="n">Sigma_iw</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">beta</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">fit_max_w</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="n">fit_max_n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">fit_max_w</span><span class="o">*</span><span class="n">Sigma_iw</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">beta</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">fit_min_n</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">fit_min_n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.8</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">Sigma_iw</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">fit_max_n</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">fit_max_n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Sigma_iw</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">fit_max_moment</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">fit_max_moment</span> <span class="o">=</span> <span class="mi">3</span>
-
-
-    <span class="k">if</span> <span class="n">fit_known_moments</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">fit_known_moments</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">sig</span> <span class="ow">in</span> <span class="n">Sigma_iw</span><span class="p">:</span>
-            <span class="n">shape</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">sig</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span>
-            <span class="n">fit_known_moments</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span> <span class="c1"># no known moments</span>
-
-    <span class="c1"># Now fit the tails of Sigma_iw and replace the high frequency part with the tail expansion</span>
-    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">sig</span> <span class="ow">in</span> <span class="n">Sigma_iw</span><span class="p">:</span>
-
-        <span class="n">tail</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">fit_hermitian_tail_on_window</span><span class="p">(</span>
-            <span class="n">sig</span><span class="p">,</span>
-            <span class="n">n_min</span> <span class="o">=</span> <span class="n">fit_min_n</span><span class="p">,</span>
-            <span class="n">n_max</span> <span class="o">=</span> <span class="n">fit_max_n</span><span class="p">,</span>
-            <span class="n">known_moments</span> <span class="o">=</span> <span class="n">fit_known_moments</span><span class="p">[</span><span class="n">name</span><span class="p">],</span>
-            <span class="c1"># set max number of pts used in fit larger than mesh size, to use all data in fit</span>
-            <span class="n">n_tail_max</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">sig</span><span class="o">.</span><span class="n">mesh</span><span class="p">),</span> 
-            <span class="n">expansion_order</span> <span class="o">=</span> <span class="n">fit_max_moment</span>
-            <span class="p">)</span>
-        
-        <span class="n">replace_by_tail</span><span class="p">(</span><span class="n">sig</span><span class="p">,</span> <span class="n">tail</span><span class="p">,</span> <span class="n">n_min</span><span class="o">=</span><span class="n">fit_min_n</span><span class="p">)</span>        
-
-    <span class="k">return</span> <span class="n">Sigma_iw</span></div>
 
 </pre></div>
 
