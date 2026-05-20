@@ -1,22 +1,23 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>triqs_dftkit.vasp.plovasp.lintetra &mdash; triqs_dftkit  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=f7f783a0" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/plot_directive.css" />
 
   
     <link rel="shortcut icon" href="../../../../_static/triqs_favicon.ico"/>
-  
-        <script src="../../../../_static/jquery.js?v=8dae8fb0"></script>
-        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
-        <script src="../../../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script src="../../../../_static/jquery.js?v=958b65b0"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="author" title="About these documents" href="../../../../about.html" />
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -34,9 +35,6 @@
           <a href="../../../../index.html" class="icon icon-home">
             triqs_dftkit
           </a>
-              <div class="version">
-                3.3.0
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -138,22 +136,22 @@
            <div itemprop="articleBody">
              
   <h1>Source code for triqs_dftkit.vasp.plovasp.lintetra</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="n">_TOL</span> <span class="o">=</span> <span class="mf">1e-8</span>
 
-<span class="k">def</span> <span class="nf">_regularize_scalar</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_regularize_scalar</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Regularize a scalar to avoid numerical underflow or division by zero.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="mf">1.0e-20</span><span class="p">)</span> <span class="o">/</span> <span class="mf">100.0</span>
 
-<span class="k">def</span> <span class="nf">_select</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="o">*</span><span class="n">arrays</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_select</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="o">*</span><span class="n">arrays</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper to select masked values for multiple arrays efficiently.&quot;&quot;&quot;</span>
     <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">mask</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">idx</span><span class="p">,</span> <span class="p">[</span><span class="n">a</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">arrays</span><span class="p">]</span>
 
 <span class="c1"># === Auxiliary numerical functions (formerly F, K1, K2) ===</span>
 
-<span class="k">def</span> <span class="nf">_stable_fraction_F</span><span class="p">(</span><span class="n">e_eval</span><span class="p">,</span> <span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">,</span> <span class="n">e3</span><span class="p">,</span> <span class="n">e4</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_stable_fraction_F</span><span class="p">(</span><span class="n">e_eval</span><span class="p">,</span> <span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">,</span> <span class="n">e3</span><span class="p">,</span> <span class="n">e4</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Stable evaluation of the F-term used in tetrahedron DOS integration.</span>
 
@@ -181,7 +179,7 @@
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">safe_val</span><span class="p">,</span> <span class="n">fallback</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">))</span>
 
 
-<span class="k">def</span> <span class="nf">_stable_fraction_K1</span><span class="p">(</span><span class="n">e_eval</span><span class="p">,</span> <span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_stable_fraction_K1</span><span class="p">(</span><span class="n">e_eval</span><span class="p">,</span> <span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Stable evaluation of the first K-term used in tetrahedron DOS integration.</span>
 
@@ -209,7 +207,7 @@
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">safe_val</span><span class="p">,</span> <span class="n">fallback</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">))</span>
 
 
-<span class="k">def</span> <span class="nf">_stable_fraction_K2</span><span class="p">(</span><span class="n">e_eval</span><span class="p">,</span> <span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">,</span> <span class="n">e3</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_stable_fraction_K2</span><span class="p">(</span><span class="n">e_eval</span><span class="p">,</span> <span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">,</span> <span class="n">e3</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Stable evaluation of the second K-term used in tetrahedron DOS integration.</span>
 
@@ -241,7 +239,7 @@
 
 <div class="viewcode-block" id="dos_tetra_weights_3d">
 <a class="viewcode-back" href="../../../../_autosummary/triqs_dftkit.vasp.plovasp.lintetra.dos_tetra_weights_3d.html#triqs_dftkit.vasp.plovasp.lintetra.dos_tetra_weights_3d">[docs]</a>
-<span class="k">def</span> <span class="nf">dos_tetra_weights_3d</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">,</span> <span class="n">energy</span><span class="p">,</span> <span class="n">k_points</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">dos_tetra_weights_3d</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">,</span> <span class="n">energy</span><span class="p">,</span> <span class="n">k_points</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compute tetrahedron corner weights for 3D DOS integration.</span>
 
