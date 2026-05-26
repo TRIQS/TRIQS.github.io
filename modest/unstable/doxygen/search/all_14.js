@@ -1,5 +1,8 @@
 var searchData=
 [
-  ['value_5fformatter_0',['value_formatter',['../structfmt_1_1formatter_3_01nda_1_1matrix_3_01U_01_4_01_4.html#ae2712cf11d8b4bb630acdce7ae0b868d',1,'fmt::formatter&lt; nda::matrix&lt; U &gt; &gt;']]],
-  ['vasp_1',['VASP',['../namespacetriqs_1_1modest.html#ae8092f1e5bdfaf796970405554c5467aae99753a8203cfe3bdda481961b33a17e',1,'triqs::modest']]]
+  ['u_5fmatrix_5fkanamori_0',['U_matrix_kanamori',['../group__hamiltonian.html#ga32ffb5bad62d48d4cb82204ae1db537a',1,'triqs']]],
+  ['u_5fmatrix_5fslater_5flocal_1',['U_matrix_slater_local',['../group__hamiltonian.html#gaed270aba98ce35ba8ebd62e8411863dd',1,'triqs']]],
+  ['u_5fmatrix_5fslater_5fspherical_2',['U_matrix_slater_spherical',['../group__hamiltonian.html#gacffdaf15815644094ea8b1e4d185fcc5',1,'triqs']]],
+  ['utilities_3',['Utilities',['../group__utils.html',1,'Utilities'],['../documentation.html#autotoc_md8',1,'Utilities']]],
+  ['utils_2ehpp_4',['utils.hpp',['../utils_8hpp.html',1,'']]]
 ];
