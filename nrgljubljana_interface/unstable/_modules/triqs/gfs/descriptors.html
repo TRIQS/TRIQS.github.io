@@ -267,7 +267,29 @@
 <span class="c1"># Authors: DerWeh, Michel Ferrero, Igor Krivenko, Mi-chael, Olivier Parcollet, Nils Wentzell</span>
 
 
-<span class="sa">r</span><span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+<span class="sa">r</span><span class="sd">&quot;&quot;&quot;Concrete Green&#39;s function descriptors used with the ``&lt;&lt;`` operator.</span>
+
+<span class="sd">This module provides the ready-made descriptors that fill a Green&#39;s</span>
+<span class="sd">function with a closed-form expression:</span>
+
+<span class="sd">* :class:`~triqs.gfs.descriptors.SemiCircular` — Hilbert transform of a </span>
+<span class="sd">  semicircular DOS.</span>
+<span class="sd">* :class:`~triqs.gfs.descriptors.Flat` (alias :class:`~triqs.gfs.descriptors.Wilson`) </span>
+<span class="sd">  — Hilbert transform of a flat DOS with cutoff.</span>
+<span class="sd">* :class:`~triqs.gfs.descriptors.Fourier` — lazy Fourier transform between conjugate </span>
+<span class="sd">  meshes.</span>
+<span class="sd">* :class:`~triqs.gfs.descriptors.LegendreToMatsubara`, </span>
+<span class="sd">  :class:`~triqs.gfs.descriptors.MatsubaraToLegendre` — lazy basis transforms.</span>
+<span class="sd">* :class:`~triqs.gfs.descriptors.OneFermionInTime` — a one-fermion imaginary-time </span>
+<span class="sd">  propagator.</span>
+
+<span class="sd">The frequency placeholders :data:`~triqs.gfs.descriptor_base.Omega` and </span>
+<span class="sd">:data:`~triqs.gfs.descriptor_base.iOmega_n` and the </span>
+<span class="sd">:class:`~triqs.gfs.descriptor_base.Function` / :class:`~triqs.gfs.descriptor_base.Const` </span>
+<span class="sd">descriptors are re-exported from :mod:`triqs.gfs.descriptor_base`.</span>
+
+<span class="sd">**See Also:** :meth:`~triqs.gfs.gf.Gf.__lshift__` -- Operator that applies a descriptor.</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.descriptor_base</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">triqs.mesh</span><span class="w"> </span><span class="kn">import</span> <span class="n">MeshImFreq</span><span class="p">,</span> <span class="n">MeshDLRImFreq</span><span class="p">,</span> <span class="n">MeshReFreq</span><span class="p">,</span> <span class="n">MeshReFreqPts</span><span class="p">,</span> <span class="n">MeshReFreqLog</span><span class="p">,</span> <span class="n">MeshImTime</span><span class="p">,</span> <span class="n">MeshDLRImTime</span>
@@ -277,10 +299,42 @@
 <span class="c1">#######################################</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">OneFermionInTime</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Single-fermion propagator on an imaginary-time mesh.</span>
+
+<span class="sd">    Fills the target with the imaginary-time Green&#39;s function of a</span>
+<span class="sd">    single fermionic level at energy :math:`L`:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        G(\tau) = -\frac{e^{-L\tau}}{1 + e^{-L\beta}}.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    l : float, optional</span>
+<span class="sd">        Level energy :math:`L`. Default ``0``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">l</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
          <span class="n">Base</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">L</span><span class="o">=</span><span class="n">l</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">G</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fill ``G.data`` with the single-fermion imaginary-time propagator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        G : Gf</span>
+<span class="sd">            Target Green&#39;s function on an imaginary-time mesh</span>
+<span class="sd">            (modified in place).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Gf</span>
+<span class="sd">            ``G``.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If ``G.mesh`` is not an imaginary-time mesh.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">L</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">L</span>
         <span class="k">if</span> <span class="n">G</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">TypeGF</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">GF_Type</span><span class="o">.</span><span class="n">Imaginary_Time</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;This initializer is only correct in frequency&quot;</span><span class="p">)</span>
@@ -294,10 +348,20 @@
 <span class="c1">##################################################</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_SemiCircularDOS</span><span class="p">(</span><span class="n">half_bandwidth</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">       Semi_Circular DOS function</span>
-<span class="sd">       Input: the 1/2 bandwidth</span>
-<span class="sd">       Returns: a function omega-&gt; dos(omega)</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return :math:`\omega \mapsto \rho(\omega)` for a semicircular DOS </span>
+<span class="sd">    with the given half-bandwidth.</span>
+
+<span class="sd">    See also :mod:`triqs.gfs.semicirc`.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    half_bandwidth : float</span>
+<span class="sd">        :math:`D`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    callable</span>
+<span class="sd">        ``rho(omega)`` evaluating the semicircular density of states.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">sqrt</span><span class="p">,</span><span class="n">pi</span>
     <span class="n">larg</span> <span class="o">=</span> <span class="n">half_bandwidth</span>
@@ -307,6 +371,21 @@
     <span class="k">return</span> <span class="n">semi</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">semi</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return :math:`\omega \mapsto \rho(\omega)` for a semicircular DOS </span>
+<span class="sd">    with the given half-bandwidth.</span>
+
+<span class="sd">    See also :mod:`triqs.gfs.semicirc`.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : float</span>
+<span class="sd">        Half-bandwidth.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    callable</span>
+<span class="sd">        ``rho(omega)`` evaluating the semicircular density of states.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">_SemiCircularDOS</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
 <span class="c1">##################################################</span>
@@ -314,27 +393,63 @@
 <div class="viewcode-block" id="SemiCircular">
 <a class="viewcode-back" href="../../../documentation.html#nrgljubljana_interface.SemiCircular">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SemiCircular</span> <span class="p">(</span><span class="n">Base</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Hilbert transform of a semicircular density of states, i.e.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Hilbert transform of a semicircular density of states.</span>
 
-<span class="sd">     .. math::</span>
-<span class="sd">        g(z) = \int \frac{A(\omega)}{z-\omega} d\omega</span>
+<span class="sd">    .. math::</span>
 
-<span class="sd">    where :math:`A(\omega) = \theta( D - |\omega|) 2 \sqrt{ D^2 - \omega^2}/(\pi D^2)`.</span>
+<span class="sd">        g(z) = \int \frac{A(\omega)}{z-\omega}\, d\omega,</span>
+<span class="sd">        \qquad</span>
+<span class="sd">        A(\omega) = \theta(D - |\omega|)\,</span>
+<span class="sd">            \frac{2 \sqrt{D^2 - \omega^2}}{\pi D^2}.</span>
 
-<span class="sd">    (Works with frequency and imaginary-time Green&#39;s functions.)</span>
+<span class="sd">    Supports Matsubara, real-frequency and imaginary-time meshes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    half_bandwidth : float</span>
+<span class="sd">        Half-bandwidth :math:`D`.</span>
+<span class="sd">    chem_potential : float, optional</span>
+<span class="sd">        Chemical potential :math:`\mu`, equal to minus the centre of the</span>
+<span class="sd">        semicircle. Default ``0``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from triqs.gfs import SemiCircular</span>
+<span class="sd">    &gt;&gt;&gt; g &lt;&lt; SemiCircular(half_bandwidth=1.0)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">half_bandwidth</span><span class="p">,</span> <span class="n">chem_potential</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;:param half_bandwidth: :math:`D`, the half bandwidth of the</span>
-<span class="sd">semicircular density of states</span>
-<span class="sd">        :param chem_potential: :math:`\mu`, the chemical potential of the    |</span>
-<span class="sd">semicircular density of states, corresponds to minus the center of the</span>
-<span class="sd">semicircle</span>
-<span class="sd">&quot;&quot;&quot;</span>
         <span class="n">Base</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">half_bandwidth</span><span class="o">=</span><span class="n">half_bandwidth</span><span class="p">,</span> <span class="n">chem_potential</span><span class="o">=</span><span class="n">chem_potential</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s2">&quot;SemiCircular(</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">half_bandwidth</span><span class="p">,</span> <span class="n">chem_potential</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``&quot;SemiCircular(D, mu)&quot;``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;SemiCircular(</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">half_bandwidth</span><span class="p">,</span> <span class="n">chem_potential</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">G</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fill ``G.data`` with the semicircular Hilbert transform on its mesh.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        G : Gf</span>
+<span class="sd">            Target Green&#39;s function (modified in place).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Gf</span>
+<span class="sd">            ``G``.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If ``G.mesh`` is not a supported mesh type.</span>
+<span class="sd">        NotImplementedError</span>
+<span class="sd">            For imaginary-time meshes with a non-zero chemical</span>
+<span class="sd">            potential.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">D</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">half_bandwidth</span>
         <span class="n">mu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chem_potential</span>
         <span class="n">Id</span> <span class="o">=</span> <span class="mf">1.</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">target_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
@@ -357,22 +472,57 @@
 <div class="viewcode-block" id="Flat">
 <a class="viewcode-back" href="../../../documentation.html#nrgljubljana_interface.Flat">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Flat</span> <span class="p">(</span><span class="n">Base</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;The Hilbert transform of a flat density of states, with cut-off</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Hilbert transform of a flat density of states with cutoff.</span>
 
 <span class="sd">    .. math::</span>
-<span class="sd">        g(z) = \int \frac{A(\omega)}{z-\omega} d\omega</span>
 
-<span class="sd">    where :math:`A(\omega) = \theta( D^2 - \omega^2)/(2D)`.</span>
+<span class="sd">        g(z) = \int \frac{A(\omega)}{z-\omega}\, d\omega,</span>
+<span class="sd">        \qquad</span>
+<span class="sd">        A(\omega) = \frac{\theta(D^2 - \omega^2)}{2D}.</span>
 
-<span class="sd">    (Only works in combination with frequency Green&#39;s functions.)</span>
+<span class="sd">    Supports Matsubara and real-frequency meshes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    half_bandwidth : float</span>
+<span class="sd">        Half-bandwidth :math:`D`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from triqs.gfs import Flat</span>
+<span class="sd">    &gt;&gt;&gt; g &lt;&lt; Flat(half_bandwidth=2.0)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">half_bandwidth</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;:param half_bandwidth: :math:`D`, the half bandwidth &quot;&quot;&quot;</span>
         <span class="n">Base</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">half_bandwidth</span><span class="o">=</span><span class="n">half_bandwidth</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s2">&quot;Flat(</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">half_bandwidth</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``&quot;Flat(D)&quot;``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;Flat(</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">half_bandwidth</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">G</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fill ``G.data`` with the flat-DOS Hilbert transform on its mesh.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        G : Gf</span>
+<span class="sd">            Target Green&#39;s function on a frequency mesh (modified in</span>
+<span class="sd">            place).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Gf</span>
+<span class="sd">            ``G``.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If ``G.mesh`` is not a frequency mesh.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">D</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">half_bandwidth</span>
         <span class="n">Id</span> <span class="o">=</span> <span class="mf">1.</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">target_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">numpy</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
@@ -402,44 +552,146 @@
 <span class="c1">##################################################</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Fourier</span><span class="p">(</span><span class="n">BaseBlock</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    The Fourier transform as a lazy expression</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Lazy Fourier transform between conjugate meshes.</span>
+
+<span class="sd">    Applying ``g_new &lt;&lt; Fourier(g_old)`` runs the C++ Fourier transform</span>
+<span class="sd">    from ``g_old``&#39;s mesh to ``g_new``&#39;s mesh. The transform direction</span>
+<span class="sd">    (time → frequency or vice versa) is inferred from the mesh pair.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : Gf or BlockGf</span>
+<span class="sd">        Source Green&#39;s function.</span>
+<span class="sd">    *args, **kw</span>
+<span class="sd">        Forwarded to :func:`~triqs.gfs.gf_fnt.set_from_fourier` (e.g. tail moments for</span>
+<span class="sd">        Matsubara → imaginary-time transforms).</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : Gf or BlockGf</span>
+<span class="sd">        Captured source Green&#39;s function (inherited from</span>
+<span class="sd">        :class:`~triqs.gfs.descriptor_base.BaseBlock`).</span>
+<span class="sd">    args : tuple</span>
+<span class="sd">        Positional arguments forwarded to :func:`~triqs.gfs.gf_fnt.set_from_fourier` at</span>
+<span class="sd">        evaluation time.</span>
+<span class="sd">    kw : dict</span>
+<span class="sd">        Keyword arguments forwarded to :func:`~triqs.gfs.gf_fnt.set_from_fourier` at</span>
+<span class="sd">        evaluation time.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from triqs.gfs import Fourier, Gf</span>
+<span class="sd">    &gt;&gt;&gt; g_tau &lt;&lt; Fourier(g_iw)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;:param G: :math:`G`, the function to be transformed. Must in the time domain&quot;&quot;&quot;</span>
         <span class="n">BaseBlock</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kw</span> <span class="o">=</span> <span class="n">args</span><span class="p">,</span> <span class="n">kw</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s2">&quot;Fourier of gf&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``&quot;Fourier of gf&quot;``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;Fourier of gf&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">G2</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run the Fourier transform from ``self.G`` into ``G2``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        G2 : Gf</span>
+<span class="sd">            Target Green&#39;s function on the conjugate mesh (modified in</span>
+<span class="sd">            place).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Gf</span>
+<span class="sd">            ``G2``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">G2</span><span class="o">.</span><span class="n">set_from_fourier</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kw</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">G2</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">LegendreToMatsubara</span> <span class="p">(</span><span class="n">BaseBlock</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    The transformation from Legendre to Matsubara as a lazy expression</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Lazy Legendre → Matsubara basis transform.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : Gf or BlockGf</span>
+<span class="sd">        Source Green&#39;s function on a Legendre mesh.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; g_iw &lt;&lt; LegendreToMatsubara(g_l)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;:param G: :math:`G`, the function to be transformed. Must in the Legendre domain&quot;&quot;&quot;</span>
         <span class="n">BaseBlock</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s2">&quot;LegendreToMatsubara of gf&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``&quot;LegendreToMatsubara of gf&quot;``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;LegendreToMatsubara of gf&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">G2</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run the Legendre → Matsubara transform from ``self.G`` into ``G2``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        G2 : Gf</span>
+<span class="sd">            Target Green&#39;s function on a Matsubara mesh (modified in</span>
+<span class="sd">            place).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Gf</span>
+<span class="sd">            ``G2``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">G2</span><span class="o">.</span><span class="n">set_from_legendre</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">G2</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">MatsubaraToLegendre</span> <span class="p">(</span><span class="n">BaseBlock</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    The transformation from Legendre to Matsubara as a lazy expression</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Lazy Matsubara → Legendre basis transform.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    G : Gf or BlockGf</span>
+<span class="sd">        Source Green&#39;s function on a Matsubara mesh.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; g_l &lt;&lt; MatsubaraToLegendre(g_iw)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;:param G: :math:`G`, the function to be transformed. Must in the Matsubara domain&quot;&quot;&quot;</span>
         <span class="n">BaseBlock</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s2">&quot;MatsubaraToLegendre of gf&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``&quot;MatsubaraToLegendre of gf&quot;``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;MatsubaraToLegendre of gf&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">G2</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run the Matsubara → Legendre transform from ``self.G`` into ``G2``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        G2 : Gf</span>
+<span class="sd">            Target Green&#39;s function on a Legendre mesh (modified in</span>
+<span class="sd">            place).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Gf</span>
+<span class="sd">            ``G2``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">G2</span><span class="o">.</span><span class="n">set_from_imfreq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">G2</span>
 
