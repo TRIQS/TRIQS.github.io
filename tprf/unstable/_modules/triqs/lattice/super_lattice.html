@@ -229,6 +229,7 @@
 <li class="toctree-l5"><a class="reference internal" href="../../../reference/python_reference.html#triqs_tprf.tight_binding.TBLattice.fourier"><code class="docutils literal notranslate"><span class="pre">TBLattice.fourier()</span></code></a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../reference/python_reference.html#triqs_tprf.tight_binding.TBLattice.get_kmesh"><code class="docutils literal notranslate"><span class="pre">TBLattice.get_kmesh()</span></code></a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../reference/python_reference.html#triqs_tprf.tight_binding.TBLattice.get_rmesh"><code class="docutils literal notranslate"><span class="pre">TBLattice.get_rmesh()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../reference/python_reference.html#triqs_tprf.tight_binding.TBLattice.hoppings"><code class="docutils literal notranslate"><span class="pre">TBLattice.hoppings</span></code></a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../reference/python_reference.html#triqs_tprf.tight_binding.TBLattice.lattice_to_real_coordinates"><code class="docutils literal notranslate"><span class="pre">TBLattice.lattice_to_real_coordinates()</span></code></a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../reference/python_reference.html#triqs_tprf.tight_binding.TBLattice.n_orbitals"><code class="docutils literal notranslate"><span class="pre">TBLattice.n_orbitals</span></code></a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../reference/python_reference.html#triqs_tprf.tight_binding.TBLattice.ndim"><code class="docutils literal notranslate"><span class="pre">TBLattice.ndim</span></code></a></li>
@@ -717,6 +718,13 @@
 <span class="c1">#</span>
 <span class="c1"># Authors: Michel Ferrero, Jonathan Karp, Olivier Parcollet, Hugo U.R. Strand, Nils Wentzell</span>
 
+<span class="sd">&quot;&quot;&quot;Superlattices on top of a :class:`TBLattice`.</span>
+
+<span class="sd">Provides :class:`TBSuperLattice`, which builds a tight-binding superlattice from</span>
+<span class="sd">a base :class:`TBLattice` and an integer superlattice basis. The base-lattice</span>
+<span class="sd">hoppings are folded onto the superlattice; internal hoppings can optionally be</span>
+<span class="sd">removed, e.g. when adding Hartree-Fock terms at a cluster boundary.</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.tight_binding</span><span class="w"> </span><span class="kn">import</span> <span class="n">TBLattice</span>
@@ -726,28 +734,32 @@
 <div class="viewcode-block" id="TBSuperLattice">
 <a class="viewcode-back" href="../../../reference/python_reference.html#triqs_tprf.super_lattice.TBSuperLattice">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TBSuperLattice</span><span class="p">(</span><span class="n">TBLattice</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot; Builds a superlattice on top of a base TBLattice.</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;A tight-binding superlattice built on top of a base :class:`TBLattice`.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
+<span class="sd">    tb_lattice : TBLattice</span>
+<span class="sd">        The base tight-binding :class:`TBLattice`.</span>
+<span class="sd">    super_lattice_units : numpy.ndarray</span>
+<span class="sd">        Two-dimensional ``(ndim, ndim)`` array giving the superlattice basis</span>
+<span class="sd">        vectors in the ``tb_lattice`` (integer) coordinates.</span>
+<span class="sd">    cluster_sites : list of array-like of int, optional</span>
+<span class="sd">        Coordinates of the cluster in ``tb_lattice`` coordinates. If ``None``,</span>
+<span class="sd">        cluster positions are computed automatically as all points whose</span>
+<span class="sd">        coordinates in the superlattice basis lie in ``[0, 1)`` along each</span>
+<span class="sd">        dimension.</span>
+<span class="sd">    remove_internal_hoppings : bool, default False</span>
+<span class="sd">        If ``True``, hopping terms inside the cluster are removed. Useful</span>
+<span class="sd">        e.g. when adding Hartree-Fock terms at a cluster boundary.</span>
 
-<span class="sd">    tb_lattice : TBLattice instance</span>
-<span class="sd">        The base tight binding lattice.</span>
-
-<span class="sd">    super_lattice_units : ndarray (2D)</span>
-<span class="sd">        The unit vectors of the superlattice in the ``tb_lattice`` (integer) coordinates.</span>
-
-<span class="sd">    cluster_sites :</span>
-<span class="sd">        Coordinates of the cluster in tb_lattice coordinates.</span>
-<span class="sd">        If ``None``, an automatic computation of cluster positions</span>
-<span class="sd">        is made as follows: it takes all points whose coordinates</span>
-<span class="sd">        in the basis of the superlattice are in [0, 1[^dimension.</span>
-
-<span class="sd">    remove_internal_hoppings : bool</span>
-<span class="sd">        If ``true``, the hopping terms are removed inside the cluster.</span>
-<span class="sd">        Useful to add Hartree Fock terms at the boundary of a cluster, e.g.</span>
-
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Norb : int</span>
+<span class="sd">        Total number of orbitals in the supercell (``n_orbitals * Ncluster_sites``).</span>
+<span class="sd">    Ncluster_sites : int</span>
+<span class="sd">        Number of sites in the cluster.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tb_lattice</span><span class="p">,</span> <span class="n">super_lattice_units</span><span class="p">,</span> <span class="n">cluster_sites</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">remove_internal_hoppings</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tb_lattice</span><span class="p">,</span> <span class="n">TBLattice</span><span class="p">):</span> <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;tb_lattice should be an instance of TBLattice&quot;</span><span class="p">)</span>
@@ -826,11 +838,25 @@
 <div class="viewcode-block" id="TBSuperLattice.fold">
 <a class="viewcode-back" href="../../../reference/python_reference.html#triqs_tprf.super_lattice.TBSuperLattice.fold">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">fold</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D1</span><span class="p">,</span> <span class="n">remove_internal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">create_zero</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Input: a function  r-&gt; f(r) on the tb_lattice given as a dictionnary</span>
-<span class="sd">            Output: the function R-&gt; F(R) folded on the superlattice.</span>
-<span class="sd">            Only requirement is that f(r)[orbital1, orbital2] is properly defined.</span>
-<span class="sd">            Hence f(r) can be a numpy, a GFBloc, etc...</span>
-<span class="sd">            &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fold a real-space function defined on the base lattice onto the superlattice.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        D1 : dict</span>
+<span class="sd">            Dictionary mapping base-lattice displacements ``r`` to an array-like</span>
+<span class="sd">            ``f(r)`` indexed by ``[orbital1, orbital2]`` (numpy array, GfBloc, ...).</span>
+<span class="sd">        remove_internal : bool, default False</span>
+<span class="sd">            If True, drop the on-site (``R = 0``) block of the folded result, useful</span>
+<span class="sd">            for adding Hartree-Fock terms at the cluster boundary.</span>
+<span class="sd">        create_zero : callable, optional</span>
+<span class="sd">            Factory returning a zero entry of the same type as ``f(r)``. Defaults to</span>
+<span class="sd">            a complex numpy array of shape ``(Norb, Norb)``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Folded function ``F(R)`` on the superlattice displacements.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1">#Res , norb = {} , self.__BaseLattice.n_orbitals</span>
         <span class="n">Res</span> <span class="p">,</span> <span class="n">norb</span> <span class="o">=</span> <span class="p">{}</span> <span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">D1</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">])</span>
         <span class="n">pack</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pack_index_site_orbital</span>
@@ -848,14 +874,40 @@
 <div class="viewcode-block" id="TBSuperLattice.change_coordinates_SL_to_L">
 <a class="viewcode-back" href="../../../reference/python_reference.html#triqs_tprf.super_lattice.TBSuperLattice.change_coordinates_SL_to_L">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">change_coordinates_SL_to_L</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">R</span> <span class="p">,</span> <span class="n">alpha</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Given a point in the supercell R, site (number) alpha, it computes its position on the tb_lattice in lattice coordinates&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Map a superlattice point ``(R, alpha)`` to its position on the base lattice in lattice coordinates.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        R : array-like of int</span>
+<span class="sd">            Superlattice displacement.</span>
+<span class="sd">        alpha : int</span>
+<span class="sd">            Index of the site within the cluster.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            Position on the base lattice in lattice coordinates.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_M</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">R</span><span class="p">))</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">__cluster_sites</span><span class="p">[</span><span class="n">alpha</span><span class="p">,:]</span></div>
 
 
 <div class="viewcode-block" id="TBSuperLattice.change_coordinates_L_to_SL">
 <a class="viewcode-back" href="../../../reference/python_reference.html#triqs_tprf.super_lattice.TBSuperLattice.change_coordinates_L_to_SL">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">change_coordinates_L_to_SL</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Given a point on the tb_lattice in lattice coordinates, returns its coordinates (R, alpha) in the Superlattice&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Map a base-lattice point ``x`` (in lattice coordinates) to its superlattice coordinates ``(R, alpha)``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : array-like of int</span>
+<span class="sd">            Position on the base lattice in lattice coordinates.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        R : tuple of int</span>
+<span class="sd">            Superlattice displacement.</span>
+<span class="sd">        alpha : int</span>
+<span class="sd">            Index of the site within the cluster.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">aux</span>  <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_Mtilde</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
         <span class="n">R</span> <span class="o">=</span> <span class="n">aux</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ncluster_sites</span>
         <span class="n">dx</span> <span class="o">=</span> <span class="nb">list</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_M</span><span class="p">,</span> <span class="n">R</span><span class="p">)</span> <span class="p">)</span> <span class="c1"># force int ?</span>
@@ -865,14 +917,42 @@
 <div class="viewcode-block" id="TBSuperLattice.pack_index_site_orbital">
 <a class="viewcode-back" href="../../../reference/python_reference.html#triqs_tprf.super_lattice.TBSuperLattice.pack_index_site_orbital">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">pack_index_site_orbital</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_site</span><span class="p">,</span> <span class="n">n_orbital</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; nsite and n_orbital must start at 0&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Combine a (site, orbital) index pair into a single superlattice orbital index.</span>
+
+<span class="sd">        Both ``n_site`` and ``n_orbital`` are zero-based.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n_site : int</span>
+<span class="sd">            Zero-based index of the site within the cluster.</span>
+<span class="sd">        n_orbital : int</span>
+<span class="sd">            Zero-based orbital index on that site.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            Combined superlattice orbital index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">n_site</span> <span class="o">+</span> <span class="p">(</span><span class="n">n_orbital</span> <span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ncluster_sites</span></div>
 
 
 <div class="viewcode-block" id="TBSuperLattice.unpack_index_site_orbital">
 <a class="viewcode-back" href="../../../reference/python_reference.html#triqs_tprf.super_lattice.TBSuperLattice.unpack_index_site_orbital">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">unpack_index_site_orbital</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Inverse of pack_index_site_orbital&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Split a superlattice orbital index back into a ``(n_site, n_orbital)`` pair (inverse of :meth:`pack_index_site_orbital`).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        index : int</span>
+<span class="sd">            Combined superlattice orbital index.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        n_site : int</span>
+<span class="sd">            Zero-based index of the site within the cluster.</span>
+<span class="sd">        n_orbital : int</span>
+<span class="sd">            Zero-based orbital index on that site.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">n_orbital</span>  <span class="o">=</span>   <span class="p">(</span><span class="n">index</span><span class="p">)</span><span class="o">//</span><span class="bp">self</span><span class="o">.</span><span class="n">Ncluster_sites</span>
         <span class="n">n_site</span> <span class="o">=</span>  <span class="n">index</span> <span class="o">-</span> <span class="n">n_orbital</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">Ncluster_sites</span>
 
@@ -882,8 +962,12 @@
 <div class="viewcode-block" id="TBSuperLattice.cluster_sites">
 <a class="viewcode-back" href="../../../reference/python_reference.html#triqs_tprf.super_lattice.TBSuperLattice.cluster_sites">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">cluster_sites</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">           Generate the position of the cluster site in the tb_lattice coordinates.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Yield each cluster-site position in base-lattice coordinates.</span>
+
+<span class="sd">        Yields</span>
+<span class="sd">        ------</span>
+<span class="sd">        list of int</span>
+<span class="sd">            Position of a cluster site in base-lattice coordinates.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__cluster_sites</span><span class="p">:</span>
             <span class="k">yield</span> <span class="n">pos</span></div>

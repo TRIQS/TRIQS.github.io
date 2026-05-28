@@ -229,6 +229,7 @@
 <li class="toctree-l5"><a class="reference internal" href="../../../reference/python_reference.html#triqs_tprf.tight_binding.TBLattice.fourier"><code class="docutils literal notranslate"><span class="pre">TBLattice.fourier()</span></code></a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../reference/python_reference.html#triqs_tprf.tight_binding.TBLattice.get_kmesh"><code class="docutils literal notranslate"><span class="pre">TBLattice.get_kmesh()</span></code></a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../reference/python_reference.html#triqs_tprf.tight_binding.TBLattice.get_rmesh"><code class="docutils literal notranslate"><span class="pre">TBLattice.get_rmesh()</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../reference/python_reference.html#triqs_tprf.tight_binding.TBLattice.hoppings"><code class="docutils literal notranslate"><span class="pre">TBLattice.hoppings</span></code></a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../reference/python_reference.html#triqs_tprf.tight_binding.TBLattice.lattice_to_real_coordinates"><code class="docutils literal notranslate"><span class="pre">TBLattice.lattice_to_real_coordinates()</span></code></a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../reference/python_reference.html#triqs_tprf.tight_binding.TBLattice.n_orbitals"><code class="docutils literal notranslate"><span class="pre">TBLattice.n_orbitals</span></code></a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../reference/python_reference.html#triqs_tprf.tight_binding.TBLattice.ndim"><code class="docutils literal notranslate"><span class="pre">TBLattice.ndim</span></code></a></li>
@@ -717,6 +718,16 @@
 <span class="c1">#</span>
 <span class="c1"># Authors: Michel Ferrero, Alexander Hampel, Olivier Parcollet, Hugo U.R. Strand, Nils Wentzell</span>
 
+<span class="sd">&quot;&quot;&quot;Tight-binding Hamiltonians on Bravais lattices.</span>
+
+<span class="sd">Provides the higher-level Python wrapper :class:`TBLattice` that bundles a </span>
+<span class="sd">:class:`BravaisLattice`, :class:`BrillouinZone` and :class:`TightBinding` from </span>
+<span class="sd">:mod:`triqs.lattice.lattice_tools` together.</span>
+
+<span class="sd">Also exposes the density-of-states helpers :func:`dos` (over a regular k-grid)</span>
+<span class="sd">and :func:`dos_patch` (over a triangular Brillouin-zone patch), which wrap the</span>
+<span class="sd">underlying C++ routines and return :class:`triqs.dos.DOS` objects.</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">h5.formats</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_class</span>
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;BravaisLattice&#39;</span><span class="p">,</span> <span class="s1">&#39;BrillouinZone&#39;</span><span class="p">,</span> <span class="s1">&#39;TightBinding&#39;</span><span class="p">,</span> <span class="s1">&#39;dos&#39;</span><span class="p">,</span> <span class="s1">&#39;TBLattice&#39;</span><span class="p">]</span>
@@ -733,21 +744,54 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">dos</span><span class="p">(</span><span class="n">tight_binding</span><span class="p">,</span> <span class="n">n_kpts</span><span class="p">,</span> <span class="n">n_eps</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    :param tight_binding: a tight_binding object</span>
-<span class="sd">    :param n_kpts: the number of k points to use in each dimension</span>
-<span class="sd">    :param n_eps: number of points used in the binning of the energy</span>
-<span class="sd">    :param name: name of the resulting dos</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the density of states of a tight-binding Hamiltonian on a regular k-grid.</span>
 
-<span class="sd">    :rtype: return a list of DOS, one for each band</span>
+<span class="sd">    Wraps the C++ :func:`triqs.lattice.lattice_tools.dos` and splits the result</span>
+<span class="sd">    into one :class:`triqs.dos.DOS` per band.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tight_binding : TightBinding</span>
+<span class="sd">        The tight-binding Hamiltonian.</span>
+<span class="sd">    n_kpts : int</span>
+<span class="sd">        Number of k-points along each dimension of the Brillouin zone.</span>
+<span class="sd">    n_eps : int</span>
+<span class="sd">        Number of energy bins.</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Name of the resulting DOS objects.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of triqs.dos.DOS</span>
+<span class="sd">        One density of states per band.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">eps</span><span class="p">,</span> <span class="n">arr</span> <span class="o">=</span> <span class="n">dos_c</span><span class="p">(</span><span class="n">tight_binding</span><span class="p">,</span> <span class="n">n_kpts</span><span class="p">,</span> <span class="n">n_eps</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">DOS</span><span class="p">(</span><span class="n">eps</span><span class="p">,</span> <span class="n">arr</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">dos_patch</span><span class="p">(</span><span class="n">tight_binding</span><span class="p">,</span> <span class="n">triangles</span><span class="p">,</span> <span class="n">n_eps</span><span class="p">,</span> <span class="n">n_div</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    To be written</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the density of states of a tight-binding Hamiltonian on a triangular Brillouin-zone patch.</span>
+
+<span class="sd">    Only supported for 2-dimensional lattices.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tight_binding : TightBinding</span>
+<span class="sd">        The tight-binding Hamiltonian.</span>
+<span class="sd">    triangles : numpy.ndarray</span>
+<span class="sd">        2-D array of shape ``(n_triangles * 3, 2)`` containing the vertices of</span>
+<span class="sd">        the triangular patches in the Brillouin zone, three rows per triangle.</span>
+<span class="sd">    n_eps : int</span>
+<span class="sd">        Number of energy bins.</span>
+<span class="sd">    n_div : int</span>
+<span class="sd">        Number of sub-divisions of each triangle used for the sampling.</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Name of the resulting DOS object.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    triqs.dos.DOS</span>
+<span class="sd">        The density of states summed over orbitals on the given patch.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">eps</span><span class="p">,</span> <span class="n">arr</span> <span class="o">=</span> <span class="n">dos_patch_c</span><span class="p">(</span><span class="n">tight_binding</span><span class="p">,</span> <span class="n">triangles</span><span class="p">,</span> <span class="n">n_eps</span><span class="p">,</span> <span class="n">n_div</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">DOS</span><span class="p">(</span><span class="n">eps</span><span class="p">,</span> <span class="n">arr</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
@@ -756,48 +800,50 @@
 <div class="viewcode-block" id="TBLattice">
 <a class="viewcode-back" href="../../../reference/python_reference.html#triqs_tprf.tight_binding.TBLattice">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">TBLattice</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A tight-binding Hamiltonian on top of a Bravais lattice.</span>
 
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Class describing a tight binding hamiltonian on top of a bravais lattice.</span>
-<span class="sd">    Has objects of type BravaisLattice, BrillouinZone and TightBinding as attributes,</span>
-<span class="sd">    and exposes part of their interfaces.</span>
+<span class="sd">    Bundles a :class:`BravaisLattice`, a :class:`BrillouinZone` and a</span>
+<span class="sd">    :class:`TightBinding` instance and exposes part of their interfaces directly.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    units : list of tuples of floats</span>
+<span class="sd">        Basis vectors of the real-space lattice.</span>
+<span class="sd">    hoppings : dict, optional</span>
+<span class="sd">        Dictionary mapping tuples of integers (real-space displacements in</span>
+<span class="sd">        multiples of the lattice basis vectors) to numpy ndarray hopping</span>
+<span class="sd">        matrices over the orbital indices.</span>
+<span class="sd">    orbital_positions : list of three-tuples of floats, optional</span>
+<span class="sd">        Internal orbital positions in the unit cell.</span>
+<span class="sd">    orbital_names : list of str, optional</span>
+<span class="sd">        Names for each orbital.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
-
 <span class="sd">    bl : BravaisLattice</span>
-<span class="sd">        The associated Bravais Lattice</span>
-
+<span class="sd">        The associated Bravais lattice.</span>
 <span class="sd">    bz : BrillouinZone</span>
-<span class="sd">        The associated Brillouin Zone</span>
-
+<span class="sd">        The associated Brillouin zone.</span>
 <span class="sd">    tb : TightBinding</span>
-<span class="sd">        The tight-binding Hamiltonian</span>
+<span class="sd">        The tight-binding Hamiltonian.</span>
+<span class="sd">    hoppings : dict</span>
+<span class="sd">        Real-space hoppings as a ``{displacement: matrix}`` dict.</span>
+<span class="sd">    ndim : int</span>
+<span class="sd">        Number of spatial dimensions of the lattice.</span>
+<span class="sd">    units : numpy.ndarray</span>
+<span class="sd">        ``(ndim, ndim)`` array whose rows are the lattice basis vectors.</span>
+<span class="sd">    n_orbitals : int</span>
+<span class="sd">        Number of orbitals in the unit cell.</span>
+<span class="sd">    orbital_positions : list</span>
+<span class="sd">        Positions of the orbitals inside the unit cell.</span>
+<span class="sd">    orbital_names : list of str</span>
+<span class="sd">        Names of the orbitals in the unit cell.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span>
                  <span class="n">hoppings</span><span class="o">=</span><span class="nb">dict</span><span class="p">(),</span>
                  <span class="n">orbital_positions</span><span class="o">=</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)],</span>
                  <span class="n">orbital_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">hopping</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-
-<span class="sd">        units : list of tuples of floats</span>
-<span class="sd">            Basis vectors for the real space lattice.</span>
-
-<span class="sd">        hoppings : dict</span>
-<span class="sd">            Dictionary with tuples of integers as keys,</span>
-<span class="sd">            describing real space hoppings in multiples of</span>
-<span class="sd">            the real space lattice basis vectors, and values being</span>
-<span class="sd">            numpy ndarray hopping matrices in the orbital indices.</span>
-
-<span class="sd">        orbital_positions : list of three three-tuples of floats.</span>
-<span class="sd">            Internal orbital positions in the unit-cell.</span>
-
-<span class="sd">        orbital_names : list of strings</span>
-<span class="sd">            Names for each orbital.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">hopping</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
@@ -813,22 +859,34 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">hoppings</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Real-space hoppings as a ``{displacement: matrix}`` dict.</span>
+
+<span class="sd">        Each key is a tuple of integers giving a real-space displacement in</span>
+<span class="sd">        multiples of the lattice basis vectors; the corresponding value is the</span>
+<span class="sd">        hopping matrix between orbitals at that displacement.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Mapping from displacement tuples to ``numpy.ndarray`` hopping</span>
+<span class="sd">            matrices of shape ``(n_orbitals, n_orbitals)``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">displ</span><span class="p">):</span> <span class="n">hop</span> <span class="k">for</span> <span class="n">displ</span><span class="p">,</span> <span class="n">hop</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tb</span><span class="o">.</span><span class="n">displ_vec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tb</span><span class="o">.</span><span class="n">overlap_mat_vec</span><span class="p">)}</span>
 
 <div class="viewcode-block" id="TBLattice.get_kmesh">
 <a class="viewcode-back" href="../../../reference/python_reference.html#triqs_tprf.tight_binding.TBLattice.get_kmesh">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_kmesh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_k</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a mesh on the Brillouin zone with a given discretization</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a mesh on the Brillouin zone with a given discretization.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        n_k : int or three-tuple of int</span>
-<span class="sd">            The linear dimension(s)</span>
+<span class="sd">            The linear dimension(s).</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        MeshBrZone</span>
-<span class="sd">            The mesh on the Brillouin zone</span>
+<span class="sd">            The mesh on the Brillouin zone.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">MeshBrZone</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bz</span><span class="p">,</span> <span class="n">n_k</span><span class="p">)</span></div>
@@ -837,17 +895,17 @@
 <div class="viewcode-block" id="TBLattice.get_rmesh">
 <a class="viewcode-back" href="../../../reference/python_reference.html#triqs_tprf.tight_binding.TBLattice.get_rmesh">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_rmesh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_r</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a mesh on the Bravais lattice with a given periodicity</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a mesh on the Bravais lattice with a given periodicity.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        n_r : int or three-tuple of int</span>
-<span class="sd">            The periodicity in each dimension</span>
+<span class="sd">            The periodicity in each dimension.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        MeshCycLat</span>
-<span class="sd">            The cyclic lattice mesh</span>
+<span class="sd">            The cyclic lattice mesh.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">MeshCycLat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="p">,</span> <span class="n">n_r</span><span class="p">)</span></div>
@@ -857,27 +915,60 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">ndim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of dimensions of the lattice&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of spatial dimensions of the lattice.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            Number of dimensions (1, 2 or 3).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="o">.</span><span class="n">ndim</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">units</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of dimensions of the lattice&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Lattice basis vectors as a ``(ndim, ndim)`` array in the standard basis.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            Two-dimensional array whose rows are the basis vectors</span>
+<span class="sd">            :math:`\\{ \\mathbf{a}_1, \\dots, \\mathbf{a}_d \\}` of the</span>
+<span class="sd">            Bravais lattice.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="o">.</span><span class="n">units</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">n_orbitals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of orbitals in the unit cell&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of orbitals in the unit cell.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            Number of atomic orbitals in the unit cell.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="o">.</span><span class="n">n_orbitals</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">orbital_positions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The list of orbital positions&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Positions of the orbitals inside the unit cell.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            Orbital positions :math:`\\{ \\mathbf{r}_1, \\dots, \\mathbf{r}_m \\}`</span>
+<span class="sd">            in the standard basis.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="o">.</span><span class="n">orbital_positions</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">orbital_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The list of orbital names&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Names of the orbitals in the unit cell.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list of str</span>
+<span class="sd">            One name per orbital, in the same order as :attr:`orbital_positions`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bl</span><span class="o">.</span><span class="n">orbital_names</span><span class="p">)</span>
 
     <span class="c1"># ---- Expose TightBinding API ----</span>
