@@ -20,17 +20,16 @@ triqs::mc_tools::mc_generic::run
 
  .. rst-class:: cppsynopsis
 
-       | int :red:`run` (int64_t :param:`n_cycles`,
-       |      int64_t :param:`length_cycle`,
+    1. | int :red:`run` (run_param_t const & :param:`params`)
+
+    2. | int :red:`run` (std::int64_t :param:`ncycles`,
+       |      std::int64_t :param:`cycle_length`,
        |      std::function<bool ()> :param:`stop_callback`,
-       |      bool :param:`do_measure`,
-       |      :ref:`communicator <mpi__communicator>` :param:`c` = mpi::communicator{})
+       |      bool :param:`enable_measures`,
+       |      :ref:`communicator <mpi__communicator>` :param:`c` = mpi::communicator{},
+       |      bool :param:`enable_calibration` = false)
 
-
-
-
-
-Generic function to run the Monte-Carlo. Used by both warmup and accumulate.
+Documentation
 
 
 
@@ -39,25 +38,23 @@ Generic function to run the Monte-Carlo. Used by both warmup and accumulate.
 Parameters
 ^^^^^^^^^^
 
- * :param:`n_cycles`         Number of QMC cycles
-                         If negative, the accumulation is done until the stop_callback returns true or signal is received.
+ * :param:`params` User-provided MC simulation parameters (see run_param_t).
 
- * :param:`length_cycle`     Number of QMC move attempts in one cycle
+ * :param:`ncycles` Number of MC cycles to run (\f:math:` < 1 \f` to run indefinitely).
 
- * :param:`stop_callback`    A callback function () -> bool. It is called after each cycle
-                         to and the computation stops when it returns true.
-                         Typically used to set up the time limit, cf doc.
+ * :param:`cycle_length` Number of MC steps per cycle (\f:math:` > 0 \f`).
 
- * :param:`do_measure`       Whether or not to accumulate for each measurement
+ * :param:`stop_callback` Callback function to check if the simulation should be stopped (returns true to stop).
 
- * :param:`c`                The mpi communicator [optional]. If not provided use the default-constructed one.
+ * :param:`enable_measures` Enable measurements at the end of each cycle (false during warmup phase).
+
+ * :param:`c` MPI communicator.
+
+ * :param:`enable_calibration` Enable calibration of the moves after each cycle (false during accumulation phase).
 
 
 Returns
 ^^^^^^^
 
-    =  =============================================
-    0  if the computation has run until the end
-    1  if it has been stopped by stop_callback
-    2  if it has been stopped by receiving a signal
-    =  =============================================
+0 if the simulation has done all requested cycles, 1 if it has been stopped due to `stop_callback()`
+ returned true, 2 if it has been stopped due to a signal.
