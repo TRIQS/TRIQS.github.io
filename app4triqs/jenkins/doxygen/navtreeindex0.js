@@ -1,0 +1,22 @@
+var NAVTREEINDEX0 =
+{
+"../ChangeLog.html":[5],
+"../issues.html":[6],
+"app4triqs_8cpp.html":[4,1,0,0],
+"app4triqs_8cpp_source.html":[4,1,0,0],
+"app4triqs_8hpp.html":[4,1,0,1],
+"app4triqs_8hpp_source.html":[4,1,0,1],
+"classapp4triqs_1_1toto.html":[4,0,0],
+"dir_8cf60653b4feabcd26e1901030af9e98.html":[4,1,0],
+"documentation.html":[4],
+"ex1.html":[3,0],
+"examples.html":[3],
+"files.html":[4,1],
+"group__mygroup.html":[4,0],
+"index.html":[],
+"index.html":[0],
+"index.html#start":[0,0],
+"installation.html":[1],
+"integration.html":[2],
+"pages.html":[]
+};
