@@ -122,6 +122,17 @@ var menudata={children:[
 {text:"atom_diag::atom_diag::eigensystem_t",url:"structtriqs_1_1atom__diag_1_1atom__diag_1_1eigensystem__t.html"},
 {text:"atom_diag::atom_diag::op_block_mat_t",url:"structtriqs_1_1atom__diag_1_1atom__diag_1_1op__block__mat__t.html"}]}]},
 {text:"Determinant manipulation",url:"group__triqs-det-manip.html"},
-{text:"Statistical tools",url:"group__triqs-stat.html"},
+{text:"Statistical analysis tools",url:"group__triqs-stat.html",children:[
+{text:"Accumulators",url:"group__triqs-stat-accs.html",children:[
+{text:"stat::lin_binning",url:"classtriqs_1_1stat_1_1lin__binning.html"},
+{text:"stat::log_binning",url:"classtriqs_1_1stat_1_1log__binning.html"}]},
+{text:"Concepts",url:"group__triqs-stat-concepts.html",children:[
+{text:"stat::StatCompatible",url:"concepttriqs_1_1stat_1_1StatCompatible.html"},
+{text:"stat::AccCompatible",url:"concepttriqs_1_1stat_1_1AccCompatible.html"},
+{text:"stat::StatCompatibleRange",url:"concepttriqs_1_1stat_1_1StatCompatibleRange.html"}]},
+{text:"Mean and error estimation",url:"group__triqs-stat-meanerr.html"},
+{text:"Resampling techniques",url:"group__triqs-stat-resampling.html"},
+{text:"Utilities",url:"group__triqs-stat-utils.html",children:[
+{text:"stat::histogram",url:"classtriqs_1_1stat_1_1histogram.html"}]}]},
 {text:"File List",url:"files.html"}]},
 {text:"Official TRIQS website",url:"^https://triqs.github.io/triqs/latest/"}]}

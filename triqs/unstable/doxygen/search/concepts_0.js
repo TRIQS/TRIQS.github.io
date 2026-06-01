@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['bzmeshpoint_0',['BzMeshPoint',['../concepttriqs_1_1mesh_1_1BzMeshPoint.html',1,'triqs::mesh']]]
+  ['acccompatible_0',['AccCompatible',['../concepttriqs_1_1stat_1_1AccCompatible.html',1,'triqs::stat']]]
 ];

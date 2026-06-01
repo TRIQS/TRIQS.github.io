@@ -1363,35 +1363,49 @@
 <dt class="sig sig-object py" id="triqs.stat.histograms.Histogram">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">triqs.stat.histograms.</span></span><span class="sig-name descname"><span class="pre">Histogram</span></span><a class="headerlink" href="#triqs.stat.histograms.Histogram" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.11/library/functions.html#object" rel="noopener noreferrer" target="_blank" title="(in Python v3.11)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<p>Statistical histogram</p>
-<p>This class serves to sample a continuous random variable, and to ‘bin’ it.
-It divides a given range of real values into a series of equal intervals,
-and counts amounts of samples falling into each interval.
-The histogram keeps track of the total number of the sampled values, as well
-as of the lost samples that lie outside the chosen range.</p>
+<p>Class representing a histogram on a given interval.</p>
+<p>The histogram is defined on the interval <span class="math notranslate nohighlight">\([a, b]\)</span> with the following values for the center of its
+bins:</p>
+<div class="math notranslate nohighlight">
+\[g_n = a + n h = a + n \frac{b - a}{N - 1} \; .\]</div>
+<p>Here, <span class="math notranslate nohighlight">\(N\)</span> is the number of bins in the histogram, <span class="math notranslate nohighlight">\(h\)</span> is the bin size and <span class="math notranslate nohighlight">\(n = 0, 1, \ldots, N - 1\)</span>
+is the index of the bin.</p>
+<p>That means that each bin is of the same size <span class="math notranslate nohighlight">\(h\)</span>, except for the first and last bins, which have a size of
+<span class="math notranslate nohighlight">\(h / 2\)</span>.</p>
+<p>Values are added to the histogram using the streaming operator <cite>&lt;&lt;</cite>. For example, <cite>hist &lt;&lt; 1.5</cite> adds the value
+<cite>1.5</cite> to the histogram <cite>hist</cite>.</p>
+<p>When a value is added to the histogram, it first determines into which bin the value falls and then increases the
+count of that bin. If the value is outside of the interval, it is discarded. Additionally, the histogram keeps
+track of the total number of data points as well as the number of lost points that fall outside of the interval.</p>
 <hr class="docutils" />
 <p>Dispatched C++ constructor(s).</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="p">()</span>
 
-<span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">n_bins</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span>
+<span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span>
 
-<span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="p">()</span>
+<span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">nbins</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>[1] Constructs a histogram over <span class="math notranslate nohighlight">\([a; b]\)</span> range with bin length equal to 1.</p>
+<p>[1] Default constructor leaves the histogram in a valid but unusable state.</p>
 <hr class="docutils" />
-<p>[2] Constructs a histogram over <span class="math notranslate nohighlight">\([a; b]\)</span> range with a given number of bins.</p>
+<p>[2] Construct a histogram on the interval <span class="math notranslate nohighlight">\([a, b]\)</span> with a bin size of 1, except for the first and last
+bins, which have a size of 0.5.</p>
+<p>The histogram will have a total of <span class="math notranslate nohighlight">\(N = b - a + 1\)</span> bins.</p>
+<p>If <span class="math notranslate nohighlight">\(a \geq b\)</span>, an exception is thrown.</p>
 <hr class="docutils" />
-<p>[3] Default constructor</p>
+<p>[3] Construct a histogram on the interval <span class="math notranslate nohighlight">\([a, b]\)</span> with the given number <span class="math notranslate nohighlight">\(N\)</span> of bins.</p>
+<p>The bin size is set to <span class="math notranslate nohighlight">\(h = (b - a) / (N - 1)\)</span>. The first and last bins have a size of <span class="math notranslate nohighlight">\(h / 2\)</span>
+.</p>
+<p>If <span class="math notranslate nohighlight">\(a \geq b\)</span> or if the number of bins is smaller than 2, an exception is thrown.</p>
 <hr class="docutils" />
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>a</strong><span class="classifier">int, float</span></dt><dd><p>Left end of the sampling range</p>
+<dt><strong>a</strong><span class="classifier">int, float</span></dt><dd><p>Lower bound of the interval.</p>
 </dd>
-<dt><strong>b</strong><span class="classifier">int, float</span></dt><dd><p>Right end of the sampling range</p>
+<dt><strong>b</strong><span class="classifier">int, float</span></dt><dd><p>Upper bound of the interval.</p>
 </dd>
-<dt><strong>n_bins</strong><span class="classifier">int</span></dt><dd><p>Number of bins</p>
+<dt><strong>nbins</strong><span class="classifier">int</span></dt><dd><p>Number of bins.</p>
 </dd>
 </dl>
 </dd>
@@ -1400,16 +1414,16 @@ as of the lost samples that lie outside the chosen range.</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="triqs.stat.histograms.Histogram.data.html#triqs.stat.histograms.Histogram.data" title="triqs.stat.histograms.Histogram.data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data</span></code></a></p></td>
-<td><p>Read-only access to the data storage</p></td>
+<td><p>Get the data stored in the histogram.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="triqs.stat.histograms.Histogram.limits.html#triqs.stat.histograms.Histogram.limits" title="triqs.stat.histograms.Histogram.limits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">limits</span></code></a></p></td>
-<td><p>Get boundaries of the histogram</p></td>
+<td><p>Get the domain on which the histogram is defined.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="triqs.stat.histograms.Histogram.n_data_pts.html#triqs.stat.histograms.Histogram.n_data_pts" title="triqs.stat.histograms.Histogram.n_data_pts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_data_pts</span></code></a></p></td>
-<td><p>Get number of accumulated samples</p></td>
+<td><p>Get the number of data points that have been added to the histogram.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="triqs.stat.histograms.Histogram.n_lost_pts.html#triqs.stat.histograms.Histogram.n_lost_pts" title="triqs.stat.histograms.Histogram.n_lost_pts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_lost_pts</span></code></a></p></td>
-<td><p>Get number of discarded samples</p></td>
+<td><p>Get the number of data points that fell outside of the interval and were discarded.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1417,10 +1431,10 @@ as of the lost samples that lie outside the chosen range.</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="triqs.stat.histograms.Histogram.clear.html#triqs.stat.histograms.Histogram.clear" title="triqs.stat.histograms.Histogram.clear"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clear</span></code></a></p></td>
-<td><p>Reset all histogram values to 0</p></td>
+<td><p>Reset the histogram to its initial state, i.e. with no data points added to it.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="triqs.stat.histograms.Histogram.mesh_point.html#triqs.stat.histograms.Histogram.mesh_point" title="triqs.stat.histograms.Histogram.mesh_point"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mesh_point</span></code></a></p></td>
-<td><p>Get position of bin's center</p></td>
+<td><p>Get the position of the center of the n-th bin.</p></td>
 </tr>
 </tbody>
 </table>

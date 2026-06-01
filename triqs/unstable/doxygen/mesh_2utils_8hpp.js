@@ -1,4 +1,4 @@
-var utils_8hpp =
+var mesh_2utils_8hpp =
 [
     [ "triqs::mesh::statistic_enum", "group__triqs-meshes-utils.html#ga84375f055c11dffb70f0f1f102abec4e", null ],
     [ "triqs::mesh::closest_mesh_pt", "group__triqs-meshes-utils.html#ga56c218c82c2199997a549ef9926df1ee", null ],

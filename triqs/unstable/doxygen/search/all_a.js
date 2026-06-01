@@ -41,8 +41,9 @@ var searchData=
   ['is_5fop_5fhermitian_38',['is_op_hermitian',['../group__triqs-ops.html#gab9e3c643c9af3d67c3220b959dcc030b',1,'triqs::operators']]],
   ['is_5fproduct_39',['is_product',['../group__triqs-meshes-utils.html#gacfbdc99dc873dfa49ff2028f56adc6b6',1,'triqs::mesh']]],
   ['is_5fset_40',['is_set',['../classtriqs_1_1mc__tools_1_1measure.html#a860e6483c90c0748c6f0ea4b5963cffd',1,'triqs::mc_tools::measure::is_set()'],['../classtriqs_1_1mc__tools_1_1move.html#a880d88cd9f96faa06837bc52fc8a155a',1,'triqs::mc_tools::move::is_set()']]],
-  ['is_5fvalue_5fvalid_41',['is_value_valid',['../classtriqs_1_1mesh_1_1refreq__log.html#a0fc935664d52005fe3f61bd67cba94f6',1,'triqs::mesh::refreq_log::is_value_valid()'],['../classtriqs_1_1mesh_1_1refreq__pts.html#a3a4743a300dba027bae932b1286ee792',1,'triqs::mesh::refreq_pts::is_value_valid()']]],
-  ['is_5fview_5ftag_42',['is_view_tag',['../structtriqs_1_1is__view__tag.html',1,'triqs']]],
-  ['is_5fzero_43',['is_zero',['../classtriqs_1_1operators_1_1many__body__operator__generic.html#aafb403965f163eb986f031c3faaf685f',1,'triqs::operators::many_body_operator_generic']]],
-  ['iterator_5fcategory_44',['iterator_category',['../structtriqs_1_1mesh_1_1mesh__iterator.html#a2d6bdb22cc2cb6ec1a14b5ec767186ae',1,'triqs::mesh::mesh_iterator']]]
+  ['is_5funbounded_41',['is_unbounded',['../classtriqs_1_1stat_1_1lin__binning.html#a651d7d8b77b8590eb029fac6ac13ddd4',1,'triqs::stat::lin_binning::is_unbounded()'],['../classtriqs_1_1stat_1_1log__binning.html#a75bf3dda06b8cd8ad3c9cb48ee055299',1,'triqs::stat::log_binning::is_unbounded()']]],
+  ['is_5fvalue_5fvalid_42',['is_value_valid',['../classtriqs_1_1mesh_1_1refreq__log.html#a0fc935664d52005fe3f61bd67cba94f6',1,'triqs::mesh::refreq_log::is_value_valid()'],['../classtriqs_1_1mesh_1_1refreq__pts.html#a3a4743a300dba027bae932b1286ee792',1,'triqs::mesh::refreq_pts::is_value_valid()']]],
+  ['is_5fview_5ftag_43',['is_view_tag',['../structtriqs_1_1is__view__tag.html',1,'triqs']]],
+  ['is_5fzero_44',['is_zero',['../classtriqs_1_1operators_1_1many__body__operator__generic.html#aafb403965f163eb986f031c3faaf685f',1,'triqs::operators::many_body_operator_generic']]],
+  ['iterator_5fcategory_45',['iterator_category',['../structtriqs_1_1mesh_1_1mesh__iterator.html#a2d6bdb22cc2cb6ec1a14b5ec767186ae',1,'triqs::mesh::mesh_iterator']]]
 ];

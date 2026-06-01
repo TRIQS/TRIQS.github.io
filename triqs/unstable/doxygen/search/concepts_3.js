@@ -1,5 +1,8 @@
 var searchData=
 [
-  ['scalargfinitfunc_0',['ScalarGfInitFunc',['../concepttriqs_1_1gfs_1_1ScalarGfInitFunc.html',1,'triqs::gfs']]],
-  ['scalargfsymmetry_1',['ScalarGfSymmetry',['../concepttriqs_1_1gfs_1_1ScalarGfSymmetry.html',1,'triqs::gfs']]]
+  ['mcmeasure_0',['MCMeasure',['../concepttriqs_1_1mc__tools_1_1MCMeasure.html',1,'triqs::mc_tools']]],
+  ['mcmove_1',['MCMove',['../concepttriqs_1_1mc__tools_1_1MCMove.html',1,'triqs::mc_tools']]],
+  ['mesh_2',['Mesh',['../concepttriqs_1_1mesh_1_1Mesh.html',1,'triqs::mesh']]],
+  ['meshpoint_3',['MeshPoint',['../concepttriqs_1_1mesh_1_1MeshPoint.html',1,'triqs::mesh']]],
+  ['meshwithvalues_4',['MeshWithValues',['../concepttriqs_1_1mesh_1_1MeshWithValues.html',1,'triqs::mesh']]]
 ];

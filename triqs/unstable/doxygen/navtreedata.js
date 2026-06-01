@@ -164,7 +164,22 @@ var NAVTREE =
         ] ]
       ] ],
       [ "Determinant manipulation", "group__triqs-det-manip.html", null ],
-      [ "Statistical tools", "group__triqs-stat.html", null ],
+      [ "Statistical analysis tools", "group__triqs-stat.html", [
+        [ "Accumulators", "group__triqs-stat-accs.html", [
+          [ "stat::lin_binning", "classtriqs_1_1stat_1_1lin__binning.html", null ],
+          [ "stat::log_binning", "classtriqs_1_1stat_1_1log__binning.html", null ]
+        ] ],
+        [ "Concepts", "group__triqs-stat-concepts.html", [
+          [ "stat::StatCompatible", "concepttriqs_1_1stat_1_1StatCompatible.html", null ],
+          [ "stat::AccCompatible", "concepttriqs_1_1stat_1_1AccCompatible.html", null ],
+          [ "stat::StatCompatibleRange", "concepttriqs_1_1stat_1_1StatCompatibleRange.html", null ]
+        ] ],
+        [ "Mean and error estimation", "group__triqs-stat-meanerr.html", null ],
+        [ "Resampling techniques", "group__triqs-stat-resampling.html", null ],
+        [ "Utilities", "group__triqs-stat-utils.html", [
+          [ "stat::histogram", "classtriqs_1_1stat_1_1histogram.html", null ]
+        ] ]
+      ] ],
       [ "File List", "files.html", "files" ]
     ] ],
     [ "Official TRIQS website", "^https://triqs.github.io/triqs/latest/", null ]
@@ -174,7 +189,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "MersenneRNG_8cpp.html",
-"gf_2mpi_8hpp_source.html"
+"functions_8cpp_source.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronization';

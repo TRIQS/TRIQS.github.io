@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['doubleorcomplex_0',['DoubleOrComplex',['../concepttriqs_1_1mc__tools_1_1DoubleOrComplex.html',1,'triqs::mc_tools']]]
+  ['bzmeshpoint_0',['BzMeshPoint',['../concepttriqs_1_1mesh_1_1BzMeshPoint.html',1,'triqs::mesh']]]
 ];

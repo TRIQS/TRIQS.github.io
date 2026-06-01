@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['statistic_5fenum_0',['statistic_enum',['../group__triqs-meshes-utils.html#ga84375f055c11dffb70f0f1f102abec4e',1,'triqs::mesh']]]
+  ['mean_5ftag_0',['mean_tag',['../group__triqs-stat-meanerr.html#ga9f052ea00603e6edb8bbbd4e5f85c9e5',1,'triqs::stat']]]
 ];
