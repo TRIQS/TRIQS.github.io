@@ -10,6 +10,7 @@ var structtriqs_1_1mc__tools_1_1mc__generic_1_1run__param__t =
     [ "enable_measures", "structtriqs_1_1mc__tools_1_1mc__generic_1_1run__param__t.html#ae8f1061dbe199f01d020c6d313cff0d4", null ],
     [ "initial_sign", "structtriqs_1_1mc__tools_1_1mc__generic_1_1run__param__t.html#a7f2606e7bd46d00c884458f00fcdbbf4", null ],
     [ "ncycles", "structtriqs_1_1mc__tools_1_1mc__generic_1_1run__param__t.html#a10fa62c35133ae382662153b6547ed1a", null ],
+    [ "phase", "structtriqs_1_1mc__tools_1_1mc__generic_1_1run__param__t.html#af82064a7c9f22d3e4e7873ab52c2a697", null ],
     [ "propagate_exception", "structtriqs_1_1mc__tools_1_1mc__generic_1_1run__param__t.html#ac2d0b6de79ad42c1973eef9c77b57693", null ],
     [ "stop_callback", "structtriqs_1_1mc__tools_1_1mc__generic_1_1run__param__t.html#aa53d043bccb81956446acdb9b7d69f32", null ]
 ];
