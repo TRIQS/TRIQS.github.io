@@ -108,7 +108,7 @@ $(function(){initNavTree('group__triqs-stat-meanerr.html','',''); });
 <p>Given a range of samples \( \{ x_i : i = 1, \ldots, N \} \), this group provides:</p><ul>
 <li><a class="el" href="#gada3f589aa70e564fbfaab8789eef9d7b" title="Calculate the arithmetic mean or the simple sum of some range of values.">triqs::stat::mean</a> and its MPI-aware counterpart <a class="el" href="#ga790dcb4eeaa8ec0a84feac43a0c37440" title="Calculate the arithmetic mean or the simple sum of some range of values spread across multiple MPI pr...">triqs::stat::mean_mpi</a>, which return either the simple sum  \(\sum_i x_i \) or the arithmetic mean \( \overline{x} \) depending on the <a class="el" href="#ga9f052ea00603e6edb8bbbd4e5f85c9e5" title="Tag to indicate what to calculate when computing the mean of a range of values.">triqs::stat::mean_tag</a> template parameter.</li>
 <li><a class="el" href="#ga71edcbe9d9865d96a7ea1e7de30d54cd" title="Calculate the arithmetic mean or the simple sum as well as a corresponding error estimate of some ran...">triqs::stat::mean_and_err</a> and <a class="el" href="#ga3aa477585449117c68a74d916c8544ef" title="Calculate the arithmetic mean or the simple sum as well as a corresponding error estimate of some ran...">triqs::stat::mean_and_err_mpi</a>, which return both the mean / sum and an error estimate. The flavour of error is selected through the <a class="el" href="#ga3be1d06c36b4afb0d9b3bd9d9401105a" title="Tag to indicate what to calculate when computing the error of a range of values.">triqs::stat::error_tag</a> enum: sum of squared deviations from the mean, variance of the data, variance of the mean, standard error of the data, standard error of the mean, or jackknife error.</li>
-<li><a class="el" href="#ga6d86b87ae838a479bc6c441b8001975f" title="Compute an estimate for the integrated auto-correlation time.">triqs::stat::tau_estimate_from_errors</a>, which computes an estimate of the integrated autocorrelation time  \( \tau 
+<li><a class="el" href="#ga6d86b87ae838a479bc6c441b8001975f" title="Compute an estimate for the integrated auto-correlation time from standard errors.">triqs::stat::tau_estimate_from_errors</a>, which computes an estimate of the integrated autocorrelation time  \( \tau 
 = \frac{1}{2} (s_n^2 / s_0^2 - 1) \) from a binned and an unbinned standard error.</li>
 </ul>
 <p>The two MPI variants accept a <span class="tt">std::optional&lt;mpi::communicator&gt;</span> and fall back to the serial implementation when no communicator is provided; otherwise per-rank partial results are combined with a numerically careful reweighting so that the reduced mean and sum of squared deviations match what a serial run on the concatenated data would have produced.</p>
@@ -143,7 +143,9 @@ Functions</h2></td></tr>
 <tr class="memdesc:ga790dcb4eeaa8ec0a84feac43a0c37440"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculate the arithmetic mean or the simple sum of some range of values spread across multiple MPI processes.  <br /></td></tr>
 <tr class="memitem:ga6d86b87ae838a479bc6c441b8001975f" id="r_ga6d86b87ae838a479bc6c441b8001975f"><td class="memTemplParams" colspan="2">template&lt;StatCompatible T&gt; </td></tr>
 <tr class="memitem:ga6d86b87ae838a479bc6c441b8001975f template"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ga6d86b87ae838a479bc6c441b8001975f">triqs::stat::tau_estimate_from_errors</a> (T const &amp;s_n, T const &amp;s_0)</td></tr>
-<tr class="memdesc:ga6d86b87ae838a479bc6c441b8001975f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute an estimate for the integrated auto-correlation time.  <br /></td></tr>
+<tr class="memdesc:ga6d86b87ae838a479bc6c441b8001975f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute an estimate for the integrated auto-correlation time from standard errors.  <br /></td></tr>
+<tr class="memitem:gab36551fd6ca2028cb1e2498dd6bf035e" id="r_gab36551fd6ca2028cb1e2498dd6bf035e"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#gab36551fd6ca2028cb1e2498dd6bf035e">triqs::stat::tau_estimate_from_vars</a> (auto const &amp;var, auto const &amp;var0)</td></tr>
+<tr class="memdesc:gab36551fd6ca2028cb1e2498dd6bf035e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute an estimate for the integrated auto-correlation time from variances.  <br /></td></tr>
 </table>
 <a name="doc-enum-members" id="doc-enum-members"></a><h2 id="header-doc-enum-members" class="groupheader">Enumeration Type Documentation</h2>
 <a id="ga3be1d06c36b4afb0d9b3bd9d9401105a" name="ga3be1d06c36b4afb0d9b3bd9d9401105a"></a>
@@ -518,12 +520,12 @@ template&lt;StatCompatible T&gt; </div>
 
 <p><code>#include &lt;<a class="el" href="mean__error_8hpp.html">triqs/stat/mean_error.hpp</a>&gt;</code></p>
 
-<p>Compute an estimate for the integrated auto-correlation time. </p>
+<p>Compute an estimate for the integrated auto-correlation time from standard errors. </p>
 <p>The integrated autocorrelation time is estimated as   </p><p class="formulaDsp">
 \[  \tau = \frac{1}{2} \left( \frac{s^2_n}{s^2_0} - 1 \right) \; ,
 \]
 </p>
-<p> where \( s^2_n \) is the variance of the mean with binning and \( s_0 \) is the variance of the mean without binning.</p>
+<p> where \( s_n \) is the standard error of the mean with binning and \( s_0 \) the standard error of the mean without binning. This is a thin wrapper around <a class="el" href="#gab36551fd6ca2028cb1e2498dd6bf035e" title="Compute an estimate for the integrated auto-correlation time from variances.">triqs::stat::tau_estimate_from_vars</a> applied to the squared errors.</p>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
     <tr><td class="paramname">T</td><td><a class="el" href="concepttriqs_1_1stat_1_1StatCompatible.html" title="Concept to check if a type can be used with various Statistical analysis tools.">triqs::stat::StatCompatible</a> type. </td></tr>
@@ -539,7 +541,55 @@ template&lt;StatCompatible T&gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Estimate of the integrated auto-correlation time. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="mean__error_8hpp_source.html#l00278">278</a> of file <a class="el" href="mean__error_8hpp_source.html">mean_error.hpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="mean__error_8hpp_source.html#l00296">296</a> of file <a class="el" href="mean__error_8hpp_source.html">mean_error.hpp</a>.</p>
+
+</div>
+</div>
+<a id="gab36551fd6ca2028cb1e2498dd6bf035e" name="gab36551fd6ca2028cb1e2498dd6bf035e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gab36551fd6ca2028cb1e2498dd6bf035e">&#9670;&#160;</a></span>tau_estimate_from_vars()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto triqs::stat::tau_estimate_from_vars </td>
+          <td>(</td>
+          <td class="paramtype">auto const &amp;</td>          <td class="paramname"><span class="paramname"><em>var</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">auto const &amp;</td>          <td class="paramname"><span class="paramname"><em>var0</em></span>&#160;)</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel nodiscard">nodiscard</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p><code>#include &lt;<a class="el" href="mean__error_8hpp.html">triqs/stat/mean_error.hpp</a>&gt;</code></p>
+
+<p>Compute an estimate for the integrated auto-correlation time from variances. </p>
+<p>The integrated autocorrelation time is estimated (elementwise) as   </p><p class="formulaDsp">
+\[  \tau = \frac{1}{2} \left( \frac{\mathrm{var}}{\mathrm{var}_0} - 1 \right) \; ,
+\]
+</p>
+<p> where <span class="tt">var</span> is the variance of the mean with binning and <span class="tt">var0</span> the variance of the mean without binning. Elements for which <span class="tt">var0</span> is zero (e.g. a constant signal) yield NaN instead of triggering a division by zero.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">var</td><td>Binned estimate of the variance of the mean. </td></tr>
+    <tr><td class="paramname">var0</td><td>Unbinned estimate of the variance of the mean. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Estimate of the integrated auto-correlation time. </dd></dl>
+
+<p class="definition">Definition at line <a class="el" href="mean__error_8hpp_source.html#l00277">277</a> of file <a class="el" href="mean__error_8hpp_source.html">mean_error.hpp</a>.</p>
 
 </div>
 </div>

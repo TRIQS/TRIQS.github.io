@@ -8,5 +8,6 @@ var mean__error_8hpp =
     [ "triqs::stat::mean_and_err", "group__triqs-stat-meanerr.html#ga71edcbe9d9865d96a7ea1e7de30d54cd", null ],
     [ "triqs::stat::mean_and_err_mpi", "group__triqs-stat-meanerr.html#ga3aa477585449117c68a74d916c8544ef", null ],
     [ "triqs::stat::mean_mpi", "group__triqs-stat-meanerr.html#ga790dcb4eeaa8ec0a84feac43a0c37440", null ],
-    [ "triqs::stat::tau_estimate_from_errors", "group__triqs-stat-meanerr.html#ga6d86b87ae838a479bc6c441b8001975f", null ]
+    [ "triqs::stat::tau_estimate_from_errors", "group__triqs-stat-meanerr.html#ga6d86b87ae838a479bc6c441b8001975f", null ],
+    [ "triqs::stat::tau_estimate_from_vars", "group__triqs-stat-meanerr.html#gab36551fd6ca2028cb1e2498dd6bf035e", null ]
 ];
