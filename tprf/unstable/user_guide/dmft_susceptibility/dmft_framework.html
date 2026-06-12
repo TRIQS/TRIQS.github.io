@@ -763,14 +763,14 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">triqs.utility.mpi</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpi</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">h5</span><span class="w"> </span><span class="kn">import</span> <span class="n">HDFArchive</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">triqs.gf</span><span class="w"> </span><span class="kn">import</span> <span class="n">Gf</span><span class="p">,</span> <span class="n">MeshImFreq</span><span class="p">,</span> <span class="n">Fourier</span><span class="p">,</span> <span class="n">LegendreToMatsubara</span><span class="p">,</span> <span class="n">BlockGf</span><span class="p">,</span> <span class="n">inverse</span><span class="p">,</span> <span class="n">Idx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">triqs.gfs</span><span class="w"> </span><span class="kn">import</span> <span class="n">Gf</span><span class="p">,</span> <span class="n">Fourier</span><span class="p">,</span> <span class="n">LegendreToMatsubara</span><span class="p">,</span> <span class="n">BlockGf</span><span class="p">,</span> <span class="n">inverse</span><span class="p">,</span> <span class="n">Idx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">triqs.mesh</span><span class="w"> </span><span class="kn">import</span> <span class="n">MeshImFreq</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">triqs_cthyb</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">triqs_tprf.lattice</span><span class="w"> </span><span class="kn">import</span> <span class="n">lattice_dyson_g_w</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">triqs_tprf.ParameterCollection</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParameterCollection</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">triqs_tprf.ParameterCollection</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParameterCollections</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">triqs_tprf.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">BlockGf_data</span>
 </pre></div>
 </div>
 <section id="setup-dmft-calculation">
@@ -781,7 +781,8 @@
 <li><p>the lattice dispersion <span class="math notranslate nohighlight">\(\epsilon_{\mathbf{k}}\)</span> in <cite>p.e_k</cite>, and</p></li>
 <li><p>the initial (zero) guess for the self-energy <span class="math notranslate nohighlight">\(\Sigma\)</span> in <cite>p.sigma_w</cite>.</p></li>
 </ul>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">setup_dmft_calculation</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<span class="k">def</span><span class="w"> </span><span class="nf">setup_dmft_calculation</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
 
     <span class="n">p</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
     <span class="n">p</span><span class="o">.</span><span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span>
@@ -805,14 +806,14 @@
     <span class="c1"># -- Initial zero guess for the self-energy    </span>
     <span class="n">p</span><span class="o">.</span><span class="n">sigma_w</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">MeshImFreq</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">beta</span><span class="p">(),</span> <span class="s1">&#39;Fermion&#39;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">n_iw</span><span class="p">),</span> <span class="n">target_shape</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
     <span class="n">p</span><span class="o">.</span><span class="n">sigma_w</span><span class="o">.</span><span class="n">zero</span><span class="p">()</span>
-
 </pre></div>
 </div>
 </section>
 <section id="solve-self-consistent-dmft">
 <h3>Solve Self-Consistent DMFT<a class="headerlink" href="#solve-self-consistent-dmft" title="Link to this heading"></a></h3>
 <p>The function <cite>solve_self_consistent_dmft</cite> repeatedly runs the DMFT self consistency step and looks for convergence in the local Legendre Green’s function <span class="math notranslate nohighlight">\(G_l\)</span>.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="k">return</span> <span class="n">p</span>
+
 <span class="k">def</span><span class="w"> </span><span class="nf">solve_self_consistent_dmft</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
 
     <span class="n">ps</span> <span class="o">=</span> <span class="p">[]</span>
@@ -824,7 +825,6 @@
         <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">dG_l</span> <span class="o">&lt;</span> <span class="n">p</span><span class="o">.</span><span class="n">G_l_tol</span><span class="p">:</span> <span class="k">break</span>
 
     <span class="k">if</span> <span class="n">dmft_iter</span> <span class="o">&gt;=</span> <span class="n">p</span><span class="o">.</span><span class="n">n_iter</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span> <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;--&gt; Warning: DMFT Not converged!&#39;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span> <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;--&gt; DMFT Converged: dG_l = </span><span class="si">{:f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">dG_l</span><span class="p">))</span>
 </pre></div>
 </div>
 </section>
@@ -840,7 +840,8 @@
 <li><p>compute a new self energy <span class="math notranslate nohighlight">\(\Sigma\)</span> from the sampled Greens function <cite>p.G_l</cite> and Weiss field <cite>p.G0_w</cite></p></li>
 <li><p>set the lattice self energy <cite>p.sigma_w</cite> from the impurity self energy <cite>p.Sigma_w</cite></p></li>
 </ul>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="k">return</span> <span class="n">ps</span>
+
 <span class="k">def</span><span class="w"> </span><span class="nf">dmft_self_consistent_step</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
 
     <span class="n">p</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
@@ -877,7 +878,6 @@
     <span class="n">M_old</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">M</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s1">&#39;M&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;nan&#39;</span><span class="p">)</span>
     <span class="n">p</span><span class="o">.</span><span class="n">M</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">rho</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">p</span><span class="o">.</span><span class="n">rho</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
     <span class="n">p</span><span class="o">.</span><span class="n">dM</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">M</span> <span class="o">-</span> <span class="n">M_old</span><span class="p">)</span>
-    
 </pre></div>
 </div>
 </section>
