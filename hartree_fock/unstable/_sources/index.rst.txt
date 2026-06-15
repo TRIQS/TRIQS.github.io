@@ -6,7 +6,7 @@ hartree_fock
 .. sidebar:: hartree_fock 3.2.1
 
    This is the homepage of hartree_fock v3.2.1.
-   For changes see the :ref:`changelog page <changelog>`.
+   For changes see the :doc:`changelog page <ChangeLog>`.
 
       .. image:: _static/logo_github.png
          :width: 75%
@@ -30,5 +30,5 @@ Learn how to use hartree_fock in the :ref:`documentation`.
    documentation
    tutorials
    issues
-   ChangeLog.md
+   ChangeLog
    about
