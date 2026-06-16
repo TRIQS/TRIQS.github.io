@@ -127,6 +127,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">triqs_hartree_fock</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImpuritySolver</span><span class="p">,</span> <span class="n">LatticeSolver</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">triqs_hartree_fock.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">flatten</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">triqs.gfs</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">triqs.mesh</span><span class="w"> </span><span class="kn">import</span> <span class="n">MeshImFreq</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">triqs.operators</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">triqs.operators.util</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">h5</span><span class="w"> </span><span class="kn">import</span> <span class="n">HDFArchive</span>
@@ -150,7 +151,7 @@ Warning: could not identify MPI environment!
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Starting serial run at: 2022-05-02 14:09:48.986326
+Starting serial run at: 2026-06-12 18:13:06.623061
 </pre></div></div>
 </div>
 <p>First we define a 2D tight binding lattice with nearest and next-nearest neighbor hopping:</p>
@@ -187,7 +188,7 @@ Starting serial run at: 2022-05-02 14:09:48.986326
 
 <span class="c1">#create a kanamori interaction Hamiltonian</span>
 <span class="n">Umat</span><span class="p">,</span> <span class="n">Upmat</span> <span class="o">=</span> <span class="n">U_matrix_kanamori</span><span class="p">(</span><span class="n">n_orb</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">U_int</span><span class="o">=</span><span class="n">U</span><span class="p">,</span> <span class="n">J_hund</span><span class="o">=</span><span class="n">J</span><span class="p">)</span>
-<span class="n">h_int</span> <span class="o">=</span> <span class="n">h_int_kanamori</span><span class="p">(</span><span class="n">spin_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">,</span> <span class="s1">&#39;down&#39;</span><span class="p">],</span> <span class="n">orb_names</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">U</span><span class="o">=</span><span class="n">Umat</span><span class="p">,</span> <span class="n">Uprime</span><span class="o">=</span><span class="n">Upmat</span><span class="p">,</span> <span class="n">J_hund</span><span class="o">=</span><span class="n">J</span><span class="p">,</span> <span class="n">off_diag</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">h_int</span> <span class="o">=</span> <span class="n">h_int_kanamori</span><span class="p">(</span><span class="n">spin_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">,</span> <span class="s1">&#39;down&#39;</span><span class="p">],</span> <span class="n">n_orb</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">U</span><span class="o">=</span><span class="n">Umat</span><span class="p">,</span> <span class="n">Uprime</span><span class="o">=</span><span class="n">Upmat</span><span class="p">,</span> <span class="n">J_hund</span><span class="o">=</span><span class="n">J</span><span class="p">,</span> <span class="n">off_diag</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="n">BL</span> <span class="o">=</span> <span class="n">BravaisLattice</span><span class="p">(</span><span class="n">units</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)])</span>
 <span class="n">BZ</span> <span class="o">=</span> <span class="n">BrillouinZone</span><span class="p">(</span><span class="n">BL</span><span class="p">)</span>
@@ -254,7 +255,8 @@ mu = 3.1380
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">SK</span> <span class="o">=</span> <span class="n">SumkDiscreteFromLattice</span><span class="p">(</span><span class="n">lattice</span><span class="o">=</span><span class="n">TBL</span><span class="p">,</span> <span class="n">n_points</span><span class="o">=</span><span class="n">nk</span><span class="p">)</span>
-<span class="n">sigma</span> <span class="o">=</span> <span class="n">GfImFreq</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span> <span class="n">n_points</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span>
+<span class="n">iw_mesh</span> <span class="o">=</span> <span class="n">MeshImFreq</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;Fermion&#39;</span><span class="p">,</span> <span class="n">n_iw</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+<span class="n">sigma</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">iw_mesh</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span>
 <span class="n">Sigma</span> <span class="o">=</span> <span class="n">BlockGf</span><span class="p">(</span><span class="n">name_list</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">,</span> <span class="s1">&#39;down&#39;</span><span class="p">],</span> <span class="n">block_list</span><span class="o">=</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span><span class="n">sigma</span><span class="p">),</span> <span class="n">make_copies</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">Gloc</span> <span class="o">=</span> <span class="n">Sigma</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 <span class="n">N_target</span> <span class="o">=</span> <span class="mi">2</span>
@@ -267,7 +269,7 @@ mu = 3.1380
     <span class="n">Symmetrized_Sigma</span><span class="p">[</span><span class="s1">&#39;down&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Symmetrized_Sigma</span><span class="p">[</span><span class="s1">&#39;up&#39;</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">Symmetrized_Sigma</span>
 
-<span class="n">S_imp</span> <span class="o">=</span> <span class="n">ImpuritySolver</span><span class="p">(</span><span class="n">gf_struct</span><span class="o">=</span><span class="n">gf_struct</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">,</span> <span class="n">n_iw</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">symmetries</span><span class="o">=</span><span class="p">[</span><span class="n">make_spins_equal</span><span class="p">])</span>
+<span class="n">S_imp</span> <span class="o">=</span> <span class="n">ImpuritySolver</span><span class="p">(</span><span class="n">gf_struct</span><span class="o">=</span><span class="n">gf_struct</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="n">iw_mesh</span><span class="p">,</span> <span class="n">symmetries</span><span class="o">=</span><span class="p">[</span><span class="n">make_spins_equal</span><span class="p">])</span>
 
 <span class="n">converged</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="k">while</span> <span class="ow">not</span> <span class="n">converged</span><span class="p">:</span>
@@ -289,7 +291,7 @@ mu = 3.1380
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-mu =  -0.11655108826676398
+mu =  -0.11655108826789595
 
 ╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
  ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
@@ -300,18 +302,32 @@ Running Impurity Solver
 beta = 40.0000
 h_int =
 1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
+HARTREE SOLVER: starting solver in one-shot mode
 Including Fock terms:
 True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 1.3514+0.j -0.024 +0.j]
- [-0.024 +0.j  1.3514+0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 1.3514+0.j -0.024 +0.j]
- [-0.024 +0.j  1.3514+0.j]]
-mu =  1.2416047543409816
+HARTREE SOLVER: Sigma_HF before iterating[&#39;up&#39;]:
+[[0.+0.j 0.+0.j]
+ [0.+0.j 0.+0.j]]
+HARTREE SOLVER: Sigma_HF before iterating[&#39;down&#39;]:
+[[0.+0.j 0.+0.j]
+ [0.+0.j 0.+0.j]]
+
+HARTREE SOLVER: fixing dc to 0.0000
+
+HARTREE SOLVER: fixing dc to 0.0000
+HARTREE SOLVER: Sigma_HF[&#39;up&#39;]:
+[[ 3.25 -0.j -0.009-0.j]
+ [-0.009+0.j  3.25 -0.j]]
+HARTREE SOLVER: Sigma_HF[&#39;down&#39;]:
+[[ 3.25 -0.j -0.009-0.j]
+ [-0.009+0.j  3.25 -0.j]]
+Final G_dens[&#39;up&#39;]:
+[[0.0801-0.j 0.0225-0.j]
+ [0.0225+0.j 0.0801+0.j]]
+Final G_dens[&#39;down&#39;]:
+[[0.0801-0.j 0.0225-0.j]
+ [0.0225+0.j 0.0801+0.j]]
+mu =  3.1370299374957247
 
 ╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
  ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
@@ -322,18 +338,32 @@ Running Impurity Solver
 beta = 40.0000
 h_int =
 1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
+HARTREE SOLVER: starting solver in one-shot mode
 Including Fock terms:
 True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 2.0346+0.j -0.0263+0.j]
- [-0.0263+0.j  2.0346+0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 2.0346+0.j -0.0263+0.j]
- [-0.0263+0.j  2.0346+0.j]]
-mu =  1.924985519971107
+HARTREE SOLVER: Sigma_HF before iterating[&#39;up&#39;]:
+[[ 3.25 -0.j -0.009-0.j]
+ [-0.009+0.j  3.25 -0.j]]
+HARTREE SOLVER: Sigma_HF before iterating[&#39;down&#39;]:
+[[ 3.25 -0.j -0.009-0.j]
+ [-0.009+0.j  3.25 -0.j]]
+
+HARTREE SOLVER: fixing dc to 0.0000
+
+HARTREE SOLVER: fixing dc to 0.0000
+HARTREE SOLVER: Sigma_HF[&#39;up&#39;]:
+[[ 3.25  +0.j -0.0112-0.j]
+ [-0.0112+0.j  3.25  +0.j]]
+HARTREE SOLVER: Sigma_HF[&#39;down&#39;]:
+[[ 3.25  +0.j -0.0112-0.j]
+ [-0.0112+0.j  3.25  +0.j]]
+Final G_dens[&#39;up&#39;]:
+[[0.4998-0.j 0.0232+0.j]
+ [0.0232-0.j 0.4998-0.j]]
+Final G_dens[&#39;down&#39;]:
+[[0.4998-0.j 0.0232+0.j]
+ [0.0232-0.j 0.4998-0.j]]
+mu =  3.1377229169767435
 
 ╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
  ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
@@ -344,18 +374,32 @@ Running Impurity Solver
 beta = 40.0000
 h_int =
 1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
+HARTREE SOLVER: starting solver in one-shot mode
 Including Fock terms:
 True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 2.4404+0.j -0.0251+0.j]
- [-0.0251+0.j  2.4404+0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 2.4404+0.j -0.0251+0.j]
- [-0.0251+0.j  2.4404+0.j]]
-mu =  2.3307342492307934
+HARTREE SOLVER: Sigma_HF before iterating[&#39;up&#39;]:
+[[ 3.25  +0.j -0.0112-0.j]
+ [-0.0112+0.j  3.25  +0.j]]
+HARTREE SOLVER: Sigma_HF before iterating[&#39;down&#39;]:
+[[ 3.25  +0.j -0.0112-0.j]
+ [-0.0112+0.j  3.25  +0.j]]
+
+HARTREE SOLVER: fixing dc to 0.0000
+
+HARTREE SOLVER: fixing dc to 0.0000
+HARTREE SOLVER: Sigma_HF[&#39;up&#39;]:
+[[ 3.25  -0.j -0.0119+0.j]
+ [-0.0119-0.j  3.25  -0.j]]
+HARTREE SOLVER: Sigma_HF[&#39;down&#39;]:
+[[ 3.25  -0.j -0.0119+0.j]
+ [-0.0119-0.j  3.25  -0.j]]
+Final G_dens[&#39;up&#39;]:
+[[0.4999+0.j 0.024 -0.j]
+ [0.024 +0.j 0.4999+0.j]]
+Final G_dens[&#39;down&#39;]:
+[[0.4999+0.j 0.024 -0.j]
+ [0.024 +0.j 0.4999+0.j]]
+mu =  3.1379142043949604
 
 ╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
  ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
@@ -366,18 +410,32 @@ Running Impurity Solver
 beta = 40.0000
 h_int =
 1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
+HARTREE SOLVER: starting solver in one-shot mode
 Including Fock terms:
 True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 2.6997+0.j -0.023 +0.j]
- [-0.023 +0.j  2.6997+0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 2.6997+0.j -0.023 +0.j]
- [-0.023 +0.j  2.6997+0.j]]
-mu =  2.589804077361585
+HARTREE SOLVER: Sigma_HF before iterating[&#39;up&#39;]:
+[[ 3.25  -0.j -0.0119+0.j]
+ [-0.0119-0.j  3.25  -0.j]]
+HARTREE SOLVER: Sigma_HF before iterating[&#39;down&#39;]:
+[[ 3.25  -0.j -0.0119+0.j]
+ [-0.0119-0.j  3.25  -0.j]]
+
+HARTREE SOLVER: fixing dc to 0.0000
+
+HARTREE SOLVER: fixing dc to 0.0000
+HARTREE SOLVER: Sigma_HF[&#39;up&#39;]:
+[[ 3.25  -0.j -0.0121-0.j]
+ [-0.0121+0.j  3.25  -0.j]]
+HARTREE SOLVER: Sigma_HF[&#39;down&#39;]:
+[[ 3.25  -0.j -0.0121-0.j]
+ [-0.0121+0.j  3.25  -0.j]]
+Final G_dens[&#39;up&#39;]:
+[[0.5   -0.j 0.0243-0.j]
+ [0.0243+0.j 0.5   +0.j]]
+Final G_dens[&#39;down&#39;]:
+[[0.5   -0.j 0.0243-0.j]
+ [0.0243+0.j 0.5   +0.j]]
+mu =  3.1379721665000178
 
 ╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
  ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
@@ -388,479 +446,31 @@ Running Impurity Solver
 beta = 40.0000
 h_int =
 1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
+HARTREE SOLVER: starting solver in one-shot mode
 Including Fock terms:
 True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 2.872 +0.j -0.0208+0.j]
- [-0.0208+0.j  2.872 +0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 2.872 +0.j -0.0208+0.j]
- [-0.0208+0.j  2.872 +0.j]]
-mu =  2.761794961651811
+HARTREE SOLVER: Sigma_HF before iterating[&#39;up&#39;]:
+[[ 3.25  -0.j -0.0121-0.j]
+ [-0.0121+0.j  3.25  -0.j]]
+HARTREE SOLVER: Sigma_HF before iterating[&#39;down&#39;]:
+[[ 3.25  -0.j -0.0121-0.j]
+ [-0.0121+0.j  3.25  -0.j]]
 
-╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
- ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
- ╩ ╩╚═╩╚═╝╚╚═╝  ┴ ┴└
-TRIQS: Hartree-Fock solver
+HARTREE SOLVER: fixing dc to 0.0000
 
-Running Impurity Solver
-beta = 40.0000
-h_int =
-1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
-Including Fock terms:
-True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 2.989 +0.j -0.0187+0.j]
- [-0.0187+0.j  2.989 +0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 2.989 +0.j -0.0187+0.j]
- [-0.0187+0.j  2.989 +0.j]]
-mu =  2.8784151039233974
-
-╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
- ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
- ╩ ╩╚═╩╚═╝╚╚═╝  ┴ ┴└
-TRIQS: Hartree-Fock solver
-
-Running Impurity Solver
-beta = 40.0000
-h_int =
-1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
-Including Fock terms:
-True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 3.0693+0.j -0.017 +0.j]
- [-0.017 +0.j  3.0693+0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 3.0693+0.j -0.017 +0.j]
- [-0.017 +0.j  3.0693+0.j]]
-mu =  2.958388200331095
-
-╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
- ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
- ╩ ╩╚═╩╚═╝╚╚═╝  ┴ ┴└
-TRIQS: Hartree-Fock solver
-
-Running Impurity Solver
-beta = 40.0000
-h_int =
-1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
-Including Fock terms:
-True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 3.1247+0.j -0.0156+0.j]
- [-0.0156+0.j  3.1247+0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 3.1247+0.j -0.0156+0.j]
- [-0.0156+0.j  3.1247+0.j]]
-mu =  3.013551770566393
-
-╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
- ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
- ╩ ╩╚═╩╚═╝╚╚═╝  ┴ ┴└
-TRIQS: Hartree-Fock solver
-
-Running Impurity Solver
-beta = 40.0000
-h_int =
-1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
-Including Fock terms:
-True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 3.1631+0.j -0.0147+0.j]
- [-0.0147+0.j  3.1631+0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 3.1631+0.j -0.0147+0.j]
- [-0.0147+0.j  3.1631+0.j]]
-mu =  3.051714472919698
-
-╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
- ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
- ╩ ╩╚═╩╚═╝╚╚═╝  ┴ ┴└
-TRIQS: Hartree-Fock solver
-
-Running Impurity Solver
-beta = 40.0000
-h_int =
-1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
-Including Fock terms:
-True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 3.1897+0.j -0.0139+0.j]
- [-0.0139+0.j  3.1897+0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 3.1897+0.j -0.0139+0.j]
- [-0.0139+0.j  3.1897+0.j]]
-mu =  3.0781557418842773
-
-╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
- ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
- ╩ ╩╚═╩╚═╝╚╚═╝  ┴ ┴└
-TRIQS: Hartree-Fock solver
-
-Running Impurity Solver
-beta = 40.0000
-h_int =
-1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
-Including Fock terms:
-True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 3.2082+0.j -0.0134+0.j]
- [-0.0134+0.j  3.2082+0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 3.2082+0.j -0.0134+0.j]
- [-0.0134+0.j  3.2082+0.j]]
-mu =  3.0964880022101333
-
-╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
- ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
- ╩ ╩╚═╩╚═╝╚╚═╝  ┴ ┴└
-TRIQS: Hartree-Fock solver
-
-Running Impurity Solver
-beta = 40.0000
-h_int =
-1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
-Including Fock terms:
-True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 3.221 +0.j -0.0131+0.j]
- [-0.0131+0.j  3.221 +0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 3.221 +0.j -0.0131+0.j]
- [-0.0131+0.j  3.221 +0.j]]
-mu =  3.1092022184291164
-
-╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
- ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
- ╩ ╩╚═╩╚═╝╚╚═╝  ┴ ┴└
-TRIQS: Hartree-Fock solver
-
-Running Impurity Solver
-beta = 40.0000
-h_int =
-1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
-Including Fock terms:
-True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 3.2299+0.j -0.0128+0.j]
- [-0.0128+0.j  3.2299+0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 3.2299+0.j -0.0128+0.j]
- [-0.0128+0.j  3.2299+0.j]]
-mu =  3.11802143459409
-
-╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
- ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
- ╩ ╩╚═╩╚═╝╚╚═╝  ┴ ┴└
-TRIQS: Hartree-Fock solver
-
-Running Impurity Solver
-beta = 40.0000
-h_int =
-1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
-Including Fock terms:
-True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 3.236 +0.j -0.0126+0.j]
- [-0.0126+0.j  3.236 +0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 3.236 +0.j -0.0126+0.j]
- [-0.0126+0.j  3.236 +0.j]]
-mu =  3.124139484544855
-
-╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
- ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
- ╩ ╩╚═╩╚═╝╚╚═╝  ┴ ┴└
-TRIQS: Hartree-Fock solver
-
-Running Impurity Solver
-beta = 40.0000
-h_int =
-1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
-Including Fock terms:
-True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 3.2403+0.j -0.0125+0.j]
- [-0.0125+0.j  3.2403+0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 3.2403+0.j -0.0125+0.j]
- [-0.0125+0.j  3.2403+0.j]]
-mu =  3.1283834605726115
-
-╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
- ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
- ╩ ╩╚═╩╚═╝╚╚═╝  ┴ ┴└
-TRIQS: Hartree-Fock solver
-
-Running Impurity Solver
-beta = 40.0000
-h_int =
-1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
-Including Fock terms:
-True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 3.2433+0.j -0.0124+0.j]
- [-0.0124+0.j  3.2433+0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 3.2433+0.j -0.0124+0.j]
- [-0.0124+0.j  3.2433+0.j]]
-mu =  3.1313278331378296
-
-╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
- ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
- ╩ ╩╚═╩╚═╝╚╚═╝  ┴ ┴└
-TRIQS: Hartree-Fock solver
-
-Running Impurity Solver
-beta = 40.0000
-h_int =
-1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
-Including Fock terms:
-True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 3.2453+0.j -0.0123+0.j]
- [-0.0123+0.j  3.2453+0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 3.2453+0.j -0.0123+0.j]
- [-0.0123+0.j  3.2453+0.j]]
-mu =  3.1333710379511377
-
-╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
- ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
- ╩ ╩╚═╩╚═╝╚╚═╝  ┴ ┴└
-TRIQS: Hartree-Fock solver
-
-Running Impurity Solver
-beta = 40.0000
-h_int =
-1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
-Including Fock terms:
-True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 3.2468+0.j -0.0123+0.j]
- [-0.0123+0.j  3.2468+0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 3.2468+0.j -0.0123+0.j]
- [-0.0123+0.j  3.2468+0.j]]
-mu =  3.134788058674276
-
-╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
- ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
- ╩ ╩╚═╩╚═╝╚╚═╝  ┴ ┴└
-TRIQS: Hartree-Fock solver
-
-Running Impurity Solver
-beta = 40.0000
-h_int =
-1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
-Including Fock terms:
-True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 3.2478+0.j -0.0123+0.j]
- [-0.0123+0.j  3.2478+0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 3.2478+0.j -0.0123+0.j]
- [-0.0123+0.j  3.2478+0.j]]
-mu =  3.135771249039664
-
-╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
- ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
- ╩ ╩╚═╩╚═╝╚╚═╝  ┴ ┴└
-TRIQS: Hartree-Fock solver
-
-Running Impurity Solver
-beta = 40.0000
-h_int =
-1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
-Including Fock terms:
-True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 3.2484+0.j -0.0123+0.j]
- [-0.0123+0.j  3.2484+0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 3.2484+0.j -0.0123+0.j]
- [-0.0123+0.j  3.2484+0.j]]
-mu =  3.1364533457514936
-
-╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
- ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
- ╩ ╩╚═╩╚═╝╚╚═╝  ┴ ┴└
-TRIQS: Hartree-Fock solver
-
-Running Impurity Solver
-beta = 40.0000
-h_int =
-1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
-Including Fock terms:
-True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 3.2489+0.j -0.0122+0.j]
- [-0.0122+0.j  3.2489+0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 3.2489+0.j -0.0122+0.j]
- [-0.0122+0.j  3.2489+0.j]]
-mu =  3.1369268847106087
-
-╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
- ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
- ╩ ╩╚═╩╚═╝╚╚═╝  ┴ ┴└
-TRIQS: Hartree-Fock solver
-
-Running Impurity Solver
-beta = 40.0000
-h_int =
-1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
-Including Fock terms:
-True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 3.2492+0.j -0.0122+0.j]
- [-0.0122+0.j  3.2492+0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 3.2492+0.j -0.0122+0.j]
- [-0.0122+0.j  3.2492+0.j]]
-mu =  3.137254115255671
-
-╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
- ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
- ╩ ╩╚═╩╚═╝╚╚═╝  ┴ ┴└
-TRIQS: Hartree-Fock solver
-
-Running Impurity Solver
-beta = 40.0000
-h_int =
-1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
-Including Fock terms:
-True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 3.2495+0.j -0.0122+0.j]
- [-0.0122+0.j  3.2495+0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 3.2495+0.j -0.0122+0.j]
- [-0.0122+0.j  3.2495+0.j]]
-mu =  3.1374808873027025
-
-╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
- ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
- ╩ ╩╚═╩╚═╝╚╚═╝  ┴ ┴└
-TRIQS: Hartree-Fock solver
-
-Running Impurity Solver
-beta = 40.0000
-h_int =
-1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
-Including Fock terms:
-True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 3.2496+0.j -0.0122+0.j]
- [-0.0122+0.j  3.2496+0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 3.2496+0.j -0.0122+0.j]
- [-0.0122+0.j  3.2496+0.j]]
-mu =  3.137639326775724
-
-╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
- ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
- ╩ ╩╚═╩╚═╝╚╚═╝  ┴ ┴└
-TRIQS: Hartree-Fock solver
-
-Running Impurity Solver
-beta = 40.0000
-h_int =
-1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
-Including Fock terms:
-True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 3.2497+0.j -0.0122+0.j]
- [-0.0122+0.j  3.2497+0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 3.2497+0.j -0.0122+0.j]
- [-0.0122+0.j  3.2497+0.j]]
-mu =  3.137749333580944
-
-╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐
- ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤
- ╩ ╩╚═╩╚═╝╚╚═╝  ┴ ┴└
-TRIQS: Hartree-Fock solver
-
-Running Impurity Solver
-beta = 40.0000
-h_int =
-1.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;down&#39;,1)*c(&#39;down&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 0.5*c_dag(&#39;down&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,1)*c(&#39;down&#39;,0) + 2*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,0)*c(&#39;up&#39;,0)*c(&#39;down&#39;,1) + 3*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;down&#39;,1) + 0.5*c_dag(&#39;down&#39;,1)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,0)*c(&#39;down&#39;,0) + 1.5*c_dag(&#39;up&#39;,0)*c_dag(&#39;up&#39;,1)*c(&#39;up&#39;,1)*c(&#39;up&#39;,0)
-mode: self-consistent
-Including Fock terms:
-True
-Self Consistent Hartree-Fock converged successfully
-Calculated self energy:
-Sigma_HF[&#39;up&#39;]:
-[[ 3.2498+0.j -0.0122+0.j]
- [-0.0122+0.j  3.2498+0.j]]
-Sigma_HF[&#39;down&#39;]:
-[[ 3.2498+0.j -0.0122+0.j]
- [-0.0122+0.j  3.2498+0.j]]
+HARTREE SOLVER: fixing dc to 0.0000
+HARTREE SOLVER: Sigma_HF[&#39;up&#39;]:
+[[ 3.25  +0.j -0.0122-0.j]
+ [-0.0122+0.j  3.25  +0.j]]
+HARTREE SOLVER: Sigma_HF[&#39;down&#39;]:
+[[ 3.25  +0.j -0.0122-0.j]
+ [-0.0122+0.j  3.25  +0.j]]
+Final G_dens[&#39;up&#39;]:
+[[0.5   -0.j 0.0244+0.j]
+ [0.0244-0.j 0.5   -0.j]]
+Final G_dens[&#39;down&#39;]:
+[[0.5   -0.j 0.0244+0.j]
+ [0.0244-0.j 0.5   -0.j]]
 </pre></div></div>
 </div>
 </section>

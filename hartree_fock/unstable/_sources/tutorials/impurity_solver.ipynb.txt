@@ -25,13 +25,14 @@
      "name": "stderr",
      "output_type": "stream",
      "text": [
-      "Starting serial run at: 2022-05-02 14:09:51.982050\n"
+      "Starting serial run at: 2026-06-12 18:12:27.493677\n"
      ]
     }
    ],
    "source": [
     "import numpy as np\n",
     "from triqs.gfs import *\n",
+    "from triqs.mesh import MeshImFreq\n",
     "from triqs.operators import *\n",
     "from h5 import HDFArchive\n",
     "from triqs_hartree_fock import ImpuritySolver\n",
@@ -54,7 +55,8 @@
     "beta = 40\n",
     "n_iw = 1025\n",
     "\n",
-    "g0 = GfImFreq(beta=40, n_points=1025, target_shape=[1,1])\n",
+    "iw_mesh = MeshImFreq(beta=beta, statistic='Fermion', n_iw=n_iw)\n",
+    "g0 = Gf(mesh=iw_mesh, target_shape=[1,1])\n",
     "g0 << inverse(iOmega_n + 2)\n",
     "G0 = BlockGf(name_list=['up', 'down'], block_list=[g0, g0], make_copies=True)\n",
     "\n",
@@ -76,7 +78,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "S = ImpuritySolver(gf_struct=gf_struct, beta=beta, n_iw=n_iw)"
+    "S = ImpuritySolver(gf_struct=gf_struct, mesh=iw_mesh)"
    ]
   },
   {
@@ -95,9 +97,9 @@
      "data": {
       "text/plain": [
        "Green Function G composed of 2 blocks: \n",
-       " Greens Function G_up with mesh Matsubara Freq Mesh of size 2050, Domain: Matsubara domain with beta = 40, statistic = 1, positive_only : 0 and target_rank 2: \n",
+       " Green's Function G_up with mesh Imaginary frequency mesh with beta = 40, statistics = Fermion, N_iw = 1025, positive_only = false and target_shape (1, 1): \n",
        " \n",
-       " Greens Function G_down with mesh Matsubara Freq Mesh of size 2050, Domain: Matsubara domain with beta = 40, statistic = 1, positive_only : 0 and target_rank 2: \n",
+       " Green's Function G_down with mesh Imaginary frequency mesh with beta = 40, statistics = Fermion, N_iw = 1025, positive_only = false and target_shape (1, 1): \n",
        " "
       ]
      },
@@ -128,23 +130,33 @@
      "text": [
       "\n",
       "╔╦╗╦═╗╦╔═╗ ╔═╗  ┬ ┬┌─┐\n",
-      " ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤ \n",
-      " ╩ ╩╚═╩╚═╝╚╚═╝  ┴ ┴└  \n",
+      " ║ ╠╦╝║║═╬╗╚═╗  ├─┤├┤\n",
+      " ╩ ╩╚═╩╚═╝╚╚═╝  ┴ ┴└\n",
       "TRIQS: Hartree-Fock solver\n",
       "\n",
       "Running Impurity Solver\n",
       "beta = 40.0000\n",
       "h_int =\n",
       "3*c_dag('down',0)*c_dag('up',0)*c('up',0)*c('down',0)\n",
-      "mode: self-consistent\n",
+      "HARTREE SOLVER: starting solver in one-shot mode\n",
       "Including Fock terms:\n",
       "True\n",
-      "Self Consistent Hartree-Fock converged successfully\n",
-      "Calculated self energy:\n",
-      "Sigma_HF['up']:\n",
-      "[[1.9833+0.j]]\n",
-      "Sigma_HF['down']:\n",
-      "[[1.9833+0.j]]\n"
+      "HARTREE SOLVER: Sigma_HF before iterating['up']:\n",
+      "[[0.+0.j]]\n",
+      "HARTREE SOLVER: Sigma_HF before iterating['down']:\n",
+      "[[0.+0.j]]\n",
+      "\n",
+      "HARTREE SOLVER: fixing dc to 0.0000\n",
+      "\n",
+      "HARTREE SOLVER: fixing dc to 0.0000\n",
+      "HARTREE SOLVER: Sigma_HF['up']:\n",
+      "[[3.-0.j]]\n",
+      "HARTREE SOLVER: Sigma_HF['down']:\n",
+      "[[3.-0.j]]\n",
+      "Final G_dens['up']:\n",
+      "[[-0.-0.j]]\n",
+      "Final G_dens['down']:\n",
+      "[[-0.-0.j]]\n"
      ]
     }
    ],
