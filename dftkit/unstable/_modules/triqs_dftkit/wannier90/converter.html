@@ -343,7 +343,7 @@
             <span class="n">misc_results</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
                 <span class="n">misc_results</span> <span class="o">=</span> <span class="n">read_misc_input</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w90_seed</span><span class="p">,</span> <span class="n">n_spin_blocks</span><span class="p">,</span> <span class="n">n_k</span><span class="p">)</span>
-            <span class="n">f_weights</span><span class="p">,</span> <span class="n">band_window</span><span class="p">,</span> <span class="n">fermi_energy</span><span class="p">,</span> <span class="n">kpt_basis</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">misc_results</span><span class="p">)</span>
+            <span class="n">f_weights</span><span class="p">,</span> <span class="n">band_window</span><span class="p">,</span> <span class="n">fermi_energy</span><span class="p">,</span> <span class="n">kpt_basis</span><span class="p">,</span> <span class="n">n_k_ibz</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">misc_results</span><span class="p">)</span>
 
             <span class="c1"># Get density from k-point weighted average and sum over all spins and bands</span>
             <span class="n">density_required</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">f_weights</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">kpt_weights</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">-</span> <span class="n">SP</span><span class="p">)</span>
@@ -488,6 +488,11 @@
                     <span class="n">archive</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">misc_subgrp</span><span class="p">][</span><span class="s1">&#39;dft_fermi_weights&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">f_weights</span>
                     <span class="n">archive</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">misc_subgrp</span><span class="p">][</span><span class="s1">&#39;band_window&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">band_window</span><span class="o">+</span><span class="mi">1</span> <span class="c1"># Change to 1-based index</span>
                     <span class="n">archive</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">misc_subgrp</span><span class="p">][</span><span class="s1">&#39;kpts_cart&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">kpts</span><span class="p">,</span> <span class="n">kpt_basis</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+                    <span class="c1"># When the DFT mesh has a reducible/irreducible split (VASP with</span>
+                    <span class="c1"># symmetry), expose the IBZ count so calc_density_correction writes</span>
+                    <span class="c1"># the density correction only for the IBZ k-points (cf. PLOVASP).</span>
+                    <span class="k">if</span> <span class="n">n_k_ibz</span> <span class="o">&lt;</span> <span class="n">n_k</span><span class="p">:</span>
+                        <span class="n">archive</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">misc_subgrp</span><span class="p">][</span><span class="s1">&#39;n_k_ibz&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">n_k_ibz</span>
         <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
 
         <span class="c1"># Makes Fermi energy a class variable for testing</span>
@@ -1101,14 +1106,15 @@
     <span class="n">nnkp_filename</span> <span class="o">=</span> <span class="n">w90_seed</span> <span class="o">+</span> <span class="s1">&#39;.nnkp&#39;</span>
     <span class="n">locproj_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">w90_seed_dir</span><span class="p">,</span> <span class="s1">&#39;LOCPROJ&#39;</span><span class="p">)</span>
     <span class="n">outcar_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">w90_seed_dir</span><span class="p">,</span> <span class="s1">&#39;OUTCAR&#39;</span><span class="p">)</span>
+    <span class="n">vasph5_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">w90_seed_dir</span><span class="p">,</span> <span class="s1">&#39;vaspout.h5&#39;</span><span class="p">)</span>
     <span class="n">abiout_filename</span> <span class="o">=</span> <span class="n">w90_seed</span> <span class="o">+</span> <span class="s1">&#39;.abinit&#39;</span>
 
     <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">nscf_filename</span><span class="p">):</span>
         <span class="n">read_from</span> <span class="o">=</span> <span class="s1">&#39;qe&#39;</span>
         <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Reading DFT band occupations from Quantum Espresso output </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nscf_filename</span><span class="p">))</span>
-    <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">locproj_filename</span><span class="p">)</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">outcar_filename</span><span class="p">):</span>
+    <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">vasph5_filename</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">locproj_filename</span><span class="p">)</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">outcar_filename</span><span class="p">)):</span>
         <span class="n">read_from</span> <span class="o">=</span> <span class="s1">&#39;vasp&#39;</span>
-        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Reading DFT band occupations from Vasp output </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">locproj_filename</span><span class="p">))</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;Reading DFT band occupations from Vasp output&#39;</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">abiout_filename</span><span class="p">):</span>
         <span class="n">read_from</span> <span class="o">=</span> <span class="s1">&#39;abinit&#39;</span>
         <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Reading DFT band occupations from ABINIT output </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">abiout_filename</span><span class="p">))</span>
@@ -1122,6 +1128,10 @@
     <span class="n">reading_kpt_basis</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">lines_read_kpt_basis</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">kpt_basis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+    <span class="c1"># Number of irreducible k-points; defaults to the full mesh (no reduction).</span>
+    <span class="c1"># For VASP with symmetry it is set below so calc_density_correction writes</span>
+    <span class="c1"># the density correction only for the IBZ (as the PLOVASP converter does).</span>
+    <span class="n">n_k_ibz</span> <span class="o">=</span> <span class="n">n_k</span>
 
     <span class="k">if</span> <span class="n">read_from</span> <span class="o">==</span> <span class="s1">&#39;qe&#39;</span><span class="p">:</span>
         <span class="n">occupations</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1159,25 +1169,58 @@
             <span class="n">flattened_occs</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">sublist</span> <span class="ow">in</span> <span class="n">occs</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sublist</span><span class="p">]</span>
             <span class="n">occupations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">flattened_occs</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">read_from</span> <span class="o">==</span> <span class="s1">&#39;vasp&#39;</span><span class="p">:</span>
-        <span class="c1"># Reads LOCPROJ</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">locproj_filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-            <span class="n">header</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
-            <span class="n">n_ks</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">header</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">2</span><span class="p">])</span>
-            <span class="n">fermi_energy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">header</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">4</span><span class="p">])</span>
-
-            <span class="n">occupations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">((</span><span class="n">line</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span> <span class="k">if</span> <span class="s1">&#39;orbital&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">),</span> <span class="n">usecols</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-        <span class="n">occupations</span> <span class="o">=</span> <span class="n">occupations</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">n_k</span><span class="p">,</span> <span class="n">n_ks</span><span class="p">))</span>
-
-        <span class="c1"># Read reciprocal vectors from OUTCAR</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">outcar_filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span>
-                <span class="k">if</span> <span class="s1">&#39;reciprocal lattice vectors&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
-                    <span class="n">reading_kpt_basis</span> <span class="o">=</span> <span class="kc">True</span>
-                <span class="k">elif</span> <span class="n">reading_kpt_basis</span><span class="p">:</span>
-                    <span class="n">kpt_basis</span><span class="p">[</span><span class="n">lines_read_kpt_basis</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">3</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span>
-                    <span class="n">lines_read_kpt_basis</span> <span class="o">+=</span> <span class="mi">1</span>
-                    <span class="k">if</span> <span class="n">lines_read_kpt_basis</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
-                        <span class="k">break</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">vasph5_filename</span><span class="p">):</span>
+            <span class="c1"># Preferred: read everything from vaspout.h5 (the official location,</span>
+            <span class="c1"># written by VASP with LSYNCH5=.TRUE.) -- the same datasets the PLOVASP</span>
+            <span class="c1"># converter reads. No dependence on LOCPROJ/OUTCAR.</span>
+            <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">vasph5_filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">archive</span><span class="p">:</span>
+                <span class="n">fermi_energy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">archive</span><span class="p">[</span><span class="s1">&#39;results/electron_dos&#39;</span><span class="p">][</span><span class="s1">&#39;efermi&#39;</span><span class="p">])</span>
+                <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">archive</span><span class="p">[</span><span class="s1">&#39;results/electron_eigenvalues&#39;</span><span class="p">]</span>
+                <span class="n">ferw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">[</span><span class="s1">&#39;fermiweights&#39;</span><span class="p">])</span>                    <span class="c1"># (nspin, n_k_ibz, n_ks)</span>
+                <span class="n">symmap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">[</span><span class="s1">&#39;kpoints_symmetry_mapping&#39;</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span>   <span class="c1"># full-BZ -&gt; IBZ, 0-based</span>
+                <span class="n">positions</span> <span class="o">=</span> <span class="n">archive</span><span class="p">[</span><span class="s1">&#39;results/positions&#39;</span><span class="p">]</span>
+                <span class="n">a_brav</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="s1">&#39;lattice_vectors&#39;</span><span class="p">])</span>
+                <span class="n">scale</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">positions</span><span class="p">[</span><span class="s1">&#39;scale&#39;</span><span class="p">])</span>
+            <span class="c1"># Unfold occupations from the IBZ onto the full BZ (spin block 0; n_spin_blocks==1)</span>
+            <span class="n">occupations</span> <span class="o">=</span> <span class="n">ferw</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">symmap</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="n">n_ks</span> <span class="o">=</span> <span class="n">occupations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="c1"># Reciprocal basis (2*pi-less, same convention as the OUTCAR vectors)</span>
+            <span class="k">if</span> <span class="n">scale</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">scale</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">scale</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">a_brav</span><span class="p">))</span> <span class="o">**</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span>
+            <span class="n">kpt_basis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">((</span><span class="n">a_brav</span> <span class="o">*</span> <span class="n">scale</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+            <span class="c1"># VASP builds the full BZ mesh IBZ-first (the first n_ibz mesh points are</span>
+            <span class="c1"># the irreducible ones, in IBZ order). Verify this and expose n_k_ibz so</span>
+            <span class="c1"># calc_density_correction writes the GAMMA only for VASP&#39;s IBZ k-points.</span>
+            <span class="n">n_ibz</span> <span class="o">=</span> <span class="n">ferw</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">n_ibz</span> <span class="o">&lt;</span> <span class="n">n_k</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">symmap</span><span class="p">[:</span><span class="n">n_ibz</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_ibz</span><span class="p">)):</span>
+                <span class="n">n_k_ibz</span> <span class="o">=</span> <span class="n">n_ibz</span>
+            <span class="k">elif</span> <span class="n">n_ibz</span> <span class="o">&lt;</span> <span class="n">n_k</span><span class="p">:</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s1">&#39;WARNING: the irreducible k-points are not the leading block &#39;</span>
+                           <span class="s1">&#39;of the mesh; writing the full-BZ density correction. Run VASP &#39;</span>
+                           <span class="s1">&#39;with ISYM=-1 (no symmetry) for the w90 CSC charge update.&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Legacy fallback: occupations + n_ks from LOCPROJ, Fermi from the LOCPROJ</span>
+            <span class="c1"># header, reciprocal vectors from OUTCAR.</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">locproj_filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="n">header</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+                <span class="n">n_ks</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">header</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">2</span><span class="p">])</span>
+                <span class="n">occupations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">((</span><span class="n">line</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span> <span class="k">if</span> <span class="s1">&#39;orbital&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">),</span> <span class="n">usecols</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+            <span class="n">occupations</span> <span class="o">=</span> <span class="n">occupations</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">n_k</span><span class="p">,</span> <span class="n">n_ks</span><span class="p">))</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">fermi_energy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">header</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">4</span><span class="p">])</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;Could not determine the DFT Fermi energy. It should be provided &#39;</span>
+                              <span class="s1">&#39;in vaspout.h5 under results/electron_dos/efermi; make sure VASP &#39;</span>
+                              <span class="s1">&#39;writes it (e.g. set LSYNCH5=.TRUE. in the INCAR for CSC runs).&#39;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">outcar_filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="s1">&#39;reciprocal lattice vectors&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                        <span class="n">reading_kpt_basis</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">elif</span> <span class="n">reading_kpt_basis</span><span class="p">:</span>
+                        <span class="n">kpt_basis</span><span class="p">[</span><span class="n">lines_read_kpt_basis</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">3</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span>
+                        <span class="n">lines_read_kpt_basis</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="k">if</span> <span class="n">lines_read_kpt_basis</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                            <span class="k">break</span>
 
     <span class="k">elif</span> <span class="n">read_from</span> <span class="o">==</span> <span class="s1">&#39;abinit&#39;</span><span class="p">:</span>
         <span class="n">occupations</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1240,7 +1283,7 @@
     <span class="n">f_weights</span> <span class="o">=</span> <span class="n">included_occupations</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">included_occupations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span>
                                              <span class="n">included_occupations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 
-    <span class="k">return</span> <span class="n">f_weights</span><span class="p">,</span> <span class="n">band_window</span><span class="p">,</span> <span class="n">fermi_energy</span><span class="p">,</span> <span class="n">kpt_basis</span></div>
+    <span class="k">return</span> <span class="n">f_weights</span><span class="p">,</span> <span class="n">band_window</span><span class="p">,</span> <span class="n">fermi_energy</span><span class="p">,</span> <span class="n">kpt_basis</span><span class="p">,</span> <span class="n">n_k_ibz</span></div>
 
 
 
