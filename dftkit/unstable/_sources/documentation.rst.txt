@@ -3,43 +3,70 @@
 Documentation
 *************
 
-dftkit bundles the DFT-code converters that turn the output of a DFT calculation
-into the TRIQS-compatible HDF5 archive consumed by
+dftkit bundles the DFT-code interfaces that connect various DFT packages to
 `DFTTools <https://triqs.github.io/dft_tools>`_ for DFT+DMFT calculations.
-Each converter reads the native output of a given DFT package and writes the
-projected local orbitals / Hamiltonian into the format expected by
-:py:class:`SumkDFT <triqs_dft_tools.sumk_dft.SumkDFT>`.
 
-Converters
-==========
+General idea
+============
 
-The following converters are available. The usage of each is described in the
-corresponding guide page of the DFTTools documentation:
+For each supported DFT code dftkit provides up to two components:
+
+- a **Converter**, which reads the native output of a DFT run and writes the
+  projected local orbitals / Hamiltonian into the TRIQS-compatible HDF5 archive
+  expected by :py:class:`SumkDFT <triqs_dft_tools.sumk_dft.SumkDFT>`. This is all
+  that is needed for one-shot DFT+DMFT calculations.
+- a **Driver**, which wraps the DFT executable itself and drives a full run
+  (and, for charge self-consistent DFT+DMFT, the repeated DFT updates inside the
+  DMFT loop). A driver typically calls the matching converter at the end of each
+  DFT step.
+
+The two are organised per code under ``triqs_dftkit.<code>``, e.g.
+``triqs_dftkit.wien2k.Converter`` and ``triqs_dftkit.wien2k.Driver``. Some codes
+share a converter: Quantum Espresso and Abinit reuse the Wannier90 converter and
+only add their own driver.
+
+Converters and drivers
+======================
+
+The following interfaces are available. The usage of each converter is described
+in the corresponding guide page of the DFTTools documentation:
 
 .. list-table::
    :header-rows: 1
-   :widths: 20 40 40
+   :widths: 16 32 22 30
 
-   * - Converter
-     - dftkit module
+   * - Code
+     - Converter
+     - Driver
      - Guide
    * - Wien2k
      - :py:class:`triqs_dftkit.wien2k.Converter`
+     - :py:class:`triqs_dftkit.wien2k.Driver`
      - `conv_wien2k <https://triqs.github.io/dft_tools/latest/guide/conv_wien2k.html>`_
-   * - VASP (PLOVasp)
-     - :py:class:`triqs_dftkit.vasp.Converter`
+   * - VASP
+     - :py:class:`triqs_dftkit.vasp.Converter` (PLOVasp) or via Wannier90
+     - *in development*
      - `conv_vasp <https://triqs.github.io/dft_tools/latest/guide/conv_vasp.html>`_
+   * - Quantum Espresso
+     - via Wannier90
+     - :py:class:`triqs_dftkit.qe.Driver`
+     - `conv_W90 <https://triqs.github.io/dft_tools/latest/guide/conv_W90.html>`_
+   * - Abinit
+     - via Wannier90
+     - :py:class:`triqs_dftkit.abinit.Driver`
+     - `conv_W90 <https://triqs.github.io/dft_tools/latest/guide/conv_W90.html>`_
    * - Elk
      - :py:class:`triqs_dftkit.elk.Converter`
+     - ✗
      - `conv_elk <https://triqs.github.io/dft_tools/latest/guide/conv_elk.html>`_
    * - Wannier90
      - :py:class:`triqs_dftkit.wannier90.Converter`
+     - ✗
      - `conv_W90 <https://triqs.github.io/dft_tools/latest/guide/conv_W90.html>`_
    * - H(k)
      - :py:class:`triqs_dftkit.hk.Converter`
+     - ✗
      - `conv_generalhk <https://triqs.github.io/dft_tools/latest/guide/conv_generalhk.html>`_
-
-Quantum Espresso is supported through the Wannier90 interface.
 
 Tutorials
 =========

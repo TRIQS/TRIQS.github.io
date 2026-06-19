@@ -58,7 +58,8 @@
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#converters">Converters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#general-idea">General idea</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#converters-and-drivers">Converters and drivers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#tutorials">Tutorials</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#python-reference-manual">Python reference manual</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/triqs_dftkit.html">triqs_dftkit</a><ul>
@@ -142,52 +143,82 @@
              
   <section id="documentation">
 <span id="id1"></span><h1>Documentation<a class="headerlink" href="#documentation" title="Link to this heading"></a></h1>
-<p>dftkit bundles the DFT-code converters that turn the output of a DFT calculation
-into the TRIQS-compatible HDF5 archive consumed by
-<a class="reference external" href="https://triqs.github.io/dft_tools" rel="noopener noreferrer" target="_blank">DFTTools</a> for DFT+DMFT calculations.
-Each converter reads the native output of a given DFT package and writes the
-projected local orbitals / Hamiltonian into the format expected by
-<a class="reference external" href="https://triqs.github.io/dft_tools/latest/_python_api/triqs_dft_tools.sumk_dft.SumkDFT.html#triqs_dft_tools.sumk_dft.SumkDFT" rel="noopener noreferrer" target="_blank" title="(in TRIQS DFTTools v3.3.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">SumkDFT</span></code></a>.</p>
-<section id="converters">
-<h2>Converters<a class="headerlink" href="#converters" title="Link to this heading"></a></h2>
-<p>The following converters are available. The usage of each is described in the
-corresponding guide page of the DFTTools documentation:</p>
+<p>dftkit bundles the DFT-code interfaces that connect various DFT packages to
+<a class="reference external" href="https://triqs.github.io/dft_tools" rel="noopener noreferrer" target="_blank">DFTTools</a> for DFT+DMFT calculations.</p>
+<section id="general-idea">
+<h2>General idea<a class="headerlink" href="#general-idea" title="Link to this heading"></a></h2>
+<p>For each supported DFT code dftkit provides up to two components:</p>
+<ul class="simple">
+<li><p>a <strong>Converter</strong>, which reads the native output of a DFT run and writes the
+projected local orbitals / Hamiltonian into the TRIQS-compatible HDF5 archive
+expected by <a class="reference external" href="https://triqs.github.io/dft_tools/latest/_python_api/triqs_dft_tools.sumk_dft.SumkDFT.html#triqs_dft_tools.sumk_dft.SumkDFT" rel="noopener noreferrer" target="_blank" title="(in TRIQS DFTTools v3.3.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">SumkDFT</span></code></a>. This is all
+that is needed for one-shot DFT+DMFT calculations.</p></li>
+<li><p>a <strong>Driver</strong>, which wraps the DFT executable itself and drives a full run
+(and, for charge self-consistent DFT+DMFT, the repeated DFT updates inside the
+DMFT loop). A driver typically calls the matching converter at the end of each
+DFT step.</p></li>
+</ul>
+<p>The two are organised per code under <code class="docutils literal notranslate"><span class="pre">triqs_dftkit.&lt;code&gt;</span></code>, e.g.
+<code class="docutils literal notranslate"><span class="pre">triqs_dftkit.wien2k.Converter</span></code> and <code class="docutils literal notranslate"><span class="pre">triqs_dftkit.wien2k.Driver</span></code>. Some codes
+share a converter: Quantum Espresso and Abinit reuse the Wannier90 converter and
+only add their own driver.</p>
+</section>
+<section id="converters-and-drivers">
+<h2>Converters and drivers<a class="headerlink" href="#converters-and-drivers" title="Link to this heading"></a></h2>
+<p>The following interfaces are available. The usage of each converter is described
+in the corresponding guide page of the DFTTools documentation:</p>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 20.0%" />
-<col style="width: 40.0%" />
-<col style="width: 40.0%" />
+<col style="width: 16.0%" />
+<col style="width: 32.0%" />
+<col style="width: 22.0%" />
+<col style="width: 30.0%" />
 </colgroup>
 <thead>
-<tr class="row-odd"><th class="head"><p>Converter</p></th>
-<th class="head"><p>dftkit module</p></th>
+<tr class="row-odd"><th class="head"><p>Code</p></th>
+<th class="head"><p>Converter</p></th>
+<th class="head"><p>Driver</p></th>
 <th class="head"><p>Guide</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>Wien2k</p></td>
 <td><p><code class="xref py py-class docutils literal notranslate"><span class="pre">triqs_dftkit.wien2k.Converter</span></code></p></td>
+<td><p><code class="xref py py-class docutils literal notranslate"><span class="pre">triqs_dftkit.wien2k.Driver</span></code></p></td>
 <td><p><a class="reference external" href="https://triqs.github.io/dft_tools/latest/guide/conv_wien2k.html" rel="noopener noreferrer" target="_blank">conv_wien2k</a></p></td>
 </tr>
-<tr class="row-odd"><td><p>VASP (PLOVasp)</p></td>
-<td><p><code class="xref py py-class docutils literal notranslate"><span class="pre">triqs_dftkit.vasp.Converter</span></code></p></td>
+<tr class="row-odd"><td><p>VASP</p></td>
+<td><p><code class="xref py py-class docutils literal notranslate"><span class="pre">triqs_dftkit.vasp.Converter</span></code> (PLOVasp) or via Wannier90</p></td>
+<td><p><em>in development</em></p></td>
 <td><p><a class="reference external" href="https://triqs.github.io/dft_tools/latest/guide/conv_vasp.html" rel="noopener noreferrer" target="_blank">conv_vasp</a></p></td>
+</tr>
+<tr class="row-even"><td><p>Quantum Espresso</p></td>
+<td><p>via Wannier90</p></td>
+<td><p><code class="xref py py-class docutils literal notranslate"><span class="pre">triqs_dftkit.qe.Driver</span></code></p></td>
+<td><p><a class="reference external" href="https://triqs.github.io/dft_tools/latest/guide/conv_W90.html" rel="noopener noreferrer" target="_blank">conv_W90</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>Abinit</p></td>
+<td><p>via Wannier90</p></td>
+<td><p><code class="xref py py-class docutils literal notranslate"><span class="pre">triqs_dftkit.abinit.Driver</span></code></p></td>
+<td><p><a class="reference external" href="https://triqs.github.io/dft_tools/latest/guide/conv_W90.html" rel="noopener noreferrer" target="_blank">conv_W90</a></p></td>
 </tr>
 <tr class="row-even"><td><p>Elk</p></td>
 <td><p><code class="xref py py-class docutils literal notranslate"><span class="pre">triqs_dftkit.elk.Converter</span></code></p></td>
+<td><p>✗</p></td>
 <td><p><a class="reference external" href="https://triqs.github.io/dft_tools/latest/guide/conv_elk.html" rel="noopener noreferrer" target="_blank">conv_elk</a></p></td>
 </tr>
 <tr class="row-odd"><td><p>Wannier90</p></td>
 <td><p><code class="xref py py-class docutils literal notranslate"><span class="pre">triqs_dftkit.wannier90.Converter</span></code></p></td>
+<td><p>✗</p></td>
 <td><p><a class="reference external" href="https://triqs.github.io/dft_tools/latest/guide/conv_W90.html" rel="noopener noreferrer" target="_blank">conv_W90</a></p></td>
 </tr>
 <tr class="row-even"><td><p>H(k)</p></td>
 <td><p><code class="xref py py-class docutils literal notranslate"><span class="pre">triqs_dftkit.hk.Converter</span></code></p></td>
+<td><p>✗</p></td>
 <td><p><a class="reference external" href="https://triqs.github.io/dft_tools/latest/guide/conv_generalhk.html" rel="noopener noreferrer" target="_blank">conv_generalhk</a></p></td>
 </tr>
 </tbody>
 </table>
-<p>Quantum Espresso is supported through the Wannier90 interface.</p>
 </section>
 <section id="tutorials">
 <h2>Tutorials<a class="headerlink" href="#tutorials" title="Link to this heading"></a></h2>
