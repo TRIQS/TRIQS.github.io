@@ -419,7 +419,7 @@ creates a h5 archive from the <a class="reference external" href="https://triqs.
 <cite>SumkDFT</cite>. Therefore, the conversion consist always of two steps.</p>
 <p>Here, we will present a guide how the interface <cite>can</cite> be used to create input for a DMFT calculation, using SrVO3 as an example. Full examples can be found in the <a class="reference internal" href="../tutorials.html#tutorials"><span class="std std-ref">tutorial section of DFTTools</span></a>.</p>
 <p>For VASP version older than 6.5.0 there are a few limitation of the interface as it was not officially supported and only text file based. See <a class="reference internal" href="#remarks-for-vasp-older-than-6-5-0">Remarks for VASP older than 6.5.0</a> for details.</p>
-<p>Generation of projectors for k-point lines (option <cite>Lines</cite> in KPOINTS) needed for Bloch spectral function calculations is not possible at the moment.</p>
+<p>For VASP versions that write <code class="docutils literal notranslate"><span class="pre">LOCPROJ_OPT</span></code> data for <code class="docutils literal notranslate"><span class="pre">KPOINTS_OPT</span></code>, projectors for a separate k-point path or grid can be converted for Bloch spectral function calculations. This workflow uses the HDF5 output in <code class="docutils literal notranslate"><span class="pre">vaspout.h5</span></code> and requires VASP to be compiled with HDF5 support enabled.</p>
 <section id="vasp-generating-raw-projectors">
 <h2>VASP: generating raw projectors<a class="headerlink" href="#vasp-generating-raw-projectors" title="Link to this heading"></a></h2>
 <p>The VASP <strong>INCAR</strong> option <cite>LOCPROJ</cite> selects a set of localized projectors that
@@ -586,7 +586,35 @@ in <code class="xref py py-class docutils literal notranslate"><span class="pre"
 </pre></div>
 </div>
 <p>However, this should only be done after a careful study of the density matrix and the projected DOS in the localized basis. For the complete process for SrVO3 see the tutorial for the VASP interface <a class="reference external" href="../tutorials/svo_vasp/svo_notebook.html" rel="noopener noreferrer" target="_blank">here</a>.</p>
+<p>When VASP band projectors are available in the HDF5 archive, for example from a <code class="docutils literal notranslate"><span class="pre">KPOINTS_OPT</span></code>/<code class="docutils literal notranslate"><span class="pre">LOCPROJ_OPT</span></code> bands conversion, <code class="xref py py-meth docutils literal notranslate"><span class="pre">SumkDFTTools.spaghettis</span></code> supports VASP orbital-projected spectral functions with <code class="docutils literal notranslate"><span class="pre">proj_type='vasp'</span></code>.</p>
 </section>
+</section>
+<section id="data-for-post-processing-spectral-functions">
+<h2>Data for post-processing - Spectral functions<a class="headerlink" href="#data-for-post-processing-spectral-functions" title="Link to this heading"></a></h2>
+<p>For momentum-resolved spectral functions along a separate VASP k-point path or grid, use <code class="docutils literal notranslate"><span class="pre">KPOINTS_OPT</span></code> together with <code class="docutils literal notranslate"><span class="pre">LOCPROJ</span></code> in the VASP calculation. Recent VASP versions write the corresponding optional-k-point projector output to:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">LOCPROJ_OPT</span></code> and <code class="docutils literal notranslate"><span class="pre">PROJCAR_OPT</span></code> for text output.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vaspout.h5:/results/locproj_opt</span></code> for HDF5 output.</p></li>
+</ul>
+<p>The HDF5 route is used by the converter. The same calculation also provides the optional-k-point eigenvalues and weights under <code class="docutils literal notranslate"><span class="pre">vaspout.h5:/results/electron_eigenvalues_kpoints_opt</span></code>. The relevant datasets are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">results/electron_eigenvalues_kpoints_opt/eigenvalues</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">results/electron_eigenvalues_kpoints_opt/fermiweights</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">results/electron_eigenvalues_kpoints_opt/kpoint_coords</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">results/electron_eigenvalues_kpoints_opt/kpoints_symmetry_weight</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">results/locproj_opt/data</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">results/locproj_opt/format</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">results/locproj_opt/parameters/*</span></code></p></li>
+</ul>
+<p>The normal converter workflow will automatically detect the optional-k-point bands data into <code class="docutils literal notranslate"><span class="pre">dft_bands_input</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Converter</span><span class="o">.</span><span class="n">convert_dft_input</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>and will internally call the bands converter with the same config:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Converter</span><span class="o">.</span><span class="n">convert_bands_input</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>After this conversion, <code class="xref py py-meth docutils literal notranslate"><span class="pre">SumkDFTTools.spaghettis</span></code> can calculate total and VASP orbital-projected spectral functions. Use <code class="docutils literal notranslate"><span class="pre">proj_type='vasp'</span></code> for orbital-projected VASP spaghetti plots.</p>
 </section>
 <section id="plovasp-detailed-guide">
 <h2>PLOVASP detailed guide<a class="headerlink" href="#plovasp-detailed-guide" title="Link to this heading"></a></h2>
