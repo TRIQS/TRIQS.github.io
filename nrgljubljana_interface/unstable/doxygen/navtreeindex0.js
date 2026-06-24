@@ -1,0 +1,26 @@
+var NAVTREEINDEX0 =
+{
+"../ChangeLog.html":[5],
+"../issues.html":[6],
+"container__set_8hpp_source.html":[4,0,0,0],
+"dir_0bebf5322e5a1a79621d5624a4b496f5.html":[4,0,0],
+"dir_f5aad91834d51bfaf1321747f016d522.html":[4,0,1,0],
+"dir_f9ee2de887915c734bcb3d9ea50cc154.html":[4,0,1],
+"documentation.html":[4],
+"ex1.html":[3,0],
+"examples.html":[3],
+"files.html":[4,0],
+"hilbert__transform_8hpp_source.html":[4,0,1,0,0],
+"index.html":[],
+"index.html":[0],
+"index.html#start":[0,0],
+"installation.html":[1],
+"integration.html":[2],
+"openmp_8hpp_source.html":[4,0,0,1],
+"pages.html":[],
+"params_8cpp_source.html":[4,0,0,2],
+"params_8hpp_source.html":[4,0,0,3],
+"solver__core_8cpp_source.html":[4,0,0,4],
+"solver__core_8hpp_source.html":[4,0,0,5],
+"types_8hpp_source.html":[4,0,0,6]
+};
