@@ -5,6 +5,8 @@ var mesh_2utils_8hpp =
     [ "triqs::mesh::copy", "group__triqs-meshes-utils.html#gae3cd2d93c44c67a3d4be11f0e5f41ff6", null ],
     [ "triqs::mesh::copy_from", "group__triqs-meshes-utils.html#ga7fc35ab620a9f8a99bdd71fadb85ee37", null ],
     [ "triqs::mesh::hash", "group__triqs-meshes-utils.html#gab33f2cbf7278f65eae2793f02bef33bc", null ],
+    [ "triqs::mesh::hash_bytes", "group__triqs-meshes-utils.html#ga1b712b7bf2aad9a3a4fcd306d21329be", null ],
+    [ "triqs::mesh::hash_bytes", "group__triqs-meshes-utils.html#ga9a2b93e3e93c3c9ef130ea9f48bf9151", null ],
     [ "triqs::mesh::operator*", "group__triqs-meshes-utils.html#gac425c5f54664f2dc3e50fb034b5220e1", null ],
     [ "triqs::mesh::positive_modulo", "group__triqs-meshes-utils.html#gad17361248f96e95de6e4ebe159e8e266", null ],
     [ "triqs::mesh::sign", "group__triqs-meshes-utils.html#ga1f14243ea4ed60275c7c3d8edd7a5c52", null ],
