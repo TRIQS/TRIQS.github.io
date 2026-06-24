@@ -1,0 +1,33 @@
+var indexSectionsWithContent =
+{
+  0: "1abcdefghilmnoprstvwz",
+  1: "cdprst",
+  2: "bceorstz",
+  3: "abcdfghilmnprsv",
+  4: "o",
+  5: "gm",
+  6: "1acdegimopstw"
+};
+
+var indexSectionNames =
+{
+  0: "all",
+  1: "classes",
+  2: "functions",
+  3: "variables",
+  4: "related",
+  5: "groups",
+  6: "pages"
+};
+
+var indexSectionLabels =
+{
+  0: "All",
+  1: "Classes",
+  2: "Functions",
+  3: "Variables",
+  4: "Friends",
+  5: "Modules",
+  6: "Pages"
+};
+
