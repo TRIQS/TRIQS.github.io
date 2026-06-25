@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['example_201_3a_20test_20example_0',['Example 1: Test example',['../ex1.html',1,'']]],
-  ['examples_1',['Examples',['../examples.html',1,'']]]
+  ['details_0',['details',['../ex1.html#ex1_p2',1,'Maybe even more details'],['../ex1.html#ex1_p1',1,'More details']]],
+  ['documentation_1',['API Documentation',['../documentation.html',1,'']]]
 ];

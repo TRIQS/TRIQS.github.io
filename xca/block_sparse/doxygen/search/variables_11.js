@@ -4,5 +4,5 @@ var searchData=
   ['v_5ftilde_1',['V_tilde',['../classhyb__F.html#aaa50e56108c01f7814e3f3a3617dfe45',1,'hyb_F']]],
   ['values_2',['values',['../classtriqs__xca_1_1hyb_1_1Hybridization.html#ad4b5fbabc77bcc3acdae96e5a77a0a03',1,'triqs_xca::hyb::Hybridization']]],
   ['values_5freflect_3',['values_reflect',['../classtriqs__xca_1_1hyb_1_1Hybridization.html#a5a4a0078c817b76d0a301533e84166d6',1,'triqs_xca::hyb::Hybridization']]],
-  ['vertices_4',['vertices',['../classtriqs__xca_1_1backbone_1_1Backbone.html#ab0b11c58dc60b3d5076d13fadcbe47d1',1,'triqs_xca::backbone::Backbone']]]
+  ['vertices_4',['vertices',['../namespacetriqs__xca_1_1backbone.html#adce04529558d654fefdd5596ba0ad1b7',1,'triqs_xca::backbone']]]
 ];

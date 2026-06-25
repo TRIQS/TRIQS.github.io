@@ -3,6 +3,7 @@ var classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator =
     [ "DiagramEvaluator", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a636ec579a03ed82b22c2558fa3ef5e58", null ],
     [ "DiagramEvaluator", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a4e39418e0efcf142dd35bb9450163da8", null ],
     [ "~DiagramEvaluator", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#aee8bafd5172fcffd090c7937f9298a1e", null ],
+    [ "compute_one_time_correlator", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a40f5564a534b1eb6a920c3473d54a080", null ],
     [ "compute_self_energy", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a58b7e4c956955a26a8b74d5513d6b143", null ],
     [ "compute_self_energy", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a0f3617c656215ea508f4c6d2d5ac3e42", null ],
     [ "compute_self_energy", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#acbb5ea93474e60234f87479dec82b40a", null ],

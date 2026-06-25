@@ -1,4 +1,4 @@
 var utils_8hpp =
 [
-    [ "pown", "utils_8hpp.html#a295a47b17249672dd55d46154c5ea012", null ]
+    [ "triqs_xca::utils::pown", "namespacetriqs__xca_1_1utils.html#a97c215a5c9bfa915bac665a37187f5da", null ]
 ];

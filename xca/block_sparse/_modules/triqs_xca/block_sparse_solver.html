@@ -1,22 +1,23 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>triqs_xca.block_sparse_solver &mdash; triqs_xca  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=f7f783a0" />
       <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
 
   
     <link rel="shortcut icon" href="../../_static/triqs_favicon.ico"/>
-  
-        <script src="../../_static/jquery.js?v=8dae8fb0"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
-        <script src="../../_static/doctools.js?v=888ff710"></script>
-        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script src="../../_static/jquery.js?v=958b65b0"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="author" title="About these documents" href="../../about.html" />
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -34,9 +35,6 @@
           <a href="../../index.html" class="icon icon-home">
             triqs_xca
           </a>
-              <div class="version">
-                0.0.2
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -156,35 +154,35 @@
            <div itemprop="articleBody">
              
   <h1>Source code for triqs_xca.block_sparse_solver</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">copy</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
 
-<span class="kn">import</span> <span class="nn">triqs.utility.mpi</span> <span class="k">as</span> <span class="nn">mpi</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">triqs.utility.mpi</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpi</span>
 
-<span class="kn">from</span> <span class="nn">triqs.gf</span> <span class="kn">import</span> <span class="n">Gf</span><span class="p">,</span> <span class="n">MeshDLRImTime</span><span class="p">,</span> <span class="n">BlockGf</span><span class="p">,</span> <span class="n">make_gf_dlr</span><span class="p">,</span> <span class="n">make_gf_dlr_imfreq</span>
-<span class="kn">from</span> <span class="nn">triqs.atom_diag</span> <span class="kn">import</span> <span class="n">AtomDiag</span><span class="p">,</span> <span class="n">AtomDiagReal</span><span class="p">,</span> <span class="n">AtomDiagComplex</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">triqs.gf</span><span class="w"> </span><span class="kn">import</span> <span class="n">Gf</span><span class="p">,</span> <span class="n">MeshDLRImTime</span><span class="p">,</span> <span class="n">BlockGf</span><span class="p">,</span> <span class="n">make_gf_dlr</span><span class="p">,</span> <span class="n">make_gf_dlr_imfreq</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">triqs.atom_diag</span><span class="w"> </span><span class="kn">import</span> <span class="n">AtomDiag</span><span class="p">,</span> <span class="n">AtomDiagReal</span><span class="p">,</span> <span class="n">AtomDiagComplex</span>
 
-<span class="kn">from</span> <span class="nn">.diag</span> <span class="kn">import</span> <span class="n">all_connected_pairings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.diag</span><span class="w"> </span><span class="kn">import</span> <span class="n">all_pairings</span><span class="p">,</span> <span class="n">all_connected_pairings</span>
 
-<span class="kn">from</span> <span class="nn">.dlr_dyson_ppsc</span> <span class="kn">import</span> <span class="n">DysonItPPSC</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.dlr_dyson_ppsc</span><span class="w"> </span><span class="kn">import</span> <span class="n">DysonItPPSC</span>
 
-<span class="kn">from</span> <span class="nn">.block_sparse</span> <span class="kn">import</span> <span class="n">DiagramEvaluator</span>
-<span class="kn">from</span> <span class="nn">.dense</span> <span class="kn">import</span> <span class="n">DenseDiagramEvaluator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.block_sparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">DiagramEvaluator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.dense</span><span class="w"> </span><span class="kn">import</span> <span class="n">DenseDiagramEvaluator</span>
 
-<span class="kn">from</span> <span class="nn">.block_sparse</span> <span class="kn">import</span> <span class="n">trace</span>
-<span class="kn">from</span> <span class="nn">.block_sparse</span> <span class="kn">import</span> <span class="n">convolve_ppsc</span> <span class="k">as</span> <span class="n">conv</span>
-<span class="kn">from</span> <span class="nn">.block_sparse</span> <span class="kn">import</span> <span class="n">expectation_value</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.block_sparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">trace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.block_sparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">convolve_ppsc</span> <span class="k">as</span> <span class="n">conv</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.block_sparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">expectation_value</span>
 
-<span class="kn">from</span> <span class="nn">.ase.utils.timing</span> <span class="kn">import</span> <span class="n">Timer</span><span class="p">,</span> <span class="n">timer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.ase.utils.timing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Timer</span><span class="p">,</span> <span class="n">timer</span>
 
 
-<span class="k">def</span> <span class="nf">is_root</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_root</span><span class="p">():</span>
     <span class="k">return</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">()</span>
 
 
-<span class="k">def</span> <span class="nf">scatter_array_over_ranks</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">scatter_array_over_ranks</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
     <span class="n">size</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">size</span>
     <span class="n">rank</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">rank</span>
     <span class="n">arr_rank</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">arr</span><span class="p">),</span> <span class="n">size</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="n">rank</span><span class="p">]</span>
@@ -193,7 +191,7 @@
 
 <div class="viewcode-block" id="BlockSparseSolver">
 <a class="viewcode-back" href="../../python_api.html#triqs_xca.block_sparse_solver.BlockSparseSolver">[docs]</a>
-<span class="k">class</span> <span class="nc">BlockSparseSolver</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">BlockSparseSolver</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Solver class for triqs_xca using the block sparse algorithm. </span>
 <span class="sd">    </span>
@@ -234,7 +232,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H_loc</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">w_max</span><span class="p">,</span> <span class="n">eps</span><span class="p">,</span> <span class="n">gf_struct</span><span class="p">,</span> 
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H_loc</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">w_max</span><span class="p">,</span> <span class="n">eps</span><span class="p">,</span> <span class="n">gf_struct</span><span class="p">,</span> 
                  <span class="n">conserved_operators</span><span class="o">=</span><span class="s1">&#39;automatic&#39;</span><span class="p">,</span> <span class="n">dlr_symmetrize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">timer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">atom_diag</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 
@@ -289,8 +287,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_zero_pseudo_particle_propagator</span><span class="p">()</span>
 
         <span class="c1"># FIXME! Get ito from mesh_tau</span>
-        <span class="kn">from</span> <span class="nn">.pycppdlr</span> <span class="kn">import</span> <span class="n">build_dlr_rf</span>
-        <span class="kn">from</span> <span class="nn">.pycppdlr</span> <span class="kn">import</span> <span class="n">ImTimeOps</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.pycppdlr</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_dlr_rf</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.pycppdlr</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImTimeOps</span>
         <span class="n">ito</span> <span class="o">=</span> <span class="n">ImTimeOps</span><span class="p">(</span><span class="n">w_max</span> <span class="o">*</span> <span class="n">beta</span><span class="p">,</span> <span class="n">build_dlr_rf</span><span class="p">(</span><span class="n">w_max</span> <span class="o">*</span> <span class="n">beta</span><span class="p">,</span> <span class="n">eps</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dlr_symmetrize</span><span class="p">),</span> <span class="n">symmetrize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dlr_symmetrize</span><span class="p">)</span>
 
         <span class="c1"># Compare DLR meshes</span>
@@ -304,7 +302,7 @@
 
 
     <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;Adapol hybridization fit&#39;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">fit_hybridization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit_hybridization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 
         <span class="n">Delta_tau_dense</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__from_blockgf_to_dense</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Delta_tau</span><span class="p">)</span>
 
@@ -312,7 +310,7 @@
 
             <span class="k">assert</span><span class="p">(</span> <span class="n">tol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">tol</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">),</span> <span class="s1">&#39;Error: tol must be provided and positive when compression is enabled.&#39;</span>
 
-            <span class="kn">from</span> <span class="nn">adapol.triqs_xca</span> <span class="kn">import</span> <span class="n">TriqsDLRCompression</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">adapol.triqs</span><span class="w"> </span><span class="kn">import</span> <span class="n">TriqsDLRCompression</span>
         
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">tdc</span> <span class="o">=</span> <span class="n">TriqsDLRCompression</span><span class="p">(</span><span class="n">Delta_tau_dense</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span> <span class="ow">and</span> <span class="n">is_root</span><span class="p">())</span>
@@ -345,7 +343,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">hyb</span><span class="o">.</span><span class="n">fit_error</span> <span class="o">=</span> <span class="n">fit_error</span>
 
 
-    <span class="k">def</span> <span class="nf">__from_blockgf_to_dense</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__from_blockgf_to_dense</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">):</span>
 
         <span class="k">for</span> <span class="n">b</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
             <span class="k">assert</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)</span>
@@ -364,7 +362,7 @@
         <span class="k">return</span> <span class="n">G_dense</span>
 
 
-    <span class="k">def</span> <span class="nf">__from_dense_to_blockgf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G_dense</span><span class="p">,</span> <span class="n">gf_struct</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__from_dense_to_blockgf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G_dense</span><span class="p">,</span> <span class="n">gf_struct</span><span class="p">):</span>
 
         <span class="n">G</span> <span class="o">=</span> <span class="n">BlockGf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">G_dense</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">gf_struct</span><span class="o">=</span><span class="n">gf_struct</span><span class="p">)</span>
 
@@ -377,7 +375,7 @@
         <span class="k">return</span> <span class="n">G</span>
 
 
-    <span class="k">def</span> <span class="nf">set_hybridization_poles_and_coefficients</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">poles</span><span class="p">,</span> <span class="n">coefficients</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_hybridization_poles_and_coefficients</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">poles</span><span class="p">,</span> <span class="n">coefficients</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">hyb</span> <span class="o">=</span> <span class="n">PoleRepresentation</span><span class="p">(</span><span class="n">poles</span><span class="p">,</span> <span class="n">coefficients</span><span class="p">)</span>
 
@@ -388,7 +386,7 @@
 
 
     <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;DiagramEvaluator Init&#39;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">init_diagram_evaluator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_diagram_evaluator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1">#if is_root(): print(f&#39;Initializing diagram evaluator with use_dense_solver = {self.use_dense_solver}&#39;)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_dense_solver</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">=</span> <span class="n">DenseDiagramEvaluator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hyb</span><span class="o">.</span><span class="n">poles</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hyb</span><span class="o">.</span><span class="n">coefficients</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">atom_diag</span><span class="p">)</span>
@@ -399,7 +397,7 @@
 
 <div class="viewcode-block" id="BlockSparseSolver.solve">
 <a class="viewcode-back" href="../../python_api.html#triqs_xca.block_sparse_solver.BlockSparseSolver.solve">[docs]</a>
-    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_order</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">mix</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">hyb_tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hyb_comp</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">normalization</span><span class="o">=</span><span class="s1">&#39;classic&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_order</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">mix</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">hyb_tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hyb_comp</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">normalization</span><span class="o">=</span><span class="s1">&#39;classic&#39;</span><span class="p">,</span> <span class="n">spgf_max_order</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Solve the impurity problem using pseudo particle self-consistent perturbation theory.</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters</span>
@@ -417,6 +415,8 @@
 <span class="sd">        hyb_comp : bool, optional</span>
 <span class="sd">            Whether to compress the hybridization function. Default: ``True``.</span>
 <span class="sd">            When set to ``False``, the hybridization function is represented using the full DLR basis.</span>
+<span class="sd">        spgf_max_order : int, optional</span>
+<span class="sd">            Maximum order for the single particle Green&#39;s function evaluation. If not provided, it defaults to ``max_order``.</span>
 <span class="sd">        normalization : str, optional</span>
 <span class="sd">            Normalization method for the pseudo particle Green&#39;s function. Default: ``&#39;classic&#39;``.</span>
 
@@ -440,6 +440,8 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">normalization</span> <span class="o">=</span> <span class="n">normalization</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_order</span> <span class="o">=</span> <span class="n">max_order</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spgf_max_order</span> <span class="o">=</span> <span class="n">spgf_max_order</span> <span class="k">if</span> <span class="n">spgf_max_order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">max_order</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">hyb_tol</span> <span class="o">=</span> <span class="n">hyb_tol</span> <span class="k">if</span> <span class="n">hyb_tol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">tol</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">hyb_comp</span> <span class="o">=</span> <span class="n">hyb_comp</span> <span class="k">if</span> <span class="n">max_order</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">False</span> <span class="c1"># Skip hybridization compression for max_order = 1 (NCA) since the pole representation is not used.</span>
@@ -449,6 +451,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">fit_hybridization</span><span class="p">(</span><span class="n">tol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hyb_tol</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hyb_comp</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">init_diagram_evaluator</span><span class="p">()</span> <span class="c1"># FIXME! Evaluator takes hyb poles and coeffs in constructor</span>
 
+        <span class="nb">iter</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="nb">iter</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
 
             <span class="c1">#if is_root(): print(f&#39;Sigma max_order = {self.max_order}&#39;)</span>
@@ -502,7 +505,7 @@
 
             <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">mix</span> <span class="o">*</span> <span class="n">G_new</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">mix</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span>
 
-        <span class="n">G_tau</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_single_particle_greens_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">,</span> <span class="n">max_order</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_order</span><span class="p">)</span>
+        <span class="n">G_tau</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_single_particle_greens_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">,</span> <span class="n">max_order</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">spgf_max_order</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">G_tau</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__from_dense_to_blockgf</span><span class="p">(</span><span class="n">G_tau</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">n_ppsc_iter</span> <span class="o">=</span> <span class="nb">iter</span>
@@ -512,14 +515,84 @@
 
 
 
-    <span class="k">def</span> <span class="nf">normalize_pseudo_particle_gf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">solve_bare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_order</span><span class="p">,</span> <span class="n">hyb_tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hyb_comp</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">use_dyson</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">spgf_max_order</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Solve the impurity problem using the bare pseudo particle self-consistent perturbation theory, </span>
+<span class="sd">        i.e. with the pseudo particle self-energy evaluated using the atomic pseudo particle Green&#39;s function.</span>
+<span class="sd">         </span>
+<span class="sd">        .. math::</span>
+<span class="sd">            \\Sigma = \\Sigma[G_0]</span>
+
+<span class="sd">        The pseudo-particle Green&#39;s function :math:`G` is then obtained by</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            G = G_0 + G_0 \\ast \\Sigma \\ast G_0</span>
+
+<span class="sd">        or when ``use_dyson=True`` by solving the Dyson equation</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            (1 - G_0 \\ast \\Sigma \\ast \\, ) G = G_0 </span>
+<span class="sd">             </span>
+<span class="sd">        This is useful for benchmarking and testing purposes.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        max_order : int</span>
+<span class="sd">            Maximum order of the perturbation theory.</span>
+<span class="sd">        hyb_tol : float, optional</span>
+<span class="sd">            Tolerance for the hybridization function compression. Defaults to ``10 * self.eps`` if not provided.</span>
+<span class="sd">        hyb_comp : bool, optional</span>
+<span class="sd">            Whether to compress the hybridization function. Default: ``True``.</span>
+<span class="sd">            When set to ``False``, the hybridization function is represented using the full DLR basis.</span>
+<span class="sd">        use_dyson : bool, optional</span>
+<span class="sd">            Whether to solve the Dyson equation to obtain the pseudo particle Green&#39;s function. Default: ``False``.</span>
+<span class="sd">        spgf_max_order : int, optional</span>
+<span class="sd">            Maximum order for the single particle Green&#39;s function evaluation. If not provided, it defaults to ``max_order``.</span>
+<span class="sd">        verbose : bool, optional</span>
+<span class="sd">            Verbosity flag controlling level of printouts. Default: ``True``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_order</span> <span class="o">=</span> <span class="n">max_order</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spgf_max_order</span> <span class="o">=</span> <span class="n">spgf_max_order</span> <span class="k">if</span> <span class="n">spgf_max_order</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">max_order</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">hyb_tol</span> <span class="o">=</span> <span class="n">hyb_tol</span> <span class="k">if</span> <span class="n">hyb_tol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">10</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hyb_comp</span> <span class="o">=</span> <span class="n">hyb_comp</span> <span class="k">if</span> <span class="n">max_order</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">False</span> <span class="c1"># Skip hybridization compression for max_order = 1 (NCA) since the pole representation is not used.</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_hybridization</span><span class="p">(</span><span class="n">tol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hyb_tol</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hyb_comp</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_diagram_evaluator</span><span class="p">()</span> <span class="c1"># FIXME! Evaluator takes hyb poles and coeffs in constructor</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_pseudo_particle_self_energy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_order</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">use_dyson</span><span class="p">:</span>   
+            <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="s1">&#39;Dyson&#39;</span><span class="p">)</span>
+            <span class="n">G</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solve_dyson</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eta</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="s1">&#39;G = G0 + G0 Sigma G0&#39;</span><span class="p">)</span>
+            <span class="n">G</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">G0</span> <span class="o">+</span> <span class="n">conv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G0</span><span class="p">,</span> <span class="n">conv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">G0</span><span class="p">))</span> <span class="c1"># Add self.eta here? (eta * G0 * G0)</span>
+
+        <span class="n">G</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_pseudo_particle_gf</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">partition_function_from_ppgf</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="n">is_root</span><span class="p">():</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Bare: Z-1 = </span><span class="si">{</span><span class="n">Z</span><span class="o">-</span><span class="mi">1</span><span class="si">:</span><span class="s1">+2.2E</span><span class="si">}</span><span class="s1">, eta = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">eta</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">G</span>
+
+        <span class="n">G_tau</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_single_particle_greens_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">,</span> <span class="n">max_order</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">spgf_max_order</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">G_tau</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__from_dense_to_blockgf</span><span class="p">(</span><span class="n">G_tau</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_struct</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="n">is_root</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">();</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">write</span><span class="p">()</span>
+        
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">normalize_pseudo_particle_gf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Normalize the pseudo particle Green&#39;s function by updating the pseudo particle chemical potential eta, such that the partition function Z is equal to 1. &quot;&quot;&quot;</span>
 
         <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">partition_function_from_ppgf</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
 
         <span class="n">deta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Z</span><span class="p">))</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span>
 
-        <span class="k">def</span> <span class="nf">energy_shift_ppgf</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">deta</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">energy_shift_ppgf</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">deta</span><span class="p">):</span>
             <span class="n">G_new</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="n">tau</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="nb">float</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">mesh</span> <span class="p">])</span>
             <span class="k">for</span> <span class="n">bidx</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">G_new</span><span class="p">:</span>
@@ -537,14 +610,14 @@
         <span class="k">return</span> <span class="n">G_new</span>
     
 
-    <span class="k">def</span> <span class="nf">normalize_pseudo_particle_gf_and_sigma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">Sigma</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">normalize_pseudo_particle_gf_and_sigma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">Sigma</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Normalize the pseudo particle Green&#39;s function by updating the pseudo particle chemical potential eta, such that the partition function Z is equal to 1. &quot;&quot;&quot;</span>
 
         <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">partition_function_from_ppgf</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
 
         <span class="n">deta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Z</span><span class="p">))</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span>
 
-        <span class="k">def</span> <span class="nf">energy_shift_ppgf</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">deta</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">energy_shift_ppgf</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">deta</span><span class="p">):</span>
             <span class="n">G_new</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="n">tau</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="nb">float</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">mesh</span> <span class="p">])</span>
             <span class="k">for</span> <span class="n">bidx</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">G_new</span><span class="p">:</span>
@@ -563,11 +636,11 @@
         <span class="k">return</span> <span class="n">G_new</span><span class="p">,</span> <span class="n">Sigma_new</span>
 
 
-    <span class="k">def</span> <span class="nf">pseudo_particle_greens_function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">pseudo_particle_greens_function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span>
 
 
-    <span class="k">def</span> <span class="nf">partition_function_from_ppgf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">partition_function_from_ppgf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">):</span>
         <span class="n">Z</span> <span class="o">=</span> <span class="o">-</span><span class="n">trace</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
         <span class="c1">#print(f&#39;partition_function_from_ppgf: Z = {Z}, eps = {self.eps}&#39;)</span>
         <span class="c1">#assert(Z.imag &lt; 1e-12)</span>
@@ -577,7 +650,7 @@
 
 <div class="viewcode-block" id="BlockSparseSolver.partition_function">
 <a class="viewcode-back" href="../../python_api.html#triqs_xca.block_sparse_solver.BlockSparseSolver.partition_function">[docs]</a>
-    <span class="k">def</span> <span class="nf">partition_function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">partition_function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Partition function :math:`Z` of the impurity model, computed from the pseudo particle Green&#39;s function as</span>
 <span class="sd">        </span>
 <span class="sd">        .. math::</span>
@@ -594,7 +667,7 @@
 
 <div class="viewcode-block" id="BlockSparseSolver.pseudo_particle_chemical_potential">
 <a class="viewcode-back" href="../../python_api.html#triqs_xca.block_sparse_solver.BlockSparseSolver.pseudo_particle_chemical_potential">[docs]</a>
-    <span class="k">def</span> <span class="nf">pseudo_particle_chemical_potential</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">pseudo_particle_chemical_potential</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Pseudo particle chemical potential :math:`\\eta`.</span>
 
 <span class="sd">        The pseudo particle chemical potential :math:`\\eta` is a shift of the pseudo particle energies used to enforce</span>
@@ -611,7 +684,7 @@
 
 <div class="viewcode-block" id="BlockSparseSolver.expectation_value">
 <a class="viewcode-back" href="../../python_api.html#triqs_xca.block_sparse_solver.BlockSparseSolver.expectation_value">[docs]</a>
-    <span class="k">def</span> <span class="nf">expectation_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operator</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">expectation_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operator</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Expectation value :math:`\\langle \\hat{O} \\rangle` of an operator :math:`\\hat{O}`, computed from the pseudo particle Green&#39;s function as</span>
 <span class="sd">        </span>
 <span class="sd">        .. math::</span>
@@ -632,7 +705,7 @@
 
     
 
-    <span class="k">def</span> <span class="nf">many_body_density_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">many_body_density_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Get the block sparse many body density matrix :math:`\\rho` from the pseudo particle Green&#39;s function :math:`G`.</span>
 <span class="sd">        </span>
 <span class="sd">        Returns</span>
@@ -650,7 +723,7 @@
         <span class="k">return</span> <span class="n">rho</span>
     
 
-    <span class="k">def</span> <span class="nf">herm_err</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">herm_err</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Compute maximum hermiticity error of a block Green&#39;s function :math:`G` &quot;&quot;&quot;</span>
         <span class="n">err</span> <span class="o">=</span> <span class="mf">0.</span>
         <span class="k">for</span> <span class="n">bidx</span><span class="p">,</span> <span class="n">g_b</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
@@ -659,7 +732,7 @@
         <span class="k">return</span> <span class="n">err</span>
 
 
-    <span class="k">def</span> <span class="nf">make_hermitian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_hermitian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Enforce hermiticity of a block Green&#39;s function :math:`G` by symmetrizing it with its conjugate transpose. &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">bidx</span><span class="p">,</span> <span class="n">g_b</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
             <span class="n">g_b</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">g_b</span><span class="o">.</span><span class="n">data</span> <span class="o">+</span> <span class="n">g_b</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">conjugate</span><span class="p">())</span>
@@ -667,7 +740,7 @@
 
 
     <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;Solve&#39;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">solve_dyson</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Sigma</span><span class="p">,</span> <span class="n">eta</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">solve_dyson</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Sigma</span><span class="p">,</span> <span class="n">eta</span><span class="p">):</span>
 
         <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">Sigma</span><span class="p">)</span> <span class="ow">is</span> <span class="n">BlockGf</span><span class="p">,</span> <span class="s1">&#39;Sigma must be a BlockGf&#39;</span>
 
@@ -687,27 +760,29 @@
         <span class="k">return</span> <span class="n">G</span>
 
 
-    <span class="k">def</span> <span class="nf">pseudo_particle_self_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">pseudo_particle_self_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span>
 
 
     <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;Sigma&#39;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">eval_pseudo_particle_self_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">max_order</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">eval_pseudo_particle_self_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">max_order</span><span class="p">,</span> <span class="n">connected</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_zero_pseudo_particle_propagator</span><span class="p">()</span>
 
         <span class="k">for</span> <span class="n">order</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
             <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Order </span><span class="si">{</span><span class="n">order</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__eval_pseudo_particle_self_energy_order</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__eval_pseudo_particle_self_energy_order</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">connected</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span>
 
 
-    <span class="k">def</span> <span class="nf">__eval_pseudo_particle_self_energy_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__eval_pseudo_particle_self_energy_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">connected</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
         <span class="n">Sigma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_zero_pseudo_particle_propagator</span><span class="p">()</span>
         
-        <span class="k">for</span> <span class="n">sign</span><span class="p">,</span> <span class="n">topology</span> <span class="ow">in</span> <span class="n">all_connected_pairings</span><span class="p">(</span><span class="n">order</span><span class="p">):</span>
+        <span class="n">pairings</span> <span class="o">=</span> <span class="n">all_connected_pairings</span> <span class="k">if</span> <span class="n">connected</span> <span class="k">else</span> <span class="n">all_pairings</span>
+
+        <span class="k">for</span> <span class="n">sign</span><span class="p">,</span> <span class="n">topology</span> <span class="ow">in</span> <span class="n">pairings</span><span class="p">(</span><span class="n">order</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="n">is_root</span><span class="p">():</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;SIGMA: O</span><span class="si">{</span><span class="n">order</span><span class="si">}</span><span class="s1"> topo </span><span class="si">{</span><span class="n">topology</span><span class="si">}</span><span class="s1"> sign </span><span class="si">{</span><span class="n">sign</span><span class="si">:</span><span class="s1">+d</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="n">topology</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
             <span class="n">Sigma</span> <span class="o">+=</span>  <span class="nb">pow</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span> <span class="o">*</span> <span class="n">sign</span> <span class="o">*</span> \
@@ -716,12 +791,12 @@
         <span class="k">return</span> <span class="n">Sigma</span>
     
     
-    <span class="k">def</span> <span class="nf">eval_pseudo_particle_self_energy_topology</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">topology</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">eval_pseudo_particle_self_energy_topology</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">topology</span><span class="p">):</span>
         <span class="n">order</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">topology</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">pow</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">compute_self_energy</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">topology</span><span class="p">)</span> <span class="c1"># FIXME! Sign convention.</span>
 
 
-    <span class="k">def</span> <span class="nf">__eval_pseudo_particle_self_energy_topology_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">topology</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__eval_pseudo_particle_self_energy_topology_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">topology</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
         <span class="n">order</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">topology</span><span class="p">)</span>
         <span class="n">n_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">get_num_self_energy_backbones</span><span class="p">(</span><span class="n">topology</span><span class="p">)</span>
@@ -735,22 +810,22 @@
         <span class="k">return</span> <span class="n">Sigma</span>
     
 
-    <span class="k">def</span> <span class="nf">get_zero_pseudo_particle_propagator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_zero_pseudo_particle_propagator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">zero_pseudo_particle_propagator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atom_diag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="p">)</span>
 
 
-    <span class="k">def</span> <span class="nf">get_zero_single_particle_greens_function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_zero_single_particle_greens_function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">spgf</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fundamental_operators</span><span class="p">)]</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>
         <span class="n">spgf</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="mf">0.</span>
         <span class="k">return</span> <span class="n">spgf</span>
 
 
-    <span class="k">def</span> <span class="nf">single_particle_greens_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_order</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">single_particle_greens_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_order</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_single_particle_greens_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">,</span> <span class="n">max_order</span><span class="o">=</span><span class="n">max_order</span><span class="p">)</span>
 
 
     <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;Single-particle Gf&#39;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">eval_single_particle_greens_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">max_order</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">eval_single_particle_greens_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">max_order</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">spgf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_zero_single_particle_greens_function</span><span class="p">()</span>
 
         <span class="k">for</span> <span class="n">order</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
@@ -760,7 +835,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spgf</span>
 
 
-    <span class="k">def</span> <span class="nf">__eval_single_particle_greens_function_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__eval_single_particle_greens_function_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
 
         <span class="n">spgf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_zero_single_particle_greens_function</span><span class="p">()</span>
 
@@ -772,7 +847,7 @@
         <span class="k">return</span> <span class="n">spgf</span>
 
 
-    <span class="k">def</span> <span class="nf">eval_single_particle_greens_function_topology</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">topology</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">eval_single_particle_greens_function_topology</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">topology</span><span class="p">):</span>
 
         <span class="n">spgf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_zero_single_particle_greens_function</span><span class="p">()</span>
 
@@ -781,7 +856,7 @@
         <span class="k">return</span> <span class="n">spgf</span>
 
 
-    <span class="k">def</span> <span class="nf">__eval_single_particle_greens_function_topology_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">topology</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__eval_single_particle_greens_function_topology_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">topology</span><span class="p">):</span>
 
         <span class="n">n_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">get_num_single_ptcle_gf_backbones</span><span class="p">(</span><span class="n">topology</span><span class="p">)</span>
         <span class="n">n_vec</span> <span class="o">=</span> <span class="n">scatter_array_over_ranks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_max</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">))</span>
@@ -793,7 +868,50 @@
         <span class="k">return</span> <span class="n">spgf</span>
 
 
-    <span class="k">def</span> <span class="nf">Z_alpha</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">eta</span><span class="p">):</span>
+    <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;One-time correlator&#39;</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">eval_one_time_correlator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">max_order</span><span class="p">,</span> <span class="n">ops_tau</span><span class="p">,</span> <span class="n">ops_0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Evaluate a one time correlator of the form</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            C(\\tau) = \\langle T_\\tau O(\\tau) O(0) \\rangle</span>
+<span class="sd">        </span>
+<span class="sd">        where :math:`O(\\tau)` and :math:`O(0)` are operators in imaginary time, </span>
+<span class="sd">        and :math:`T_\\tau` is the imaginary time ordering operator. </span>
+<span class="sd">        </span>
+<span class="sd">        The operators are specified by the lists of fundamental operators </span>
+<span class="sd">        ``ops_tau`` and ``ops_0``, which contain the operators at imaginary time </span>
+<span class="sd">        :math:`\\tau` and :math:`0`, respectively.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">corr</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">ops_tau</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">ops_0</span><span class="p">)])</span>
+        <span class="n">corr</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="mf">0.</span>
+
+        <span class="k">for</span> <span class="n">order</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Order </span><span class="si">{</span><span class="n">order</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__inplace_eval_one_time_correlator_order</span><span class="p">(</span><span class="n">corr</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">ops_tau</span><span class="p">,</span> <span class="n">ops_0</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">corr</span>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__inplace_eval_one_time_correlator_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">corr</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">ops_tau</span><span class="p">,</span> <span class="n">ops_0</span><span class="p">):</span>
+
+        <span class="k">for</span> <span class="n">sign</span><span class="p">,</span> <span class="n">topology</span> <span class="ow">in</span> <span class="n">all_connected_pairings</span><span class="p">(</span><span class="n">order</span><span class="p">):</span>
+            <span class="n">topology</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+            <span class="n">prefactor</span> <span class="o">=</span> <span class="nb">pow</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span> <span class="o">*</span> <span class="n">sign</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__inplace_eval_one_time_correlator_topology_loop</span><span class="p">(</span>
+                <span class="n">corr</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">topology</span><span class="p">,</span> <span class="n">ops_tau</span><span class="p">,</span> <span class="n">ops_0</span><span class="p">,</span> <span class="n">prefactor</span><span class="p">)</span>
+    
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__inplace_eval_one_time_correlator_topology_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">corr</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">topology</span><span class="p">,</span> <span class="n">ops_tau</span><span class="p">,</span> <span class="n">ops_0</span><span class="p">,</span> <span class="n">prefactor</span><span class="p">):</span>
+
+        <span class="n">n_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">get_num_single_ptcle_gf_backbones</span><span class="p">(</span><span class="n">topology</span><span class="p">)</span>
+        <span class="n">n_vec</span> <span class="o">=</span> <span class="n">scatter_array_over_ranks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_max</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">))</span>
+
+        <span class="n">corr_arr</span> <span class="o">=</span> <span class="n">prefactor</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="o">.</span><span class="n">compute_one_time_correlator</span><span class="p">(</span>
+            <span class="n">G</span><span class="p">,</span> <span class="n">ops_tau</span><span class="p">,</span> <span class="n">ops_0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">atom_diag</span><span class="p">,</span> <span class="n">topology</span><span class="p">,</span> <span class="n">n_vec</span><span class="p">)</span>
+        <span class="n">corr</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">+=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">all_reduce</span><span class="p">(</span><span class="n">corr_arr</span><span class="p">)</span>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">Z_alpha</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">eta</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot; Partition function with Sigma scaled by alpha </span>
 <span class="sd">        Solving</span>
 <span class="sd">        </span>
@@ -816,7 +934,7 @@
         <span class="k">return</span> <span class="n">Za</span>    
 
 
-    <span class="k">def</span> <span class="nf">dZ_alpha_deta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">eta</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dZ_alpha_deta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">eta</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot; Derivative of partition function Z_\alpha with respect to</span>
 <span class="sd">        the pseudo-particle chemical potential eta. </span>
 <span class="sd">        </span>
@@ -835,7 +953,7 @@
         <span class="k">return</span> <span class="n">dZ_deta</span>
 
 
-    <span class="k">def</span> <span class="nf">Z_alpha_minus_one_and_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">eta</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">Z_alpha_minus_one_and_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">eta</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot; Compute Z_alpha - 1 and its derivative with respect to eta, for root finding in the Newton solver. &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">is_root</span><span class="p">():</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Z_alpha_minus_one_and_derivative: alpha = </span><span class="si">{</span><span class="n">alpha</span><span class="si">}</span><span class="s1">, eta = </span><span class="si">{</span><span class="n">eta</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -850,7 +968,7 @@
         <span class="k">return</span> <span class="n">Za</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dZ_deta</span>
     
 
-    <span class="k">def</span> <span class="nf">Z_alpha_minus_one_and_derivative_and_2nd_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">eta</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">Z_alpha_minus_one_and_derivative_and_2nd_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">eta</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot; Compute Z_alpha - 1 and its derivatives with respect to eta, for root finding in the Newton solver. &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">is_root</span><span class="p">():</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Z_alpha_minus_one_and_derivative_and_2nd_derivative: alpha = </span><span class="si">{</span><span class="n">alpha</span><span class="si">}</span><span class="s1">, eta = </span><span class="si">{</span><span class="n">eta</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -870,7 +988,7 @@
         <span class="k">return</span> <span class="n">Za</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dZ_deta</span><span class="p">,</span> <span class="n">d2Z_deta2</span>
 
 
-    <span class="k">def</span> <span class="nf">deta_dalpha</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">eta</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">deta_dalpha</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">eta</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot; Analytic derivative of :math:`\eta(\alpha)`</span>
 
 <span class="sd">        .. math::</span>
@@ -892,7 +1010,7 @@
         <span class="k">return</span> <span class="n">deta_dalpha</span>
 
 
-    <span class="k">def</span> <span class="nf">derivative_components</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">eta</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">derivative_components</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">eta</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">is_root</span><span class="p">():</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;derivative_components: alpha = </span><span class="si">{</span><span class="n">alpha</span><span class="si">}</span><span class="s1">, eta = </span><span class="si">{</span><span class="n">eta</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="n">Sigma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pseudo_particle_self_energy</span><span class="p">()</span>
         <span class="n">Ga</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solve_dyson</span><span class="p">(</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">Sigma</span><span class="p">,</span> <span class="n">eta</span><span class="p">)</span>
@@ -901,7 +1019,7 @@
         <span class="k">return</span> <span class="n">TrGaGa</span><span class="p">,</span> <span class="n">TrGaSigmaGa</span>
 
 
-    <span class="k">def</span> <span class="nf">d2eta_dalpha_deta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">eta</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">d2eta_dalpha_deta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">eta</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot; Higher order derivative (used for stiff ODE solver)</span>
 <span class="sd">        </span>
 <span class="sd">        .. math:: </span>
@@ -945,7 +1063,7 @@
     
     
     <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;ODE normalization&#39;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">solve_ppsc_chempot_adiabatic_ode</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">solve_ppsc_chempot_adiabatic_ode</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">,</span> 
         <span class="n">method</span><span class="o">=</span><span class="s1">&#39;RK23&#39;</span><span class="p">,</span>
         <span class="c1">#method=&#39;DOP853&#39;,</span>
@@ -956,7 +1074,7 @@
         <span class="n">func</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">,</span> <span class="n">y</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">deta_dalpha</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">real</span>
         <span class="n">jac</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">,</span> <span class="n">y</span> <span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">d2eta_dalpha_deta</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">])])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
 
-        <span class="kn">from</span> <span class="nn">scipy.integrate</span> <span class="kn">import</span> <span class="n">solve_ivp</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.integrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve_ivp</span>
 
         <span class="n">sol</span> <span class="o">=</span> <span class="n">solve_ivp</span><span class="p">(</span>
             <span class="n">func</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">),</span> 
@@ -976,12 +1094,12 @@
 
 
     <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;ODE normalization G&#39;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">solve_ppsc_chempot_adiabatic_ode_G</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">solve_ppsc_chempot_adiabatic_ode_G</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">,</span> 
         <span class="n">method</span><span class="o">=</span><span class="s1">&#39;RK23&#39;</span><span class="p">,</span>
         <span class="p">):</span>
 
-        <span class="k">def</span> <span class="nf">from_array</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">from_array</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
             <span class="n">G</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_zero_pseudo_particle_propagator</span><span class="p">()</span>
             <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">for</span> <span class="n">bidx</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
@@ -990,13 +1108,13 @@
                 <span class="n">idx</span> <span class="o">+=</span> <span class="n">size</span>
             <span class="k">return</span> <span class="n">G</span>
         
-        <span class="k">def</span> <span class="nf">to_array</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">to_array</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
             <span class="n">arr</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">bidx</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
                 <span class="n">arr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
         
-        <span class="k">def</span> <span class="nf">get_eta</span><span class="p">(</span><span class="n">G0</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">S</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">get_eta</span><span class="p">(</span><span class="n">G0</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">S</span><span class="p">):</span>
             
             <span class="n">TrG0G</span> <span class="o">=</span> <span class="n">trace</span><span class="p">(</span><span class="n">conv</span><span class="p">(</span><span class="n">G0</span><span class="p">,</span> <span class="n">G</span><span class="p">))</span>
             <span class="n">TrG0SG</span>  <span class="o">=</span> <span class="n">trace</span><span class="p">(</span><span class="n">G</span> <span class="o">-</span> <span class="n">G0</span> <span class="o">-</span> <span class="n">conv</span><span class="p">(</span><span class="n">G0</span><span class="p">,</span> <span class="n">conv</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">G</span><span class="p">)))</span>
@@ -1004,7 +1122,7 @@
             <span class="n">eta</span> <span class="o">=</span> <span class="n">TrG0SG</span> <span class="o">/</span> <span class="n">TrG0G</span>
             <span class="k">return</span> <span class="n">eta</span>
 
-        <span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
 
             <span class="n">G</span> <span class="o">=</span> <span class="n">from_array</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
 
@@ -1024,7 +1142,7 @@
 
             <span class="k">return</span> <span class="n">dy</span>
 
-        <span class="kn">from</span> <span class="nn">scipy.integrate</span> <span class="kn">import</span> <span class="n">solve_ivp</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.integrate</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve_ivp</span>
 
         <span class="n">y0</span> <span class="o">=</span> <span class="n">to_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G0</span><span class="p">)</span>
 
@@ -1049,7 +1167,7 @@
 
 
     <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;Root normalization&#39;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">solve_ppsc_chempot_newton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">solve_ppsc_chempot_newton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
         <span class="k">if</span> <span class="n">is_root</span><span class="p">():</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;PPSC: Starting root solver for eta with kwargs = </span><span class="si">{</span><span class="n">kwargs</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         
@@ -1058,7 +1176,7 @@
         <span class="c1">#f = lambda eta : self.Z_alpha_minus_one_and_derivative(1., eta)</span>
         <span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">eta</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">Z_alpha_minus_one_and_derivative_and_2nd_derivative</span><span class="p">(</span><span class="mf">1.</span><span class="p">,</span> <span class="n">eta</span><span class="p">)</span>
         
-        <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">root_scalar</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">root_scalar</span>
 
         <span class="n">sol</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span>
             <span class="n">f</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">eta</span><span class="p">,</span> 
@@ -1082,17 +1200,17 @@
     
 
     <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;Bisection normalization&#39;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">solve_ppsc_chempot_bisection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">solve_ppsc_chempot_bisection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 
         <span class="k">if</span> <span class="n">is_root</span><span class="p">():</span> <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;PPSC: Starting bisection solver for eta with kwargs = </span><span class="si">{</span><span class="n">kwargs</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         
-        <span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">eta</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="n">eta</span><span class="p">):</span>
             <span class="n">Sigma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pseudo_particle_self_energy</span><span class="p">()</span>
             <span class="n">G</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solve_dyson</span><span class="p">(</span><span class="n">Sigma</span><span class="p">,</span> <span class="n">eta</span><span class="p">)</span>
 
             <span class="c1"># Try to detect extreme limits by oscillations in Ga</span>
 
-            <span class="k">def</span> <span class="nf">num_sign_changes_blockgf</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">num_sign_changes_blockgf</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
                 <span class="n">max_num_changes</span> <span class="o">=</span> <span class="mi">0</span>
                 <span class="k">for</span> <span class="n">bidx</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
                     <span class="n">g_diag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">axis1</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">axis2</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
@@ -1100,25 +1218,25 @@
                     <span class="n">max_num_changes</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_num_changes</span><span class="p">,</span> <span class="n">num_changes</span><span class="p">)</span>
                 <span class="k">return</span> <span class="n">max_num_changes</span>
 
-            <span class="k">def</span> <span class="nf">max_blockgf</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">max_blockgf</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
                 <span class="n">max_val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;-inf&#39;</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">bidx</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
                     <span class="n">max_val</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_val</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span><span class="p">))</span>
                 <span class="k">return</span> <span class="n">max_val</span>
 
-            <span class="k">def</span> <span class="nf">min_blockgf</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">min_blockgf</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
                 <span class="n">min_val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">bidx</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
                     <span class="n">min_val</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">min_val</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">real</span><span class="p">))</span>
                 <span class="k">return</span> <span class="n">min_val</span>
 
-            <span class="k">def</span> <span class="nf">max_tau0_blockgf</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">max_tau0_blockgf</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
                 <span class="n">max_val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;-inf&#39;</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">bidx</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
                     <span class="n">max_val</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_val</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">)))</span>
                 <span class="k">return</span> <span class="n">max_val</span>
 
-            <span class="k">def</span> <span class="nf">min_tau0_blockgf</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">min_tau0_blockgf</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
                 <span class="n">min_val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">bidx</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
                     <span class="n">min_val</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">min_val</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="p">)))</span>
@@ -1148,7 +1266,7 @@
 
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;func: eta = </span><span class="si">{</span><span class="n">eta</span><span class="si">}</span><span class="s1">, Z = </span><span class="si">{</span><span class="n">Z</span><span class="si">}</span><span class="s1">, max(G) = </span><span class="si">{</span><span class="n">max_blockgf</span><span class="p">(</span><span class="n">G</span><span class="p">)</span><span class="si">}</span><span class="s1">, min(G) = </span><span class="si">{</span><span class="n">min_blockgf</span><span class="p">(</span><span class="n">G</span><span class="p">)</span><span class="si">}</span><span class="s1">, val = </span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
-            <span class="kn">from</span> <span class="nn">triqs.plot.mpl_interface</span> <span class="kn">import</span> <span class="n">oplot</span><span class="p">,</span> <span class="n">plt</span><span class="p">,</span> <span class="n">oplotr</span><span class="p">,</span> <span class="n">oploti</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">triqs.plot.mpl_interface</span><span class="w"> </span><span class="kn">import</span> <span class="n">oplot</span><span class="p">,</span> <span class="n">plt</span><span class="p">,</span> <span class="n">oplotr</span><span class="p">,</span> <span class="n">oploti</span>
             <span class="n">oplot</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
@@ -1164,7 +1282,7 @@
 
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;E_max = </span><span class="si">{</span><span class="n">E_max</span><span class="si">}</span><span class="s1">, E_min = </span><span class="si">{</span><span class="n">E_min</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
-        <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">root_scalar</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">root_scalar</span>
 
         <span class="n">sol</span> <span class="o">=</span> <span class="n">root_scalar</span><span class="p">(</span>
             <span class="n">func</span><span class="p">,</span> <span class="n">bracket</span><span class="o">=</span><span class="p">(</span><span class="n">E_min</span><span class="p">,</span> <span class="n">E_max</span><span class="p">),</span>
@@ -1182,7 +1300,7 @@
         <span class="k">return</span> <span class="n">sol</span>    
 
 
-    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
 
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
@@ -1223,28 +1341,28 @@
         <span class="k">return</span> <span class="kc">True</span>
 
     
-    <span class="k">def</span> <span class="nf">__skip_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__skip_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="s1">&#39;dysons&#39;</span><span class="p">,</span> <span class="s1">&#39;timer&#39;</span><span class="p">]</span>
 
 
-    <span class="k">def</span> <span class="nf">__reduce_to_dict__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__reduce_to_dict__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__skip_keys</span><span class="p">())</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span> <span class="k">del</span> <span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">d</span>
 
 
-    <span class="k">def</span> <span class="nf">__copy__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__copy__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__factory_from_dict__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__reduce_to_dict__</span><span class="p">())</span>
 
     
-    <span class="k">def</span> <span class="nf">__deepcopy__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">memo</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__deepcopy__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">memo</span><span class="p">):</span>
         <span class="n">d</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__reduce_to_dict__</span><span class="p">())</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__factory_from_dict__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
 
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">__factory_from_dict__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__factory_from_dict__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
         <span class="n">arg_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;H_loc&#39;</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span><span class="p">,</span> <span class="s1">&#39;w_max&#39;</span><span class="p">,</span> <span class="s1">&#39;eps&#39;</span><span class="p">,</span> <span class="s1">&#39;gf_struct&#39;</span><span class="p">,</span> <span class="s1">&#39;conserved_operators&#39;</span><span class="p">]</span>
         <span class="n">argv_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;atom_diag&#39;</span><span class="p">,</span> <span class="s1">&#39;verbose&#39;</span><span class="p">]</span>
         <span class="n">verbose</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]</span>
@@ -1257,7 +1375,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">logo</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">logo</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; https://patorjk.com/software/taag/#p=display&amp;f=Red+Phoenix&amp;t=XCA &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="sa">r</span><span class="s2">&quot;&quot;&quot;____  ____________     _____</span>
 <span class="s2">\   \/  /\_   ___ \   /  _  \</span>
@@ -1267,24 +1385,24 @@
 <span class="s2">      \_/        \/         \/  [github.com/TRIQS/xca]&quot;&quot;&quot;</span>
 
 
-<span class="k">class</span> <span class="nc">PoleRepresentation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">poles</span><span class="p">,</span> <span class="n">coefficients</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PoleRepresentation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">poles</span><span class="p">,</span> <span class="n">coefficients</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">poles</span> <span class="o">=</span> <span class="n">poles</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">coefficients</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">coefficients</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
 
 
-    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">poles</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">poles</span><span class="p">)</span> <span class="ow">and</span> \
             <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coefficients</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">coefficients</span><span class="p">)</span>
 
 
-    <span class="k">def</span> <span class="nf">__reduce_to_dict__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__reduce_to_dict__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">d</span>
 
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">__factory_from_dict__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__factory_from_dict__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
         <span class="n">arg_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;poles&#39;</span><span class="p">,</span> <span class="s1">&#39;coefficients&#39;</span><span class="p">]</span>
         <span class="n">argv_keys</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="o">*</span><span class="p">[</span> <span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">arg_keys</span> <span class="p">],</span>
@@ -1293,7 +1411,7 @@
         <span class="k">return</span> <span class="n">ret</span>
 
 
-<span class="k">def</span> <span class="nf">hamiltonian_matrix</span><span class="p">(</span><span class="n">ad</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">hamiltonian_matrix</span><span class="p">(</span><span class="n">ad</span><span class="p">):</span>
 
     <span class="n">H_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">ad</span><span class="o">.</span><span class="n">full_hilbert_space_dim</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 
@@ -1306,7 +1424,7 @@
     <span class="k">return</span> <span class="n">H_mat</span>
 
 
-<span class="k">def</span> <span class="nf">hamiltonian_matrix_blocks</span><span class="p">(</span><span class="n">ad</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">hamiltonian_matrix_blocks</span><span class="p">(</span><span class="n">ad</span><span class="p">):</span>
   
     <span class="n">H_blocks</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -1317,7 +1435,7 @@
     <span class="k">return</span> <span class="n">H_blocks</span>
 
 
-<span class="k">def</span> <span class="nf">hamiltonian_matrix_block</span><span class="p">(</span><span class="n">ad</span><span class="p">,</span> <span class="n">sidx</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">hamiltonian_matrix_block</span><span class="p">(</span><span class="n">ad</span><span class="p">,</span> <span class="n">sidx</span><span class="p">):</span>
 
     <span class="n">U</span> <span class="o">=</span> <span class="n">ad</span><span class="o">.</span><span class="n">unitary_matrices</span><span class="p">[</span><span class="n">sidx</span><span class="p">]</span>
     <span class="n">E</span> <span class="o">=</span> <span class="n">ad</span><span class="o">.</span><span class="n">energies</span><span class="p">[</span><span class="n">sidx</span><span class="p">]</span>
@@ -1327,7 +1445,7 @@
     <span class="k">return</span> <span class="n">H_block</span>
 
 
-<span class="k">def</span> <span class="nf">zero_pseudo_particle_propagator_dense</span><span class="p">(</span><span class="n">ad</span><span class="p">,</span> <span class="n">mesh_tau</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">zero_pseudo_particle_propagator_dense</span><span class="p">(</span><span class="n">ad</span><span class="p">,</span> <span class="n">mesh_tau</span><span class="p">):</span>
 
     <span class="n">G_tau</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">mesh_tau</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="p">[</span><span class="n">ad</span><span class="o">.</span><span class="n">full_hilbert_space_dim</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>
     <span class="n">G_tau</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="mf">0.</span>
@@ -1335,7 +1453,7 @@
     <span class="k">return</span> <span class="n">G_tau</span>
 
 
-<span class="k">def</span> <span class="nf">zero_pseudo_particle_propagator</span><span class="p">(</span><span class="n">ad</span><span class="p">,</span> <span class="n">mesh_tau</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">zero_pseudo_particle_propagator</span><span class="p">(</span><span class="n">ad</span><span class="p">,</span> <span class="n">mesh_tau</span><span class="p">):</span>
 
     <span class="n">G_tau_blocks</span> <span class="o">=</span> <span class="p">[]</span>
     
@@ -1349,13 +1467,13 @@
     <span class="k">return</span> <span class="n">G_tau</span>
         
 
-<span class="k">def</span> <span class="nf">atomic_pseudo_particle_greens_function_dense</span><span class="p">(</span><span class="n">ad</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">mesh_tau</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">atomic_pseudo_particle_greens_function_dense</span><span class="p">(</span><span class="n">ad</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">mesh_tau</span><span class="p">):</span>
     <span class="n">G_b_tau</span> <span class="o">=</span> <span class="n">atomic_pseudo_particle_greens_function</span><span class="p">(</span><span class="n">ad</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">mesh_tau</span><span class="p">)</span>
     <span class="n">G_tau</span> <span class="o">=</span> <span class="n">pseudo_particle_block_gf_to_dense</span><span class="p">(</span><span class="n">G_b_tau</span><span class="p">,</span> <span class="n">ad</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">G_tau</span>
 
 
-<span class="k">def</span> <span class="nf">atomic_pseudo_particle_greens_function</span><span class="p">(</span><span class="n">ad</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">mesh_tau</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">atomic_pseudo_particle_greens_function</span><span class="p">(</span><span class="n">ad</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">mesh_tau</span><span class="p">):</span>
 
     <span class="n">G_tau_blocks</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -1381,7 +1499,7 @@
     <span class="k">return</span> <span class="n">G_tau</span><span class="p">,</span> <span class="n">eta0</span>
 
 
-<span class="k">def</span> <span class="nf">print_atom_diag_info</span><span class="p">(</span><span class="n">ad</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">print_atom_diag_info</span><span class="p">(</span><span class="n">ad</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
     <span class="k">if</span> <span class="kc">False</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;&quot;&quot;   _____    __                   ________   .___    _____     ________</span>
@@ -1429,11 +1547,11 @@
         <span class="nb">print</span><span class="p">(</span><span class="n">ad</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">max_abs_diff_BlockGf</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span> <span class="n">G2</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">max_abs_diff_BlockGf</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span> <span class="n">G2</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">g1</span><span class="o">.</span><span class="n">data</span> <span class="o">-</span> <span class="n">g2</span><span class="o">.</span><span class="n">data</span><span class="p">))</span> <span class="k">for</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">g1</span><span class="p">),</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">g2</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">G1</span><span class="p">,</span> <span class="n">G2</span><span class="p">)</span> <span class="p">])</span>
 
 
-<span class="k">def</span> <span class="nf">pseudo_particle_block_gf_to_dense</span><span class="p">(</span><span class="n">block_gf</span><span class="p">,</span> <span class="n">ad</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">pseudo_particle_block_gf_to_dense</span><span class="p">(</span><span class="n">block_gf</span><span class="p">,</span> <span class="n">ad</span><span class="p">):</span>
 
     <span class="n">mesh</span> <span class="o">=</span> <span class="n">block_gf</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mesh</span>
     <span class="n">dense_gf</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="p">[</span><span class="n">ad</span><span class="o">.</span><span class="n">full_hilbert_space_dim</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>
@@ -1446,7 +1564,7 @@
     <span class="k">return</span> <span class="n">dense_gf</span>    
 
 
-<span class="k">def</span> <span class="nf">get_max_abs_trapz_block_gf</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_max_abs_trapz_block_gf</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
 
     <span class="n">max_abs</span> <span class="o">=</span> <span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">b</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
@@ -1461,7 +1579,7 @@
     <span class="k">return</span> <span class="n">max_abs</span>
 
 
-<span class="k">def</span> <span class="nf">get_max_abs_block_gf</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_max_abs_block_gf</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
 
     <span class="n">max_abs</span> <span class="o">=</span> <span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">b</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
@@ -1472,17 +1590,17 @@
     <span class="k">return</span> <span class="n">max_abs</span>
 
 
-<span class="k">def</span> <span class="nf">trace_dlr_imtime_BlockGf</span><span class="p">(</span><span class="n">G_dlr_imtime_BlockGf</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">trace_dlr_imtime_BlockGf</span><span class="p">(</span><span class="n">G_dlr_imtime_BlockGf</span><span class="p">):</span>
 
     <span class="n">G_dlr_coeff_BlockGf</span> <span class="o">=</span> <span class="n">make_gf_dlr</span><span class="p">(</span><span class="n">G_dlr_imtime_BlockGf</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">block_trace</span><span class="p">(</span><span class="n">g_dlr_coeff</span><span class="p">):</span> 
+    <span class="k">def</span><span class="w"> </span><span class="nf">block_trace</span><span class="p">(</span><span class="n">g_dlr_coeff</span><span class="p">):</span> 
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">g_dlr_coeff</span><span class="p">(</span><span class="n">g_dlr_coeff</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">beta</span><span class="p">))</span>
 
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">block_trace</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">G_dlr_coeff_BlockGf</span><span class="p">])</span>
 
 
-<span class="k">def</span> <span class="nf">fundamental_operators_from_gf_struct</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">fundamental_operators_from_gf_struct</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">):</span>
     <span class="n">fundamental_operators</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">gf_struct</span><span class="p">:</span>
         <span class="n">fundamental_operators</span> <span class="o">+=</span> <span class="p">[</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="p">]</span>
@@ -1491,7 +1609,7 @@
 
 <span class="c1"># -- Register Solver in Triqs formats</span>
 
-<span class="kn">from</span> <span class="nn">h5.formats</span> <span class="kn">import</span> <span class="n">register_class</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">h5.formats</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_class</span>
 <span class="n">register_class</span><span class="p">(</span><span class="n">BlockSparseSolver</span><span class="p">)</span>
 <span class="n">register_class</span><span class="p">(</span><span class="n">PoleRepresentation</span><span class="p">)</span>
 </pre></div>

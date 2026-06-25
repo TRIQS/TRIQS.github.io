@@ -1,12 +1,13 @@
 var searchData=
 [
-  ['p_0',['p',['../classhyb__F.html#ab13b3bd7a5945c0b04713e7037a7791f',1,'hyb_F::P'],['../classtriqs__xca_1_1block__sparse_1_1BlockOpSymQuartet.html#aa57168c6e015ba9a27837e4a39e028b8',1,'triqs_xca::block_sparse::BlockOpSymQuartet::p']]],
-  ['partition_5ffunction_1',['partition_function',['../classfastdiagram.html#abd1ce2430f31a686cd85bffdc2f749a8',1,'fastdiagram']]],
-  ['poles_2',['poles',['../classtriqs__xca_1_1hyb_1_1Hybridization.html#a0f9d01ee55fbaebb60b4903ed26a9a12',1,'triqs_xca::hyb::Hybridization']]],
-  ['pown_3',['pown',['../utils_8hpp.html#a295a47b17249672dd55d46154c5ea012',1,'utils.hpp']]],
-  ['prefactor_5fsign_4',['prefactor_sign',['../classtriqs__xca_1_1backbone_1_1Backbone.html#a09acb4fb3d5a46657132679256d89bdc',1,'triqs_xca::backbone::Backbone']]],
-  ['print_5fself_5fenergy_5fbackbone_5',['print_self_energy_backbone',['../classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a8c31992b2b4b3c2ef02be464a74f0393',1,'triqs_xca::block_sparse::DiagramEvaluator']]],
-  ['print_5fsingle_5fptcle_5fgf_5fbackbone_6',['print_single_ptcle_gf_backbone',['../classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a72fd676166759d838db90ff5f28d87e4',1,'triqs_xca::block_sparse::DiagramEvaluator']]],
-  ['print_5fslice_7',['print_slice',['../classtriqs__xca_1_1block__sparse_1_1BlockOp3D.html#a2c25baac2d0cb1e7df69c1699ff1e6b7',1,'triqs_xca::block_sparse::BlockOp3D']]],
-  ['projects_8',['Integration in C++ projects',['../integration.html',1,'']]]
+  ['n_0',['N',['../classtriqs__xca_1_1dense_1_1DenseDiagramEvaluator.html#ade529c301815f88228ee8e9653bad87e',1,'triqs_xca::dense::DenseDiagramEvaluator::N'],['../classhyb__F.html#a1ec1bb2dd36477ba830be2ffb181b181',1,'hyb_F::N']]],
+  ['n_1',['n',['../classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#aa16715b25279f1e8df568b208594bd34',1,'triqs_xca::block_sparse::DiagramEvaluator::n'],['../classtriqs__xca_1_1dense_1_1DenseDiagramEvaluator.html#ad0ff8dc53227d442ba117e978b1d6c60',1,'triqs_xca::dense::DenseDiagramEvaluator::n'],['../classhyb__F.html#aebeaa076d3a49d70d7cdbbd2c4aa2d88',1,'hyb_F::n'],['../namespacetriqs__xca_1_1backbone.html#a3467704edf530c3ad34069cb81903978',1,'triqs_xca::backbone::n']]],
+  ['nca_5fbs_2',['NCA_bs',['../namespacetriqs__xca_1_1block__sparse.html#a3856467562ded2390d849ac49cdca5c9',1,'triqs_xca::block_sparse::NCA_bs(nda::array_const_view&lt; dcomplex, 3 &gt; hyb, nda::array_const_view&lt; dcomplex, 3 &gt; hyb_refl, const BlockDiagOpFun &amp;Gt, const std::vector&lt; BlockOp &gt; &amp;Fs)'],['../namespacetriqs__xca_1_1block__sparse.html#a3add4037d8987ba492578e008e08fc9e',1,'triqs_xca::block_sparse::NCA_bs(nda::array_const_view&lt; dcomplex, 3 &gt; hyb, nda::array_const_view&lt; dcomplex, 3 &gt; hyb_refl, BlockDiagOpFun const &amp;Gt, const BlockOpSymQuartet &amp;Fq)']]],
+  ['nca_5fdense_3',['NCA_dense',['../namespacetriqs__xca_1_1block__sparse.html#a8f4d466e10eded087fd26c2a15ae7e35',1,'triqs_xca::block_sparse']]],
+  ['nca_5fgf_5fbs_4',['NCA_gf_bs',['../namespacetriqs__xca_1_1block__sparse.html#a27a192ae3f384f734141448615a73dc4',1,'triqs_xca::block_sparse']]],
+  ['nca_5fgf_5fdense_5',['NCA_gf_dense',['../namespacetriqs__xca_1_1block__sparse.html#ae6edd27cee2c857369e3d1ae320dcc44',1,'triqs_xca::block_sparse']]],
+  ['nmax_6',['Nmax',['../classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a2f72934f6d48b8f1d587706e0278aca9',1,'triqs_xca::block_sparse::DiagramEvaluator']]],
+  ['nonint_5fgf_5fbdof_7',['nonint_gf_BDOF',['../namespacetriqs__xca_1_1block__sparse.html#aafdb474dbc7541b8abf328cb6717e192',1,'triqs_xca::block_sparse']]],
+  ['num_5fblock_5fcols_8',['num_block_cols',['../classtriqs__xca_1_1block__sparse_1_1BlockOp3D.html#a353310447a72f019c966e31b01df4539',1,'triqs_xca::block_sparse::BlockOp3D::num_block_cols'],['../classtriqs__xca_1_1block__sparse_1_1BlockOpSymSetBar.html#a723d87c3ebd88eaa654ecf2920ef912b',1,'triqs_xca::block_sparse::BlockOpSymSetBar::num_block_cols']]],
+  ['number_5fof_5fdiagrams_9',['number_of_diagrams',['../classfastdiagram.html#a9ded7bef5516bf6ec97c79d710fc3313',1,'fastdiagram']]]
 ];

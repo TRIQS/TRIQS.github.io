@@ -4,9 +4,13 @@ var annotated_dup =
       [ "dyson_it_ppsc", "classcppdlr_1_1dyson__it__ppsc.html", "classcppdlr_1_1dyson__it__ppsc" ]
     ] ],
     [ "triqs_xca", "namespacetriqs__xca.html", [
+      [ "atom_diag", "namespacetriqs__xca_1_1atom__diag.html", [
+        [ "BlockDiagOpFun", "classtriqs__xca_1_1atom__diag_1_1BlockDiagOpFun.html", "classtriqs__xca_1_1atom__diag_1_1BlockDiagOpFun" ],
+        [ "BlockOpSymQuartet", "classtriqs__xca_1_1atom__diag_1_1BlockOpSymQuartet.html", "classtriqs__xca_1_1atom__diag_1_1BlockOpSymQuartet" ],
+        [ "BlockOpSymSet", "classtriqs__xca_1_1atom__diag_1_1BlockOpSymSet.html", "classtriqs__xca_1_1atom__diag_1_1BlockOpSymSet" ],
+        [ "DenseFSet", "classtriqs__xca_1_1atom__diag_1_1DenseFSet.html", "classtriqs__xca_1_1atom__diag_1_1DenseFSet" ]
+      ] ],
       [ "backbone", "namespacetriqs__xca_1_1backbone.html", [
-        [ "Backbone", "classtriqs__xca_1_1backbone_1_1Backbone.html", "classtriqs__xca_1_1backbone_1_1Backbone" ],
-        [ "BackboneVertex", "classtriqs__xca_1_1backbone_1_1BackboneVertex.html", "classtriqs__xca_1_1backbone_1_1BackboneVertex" ],
         [ "CorrelatorBackbone", "classtriqs__xca_1_1backbone_1_1CorrelatorBackbone.html", "classtriqs__xca_1_1backbone_1_1CorrelatorBackbone" ]
       ] ],
       [ "block_sparse", "namespacetriqs__xca_1_1block__sparse.html", [
@@ -27,6 +31,9 @@ var annotated_dup =
         [ "Hybridization", "classtriqs__xca_1_1hyb_1_1Hybridization.html", "classtriqs__xca_1_1hyb_1_1Hybridization" ]
       ] ]
     ] ],
+    [ "Backbone", "classBackbone.html", null ],
+    [ "BackboneVertex", "classBackboneVertex.html", null ],
+    [ "CorrelatorBackbone", "classCorrelatorBackbone.html", "classCorrelatorBackbone" ],
     [ "fastdiagram", "classfastdiagram.html", "classfastdiagram" ],
     [ "hyb_decomp", "classhyb__decomp.html", "classhyb__decomp" ],
     [ "hyb_F", "classhyb__F.html", "classhyb__F" ]

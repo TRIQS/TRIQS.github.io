@@ -1,9 +1,12 @@
 var searchData=
 [
-  ['k_5f0_5fm_0',['k_0_m',['../classtriqs__xca_1_1hyb_1_1Hybridization.html#ad2aa675158669e8366dbc67c185dd161',1,'triqs_xca::hyb::Hybridization']]],
-  ['k_5f0_5fp_1',['k_0_p',['../classtriqs__xca_1_1hyb_1_1Hybridization.html#a650eacf4b53adf2a09b01924ff76556d',1,'triqs_xca::hyb::Hybridization']]],
-  ['k_5fit_5fm_2',['k_it_m',['../classtriqs__xca_1_1hyb_1_1Hybridization.html#a24a519b94577b358310f5094bfb49441',1,'triqs_xca::hyb::Hybridization']]],
-  ['k_5fit_5fp_3',['k_it_p',['../classtriqs__xca_1_1hyb_1_1Hybridization.html#a1eb18d78a2d254b134314f363a733a36',1,'triqs_xca::hyb::Hybridization']]],
-  ['k_5fmat_4',['K_mat',['../namespacetriqs__xca_1_1block__sparse.html#a45193fcd896d0036c12c76527f87c8c1',1,'triqs_xca::block_sparse']]],
-  ['k_5fmatrix_5',['K_matrix',['../classhyb__F.html#ac823f044c84fbb201476aea87758d05f',1,'hyb_F']]]
+  ['impurity_2ecpp_0',['impurity.cpp',['../impurity_8cpp.html',1,'']]],
+  ['impurity_2ehpp_1',['impurity.hpp',['../impurity_8hpp.html',1,'']]],
+  ['imtime_5fops_2',['imtime_ops',['../namespacetriqs__xca_1_1dense.html#a87e457a395f840e4a22e56137b57374c',1,'triqs_xca::dense']]],
+  ['in_20c_20projects_3',['Integration in C++ projects',['../integration.html',1,'']]],
+  ['installation_4',['Installation',['../installation.html',1,'']]],
+  ['installation_2emd_5',['installation.md',['../installation_8md.html',1,'']]],
+  ['integration_20in_20c_20projects_6',['Integration in C++ projects',['../integration.html',1,'']]],
+  ['integration_2emd_7',['integration.md',['../integration_8md.html',1,'']]],
+  ['itops_8',['itops',['../classtriqs__xca_1_1dense_1_1DenseDiagramEvaluator.html#ac26b50b6679a89d60b98172170cd00c6',1,'triqs_xca::dense::DenseDiagramEvaluator']]]
 ];
