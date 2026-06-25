@@ -45,7 +45,7 @@ in the corresponding guide page of the DFTTools documentation:
      - `conv_wien2k <https://triqs.github.io/dft_tools/latest/guide/conv_wien2k.html>`_
    * - VASP
      - :py:class:`triqs_dftkit.vasp.Converter` (PLOVasp) or via Wannier90
-     - *in development*
+     - :py:class:`triqs_dftkit.vasp.Driver`
      - `conv_vasp <https://triqs.github.io/dft_tools/latest/guide/conv_vasp.html>`_
    * - Quantum Espresso
      - via Wannier90
@@ -71,13 +71,18 @@ in the corresponding guide page of the DFTTools documentation:
 Tutorials
 =========
 
-End-to-end DFT+DMFT tutorials that exercise these converters live in the
+End-to-end DFT+DMFT tutorials that exercise the converters live in the
 DFTTools documentation:
 
 - `SrVO3 (VASP, one-shot) <https://triqs.github.io/dft_tools/latest/tutorials/srvo3.html>`_
 - `Sr2MgOsO6 without SOC <https://triqs.github.io/dft_tools/latest/tutorials/sr2mgoso6_nosoc.html>`_
 - `Sr2MgOsO6 with SOC <https://triqs.github.io/dft_tools/latest/tutorials/sr2mgoso6_soc.html>`_
 - `Ce-gamma Fermi surfaces (Wien2k) <https://triqs.github.io/dft_tools/latest/tutorials/ce-gamma-fscs_wien2k.html>`_
+
+A full charge self-consistent DFT+DMFT calculation driven end-to-end through the
+dftkit VASP ``Driver`` is documented in the ModEST documentation:
+
+- `Charge self-consistent DFT+DMFT with VASP: SrVO3 <https://triqs.github.io/modest/latest/tutorials/vasp_csc_svo/svo_csc.html>`_
 
 See the full `DFTTools documentation <https://triqs.github.io/dft_tools/latest/documentation.html>`_
 for the DMFT self-consistency loop, post-processing and advanced topics.

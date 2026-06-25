@@ -83,6 +83,7 @@
 </li>
 <li class="toctree-l4"><a class="reference internal" href="../../../../_autosummary/triqs_dftkit.vasp.html">triqs_dftkit.vasp</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="../../../../_autosummary/triqs_dftkit.vasp.converter.html">triqs_dftkit.vasp.converter</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../../_autosummary/triqs_dftkit.vasp.driver.html">triqs_dftkit.vasp.driver</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../../_autosummary/triqs_dftkit.vasp.plovasp.html">triqs_dftkit.vasp.plovasp</a></li>
 </ul>
 </li>
@@ -278,7 +279,7 @@
     <span class="k">while</span> <span class="n">vasp_running</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">debug</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">bcolors</span><span class="o">.</span><span class="n">RED</span> <span class="o">+</span> <span class="s2">&quot;rank </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">mpi</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span> <span class="o">+</span> <span class="n">bcolors</span><span class="o">.</span><span class="n">ENDC</span><span class="p">)</span>
         <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;  Waiting for VASP lock to disappear...&quot;</span><span class="p">)</span>
-        <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">(</span><span class="n">poll_msec</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
         <span class="k">while</span> <span class="n">is_vasp_lock_present</span><span class="p">():</span>
             <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">debug</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">bcolors</span><span class="o">.</span><span class="n">YELLOW</span> <span class="o">+</span> <span class="s2">&quot; waiting: rank </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">mpi</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span> <span class="o">+</span> <span class="n">bcolors</span><span class="o">.</span><span class="n">ENDC</span><span class="p">)</span>
@@ -297,11 +298,11 @@
             <span class="n">converter</span><span class="o">.</span><span class="n">generate_and_output_as_text</span><span class="p">(</span><span class="n">cfg_file</span><span class="p">,</span> <span class="n">vasp_dir</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">)</span>
             <span class="c1"># Read energy from OSZICAR</span>
             <span class="n">dft_energy</span> <span class="o">=</span> <span class="n">get_dft_energy</span><span class="p">()</span>
-        <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">(</span><span class="n">poll_msec</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">debug</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="n">bcolors</span><span class="o">.</span><span class="n">GREEN</span> <span class="o">+</span> <span class="s2">&quot;rank </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">mpi</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span> <span class="o">+</span> <span class="n">bcolors</span><span class="o">.</span><span class="n">ENDC</span><span class="p">)</span>
         <span class="n">corr_energy</span><span class="p">,</span> <span class="n">sum_k</span> <span class="o">=</span> <span class="n">dmft_cycle</span><span class="p">()</span>
-        <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">(</span><span class="n">poll_msec</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
             <span class="n">total_energy</span> <span class="o">=</span> <span class="n">dft_energy</span> <span class="o">+</span> <span class="n">corr_energy</span> <span class="o">-</span> <span class="n">sum_k</span><span class="o">.</span><span class="n">dc_energ</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -341,7 +342,7 @@
             <span class="c1"># Writes out GAMMA file</span>
             <span class="n">sum_k</span><span class="o">.</span><span class="n">calc_density_correction</span><span class="p">(</span><span class="n">dm_type</span><span class="o">=</span><span class="s1">&#39;vasp&#39;</span><span class="p">)</span>
 
-            <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">(</span><span class="n">poll_msec</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
                 <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./vasp.lock&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
             <span class="k">while</span> <span class="n">is_vasp_lock_present</span><span class="p">():</span>
