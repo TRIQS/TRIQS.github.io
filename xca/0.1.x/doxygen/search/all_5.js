@@ -1,0 +1,22 @@
+var searchData=
+[
+  ['dagger_5fbs_0',['dagger_bs',['../namespacetriqs__xca_1_1block__sparse.html#a8fe9ed10007d37ff33291dfb43722242',1,'triqs_xca::block_sparse']]],
+  ['deltaiw_1',['Deltaiw',['../classfastdiagram.html#a960a884580f751414fbd3e1451fcff4d',1,'fastdiagram']]],
+  ['deltaiw_5freflect_2',['Deltaiw_reflect',['../classfastdiagram.html#aac593aa28be52f1408f96c0f90c1cdf1',1,'fastdiagram']]],
+  ['dense_2ecpp_3',['dense.cpp',['../dense_8cpp.html',1,'']]],
+  ['dense_2ehpp_4',['dense.hpp',['../dense_8hpp.html',1,'']]],
+  ['dense_5fbackbone_2ecpp_5',['dense_backbone.cpp',['../dense__backbone_8cpp.html',1,'']]],
+  ['dense_5fbackbone_2ehpp_6',['dense_backbone.hpp',['../dense__backbone_8hpp.html',1,'']]],
+  ['densediagramevaluator_7',['DenseDiagramEvaluator',['../classtriqs__xca_1_1dense_1_1DenseDiagramEvaluator.html',1,'triqs_xca::dense::DenseDiagramEvaluator'],['../classtriqs__xca_1_1dense_1_1DenseDiagramEvaluator.html#a3b4aa948a0ec9e4335ef69d24262a8db',1,'triqs_xca::dense::DenseDiagramEvaluator::DenseDiagramEvaluator(double beta, double eps, imtime_ops &amp;itops, nda::vector_const_view&lt; double &gt; hyb_poles, nda::array_const_view&lt; dcomplex, 3 &gt; hyb_coeffs, DenseFSet &amp;Fset)'],['../classtriqs__xca_1_1dense_1_1DenseDiagramEvaluator.html#a973af61c994611d5ebdac9ddf2fae36a',1,'triqs_xca::dense::DenseDiagramEvaluator::DenseDiagramEvaluator(nda::vector_const_view&lt; double &gt; hyb_poles, nda::array_const_view&lt; dcomplex, 3 &gt; hyb_coeffs, triqs::mesh::dlr_imtime tau_mesh, triqs::atom_diag::atom_diag&lt; isComplex &gt; const &amp;ad)']]],
+  ['densefset_8',['DenseFSet',['../classtriqs__xca_1_1atom__diag_1_1DenseFSet.html',1,'triqs_xca::atom_diag::DenseFSet'],['../classtriqs__xca_1_1dense_1_1DenseFSet.html',1,'triqs_xca::dense::DenseFSet'],['../classtriqs__xca_1_1dense_1_1DenseFSet.html#a507a20cbcaf937a112708f8a1768972e',1,'triqs_xca::dense::DenseFSet::DenseFSet()'],['../classtriqs__xca_1_1atom__diag_1_1DenseFSet.html#a507a20cbcaf937a112708f8a1768972e',1,'triqs_xca::atom_diag::DenseFSet::DenseFSet()']]],
+  ['details_9',['details',['../ex1.html#ex1_p2',1,'Maybe even more details'],['../ex1.html#ex1_p1',1,'More details']]],
+  ['diagramevaluator_10',['DiagramEvaluator',['../classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html',1,'triqs_xca::block_sparse::DiagramEvaluator'],['../classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a636ec579a03ed82b22c2558fa3ef5e58',1,'triqs_xca::block_sparse::DiagramEvaluator::DiagramEvaluator(nda::vector_const_view&lt; double &gt; hyb_poles, nda::array_const_view&lt; dcomplex, 3 &gt; hyb_coeffs, triqs::mesh::dlr_imtime tau_mesh, triqs::atom_diag::atom_diag&lt; isComplex &gt; const &amp;ad)'],['../classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a4e39418e0efcf142dd35bb9450163da8',1,'triqs_xca::block_sparse::DiagramEvaluator::DiagramEvaluator(double beta, double Lambda, double eps, nda::vector_const_view&lt; double &gt; hyb_poles, nda::array_const_view&lt; dcomplex, 3 &gt; hyb_coeffs, BlockOpSymQuartet &amp;Fq)']]],
+  ['dlr_5fdyson_5fppsc_2ehpp_11',['dlr_dyson_ppsc.hpp',['../dlr__dyson__ppsc_8hpp.html',1,'']]],
+  ['dlr_5fif_5fdense_12',['dlr_if_dense',['../classfastdiagram.html#a065319888492d83d1adc8b3f0bcb3405',1,'fastdiagram']]],
+  ['dlr_5fit_13',['dlr_it',['../classtriqs__xca_1_1dense_1_1DenseDiagramEvaluator.html#afb0a2c4512f10c121372f56764e94af8',1,'triqs_xca::dense::DenseDiagramEvaluator']]],
+  ['documentation_14',['API Documentation',['../documentation.html',1,'']]],
+  ['documentation_2emd_15',['documentation.md',['../documentation_8md.html',1,'']]],
+  ['dyson_5fit_5fppsc_16',['dyson_it_ppsc',['../classcppdlr_1_1dyson__it__ppsc.html',1,'cppdlr::dyson_it_ppsc&lt; Ht, Sh &gt;'],['../classcppdlr_1_1dyson__it__ppsc.html#a5ab692b118e78e29e3e58e439d11f0e6',1,'cppdlr::dyson_it_ppsc::dyson_it_ppsc(double beta, imtime_ops itops, Ht const &amp;h)'],['../classcppdlr_1_1dyson__it__ppsc.html#aa7e62755b14ecd780a62254b5f475f28',1,'cppdlr::dyson_it_ppsc::dyson_it_ppsc(double beta, imtime_ops itops, Tg0 const &amp;g0)']]],
+  ['dyson_5fit_5fppsc_3c_20nda_3a_3aarray_3c_20dcomplex_2c_202_20_3e_2c_20dcomplex_20_3e_17',['dyson_it_ppsc&lt; nda::array&lt; dcomplex, 2 &gt;, dcomplex &gt;',['../classcppdlr_1_1dyson__it__ppsc.html',1,'cppdlr']]],
+  ['dyson_5fit_5fppsc_5fcomplex_5fmatrix_18',['dyson_it_ppsc_complex_matrix',['../namespacecppdlr.html#a620f2c5056a1ba50ee6ae5f28c33022e',1,'cppdlr']]]
+];
