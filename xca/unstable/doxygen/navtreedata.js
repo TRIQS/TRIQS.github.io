@@ -35,7 +35,7 @@ var NAVTREE =
           [ "All", "functions.html", "functions_dup" ],
           [ "Functions", "functions_func.html", null ],
           [ "Variables", "functions_vars.html", null ],
-          [ "Related Symbols", "functions_rela.html", null ]
+          [ "Typedefs", "functions_type.html", null ]
         ] ]
       ] ],
       [ "Namespaces", "namespaces.html", [
@@ -43,6 +43,7 @@ var NAVTREE =
         [ "Namespace Members", "namespacemembers.html", [
           [ "All", "namespacemembers.html", null ],
           [ "Functions", "namespacemembers_func.html", null ],
+          [ "Variables", "namespacemembers_vars.html", null ],
           [ "Typedefs", "namespacemembers_type.html", null ]
         ] ]
       ] ],
@@ -50,8 +51,7 @@ var NAVTREE =
         [ "File List", "files.html", "files_dup" ],
         [ "File Members", "globals.html", [
           [ "All", "globals.html", null ],
-          [ "Functions", "globals_func.html", null ],
-          [ "Macros", "globals_defs.html", null ]
+          [ "Functions", "globals_func.html", null ]
         ] ]
       ] ]
     ] ],
@@ -63,8 +63,11 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "../ChangeLog.html",
-"classBlockOpSymSetBar.html#a3718f263e0b5fe23582011d441aa14cb"
+"classtriqs__xca_1_1block__sparse_1_1BlockOp3D.html",
+"classtriqs__xca_1_1dense_1_1DenseDiagramEvaluator.html#ad0ff8dc53227d442ba117e978b1d6c60",
+"namespacetriqs__xca_1_1block__sparse.html#ae6711bab13df3b14b6c98561ca41d273"
 ];
 
-var SYNCONMSG = 'click to disable panel synchronisation';
-var SYNCOFFMSG = 'click to enable panel synchronisation';
+var SYNCONMSG = 'click to disable panel synchronization';
+var SYNCOFFMSG = 'click to enable panel synchronization';
+var LISTOFALLMEMBERS = 'List of all members';

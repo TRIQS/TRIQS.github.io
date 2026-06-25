@@ -1,12 +1,17 @@
 var atom__diag__utils_8cpp =
 [
-    [ "ad_to_atom_prop", "atom__diag__utils_8cpp.html#a4b0d09ba85e2d5f8b9903a0041b00c47", null ],
-    [ "ad_to_atom_prop", "atom__diag__utils_8cpp.html#a146616b7fc3796126ee7eb06f13755ac", null ],
-    [ "get_full_h_atomic", "atom__diag__utils_8cpp.html#ac933d28408fb2527d180497321ddbc16", null ],
-    [ "get_full_h_atomic_perm", "atom__diag__utils_8cpp.html#a7aecc2246b350c7e4a757992c9136add", null ],
-    [ "get_full_operator_matrix", "atom__diag__utils_8cpp.html#a3132cbdc9164fac49c78c92254aa507b", null ],
-    [ "get_hamiltonian_blocks", "atom__diag__utils_8cpp.html#a2cfed1f4eb6fc115ed514205c2b81d77", null ],
-    [ "get_operators", "atom__diag__utils_8cpp.html#a0ac2643551c7ff0f36f9686bf79ff841", null ],
-    [ "get_operators_dense", "atom__diag__utils_8cpp.html#a950a68bbcd935a2d455f897b166723e3", null ],
-    [ "H_to_atom_prop_blocks", "atom__diag__utils_8cpp.html#aaa2762da3f90391aab5414c9fb2031b8", null ]
+    [ "triqs_xca::atom_diag::ad_to_atom_prop", "namespacetriqs__xca_1_1atom__diag.html#a26663d5055e159c9b6e93e037c35bf92", null ],
+    [ "triqs_xca::atom_diag::ad_to_atom_prop", "namespacetriqs__xca_1_1atom__diag.html#ac7decbc337b5c9e7dd384dd85ca3eadb", null ],
+    [ "triqs_xca::atom_diag::get_full_h_atomic", "namespacetriqs__xca_1_1atom__diag.html#ae4a26b360049673c22d75e42209bfa07", null ],
+    [ "triqs_xca::atom_diag::get_full_operator_matrix", "namespacetriqs__xca_1_1atom__diag.html#a24e1133d285ecaf5e9c5a47d3ed904f3", null ],
+    [ "triqs_xca::atom_diag::get_full_operator_matrix", "namespacetriqs__xca_1_1atom__diag.html#ab9df747848c19a84530ef11e5aaf5a74", null ],
+    [ "triqs_xca::atom_diag::get_hamiltonian_blocks", "namespacetriqs__xca_1_1atom__diag.html#ab9c97847ae99ba505834b0e43c3c2ba0", null ],
+    [ "triqs_xca::atom_diag::get_operators", "namespacetriqs__xca_1_1atom__diag.html#afd0210a3cd9cbf2f3eb9ad15b4dd430d", null ],
+    [ "triqs_xca::atom_diag::get_operators", "namespacetriqs__xca_1_1atom__diag.html#ac75d137b907f6658858cc4faf3f6a3cd", null ],
+    [ "triqs_xca::atom_diag::get_operators_dense", "namespacetriqs__xca_1_1atom__diag.html#ab978dcb132bcefde2186a23b9cdaad7b", null ],
+    [ "triqs_xca::atom_diag::get_operators_dense", "namespacetriqs__xca_1_1atom__diag.html#a3f993cd0009be97ed6141e38096c6eaf", null ],
+    [ "triqs_xca::atom_diag::get_operators_dense", "namespacetriqs__xca_1_1atom__diag.html#ae1f6ba8b632ec60b0ce53cb3d6f01916", null ],
+    [ "triqs_xca::atom_diag::get_operators_dense", "namespacetriqs__xca_1_1atom__diag.html#aaa88d6f79f2188fdcc4e0248b0c3c79d", null ],
+    [ "triqs_xca::atom_diag::get_tensor_in_atom_diag_subspace", "namespacetriqs__xca_1_1atom__diag.html#a9ad072bd7d03b7815f1b9a16b4b316d9", null ],
+    [ "triqs_xca::atom_diag::H_to_atom_prop_blocks", "namespacetriqs__xca_1_1atom__diag.html#a256820e69ecff3fd10268965ee31a922", null ]
 ];

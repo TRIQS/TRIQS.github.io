@@ -1,4 +1,6 @@
 var searchData=
 [
-  ['test_20example_0',['Example 1: Test example',['../ex1.html',1,'']]]
+  ['l_0',['| l | l&apos; | l&apos;&apos; | ...',['../classBackbone.html#autotoc_md1',1,'']]],
+  ['l_20l_1',['| l | l&apos; | l&apos;&apos; | ...',['../classBackbone.html#autotoc_md1',1,'']]],
+  ['l_20l_20l_2',['| l | l&apos; | l&apos;&apos; | ...',['../classBackbone.html#autotoc_md1',1,'']]]
 ];

@@ -1,15 +1,15 @@
 var block__sparse__manual_8hpp =
 [
-    [ "eval_eq", "block__sparse__manual_8hpp.html#ab7b3b39f4f2111b32707b54dddf95fde", null ],
-    [ "K_mat", "block__sparse__manual_8hpp.html#aeadc9941c5147beb4d63b372e0110af9", null ],
-    [ "NCA_bs", "block__sparse__manual_8hpp.html#a851fe2887430566e195cd2ae7e2023a2", null ],
-    [ "NCA_bs", "block__sparse__manual_8hpp.html#ac2d6e44d5416d83724739b0d5d2c16dd", null ],
-    [ "NCA_dense", "block__sparse__manual_8hpp.html#a973cf95b7a0fc8062341981621e11b1a", null ],
-    [ "OCA_bs", "block__sparse__manual_8hpp.html#a46a5d2642672c1d338fb3c1cc9f611cc", null ],
-    [ "OCA_bs", "block__sparse__manual_8hpp.html#a99534d5c096da4694999abfb3069a2c5", null ],
-    [ "OCA_bs", "block__sparse__manual_8hpp.html#a619ef32568a63bd91322af6a6083e264", null ],
-    [ "OCA_dense", "block__sparse__manual_8hpp.html#ad569fb141467f83e3ebec41f4d0e7ce0", null ],
-    [ "OCA_dense", "block__sparse__manual_8hpp.html#a3bd809d7993ba4ad83973f7eb343d168", null ],
-    [ "OCA_tpz", "block__sparse__manual_8hpp.html#af9c5759dec843434eee88518f4ca9727", null ],
-    [ "third_order_dense_partial", "block__sparse__manual_8hpp.html#ac0d10014ddc486b69ab9521662034da7", null ]
+    [ "triqs_xca::block_sparse::eval_eq", "namespacetriqs__xca_1_1block__sparse.html#a3ee29e40ac549c00bc2d65fc13feeed5", null ],
+    [ "triqs_xca::block_sparse::K_mat", "namespacetriqs__xca_1_1block__sparse.html#a45193fcd896d0036c12c76527f87c8c1", null ],
+    [ "triqs_xca::block_sparse::NCA_bs", "namespacetriqs__xca_1_1block__sparse.html#a3add4037d8987ba492578e008e08fc9e", null ],
+    [ "triqs_xca::block_sparse::NCA_bs", "namespacetriqs__xca_1_1block__sparse.html#a3856467562ded2390d849ac49cdca5c9", null ],
+    [ "triqs_xca::block_sparse::NCA_dense", "namespacetriqs__xca_1_1block__sparse.html#a8f4d466e10eded087fd26c2a15ae7e35", null ],
+    [ "triqs_xca::block_sparse::OCA_bs", "namespacetriqs__xca_1_1block__sparse.html#ac614c7e3e90d8a5528ecb2408fc3921f", null ],
+    [ "triqs_xca::block_sparse::OCA_bs", "namespacetriqs__xca_1_1block__sparse.html#a055dbfdcacfc9035652fe6e355e52e33", null ],
+    [ "triqs_xca::block_sparse::OCA_bs", "namespacetriqs__xca_1_1block__sparse.html#a28eeefd9eff24eb6f1c3216d73e91cda", null ],
+    [ "triqs_xca::block_sparse::OCA_dense", "namespacetriqs__xca_1_1block__sparse.html#a1d9ee970cc370689f25821680bec4b1b", null ],
+    [ "triqs_xca::block_sparse::OCA_dense", "namespacetriqs__xca_1_1block__sparse.html#ae6711bab13df3b14b6c98561ca41d273", null ],
+    [ "triqs_xca::block_sparse::OCA_tpz", "namespacetriqs__xca_1_1block__sparse.html#a0d97056723d4352c65a324a03ba26da3", null ],
+    [ "triqs_xca::block_sparse::third_order_dense_partial", "namespacetriqs__xca_1_1block__sparse.html#a1cc4472b093f61c40a647cce776a503b", null ]
 ];

@@ -1,12 +1,12 @@
 var block__sparse__manual__gf_8cpp =
 [
-    [ "NCA_gf_bs", "block__sparse__manual__gf_8cpp.html#a889ece8983d531075328ab22f231cad5", null ],
-    [ "NCA_gf_dense", "block__sparse__manual__gf_8cpp.html#a9525aa77b323636289e38a6d09224c30", null ],
-    [ "OCA_gf_bs", "block__sparse__manual__gf_8cpp.html#a7367a2f0b97249342c9118fd947527ea", null ],
-    [ "OCA_gf_bs_left", "block__sparse__manual__gf_8cpp.html#a59bf13c0d228523acdefa41b4a7f4553", null ],
-    [ "OCA_gf_bs_right", "block__sparse__manual__gf_8cpp.html#a990deabc97a7227e39fde0435873ec09", null ],
-    [ "OCA_gf_dense", "block__sparse__manual__gf_8cpp.html#a00cb18719414221aa89b171347f6d844", null ],
-    [ "OCA_gf_dense_left", "block__sparse__manual__gf_8cpp.html#a60efdf55d1d26d4a4ae3765cbb739524", null ],
-    [ "OCA_gf_dense_right", "block__sparse__manual__gf_8cpp.html#ab973e8be04bcb8d15c748687a6d715ee", null ],
-    [ "OCA_gf_tpz", "block__sparse__manual__gf_8cpp.html#a063a5480904a075f983c4e70bbf910f9", null ]
+    [ "triqs_xca::block_sparse::NCA_gf_bs", "namespacetriqs__xca_1_1block__sparse.html#a27a192ae3f384f734141448615a73dc4", null ],
+    [ "triqs_xca::block_sparse::NCA_gf_dense", "namespacetriqs__xca_1_1block__sparse.html#ae6edd27cee2c857369e3d1ae320dcc44", null ],
+    [ "triqs_xca::block_sparse::OCA_gf_bs", "namespacetriqs__xca_1_1block__sparse.html#ad5961bbc0391f93b5fa3116588089a65", null ],
+    [ "triqs_xca::block_sparse::OCA_gf_bs_left", "namespacetriqs__xca_1_1block__sparse.html#a56b3d95487d6950c867e1038e0b9c5cd", null ],
+    [ "triqs_xca::block_sparse::OCA_gf_bs_right", "namespacetriqs__xca_1_1block__sparse.html#a32b70842c3da9d0a426bbcb9078fc937", null ],
+    [ "triqs_xca::block_sparse::OCA_gf_dense", "namespacetriqs__xca_1_1block__sparse.html#a60a746ca68763ecf25ab55818c4ae9de", null ],
+    [ "triqs_xca::block_sparse::OCA_gf_dense_left", "namespacetriqs__xca_1_1block__sparse.html#a0f03a761805a1afe4a14f6c6fa55a596", null ],
+    [ "triqs_xca::block_sparse::OCA_gf_dense_right", "namespacetriqs__xca_1_1block__sparse.html#aac87cc81ece77a234b8d9796aaad0bff", null ],
+    [ "triqs_xca::block_sparse::OCA_gf_tpz", "namespacetriqs__xca_1_1block__sparse.html#a2385df440cc4d38f341c49bfc1631310", null ]
 ];

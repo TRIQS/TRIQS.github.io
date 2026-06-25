@@ -1,9 +1,14 @@
 var searchData=
 [
-  ['r_0',['r',['../classDiagramEvaluator.html#a0a8e26d910bf395e37e24694c2a59a3f',1,'DiagramEvaluator::r'],['../classDenseDiagramEvaluator.html#ab2fb78eea0f1813f37be3058bbbfa28d',1,'DenseDiagramEvaluator::r'],['../classhyb__F.html#a2ac5d7a29783073177ac37f954668019',1,'hyb_F::r']]],
-  ['reset_1',['reset',['../classDiagramEvaluator.html#a3a91b443b1b469e6de6d2af83ecf4a4d',1,'DiagramEvaluator::reset()'],['../classDenseDiagramEvaluator.html#a0f8644041ccecb4453f5f89dc9b11643',1,'DenseDiagramEvaluator::reset()']]],
-  ['reset_5fall_5finds_2',['reset_all_inds',['../classBackbone.html#aa13907653ff845371e54988cb9f05822',1,'Backbone']]],
-  ['reset_5fdirections_3',['reset_directions',['../classBackbone.html#ac0b59ca561f7e8dee347d1bc0dc9a0d0',1,'Backbone']]],
-  ['reset_5forb_5finds_4',['reset_orb_inds',['../classBackbone.html#a4d249de90257cdad185a7a4ed7f0ac6c',1,'Backbone']]],
-  ['reset_5fpole_5finds_5',['reset_pole_inds',['../classBackbone.html#aa124c991ace3f8d9ce6c9e12f057cd79',1,'Backbone']]]
+  ['p_0',['P',['../classhyb__F.html#ab13b3bd7a5945c0b04713e7037a7791f',1,'hyb_F']]],
+  ['p_1',['p',['../classtriqs__xca_1_1block__sparse_1_1BlockOpSymQuartet.html#aa57168c6e015ba9a27837e4a39e028b8',1,'triqs_xca::block_sparse::BlockOpSymQuartet::p'],['../classtriqs__xca_1_1atom__diag_1_1BlockOpSymQuartet.html#aa57168c6e015ba9a27837e4a39e028b8',1,'triqs_xca::atom_diag::BlockOpSymQuartet::p']]],
+  ['partition_5ffunction_2',['partition_function',['../classfastdiagram.html#abd1ce2430f31a686cd85bffdc2f749a8',1,'fastdiagram']]],
+  ['permutation_5fparity_3',['permutation_parity',['../namespacetriqs__xca_1_1topology.html#aa105d3e9f260817c41c87da505291453',1,'triqs_xca::topology']]],
+  ['pole_5finds_4',['pole_inds',['../namespacetriqs__xca_1_1backbone.html#a3006dcdbc6fedf93e716dc084c4d7909',1,'triqs_xca::backbone']]],
+  ['poles_5',['poles',['../classtriqs__xca_1_1hyb_1_1Hybridization.html#a0f9d01ee55fbaebb60b4903ed26a9a12',1,'triqs_xca::hyb::Hybridization']]],
+  ['pown_6',['pown',['../namespacetriqs__xca_1_1utils.html#a97c215a5c9bfa915bac665a37187f5da',1,'triqs_xca::utils']]],
+  ['print_5fself_5fenergy_5fbackbone_7',['print_self_energy_backbone',['../classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a8c31992b2b4b3c2ef02be464a74f0393',1,'triqs_xca::block_sparse::DiagramEvaluator']]],
+  ['print_5fsingle_5fptcle_5fgf_5fbackbone_8',['print_single_ptcle_gf_backbone',['../classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a72fd676166759d838db90ff5f28d87e4',1,'triqs_xca::block_sparse::DiagramEvaluator']]],
+  ['print_5fslice_9',['print_slice',['../classtriqs__xca_1_1block__sparse_1_1BlockOp3D.html#a2c25baac2d0cb1e7df69c1699ff1e6b7',1,'triqs_xca::block_sparse::BlockOp3D']]],
+  ['projects_10',['Integration in C++ projects',['../integration.html',1,'']]]
 ];

@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['gkt_0',['gkt',['../classDiagramEvaluator.html#adbadd2c4c3b80df434351e792efacc12',1,'DiagramEvaluator::GKt'],['../classDenseDiagramEvaluator.html#aac4a1f7e0448642d2bf91af16ebddaca',1,'DenseDiagramEvaluator::GKt']]],
-  ['gt_1',['Gt',['../classDenseDiagramEvaluator.html#ab9f9306c9dd192e68f88200fe3709134',1,'DenseDiagramEvaluator']]]
+  ['gkt_0',['GKt',['../classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#ab25fbf9465bc07e8a0139012cc8a6925',1,'triqs_xca::block_sparse::DiagramEvaluator::GKt'],['../classtriqs__xca_1_1dense_1_1DenseDiagramEvaluator.html#aa6759416bf91515682ce9b725454064a',1,'triqs_xca::dense::DenseDiagramEvaluator::GKt']]]
 ];

@@ -1,5 +1,5 @@
 var backbone_8cpp =
 [
-    [ "operator<<", "backbone_8cpp.html#a2937f0f5b49e0a0ceb7d05f40ad6bf6b", null ],
-    [ "operator<<", "backbone_8cpp.html#a84b97060c66052b66dff52df51174519", null ]
+    [ "triqs_xca::backbone::operator<<", "namespacetriqs__xca_1_1backbone.html#a3bec215b23623937c38855f226108203", null ],
+    [ "triqs_xca::backbone::operator<<", "namespacetriqs__xca_1_1backbone.html#a22dd1f87bb77197778c19f18687d452e", null ]
 ];

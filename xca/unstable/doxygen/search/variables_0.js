@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['beta_0',['beta',['../classDiagramEvaluator.html#aeb60976cce3798b6f4800d329bf20cf1',1,'DiagramEvaluator::beta'],['../classDenseDiagramEvaluator.html#aba022480ea91dab03d23810e9d0d61da',1,'DenseDiagramEvaluator::beta']]],
-  ['block_5findices_1',['block_indices',['../classBlockOp3D.html#a82b720269221f5781aeefe5e1a6ca030',1,'BlockOp3D::block_indices'],['../classBlockOpSymSetBar.html#acfe368758b160cb7feda302477fdf6a0',1,'BlockOpSymSetBar::block_indices']]],
-  ['blocks_2',['blocks',['../classBlockOp3D.html#a2256c24450917efbf59dbaccba580ac2',1,'BlockOp3D::blocks'],['../classBlockOpSymSetBar.html#ac3d2c6c439e57866271aab941e1dacac',1,'BlockOpSymSetBar::blocks']]]
+  ['beta_0',['beta',['../classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#ae9fbd4921eeb1398e680a70d256555ac',1,'triqs_xca::block_sparse::DiagramEvaluator::beta'],['../classtriqs__xca_1_1dense_1_1DenseDiagramEvaluator.html#a0b5208339ec08c4c0254b3ced4876b1e',1,'triqs_xca::dense::DenseDiagramEvaluator::beta']]],
+  ['block_5findices_1',['block_indices',['../classtriqs__xca_1_1block__sparse_1_1BlockOp3D.html#a7b720e84f3c50550b9908150e0485850',1,'triqs_xca::block_sparse::BlockOp3D::block_indices'],['../classtriqs__xca_1_1block__sparse_1_1BlockOpSymSetBar.html#aeeb003992798f5e93cffeeb864b7661d',1,'triqs_xca::block_sparse::BlockOpSymSetBar::block_indices']]],
+  ['blocks_2',['blocks',['../classtriqs__xca_1_1block__sparse_1_1BlockOp3D.html#a64dcb3db325fc63618676e347e25efd2',1,'triqs_xca::block_sparse::BlockOp3D::blocks'],['../classtriqs__xca_1_1block__sparse_1_1BlockOpSymSetBar.html#a5b5b10ce5a9154642fe562232abd9beb',1,'triqs_xca::block_sparse::BlockOpSymSetBar::blocks']]]
 ];

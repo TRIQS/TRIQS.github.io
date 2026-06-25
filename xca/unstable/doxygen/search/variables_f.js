@@ -1,7 +1,5 @@
 var searchData=
 [
-  ['t_0',['t',['../classDiagramEvaluator.html#a1eee89282e1c24b73d43bded32b1fb0c',1,'DiagramEvaluator::T'],['../classDenseDiagramEvaluator.html#a566f8252fecadbbc98d052123d8fd00f',1,'DenseDiagramEvaluator::T']]],
-  ['tkaps_1',['tkaps',['../classDiagramEvaluator.html#a4a5e0dcf8bb7d87cf8c1237099dc6061',1,'DiagramEvaluator::Tkaps'],['../classDenseDiagramEvaluator.html#ac9aec3eeee8d7db6bb803beb1d14c40e',1,'DenseDiagramEvaluator::Tkaps']]],
-  ['tmu_2',['tmu',['../classDiagramEvaluator.html#a477b12e129b8f3eb0499245c3886102f',1,'DiagramEvaluator::Tmu'],['../classDenseDiagramEvaluator.html#ac0cef68a9c6973c8fd0286004c693d59',1,'DenseDiagramEvaluator::Tmu']]],
-  ['topology_3',['topology',['../classBackbone.html#ab59da84cb53a88309c5b7606015f8a67',1,'Backbone']]]
+  ['u_0',['U',['../classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#ae7e7bb51098a3658ef71bd466e9d6b60',1,'triqs_xca::block_sparse::DiagramEvaluator::U'],['../classtriqs__xca_1_1dense_1_1DenseDiagramEvaluator.html#aed4223f08d51c1526a93478e3f1f1fd8',1,'triqs_xca::dense::DenseDiagramEvaluator::U'],['../classhyb__decomp.html#ac35f55f1e368e0a86e8af7e6b886c21f',1,'hyb_decomp::U']]],
+  ['u_5ftilde_1',['U_tilde',['../classhyb__F.html#a4dbd0ab5a9b02ff8c505ef4f82948aa5',1,'hyb_F']]]
 ];

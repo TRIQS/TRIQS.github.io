@@ -1,7 +1,7 @@
 var classCorrelatorBackbone =
 [
-    [ "CorrelatorBackbone", "classCorrelatorBackbone.html#a77e57a5d025c35e49a78c04de802b859", null ],
-    [ "set_directions", "classCorrelatorBackbone.html#a3b5138e342612b60dc878c63094193f4", null ],
-    [ "set_directions", "classCorrelatorBackbone.html#a90cb2ae7f42f6d2fdf93c86e3536e567", null ],
-    [ "set_flat_index", "classCorrelatorBackbone.html#a795273f8a135e52c9cb9407d71d77d1f", null ]
+    [ "CorrelatorBackbone", "classCorrelatorBackbone.html#aef023f56a93b6bee21c3bac27f2956cd", null ],
+    [ "set_directions", "classCorrelatorBackbone.html#af670977beffdce5bc49207bae1121867", null ],
+    [ "set_directions", "classCorrelatorBackbone.html#a841eec7fb55cfc36277fc63457609deb", null ],
+    [ "set_flat_index", "classCorrelatorBackbone.html#a01047ed220e2e398f174cea47c22df73", null ]
 ];

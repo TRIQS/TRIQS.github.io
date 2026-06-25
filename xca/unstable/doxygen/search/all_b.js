@@ -1,13 +1,9 @@
 var searchData=
 [
-  ['m_0',['m',['../classBackbone.html#a4e53f69f0804d24279d6b21475b324c5',1,'Backbone']]],
-  ['maybe_20even_20more_20details_1',['Maybe even more details',['../ex1.html#ex1_p2',1,'']]],
-  ['more_20details_2',['more details',['../ex1.html#ex1_p2',1,'Maybe even more details'],['../ex1.html#ex1_p1',1,'More details']]],
-  ['multiplicate_5fonto_3',['multiplicate_onto',['../strong__cpl_8cpp.html#a92bceeeba3af17cda4674b96fc8ef5c2',1,'multiplicate_onto(nda::array_const_view&lt; dcomplex, 3 &gt; Ft, nda::array_view&lt; dcomplex, 3 &gt; Gt):&#160;strong_cpl.cpp'],['../strong__cpl_8hpp.html#a92bceeeba3af17cda4674b96fc8ef5c2',1,'multiplicate_onto(nda::array_const_view&lt; dcomplex, 3 &gt; Ft, nda::array_view&lt; dcomplex, 3 &gt; Gt):&#160;strong_cpl.cpp']]],
-  ['multiplicate_5fonto_5fleft_4',['multiplicate_onto_left',['../strong__cpl_8cpp.html#a0e33166ffbef540a7de9e56089f8d3e9',1,'multiplicate_onto_left(nda::array_view&lt; dcomplex, 3 &gt; Ft, nda::array_const_view&lt; dcomplex, 3 &gt; Gt):&#160;strong_cpl.cpp'],['../strong__cpl_8hpp.html#a0e33166ffbef540a7de9e56089f8d3e9',1,'multiplicate_onto_left(nda::array_view&lt; dcomplex, 3 &gt; Ft, nda::array_const_view&lt; dcomplex, 3 &gt; Gt):&#160;strong_cpl.cpp']]],
-  ['multiply_5fprefactor_5',['multiply_prefactor',['../classDenseDiagramEvaluator.html#abc30bcf668f7cb2b707beef710eb0ffb',1,'DenseDiagramEvaluator']]],
-  ['multiply_5fvertex_6',['multiply_vertex',['../classDenseDiagramEvaluator.html#add25f1b999a43fa3c8ba2b3c12bf9c52',1,'DenseDiagramEvaluator']]],
-  ['multiply_5fvertex_5fcorr_7',['multiply_vertex_corr',['../classDenseDiagramEvaluator.html#a4a0180f2f135facb9c4a25f0a694ea92',1,'DenseDiagramEvaluator']]],
-  ['multiply_5fzero_5fvertex_8',['multiply_zero_vertex',['../classDenseDiagramEvaluator.html#ae106e177214f0af785b3f55d949fb598',1,'DenseDiagramEvaluator']]],
-  ['my_20group_9',['My Group',['../group__mygroup.html',1,'']]]
+  ['k_5f0_5fm_0',['k_0_m',['../classtriqs__xca_1_1hyb_1_1Hybridization.html#ad2aa675158669e8366dbc67c185dd161',1,'triqs_xca::hyb::Hybridization']]],
+  ['k_5f0_5fp_1',['k_0_p',['../classtriqs__xca_1_1hyb_1_1Hybridization.html#a650eacf4b53adf2a09b01924ff76556d',1,'triqs_xca::hyb::Hybridization']]],
+  ['k_5fit_5fm_2',['k_it_m',['../classtriqs__xca_1_1hyb_1_1Hybridization.html#a24a519b94577b358310f5094bfb49441',1,'triqs_xca::hyb::Hybridization']]],
+  ['k_5fit_5fp_3',['k_it_p',['../classtriqs__xca_1_1hyb_1_1Hybridization.html#a1eb18d78a2d254b134314f363a733a36',1,'triqs_xca::hyb::Hybridization']]],
+  ['k_5fmat_4',['K_mat',['../namespacetriqs__xca_1_1block__sparse.html#a45193fcd896d0036c12c76527f87c8c1',1,'triqs_xca::block_sparse']]],
+  ['k_5fmatrix_5',['K_matrix',['../classhyb__F.html#ac823f044c84fbb201476aea87758d05f',1,'hyb_F']]]
 ];

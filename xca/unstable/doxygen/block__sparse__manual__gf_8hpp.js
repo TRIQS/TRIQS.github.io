@@ -1,8 +1,8 @@
 var block__sparse__manual__gf_8hpp =
 [
-    [ "NCA_gf_bs", "block__sparse__manual__gf_8hpp.html#a889ece8983d531075328ab22f231cad5", null ],
-    [ "NCA_gf_dense", "block__sparse__manual__gf_8hpp.html#a9525aa77b323636289e38a6d09224c30", null ],
-    [ "OCA_gf_bs", "block__sparse__manual__gf_8hpp.html#a7367a2f0b97249342c9118fd947527ea", null ],
-    [ "OCA_gf_dense", "block__sparse__manual__gf_8hpp.html#a00cb18719414221aa89b171347f6d844", null ],
-    [ "OCA_gf_tpz", "block__sparse__manual__gf_8hpp.html#a063a5480904a075f983c4e70bbf910f9", null ]
+    [ "triqs_xca::block_sparse::NCA_gf_bs", "namespacetriqs__xca_1_1block__sparse.html#a27a192ae3f384f734141448615a73dc4", null ],
+    [ "triqs_xca::block_sparse::NCA_gf_dense", "namespacetriqs__xca_1_1block__sparse.html#ae6edd27cee2c857369e3d1ae320dcc44", null ],
+    [ "triqs_xca::block_sparse::OCA_gf_bs", "namespacetriqs__xca_1_1block__sparse.html#ad5961bbc0391f93b5fa3116588089a65", null ],
+    [ "triqs_xca::block_sparse::OCA_gf_dense", "namespacetriqs__xca_1_1block__sparse.html#a60a746ca68763ecf25ab55818c4ae9de", null ],
+    [ "triqs_xca::block_sparse::OCA_gf_tpz", "namespacetriqs__xca_1_1block__sparse.html#a2385df440cc4d38f341c49bfc1631310", null ]
 ];

@@ -1,6 +1,8 @@
 var searchData=
 [
-  ['in_20c_20projects_0',['Integration in C++ projects',['../integration.html',1,'']]],
-  ['installation_1',['Installation',['../installation.html',1,'']]],
-  ['integration_20in_20c_20projects_2',['Integration in C++ projects',['../integration.html',1,'']]]
+  ['even_20more_20details_0',['Maybe even more details',['../ex1.html#ex1_p2',1,'']]],
+  ['example_1',['Example 1: Test example',['../ex1.html',1,'']]],
+  ['example_201_3a_20test_20example_2',['Example 1: Test example',['../ex1.html',1,'']]],
+  ['examples_3',['Examples',['../examples.html',1,'']]],
+  ['examples_4',['Compiling the examples',['../examples.html#compiling',1,'']]]
 ];
