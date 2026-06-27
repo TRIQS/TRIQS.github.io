@@ -7,7 +7,7 @@ var NAVTREEINDEX0 =
 "app4triqs_8hpp.html":[4,1,0,1],
 "app4triqs_8hpp_source.html":[4,1,0,1],
 "classapp4triqs_1_1toto.html":[4,0,0],
-"dir_f376e1a9c928125dd2a9eb88ab9e8855.html":[4,1,0],
+"dir_dfc82cd8b819bbdd065e768aaac4e215.html":[4,1,0],
 "documentation.html":[4],
 "ex1.html":[3,0],
 "examples.html":[3],
