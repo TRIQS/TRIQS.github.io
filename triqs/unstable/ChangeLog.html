@@ -745,6 +745,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#python-bindings-cpp2py-to-clair-c2py">Python bindings: cpp2py to clair + c2py</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#renamings">Renamings</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#removal-of-deprecated-api">Removal of deprecated API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#experimental-package">Experimental package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#documentation">Documentation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#dependency-management">Dependency Management</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#general">General</a></li>
@@ -1077,6 +1078,7 @@
 <li><p>bumps the minimum compiler requirements to clang 19 / gcc 14</p></li>
 <li><p>removes long-deprecated headers and API (<code class="docutils literal notranslate"><span class="pre">triqs/h5.hpp</span></code>, <code class="docutils literal notranslate"><span class="pre">triqs/mpi/base.hpp</span></code>, <code class="docutils literal notranslate"><span class="pre">triqs/mpi/vector.hpp</span></code>, deprecated Matsubara domains, <code class="docutils literal notranslate"><span class="pre">triqs::AnyOf</span></code>)</p></li>
 <li><p>adds new real-frequency (<code class="docutils literal notranslate"><span class="pre">refreq_pts</span></code>, <code class="docutils literal notranslate"><span class="pre">refreq_log</span></code>) and Chebyshev imaginary-time meshes</p></li>
+<li><p>adds a new experimental <code class="docutils literal notranslate"><span class="pre">triqs.experimental</span></code> package with lattice tight-binding tools and numerical utilities</p></li>
 <li><p>overhauls the <code class="docutils literal notranslate"><span class="pre">triqs/stat</span></code> and <code class="docutils literal notranslate"><span class="pre">triqs/mc_tools</span></code> modules</p></li>
 <li><p>fixes several library issues</p></li>
 </ul>
@@ -1113,10 +1115,31 @@ These renamings can be automated using the <a class="reference external" href="h
 The <a class="reference external" href="https://github.com/TRIQS/triqs/blob/unstable/porting_tools/port_to_triqs4" rel="noopener noreferrer" target="_blank">porting script</a> replaces
 the regex-safe cases; the remainder are described in the <a class="reference external" href="https://github.com/TRIQS/triqs/blob/unstable/doc/porting_to_triqs4.md" rel="noopener noreferrer" target="_blank">porting guide</a>.</p>
 </section>
+<section id="experimental-package">
+<h3>Experimental package<a class="headerlink" href="#experimental-package" title="Link to this heading"></a></h3>
+<p>A new experimental component provides a staging area for functionality whose API is still unstable and may
+change or be removed without a deprecation cycle. It ships as a C++ library under the <code class="docutils literal notranslate"><span class="pre">triqs::experimental</span></code>
+namespace together with Python bindings under the <code class="docutils literal notranslate"><span class="pre">triqs.experimental</span></code> package, both organized into two
+submodules:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">lattice</span></code> — tight-binding Hamiltonians <code class="docutils literal notranslate"><span class="pre">H(k)</span></code> (<code class="docutils literal notranslate"><span class="pre">TbHk</span></code>), Brillouin-zone integration (<code class="docutils literal notranslate"><span class="pre">BzIntOptions</span></code>),
+k-integrated local Green’s functions (<code class="docutils literal notranslate"><span class="pre">gloc</span></code>) and the associated chemical-potential search
+(<code class="docutils literal notranslate"><span class="pre">find_chemical_potential</span></code>), folding onto a <code class="docutils literal notranslate"><span class="pre">Superlattice</span></code>, and Wannier90 loaders (<code class="docutils literal notranslate"><span class="pre">read_wannier90_tb_data</span></code>,
+<code class="docutils literal notranslate"><span class="pre">make_tb_hk_from_w90_tb_file</span></code>, <code class="docutils literal notranslate"><span class="pre">read_wannier90_hr_data</span></code>, <code class="docutils literal notranslate"><span class="pre">make_tb_hk_from_w90_hr_file</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">utility</span></code> — generic one-dimensional numerical helpers: root finding (<code class="docutils literal notranslate"><span class="pre">root_finder</span></code>, with bisection/dichotomy
+methods) and adaptive Gauss-Kronrod-Lobatto integration.</p></li>
+</ul>
+<p>The C++ headers are the primary interface; the Python bindings expose the subset that can be wrapped, and both
+sides ship matching tests. As the package is explicitly experimental, do not rely on its interface in
+production code.</p>
+</section>
 <section id="documentation">
 <h3>Documentation<a class="headerlink" href="#documentation" title="Link to this heading"></a></h3>
-<p>The C++ API documentation has been migrated from cpp2rst to Doxygen, with new and updated docstrings
-across the <code class="docutils literal notranslate"><span class="pre">gfs</span></code>, <code class="docutils literal notranslate"><span class="pre">mesh</span></code>, <code class="docutils literal notranslate"><span class="pre">operators</span></code>, <code class="docutils literal notranslate"><span class="pre">atom_diag</span></code>, <code class="docutils literal notranslate"><span class="pre">lattice</span></code>, <code class="docutils literal notranslate"><span class="pre">stat</span></code>, and <code class="docutils literal notranslate"><span class="pre">mc_tools</span></code> modules.</p>
+<p>The C++ API documentation has been migrated from cpp2rst to Doxygen and substantially overhauled, with new and
+updated docstrings across essentially all modules (<code class="docutils literal notranslate"><span class="pre">gfs</span></code>, <code class="docutils literal notranslate"><span class="pre">mesh</span></code>, <code class="docutils literal notranslate"><span class="pre">operators</span></code>, <code class="docutils literal notranslate"><span class="pre">atom_diag</span></code>, <code class="docutils literal notranslate"><span class="pre">hilbert_space</span></code>,
+<code class="docutils literal notranslate"><span class="pre">lattice</span></code>, <code class="docutils literal notranslate"><span class="pre">det_manip</span></code>, <code class="docutils literal notranslate"><span class="pre">mc_tools</span></code>, <code class="docutils literal notranslate"><span class="pre">stat</span></code>, <code class="docutils literal notranslate"><span class="pre">utility</span></code>, and <code class="docutils literal notranslate"><span class="pre">experimental</span></code>). Usage examples were added to both
+the Doxygen pages and the Python docstrings, the Sphinx user guide is now Python-only, and the top-level
+navigation was reorganized (the former “Documentation” page is now “API Documentation”).</p>
 </section>
 <section id="dependency-management">
 <h3>Dependency Management<a class="headerlink" href="#dependency-management" title="Link to this heading"></a></h3>
@@ -1165,6 +1188,7 @@ and packaging images updated to Ubuntu 26.04 / LLVM 21.</p>
 <li><p>Add <code class="docutils literal notranslate"><span class="pre">target_value_t</span></code> trait as a replacement of <code class="docutils literal notranslate"><span class="pre">gf::target_t::value_t</span></code></p></li>
 <li><p>Allow <code class="docutils literal notranslate"><span class="pre">make_gf_from_fourier</span></code> with DLR mesh types</p></li>
 <li><p>Change <code class="docutils literal notranslate"><span class="pre">fit_gf_dlr</span></code> symmetrize default to true for consistency with the DLR mesh default</p></li>
+<li><p>Restore default arguments for <code class="docutils literal notranslate"><span class="pre">set_from_pade</span></code> (<code class="docutils literal notranslate"><span class="pre">n_points=100</span></code>, <code class="docutils literal notranslate"><span class="pre">freq_offset=0.0</span></code>)</p></li>
 <li><p>Use numpy for adding/subtracting scalars and matrices from GFs, and for inverting GFs</p></li>
 <li><p>Assert square <code class="docutils literal notranslate"><span class="pre">target_shape</span></code> when adding/subtracting a scalar to a matrix-valued Gf</p></li>
 <li><p>Add a benchmark for Green’s function evaluation</p></li>
@@ -1177,6 +1201,7 @@ and packaging images updated to Ubuntu 26.04 / LLVM 21.</p>
 <li><p>Add a Chebyshev imaginary-time mesh (precomputes 2/beta for faster barycentric evaluation)</p></li>
 <li><p>Make 1D meshes random-access and add a generic <code class="docutils literal notranslate"><span class="pre">mesh_iterator</span></code> class (#990)</p></li>
 <li><p>Add <code class="docutils literal notranslate"><span class="pre">mesh_hash()</span></code> to the Mesh concept and update all meshes accordingly</p></li>
+<li><p>Stabilize DLR mesh hashing for reproducibility across BLAS backends (pinned with a regression test)</p></li>
 <li><p>Add comparison operators and <code class="docutils literal notranslate"><span class="pre">__repr__</span></code> to <code class="docutils literal notranslate"><span class="pre">matsubara_freq</span></code> / <code class="docutils literal notranslate"><span class="pre">MatsubaraFreq</span></code></p></li>
 <li><p>Add <code class="docutils literal notranslate"><span class="pre">triqs::mesh::values</span></code> to obtain a vector of mesh values; expose to Python</p></li>
 <li><p>Expose DLR frequencies for the DLR Python mesh types</p></li>
