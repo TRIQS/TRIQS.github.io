@@ -1,0 +1,660 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "7b689871-9cb4-4966-a6bb-71bb292c2929",
+   "metadata": {},
+   "source": [
+    "# La$_{2}$CuO$_{4}$\n",
+    "\n",
+    "The electronic structure of La$_{2}$CuO$_{4}$ is dominated by strong hybridization between Cu($3d$) and O($2p$) states, placing it in the charge-transfer insulator regime of the Zaanen-Sawatzky-Allen classification diagram. Its most famous role is as the parent compound of high-T$_{c}$ cuprate superconductors, becoming a superconductor upon hole or electron doping. Standard DFT predicts a metallic state because it cannot capture the strong local Coulomb repulsion and charge-transfer gap that arise from the interplay of copper and oxygen orbitals. DFT+DMFT, particularly in a large energy window including both Cu and O states, is essential for describing the experimentally observed insulating behavior, spectral weight transfer, and the multi-orbital nature of the correlations.\n",
+    "\n",
+    "In this tutorial, we learn how to write a DMFT calculation for La$_{2}$CuO$_{4}$ using TRIQS/ModEST. Specifically, we will cover\n",
+    "- a OneBodyElementsOnGrid object\n",
+    "- manipulating the embedding object\n",
+    "- the double-counting term in the DMFT loop\n",
+    "- writing the DMFT loop\n",
+    "- plotting the $k$-summed spectral function projected onto different atoms and orbitals."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6e53d8bd-222c-4265-a570-e9a3ed1cba8f",
+   "metadata": {},
+   "source": [
+    "### 🧪 Exercise 0: Import Modest and Load the DFT data\n",
+    "Load the ``triqs_modest`` module and use the function ``one_body_elements_from_dft_converter`` to load in the HDF5 which was produced by the Wien2k DFT converter in ``ref_data/la2cuo4.h5``.\n",
+    "\n",
+    "> 💡 **Tip:** The function ``one_body_elements_from_dft_converter`` returns the target density and the one-body elements.\n",
+    "\n",
+    "Print both the target electron density and the one_body_elements and pause for a moment to see if this information makes sense for La$_{2}$CuO$_{4}$."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "49e84b83-84d4-4e09-815a-2f246162a072",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "SyntaxError",
+     "evalue": "invalid syntax (1141531481.py, line 3)",
+     "output_type": "error",
+     "traceback": [
+      "  \u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[1]\u001b[39m\u001b[32m, line 3\u001b[39m\n\u001b[31m    \u001b[39m\u001b[31mtarget_density, obe = # load the data here\u001b[39m\n                          ^\n\u001b[31mSyntaxError\u001b[39m\u001b[31m:\u001b[39m invalid syntax\n"
+     ]
+    }
+   ],
+   "source": [
+    "import triqs_modest as modest\n",
+    "\n",
+    "target_density, obe = # load the data here\n",
+    "print(f\"target_density= {round(target_density)}e-\\n\")\n",
+    "print(obe)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ab686b96-99ea-430c-98ab-533f493b43ca",
+   "metadata": {},
+   "source": [
+    "#### 🔎 Explanation of the OBE"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f636066f-3015-427f-aa68-8a926befbfae",
+   "metadata": {
+    "jp-MarkdownHeadingCollapsed": true
+   },
+   "source": [
+    "We are studying La$_{2}$CuO$_{4}$ within a large-energy window, which fully includes the hybridization between the O($2p$) and Cu($3d$) states. The ``OneBodyElementsOnGrid`` is composed of four pieces that represent the one-body physics that is obtained from DFT and will be used in the DMFT calculation.\n",
+    "\n",
+    "The one-body elements (OBE) class contains four pieces:\n",
+    "\n",
+    "##### 🔹 H: Band dispersion $\\varepsilon^{\\sigma}(k)$\n",
+    "This is the DFT Kohn-Sham eigenvalues: $\\varepsilon^{\\sigma}(k)$ is the **band energy** for spin ($\\sigma$) at $k$.\n",
+    "\n",
+    "##### 🔹 C_space: Local (correlated) orbital space\n",
+    "This describes the **correlated subspace** $\\mathcal{C}$ -- the one that will be used in the DMFT impurity model. We created a projector for all five Cu($3d$) orbitals and we indicated that we want to treat this atom as correlated. The following is reflected in the printout '(1) correlated atom with orbital dimension 5'.\n",
+    "\n",
+    "##### 🔹 P: Downfolding projector\n",
+    "This is the projector that we introduced in [Tutorial 05](05s-dftdmft.ipynb). Importantly, we print the shape of the projector so that the user can confirm that this is what they expect.\n",
+    "\n",
+    "##### 🔹 IBZ: Irreducible Brillouin zone Ops\n",
+    "Some DFT codes perform the summation in the Brillouin zone within the irreducible Brillouin zone. For those cases, to obtain observables like the local Green's function, we must symmetrize. Internally, we read these IBZ symmetry operations and store them away. We apply them whenever we perform a $k$-summation. In practice, there is no need to worry about them 🙂. The 16 symmetry operations correspond to the $I4/mmm$ space group. "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "7817bd2b-d6a3-4b5b-a870-65dad6155459",
+   "metadata": {},
+   "source": [
+    "<a id=\"covalency-into\"></a>\n",
+    "## ⚛️ The role of covalency in the metal-insulator transition of La$_{2}$CuO$_{4}$\n",
+    "Our goal is to study La$_{2}$CuO$_{4}$ within DFT+DMFT, where we treat only the Cu-$d_{x^{2}-y^{2}}$ as our quantum impurity which we solve within DMFT. All other states will be treated at the Hartree level within DFT. While we will not study the effects of charge self-consistency, the script that you will develop in the notebook can easily be adapted to perform charge self-consistent calculations.\n",
+    "\n",
+    "Within DFT + DMFT, the so-called \"double-counting\" term plays a critical role in achieving the correct physics. Previously, [Wang et. al.](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.86.195136) calculated the metal-insulator phase diagram for La$_{2}$CuO$_{4}$ in the plane of Hubbard interaction and $N_{d}$ where $N_{d}$ is the total filling of the Cu-$d_{x^{2}-y^{2}}$ orbitals. We will develop a script using TRIQS/ModEST to reproduce the results in Figure 4 (top panel) of their manuscript which correctly captures the insulating behavior of La$_{2}$CuO$_{4}$ but requires an adjustment to the double-counting term."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "198287bd-dfa8-4967-a78d-2e4f1faa8373",
+   "metadata": {},
+   "source": [
+    "### 🧪 Exercise 1: Create an Embedding Description\n",
+    "Create an embedding from the local space in one-body elements and print it out to the screen."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "b1813542-4cec-440b-896c-f0e703be3276",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "SyntaxError",
+     "evalue": "invalid syntax (200335600.py, line 1)",
+     "output_type": "error",
+     "traceback": [
+      "  \u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[2]\u001b[39m\u001b[32m, line 1\u001b[39m\n\u001b[31m    \u001b[39m\u001b[31mE = # make the embedding using the local space (C_space) inside of obe.\u001b[39m\n        ^\n\u001b[31mSyntaxError\u001b[39m\u001b[31m:\u001b[39m invalid syntax\n"
+     ]
+    }
+   ],
+   "source": [
+    "E = # make the embedding using the local space (C_space) inside of obe.\n",
+    "print(E)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "440b43f4-74b5-451e-b9c0-757298ec96e0",
+   "metadata": {},
+   "source": [
+    "Up until now we've only seen rather simple embeddings. However, to see the full information contained within the embedding class, use the ``description`` method to get a full print out."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "c09a76c7-abd4-424c-8664-743f73022e32",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "NameError",
+     "evalue": "name 'E' is not defined",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[31m---------------------------------------------------------------------------\u001b[39m",
+      "\u001b[31mNameError\u001b[39m                                 Traceback (most recent call last)",
+      "\u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[3]\u001b[39m\u001b[32m, line 1\u001b[39m\n\u001b[32m----> \u001b[39m\u001b[32m1\u001b[39m \u001b[38;5;28mprint\u001b[39m(\u001b[43mE\u001b[49m.description(\u001b[38;5;28;01mTrue\u001b[39;00m))\n",
+      "\u001b[31mNameError\u001b[39m: name 'E' is not defined"
+     ]
+    }
+   ],
+   "source": [
+    "print(E.description(True))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "3721b044-ee5f-46ae-ba59-ce85e33b514b",
+   "metadata": {
+    "jp-MarkdownHeadingCollapsed": true
+   },
+   "source": [
+    "#### 🔎 Explanation of Embedding"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "bf853e98-9fcf-4f20-8328-e4fbd6033198",
+   "metadata": {
+    "jp-MarkdownHeadingCollapsed": true
+   },
+   "source": [
+    "In DMFT, the **embedding** tells you how the _correlated subspace_ (from the DFT/Wannier model) is mapped to one or more **impurity problems**. Thus, it is essential to be able to flexibly construct impurity model(s) for your correlated subspace and ensure the correct assignment of local orbitals and spin channels. Below is a detailed breakdown of the printout from the ``Embedding`` object.\n",
+    "\n",
+    "##### 🔹 spin index ($\\sigma/\\tau$) names: [\"up\", \"down\"]\n",
+    "These are the names of the block-diagonal spin indices $\\sigma$ used in the impurity model. They correspond to the spin-up and spin-down electrons and will be used to construct the fermionic creation and annihilation operators for the impurity model.\n",
+    "\n",
+    "We distinguish between:\n",
+    "\n",
+    "- $\\sigma$: the spin index in the **embedded problem**, and\n",
+    "- $\\tau$: the internal spin index used by the **impurity solver** (e.g., in the impurity solver Green's function blocks).\n",
+    "\n",
+    "This distinction allows us to support more generic embeddings.\n",
+    "\n",
+    "##### 🔹  $\\Sigma$_embed block decomposition\n",
+    "This section describes the **block structure** of the embedded self-energy $\\Sigma_{\\text{embed}}^{\\sigma}(\\omega)$. In our case, there are 5 orbitals each representing a $1\\times1$ block in the self-energy (see $\\alpha$ and dim_$\\alpha$).\n",
+    "\n",
+    "##### 🔹  Impurities\n",
+    "This describes the structure of the **impurity problems** constructed from the local space:\n",
+    "\n",
+    "- ``n_imp = 0``: There is one impurity solver (index 0).\n",
+    "- For this impurity solver: there are 5 correlated orbitals with dimension 1 (``dim_γ``).\n",
+    "- The impurity Green's function will therefore have **10 blocks**: 5 for spin-up and 5 for spin-down.\n",
+    "\n",
+    "The solver's block structure (``gf_struct``) is printed:\n",
+    "```\n",
+    "[imp_idx = 0] up_0 [1], up_1 [1], up_2 [1], up_3 [1], up_4 [1], down_0 [1], down_1 [1], down_2 [1], down_3 [1], down_4 [1]\n",
+    "```\n",
+    "This means:\n",
+    "- The impurity solver has **10 blocks**, 5 for each spin,\n",
+    "- Each block is of dimension 1.\n",
+    "\n",
+    "##### 🔹 Mapping ψ(α,σ) = (imp_idx, γ, τ) \n",
+    "This table gives the **mapping from the embedded indices** ``(α,σ)`` to the **impurity solver indices** ``(imp_idx, γ, τ)``.\n",
+    "\n",
+    "For this case, the mapping is simple: the five blocks of the impurity self-energy are directly mapped to the five blocks in the embedded self-energy."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c1058063-1970-41f7-8c85-8c44a100bb73",
+   "metadata": {},
+   "source": [
+    "### 🧪 Exercise 2: From 5 correlated orbitals to 1 correlated orbital\n",
+    "\n",
+    "We constructed a five-orbital correlated subspace for the Cu($3d$) orbitals, which is currently treated as a single correlated impurity. However, one could instead split off certain orbitals to treat them with a different impurity solver or exclude them from the impurity altogether. For example, in Cu$^{2+}$ ($3d^{9}$), the $t_{2g}$ shell is fully filled, so -- at least to first approximation -- correlation effects in this sector are expected to be weak. Furthermore, due to their large octahedral elongation, the $e_{g}$ levels are strongly split, with the $3z^{2}-r^{2}$ orbital lying lower in energy and being filled first, leaving the $d_{x^{2}-y^{2}}$ orbital approximately half-filled and at the Fermi level. \n",
+    "\n",
+    "In this exercise, you will modify the embedding to reflect that we want to solve a single impurity for the Cu $d_{x^{2}-y^{2}}$ orbital, removing the other four orbitals from the impurity. To achieve this, we will use the ``split_imp`` and ``drop_imp`` methods of the ``Embedding`` class. To do this you also need to know the orbital order. The orbital ordering depends on the DFT code, because different DFT codes have different conventions for ordering the $d$ orbitals. For Wien2k, the orbital ordering is: $d_{3z^{2}-r^{2}}$, $d_{x^{2}-y^{2}}$, $d_{xy}$, $d_{xz}$, and $d_{yz}$.\n",
+    "\n",
+    ">💡 **Tips:** \n",
+    ">\n",
+    "> - The **E.split_imp** function takes two arguments: an impurity index and a list of blocks.\n",
+    "> \n",
+    "> - The **E.drop_imp** function takes the index of an impurity solver to drop from the list. Dropping an impurity solver means that you want to replace the self-energy that it connects to with a zero self-energy.\n",
+    ">\n",
+    "> - Each method returns a new embedding, so you do not have to worry about accidentally making changes to the underlying embedding ``E`` that we are working with.\n",
+    "\n",
+    "#### 🧩 Your Task\n",
+    "1. Use the split method to divide the Embedding into two impurity solvers: 1 for the Cu-$d_{x^{2}-y^{2}}$ and 1 for the remaining 4 orbitals.\n",
+    "```python\n",
+    "E1 = E.split_imp(0, \"\"\"your answer\"\"\")\n",
+    "```\n",
+    "2. Use the drop method to drop the impurity solver that we do not want to keep.\n",
+    "```python\n",
+    "E1.drop_imp(\"\"\"your answer\"\"\")\n",
+    "```\n",
+    "3. String the two operations together.\n",
+    "```python\n",
+    "E2 = E.split_imp(\"\"\" \"\"\").drop_imp(\"\"\" \"\"\")\n",
+    "\n",
+    "```\n",
+    "4. Lastly, print the new embedding. You should see something like this:\n",
+    "```text\n",
+    "Embedding:\n",
+    "  Spin index (σ/τ) names: [\"up\", \"down\"]\n",
+    "\n",
+    "  Σ_embed block decomposition:\n",
+    "    dim_α:   1   1   1   1   1\n",
+    "        α:   0   1   2   3   4\n",
+    "\n",
+    "  Impurities\n",
+    "    Block dimensions, dim_γ for all γ:\n",
+    "      [n_imp = 0] dim_γ =   1\n",
+    "                      γ =   0\n",
+    "    Gf Block structures for solvers as names, [dim]:\n",
+    "      [imp_idx = 0] up_0 [1], down_0 [1]\n",
+    "\n",
+    "  Mapping ψ(α,σ) = (imp_idx, γ, τ) \n",
+    "             |           σ = 0 / up                     σ = 1 / down           \n",
+    "      -------+--------------------------------+-------------------------------+\n",
+    "      α = 1  |    (imp_idx = 0, γ = 0, τ = 0)     (imp_idx = 0, γ = 0, τ = 1)  \n",
+    "\n",
+    "```"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "a343c5dc-2cb2-4294-b941-30a8801d8a43",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# write your solution here and print with .description(True)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "784ce9ed-e835-451c-aa59-d4fb40edfcef",
+   "metadata": {},
+   "source": [
+    "## 2️⃣ Double-Counting\n",
+    "Because we are working in a large energy window and have included the O($2p$) and the La($5d$) orbitals implicitly in the calculation, we need to properly incorporate the double-counting term, which controls the relative splitting between the correlated orbitals and the uncorrelated orbitals. For La$_{2}$CuO$_{4}$, which is a charge-transfer insulator, the double-counting term controls the size of the charge-transfer gap -- the energy difference between the Cu($3d$) and the O($2p$) levels. \n",
+    "\n",
+    "#### ❓ Where does the double-counting term appear in the DMFT loop?\n",
+    "The DMFT self-consistency condition is\n",
+    "\n",
+    "$$ G_{\\mathrm{loc}} \\overset{!}{=} G_{\\mathrm{imp}},$$\n",
+    "which reads\n",
+    "$$ \\sum_{k} P(k)[i\\omega_{n} + \\mu - H(k) - P^{\\dagger}(\\Sigma_{\\mathrm{imp}}(i\\omega_{n})-\\Sigma_{\\mathrm{DC}})P]^{-1}P^{\\dagger}(k) = \\frac{1}{ i\\omega_{n} - E_{\\mathrm{imp}} - \\Delta(i\\omega_{n})-\\Sigma_{\\mathrm{imp}}(i\\omega_{n})},$$\n",
+    "\n",
+    "In the local Green's function, it is important that we must substract off the double-counting term from the self-energy when we embed the self-energy back to the lattice. Now, let's find the definition of the impurity levels $E_{\\mathrm{imp}}$. Taking the high-frequency expansion of both sides gives,\n",
+    "\n",
+    "$$ \\mu - \\langle H(k) \\rangle_{k} - \\Sigma_{\\infty} + \\Sigma_{\\mathrm{DC}}  = - E_{\\mathrm{imp}} - \\Sigma_{\\infty},$$\n",
+    "and solving for $E_{\\mathrm{imp}}$ gives\n",
+    "\n",
+    "$$ E_{\\mathrm{imp}} = \\langle H(k) \\rangle_{k} -\\mu - \\Sigma_{\\mathrm{DC}}.$$\n",
+    "\n",
+    "So the double-counting term appears in two places:\n",
+    "\n",
+    "1. The embedded self-energy, $\\Sigma_{\\mathrm{embed}} = \\Sigma_{\\mathrm{imp}} - \\Sigma_{\\mathrm{DC}}$\n",
+    "2. The local impurity levels which are defined as: $E_{\\mathrm{imp}} = \\langle H(k) \\rangle_{k} -\\mu - \\Sigma_{\\mathrm{DC}}$."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "90554088-b7c3-46b2-83d9-609e5993505f",
+   "metadata": {},
+   "source": [
+    "## 🧠 DMFT loop"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "bfb246e1-eb8b-4187-bffe-7594ce6d6a1e",
+   "metadata": {},
+   "source": [
+    "### 🧪 Exercise 3: Write the DMFT loop\n",
+    "\n",
+    "The DMFT loop can be written identically to the one that you worked on in the previous tutorials. You will make a slight modification to the static part of the self-energy and the local impurity levels to incorporate the double-counting correctly."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "6376279c-dd00-4c1d-a881-6777c5186a18",
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "ename": "SyntaxError",
+     "evalue": "invalid syntax (1230867133.py, line 16)",
+     "output_type": "error",
+     "traceback": [
+      "  \u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[5]\u001b[39m\u001b[32m, line 16\u001b[39m\n\u001b[31m    \u001b[39m\u001b[31mtarget_density, obe =\u001b[39m\n                          ^\n\u001b[31mSyntaxError\u001b[39m\u001b[31m:\u001b[39m invalid syntax\n"
+     ]
+    }
+   ],
+   "source": [
+    "import numpy as np\n",
+    "from triqs.gfs import MeshImFreq\n",
+    "from triqs.operators import n\n",
+    "from triqs_cthyb import solve_generic, TailFitParams\n",
+    "\n",
+    "# Coulomb interaction\n",
+    "U = 14    \n",
+    "\n",
+    "# double-counting density\n",
+    "N_d = 1.1 \n",
+    "\n",
+    "# Matsubara Mesh\n",
+    "mesh = MeshImFreq(beta = 10.0, S = \"Fermion\", n_iw = 250)\n",
+    "\n",
+    "# load in density and obe\n",
+    "target_density, obe = \n",
+    "\n",
+    "# create the embedding we made in exercise 2\n",
+    "E = \n",
+    "\n",
+    "# setup-solver parameters (realistic solver parameters: length_cycle = 9000, n_cycles = 9e+6, n_warmup_cycles = 1e+4)\n",
+    "solver_params = dict(length_cycle=100, n_cycles = int(1e+5),\n",
+    "                     n_warmup_cycles = int(1e+3), \n",
+    "                     perform_tail_fit=True, \n",
+    "                     imag_threshold = 1e-6)\n",
+    "tail_fit_params = TailFitParams(fit_min_w=24, fit_max_w=28)\n",
+    "\n",
+    "# make an empty self-energy\n",
+    "Sigma_imp_dynamic, Sigma_imp_infty = \n",
+    "\n",
+    "# compute the double-counting and set it equal to the static part of the self-energy\n",
+    "Sigma_DC = U*(N_d - 0.5)\n",
+    "# typically, the self-energy is initialized the double-counting at the beginning of the DMFT loop.\n",
+    "for SH in Sigma_imp_infty: SH += Sigma_DC\n",
+    "\n",
+    "# interaction Hamiltonian\n",
+    "h_int = U*n('up_0',0)*n('down_0',0)\n",
+    "\n",
+    "# number of DMFT iterations\n",
+    "n_dmft_loops = 2\n",
+    "\n",
+    "epsilon_d = # compute the impurity levels and use embedding to extract the correlated ones\n",
+    "\n",
+    "for n_iter in range(n_dmft_loops):\n",
+    "\n",
+    "    # 1. subtract the double-counting to computed the embedded self-energy\n",
+    "    Sigma_imp_infty_minus_dc = \n",
+    "\n",
+    "    # 2. embed the impurity self-energy\n",
+    "    Sigma_C_dynamic, Sigma_C_infty =\n",
+    "\n",
+    "    # 3. find the chemical potential\n",
+    "    mu = \n",
+    "\n",
+    "    # 4. compute the local Green's function and extract\n",
+    "    Gloc =\n",
+    "\n",
+    "    # 5. Compute the effective impurity levels. Don't forget to subtract mu and Sigma_DC\n",
+    "    E_imp = \n",
+    "\n",
+    "    # 6. Compute hybridization function\n",
+    "    Delta_iw = \n",
+    "\n",
+    "    # 7. solve the quantum impurity problem\n",
+    "    solver_results = solve_generic(Delta_iw, E_imp, h_int, postprocess=tail_fit_params, **solver_params)\n",
+    "\n",
+    "    print(f\"Δn = |n_lattice - n_impurity| = {abs(Gloc.total_density()-solver_results.G_iw.total_density())}\")\n",
+    "\n",
+    "    # 8. update the impurity self-energy\n",
+    "    Sigma_imp_dynamic, Sigma_imp_infty = solver_results.Sigma_dynamic, solver_results.Sigma_Hartree"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "3532fc77-3efd-463c-b387-b71c2c5126d2",
+   "metadata": {},
+   "source": [
+    "## 📊 Analyze Results"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "1de42531-0a8f-4358-92b4-772345b052de",
+   "metadata": {},
+   "source": [
+    "### 🧪 Exercise 4: Load the converged results\n",
+    "\n",
+    "Now that you have your DMFT loop, we provide you with pre-converged results for this calculation at $\\beta = 50.0$ 1/eV. Load the converged data from the file ``ref_data/lco-x2y2-Nd=1.1-beta=50.0-U=14.0.h5``. Plot the self-energy and Green's function from the first and last iteration and explain what you see."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "d345f3d3-7052-4075-817b-890593db3115",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "SyntaxError",
+     "evalue": "incomplete input (284851555.py, line 9)",
+     "output_type": "error",
+     "traceback": [
+      "  \u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[6]\u001b[39m\u001b[32m, line 9\u001b[39m\n\u001b[31m    \u001b[39m\u001b[31m# plot G_first/last and Σ_first/last\u001b[39m\n                                        ^\n\u001b[31mSyntaxError\u001b[39m\u001b[31m:\u001b[39m incomplete input\n"
+     ]
+    }
+   ],
+   "source": [
+    "from h5 import HDFArchive\n",
+    "\n",
+    "from triqs.plot.mpl_interface import oplot, plt\n",
+    "\n",
+    "# load the data using HDFArchive\n",
+    "with HDFArchive('ref_data/lco-x2y2-Nd=1.1-beta=50.0-U=14.0.h5', 'r') as ar:\n",
+    "\n",
+    "\n",
+    "# plot G_first/last and Σ_first/last\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "202feb6c-ec6b-4e4d-a452-8ae6d90e408d",
+   "metadata": {},
+   "source": [
+    "At the first iteration, both the Green's function and self-energy indicate metallic behavior. However, at convergence, they both show insulating behavior."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "06d334e0-f4b6-4f44-bced-dd3dae14dad2",
+   "metadata": {},
+   "source": [
+    "### 🧪 Exercise 5: Analytically continue the self-energy\n",
+    "Now let us analytically continue the self-energy onto the real axis so that we can plot real-frequency spectra. Use the maximum entropy utilities from before to analytically continue the self-energy from the last iteration. Plot your result."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "141349df-a39d-4e3f-ad38-8e5fd0aa499f",
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Warning: could not identify MPI environment!\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "Starting serial run at: 2026-06-28 07:48:26.715732\n"
+     ]
+    },
+    {
+     "ename": "NameError",
+     "evalue": "name 'Sigma_iw_last' is not defined",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[31m---------------------------------------------------------------------------\u001b[39m",
+      "\u001b[31mNameError\u001b[39m                                 Traceback (most recent call last)",
+      "\u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[7]\u001b[39m\u001b[32m, line 3\u001b[39m\n\u001b[32m      1\u001b[39m \u001b[38;5;28;01mfrom\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[34;01mtriqs_tutorials_utils\u001b[39;00m\u001b[34;01m.\u001b[39;00m\u001b[34;01mmaxent\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[38;5;28;01mimport\u001b[39;00m Sigma_w_from_maxent\n\u001b[32m----> \u001b[39m\u001b[32m3\u001b[39m Sigma_w = Sigma_w_from_maxent(\u001b[43mSigma_iw_last\u001b[49m, alpha_min=\u001b[32m1e-2\u001b[39m, alpha_max=\u001b[32m1e2\u001b[39m, error=\u001b[32m0.04\u001b[39m)\n",
+      "\u001b[31mNameError\u001b[39m: name 'Sigma_iw_last' is not defined"
+     ]
+    }
+   ],
+   "source": [
+    "from triqs_tutorials_utils.maxent import Sigma_w_from_maxent\n",
+    "\n",
+    "Sigma_w = Sigma_w_from_maxent(Sigma_iw_last, alpha_min=1e-2, alpha_max=1e2, error=0.04)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "2be78608-b3f1-4043-8609-14b55c463f80",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# plot the Re and Im parts of Σ(ω)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ea5e21df-0110-42b2-9407-cc8d9d8c8164",
+   "metadata": {},
+   "source": [
+    "### 🧪 Exercise 6: Compute real-frequency spectra\n",
+    "Now we will learn how to plot the atom- and orbital-resolved spectral function -- the interacting density of states. The quantity that we want to compute is\n",
+    "\n",
+    "$$ A_{\\mathrm{proj}}(\\omega) = \\frac{-1}{\\pi} \\mathrm{Im} G_{\\mathrm{proj}}(\\omega), $$\n",
+    "\n",
+    "where $G_{\\mathrm{proj}}$ is the local Green's function projected onto atom $a$ and orbital $o$. To project the Green's function onto non-correlated orbitals, we need to load new projectors (referred to as $\\Theta$ projectors), which span a larger space in the correlated space. The $\\Theta$ projectors can then be used to project the lattice Green's function onto specific atoms and orbitals. To post-process your results, follow the steps below.\n",
+    "\n",
+    "#### 🧩 Your Task\n",
+    "1. Load in a new one-body elements using the function: ``one_body_elements_with_theta_projectors``. Print out the new obe and try to spot any differences.\n",
+    "2. Embed your real-frequency self-energy using the Embedding (E).\n",
+    "3. Use the function ``projected_spectral_function`` to compute $A_{\\mathrm{proj}}(\\omega)$.\n",
+    "4. Plot your result."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "fbb1e535-03eb-4282-9688-ff9ede13f816",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "SyntaxError",
+     "evalue": "invalid syntax (2971558196.py, line 2)",
+     "output_type": "error",
+     "traceback": [
+      "  \u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[9]\u001b[39m\u001b[32m, line 2\u001b[39m\n\u001b[31m    \u001b[39m\u001b[31mobe_proj = # load in the new obe.\u001b[39m\n               ^\n\u001b[31mSyntaxError\u001b[39m\u001b[31m:\u001b[39m invalid syntax\n"
+     ]
+    }
+   ],
+   "source": [
+    "# 1. load in new obe with Θ projectors\n",
+    "obe_proj = # load in the new obe.\n",
+    "print(obe_proj)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "7b49c8b7-32bc-427f-99d0-fba7ee599a4e",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "SyntaxError",
+     "evalue": "invalid syntax (1500252612.py, line 2)",
+     "output_type": "error",
+     "traceback": [
+      "  \u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[10]\u001b[39m\u001b[32m, line 2\u001b[39m\n\u001b[31m    \u001b[39m\u001b[31mSigma_w_proj =\u001b[39m\n                   ^\n\u001b[31mSyntaxError\u001b[39m\u001b[31m:\u001b[39m invalid syntax\n"
+     ]
+    }
+   ],
+   "source": [
+    "# 2. embed the self-energy minus the double-counting\n",
+    "Sigma_w_proj = "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "e6bdb179-83d3-4a10-84a4-ac6c7e2cd881",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "SyntaxError",
+     "evalue": "invalid syntax (2172538784.py, line 2)",
+     "output_type": "error",
+     "traceback": [
+      "  \u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[11]\u001b[39m\u001b[32m, line 2\u001b[39m\n\u001b[31m    \u001b[39m\u001b[31mA_proj =\u001b[39m\n             ^\n\u001b[31mSyntaxError\u001b[39m\u001b[31m:\u001b[39m invalid syntax\n"
+     ]
+    }
+   ],
+   "source": [
+    "# 3. compute the projected spectral function\n",
+    "A_proj = "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "181541f6-0d66-488b-8f52-7e039758cbe8",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "NameError",
+     "evalue": "name 'A_proj' is not defined",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[31m---------------------------------------------------------------------------\u001b[39m",
+      "\u001b[31mNameError\u001b[39m                                 Traceback (most recent call last)",
+      "\u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[12]\u001b[39m\u001b[32m, line 2\u001b[39m\n\u001b[32m      1\u001b[39m \u001b[38;5;66;03m# 4. plot your results.\u001b[39;00m\n\u001b[32m----> \u001b[39m\u001b[32m2\u001b[39m La = \u001b[43mA_proj\u001b[49m.per_theta[\u001b[32m0\u001b[39m,:,:\u001b[32m10\u001b[39m, :\u001b[32m10\u001b[39m].trace(axis1=\u001b[32m1\u001b[39m,axis2=\u001b[32m2\u001b[39m)    \u001b[38;5;66;03m# 2 La = 10 d orbitals\u001b[39;00m\n\u001b[32m      3\u001b[39m Cu = A_proj.per_theta[\u001b[32m0\u001b[39m,:,\u001b[32m10\u001b[39m:\u001b[32m15\u001b[39m,\u001b[32m10\u001b[39m:\u001b[32m15\u001b[39m].trace(axis1=\u001b[32m1\u001b[39m,axis2=\u001b[32m2\u001b[39m) \u001b[38;5;66;03m# 1 Cu = 5  d orbitals\u001b[39;00m\n\u001b[32m      4\u001b[39m O  = A_proj.per_theta[\u001b[32m0\u001b[39m,:,\u001b[32m16\u001b[39m:, \u001b[32m16\u001b[39m:].trace(axis1=\u001b[32m1\u001b[39m,axis2=\u001b[32m2\u001b[39m)    \u001b[38;5;66;03m# 4 O  = 12 p orbitals\u001b[39;00m\n",
+      "\u001b[31mNameError\u001b[39m: name 'A_proj' is not defined"
+     ]
+    }
+   ],
+   "source": [
+    "# 4. plot your results.\n",
+    "La = A_proj.per_theta[0,:,:10, :10].trace(axis1=1,axis2=2)    # 2 La = 10 d orbitals\n",
+    "Cu = A_proj.per_theta[0,:,10:15,10:15].trace(axis1=1,axis2=2) # 1 Cu = 5  d orbitals\n",
+    "O  = A_proj.per_theta[0,:,16:, 16:].trace(axis1=1,axis2=2)    # 4 O  = 12 p orbitals\n",
+    "\n",
+    "# for the x-axis\n",
+    "mesh = np.fromiter(Sigma_w_proj['0','up'].mesh, float)\n",
+    "\n",
+    "# plot the atom resolved dos\n",
+    "\n",
+    "# plot the orbital resolved DOS for Cu(3d)\n"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

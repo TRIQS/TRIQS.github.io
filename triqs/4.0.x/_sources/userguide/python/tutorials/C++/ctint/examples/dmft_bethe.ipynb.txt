@@ -1,0 +1,169 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Warning: could not identify MPI environment!\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "Starting serial run at: 2026-06-28 08:03:53.213313\n"
+     ]
+    },
+    {
+     "ename": "ModuleNotFoundError",
+     "evalue": "No module named 'triqs.applications'",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[31m---------------------------------------------------------------------------\u001b[39m",
+      "\u001b[31mModuleNotFoundError\u001b[39m                       Traceback (most recent call last)",
+      "\u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[1]\u001b[39m\u001b[32m, line 4\u001b[39m\n\u001b[32m      2\u001b[39m \u001b[38;5;28;01mfrom\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[34;01mh5\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[38;5;28;01mimport\u001b[39;00m *\n\u001b[32m      3\u001b[39m \u001b[38;5;28;01mimport\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[34;01mtriqs\u001b[39;00m\u001b[34;01m.\u001b[39;00m\u001b[34;01mutility\u001b[39;00m\u001b[34;01m.\u001b[39;00m\u001b[34;01mmpi\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[38;5;28;01mas\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[34;01mmpi\u001b[39;00m\n\u001b[32m----> \u001b[39m\u001b[32m4\u001b[39m \u001b[38;5;28;01mfrom\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[34;01mtriqs\u001b[39;00m\u001b[34;01m.\u001b[39;00m\u001b[34;01mapplications\u001b[39;00m\u001b[34;01m.\u001b[39;00m\u001b[34;01mimpurity_solvers\u001b[39;00m\u001b[34;01m.\u001b[39;00m\u001b[34;01mctint_tutorial\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[38;5;28;01mimport\u001b[39;00m CtintSolver\n\u001b[32m      5\u001b[39m \u001b[38;5;28;01mfrom\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[34;01mtriqs\u001b[39;00m\u001b[34;01m.\u001b[39;00m\u001b[34;01mplot\u001b[39;00m\u001b[34;01m.\u001b[39;00m\u001b[34;01mmpl_interface\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[38;5;28;01mimport\u001b[39;00m oplot\n\u001b[32m      7\u001b[39m \u001b[38;5;66;03m# Parameters\u001b[39;00m\n",
+      "\u001b[31mModuleNotFoundError\u001b[39m: No module named 'triqs.applications'"
+     ]
+    }
+   ],
+   "source": [
+    "from triqs.gfs import *\n",
+    "from h5 import *\n",
+    "import triqs.utility.mpi as mpi\n",
+    "from triqs.applications.impurity_solvers.ctint_tutorial import CtintSolver\n",
+    "from triqs.plot.mpl_interface import oplot\n",
+    "\n",
+    "# Parameters\n",
+    "U = 2.5            # Hubbard interaction\n",
+    "mu = U/2.0         # Chemical potential\n",
+    "half_bandwidth=1.0 # Half bandwidth (energy unit)\n",
+    "beta = 40.0        # Inverse temperature\n",
+    "n_iw = 128         # Number of Matsubara frequencies\n",
+    "n_cycles = 10000   # Number of MC cycles\n",
+    "delta = 0.1        # delta parameter\n",
+    "n_iterations = 21  # Number of DMFT iterations\n",
+    "\n",
+    "S = CtintSolver(beta, n_iw) # Initialize the solver\n",
+    "\n",
+    "S.G_iw << SemiCircular(half_bandwidth) # Initialize the Green's function\n",
+    "\n",
+    "with HDFArchive(\"dmft_bethe.output.h5\",'w') as A:\n",
+    " A['n_iterations'] = n_iterations # Save a parameter\n",
+    "\n",
+    " for it in range(n_iterations): # DMFT loop\n",
+    "  for name, G0 in S.G0_iw:\n",
+    "   G0 << inverse(iOmega_n + mu - (half_bandwidth/2.0)**2 * S.G_iw[name] ) # Set G0\n",
+    "  # Change random number generator on final iteration\n",
+    "  random_name = 'mt19937' if it<n_iterations-1 else 'lagged_fibonacci19937'\n",
+    "\n",
+    "  S.solve(U, delta, n_cycles, random_name=random_name) # Solve the impurity problem\n",
+    "\n",
+    "  G_sym = (S.G_iw['up']+S.G_iw['down'])/2 # Impose paramagnetic solution\n",
+    "  S.G_iw << G_sym\n",
+    "\n",
+    "  if mpi.is_master_node():\n",
+    "   A['G%i'%it] = G_sym # Save G from every iteration to file"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Cannot open the HDF file dmft_bethe.output.h5\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "HDF5-DIAG: Error detected in HDF5 (1.12.3) thread 0:\n",
+      "  #000: /dev/shm/nix-build-hdf5-1.12.3.drv-1/nixbld1/spack-stage-hdf5-1.12.3-fx4s301kfywhjkdqaldc721gdabrlwkz/spack-src/src/H5F.c line 619 in H5Fopen(): unable to open file\n",
+      "    major: File accessibility\n",
+      "    minor: Unable to open file\n",
+      "  #001: /dev/shm/nix-build-hdf5-1.12.3.drv-1/nixbld1/spack-stage-hdf5-1.12.3-fx4s301kfywhjkdqaldc721gdabrlwkz/spack-src/src/H5VLcallback.c line 3522 in H5VL_file_open(): open failed\n",
+      "    major: Virtual Object Layer\n",
+      "    minor: Can't open object\n",
+      "  #002: /dev/shm/nix-build-hdf5-1.12.3.drv-1/nixbld1/spack-stage-hdf5-1.12.3-fx4s301kfywhjkdqaldc721gdabrlwkz/spack-src/src/H5VLcallback.c line 3351 in H5VL__file_open(): open failed\n",
+      "    major: Virtual Object Layer\n",
+      "    minor: Can't open object\n",
+      "  #003: /dev/shm/nix-build-hdf5-1.12.3.drv-1/nixbld1/spack-stage-hdf5-1.12.3-fx4s301kfywhjkdqaldc721gdabrlwkz/spack-src/src/H5VLnative_file.c line 97 in H5VL__native_file_open(): unable to open file\n",
+      "    major: File accessibility\n",
+      "    minor: Unable to open file\n",
+      "  #004: /dev/shm/nix-build-hdf5-1.12.3.drv-1/nixbld1/spack-stage-hdf5-1.12.3-fx4s301kfywhjkdqaldc721gdabrlwkz/spack-src/src/H5Fint.c line 1876 in H5F_open(): unable to open file: name = 'dmft_bethe.output.h5', tent_flags = 0\n",
+      "    major: File accessibility\n",
+      "    minor: Unable to open file\n",
+      "  #005: /dev/shm/nix-build-hdf5-1.12.3.drv-1/nixbld1/spack-stage-hdf5-1.12.3-fx4s301kfywhjkdqaldc721gdabrlwkz/spack-src/src/H5FD.c line 722 in H5FD_open(): open failed\n",
+      "    major: Virtual File Layer\n",
+      "    minor: Unable to initialize object\n",
+      "  #006: /dev/shm/nix-build-hdf5-1.12.3.drv-1/nixbld1/spack-stage-hdf5-1.12.3-fx4s301kfywhjkdqaldc721gdabrlwkz/spack-src/src/H5FDsec2.c line 351 in H5FD__sec2_open(): unable to open file: name = 'dmft_bethe.output.h5', errno = 2, error message = 'No such file or directory', flags = 0, o_flags = 0\n",
+      "    major: File accessibility\n",
+      "    minor: Unable to open file\n"
+     ]
+    },
+    {
+     "ename": "RuntimeError",
+     "evalue": ".. Error  : \nOpening/Creating the file dmft_bethe.output.h5 failed",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[31m---------------------------------------------------------------------------\u001b[39m",
+      "\u001b[31mRuntimeError\u001b[39m                              Traceback (most recent call last)",
+      "\u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[2]\u001b[39m\u001b[32m, line 1\u001b[39m\n\u001b[32m----> \u001b[39m\u001b[32m1\u001b[39m A = \u001b[43mHDFArchive\u001b[49m\u001b[43m(\u001b[49m\u001b[33;43m\"\u001b[39;49m\u001b[33;43mdmft_bethe.output.h5\u001b[39;49m\u001b[33;43m\"\u001b[39;49m\u001b[43m,\u001b[49m\u001b[33;43m'\u001b[39;49m\u001b[33;43mr\u001b[39;49m\u001b[33;43m'\u001b[39;49m\u001b[43m)\u001b[49m \u001b[38;5;66;03m# Open file\u001b[39;00m\n\u001b[32m      2\u001b[39m n_iterations = A[\u001b[33m'\u001b[39m\u001b[33mn_iterations\u001b[39m\u001b[33m'\u001b[39m] \u001b[38;5;66;03m# Load a parameter\u001b[39;00m\n\u001b[32m      3\u001b[39m \u001b[38;5;28;01mfor\u001b[39;00m it \u001b[38;5;129;01min\u001b[39;00m \u001b[38;5;28mrange\u001b[39m(n_iterations): \u001b[38;5;66;03m# Use parameter in the analysis\u001b[39;00m\n",
+      "\u001b[36mFile \u001b[39m\u001b[32m~/opt/triqs/lib/python3.12/site-packages/h5/archive.py:401\u001b[39m, in \u001b[36mHDFArchive.__init__\u001b[39m\u001b[34m(self, descriptor, open_flag, key_as_string_only, reconstruct_python_object, init)\u001b[39m\n\u001b[32m    398\u001b[39m         \u001b[38;5;28;01mtry\u001b[39;00m: os.remove(os.path.abspath(LocalFileName))\n\u001b[32m    399\u001b[39m         \u001b[38;5;28;01mexcept\u001b[39;00m \u001b[38;5;167;01mOSError\u001b[39;00m: \u001b[38;5;28;01mpass\u001b[39;00m\n\u001b[32m--> \u001b[39m\u001b[32m401\u001b[39m     \u001b[38;5;28;43mself\u001b[39;49m\u001b[43m.\u001b[49m\u001b[43m_init_root\u001b[49m\u001b[43m(\u001b[49m\u001b[43mLocalFileName\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mopen_flag\u001b[49m\u001b[43m)\u001b[49m\n\u001b[32m    403\u001b[39m \u001b[38;5;28mself\u001b[39m.options = {\u001b[33m'\u001b[39m\u001b[33mkey_as_string_only\u001b[39m\u001b[33m'\u001b[39m : key_as_string_only,\n\u001b[32m    404\u001b[39m                 \u001b[33m'\u001b[39m\u001b[33mdo_not_overwrite_entries\u001b[39m\u001b[33m'\u001b[39m : \u001b[38;5;28;01mFalse\u001b[39;00m,\n\u001b[32m    405\u001b[39m                 \u001b[33m'\u001b[39m\u001b[33mreconstruct_python_object\u001b[39m\u001b[33m'\u001b[39m: reconstruct_python_object,\n\u001b[32m    406\u001b[39m                 \u001b[33m'\u001b[39m\u001b[33mUseAlpsNotationForComplex\u001b[39m\u001b[33m'\u001b[39m  : \u001b[38;5;28;01mTrue\u001b[39;00m\n\u001b[32m    407\u001b[39m                 }\n\u001b[32m    408\u001b[39m HDFArchiveGroup.\u001b[34m__init__\u001b[39m(\u001b[38;5;28mself\u001b[39m,\u001b[38;5;28mself\u001b[39m,\u001b[33m\"\u001b[39m\u001b[33m\"\u001b[39m)\n",
+      "\u001b[36mFile \u001b[39m\u001b[32m~/opt/triqs/lib/python3.12/site-packages/h5/archive_basic_layer.py:46\u001b[39m, in \u001b[36mHDFArchiveGroupBasicLayer._init_root\u001b[39m\u001b[34m(self, descriptor, open_flag)\u001b[39m\n\u001b[32m     44\u001b[39m \u001b[38;5;28;01massert\u001b[39;00m(\u001b[38;5;28misinstance\u001b[39m(descriptor, \u001b[38;5;28mstr\u001b[39m))\n\u001b[32m     45\u001b[39m \u001b[38;5;28;01mtry\u001b[39;00m :\n\u001b[32m---> \u001b[39m\u001b[32m46\u001b[39m     fich = \u001b[43mh5\u001b[49m\u001b[43m.\u001b[49m\u001b[43mFile\u001b[49m\u001b[43m(\u001b[49m\u001b[43mdescriptor\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mopen_flag\u001b[49m\u001b[43m)\u001b[49m\n\u001b[32m     47\u001b[39m \u001b[38;5;28;01mexcept\u001b[39;00m :\n\u001b[32m     48\u001b[39m     \u001b[38;5;28mprint\u001b[39m(\u001b[33m\"\u001b[39m\u001b[33mCannot open the HDF file \u001b[39m\u001b[38;5;132;01m%s\u001b[39;00m\u001b[33m\"\u001b[39m%descriptor)\n",
+      "\u001b[31mRuntimeError\u001b[39m: .. Error  : \nOpening/Creating the file dmft_bethe.output.h5 failed"
+     ]
+    }
+   ],
+   "source": [
+    "A = HDFArchive(\"dmft_bethe.output.h5\",'r') # Open file\n",
+    "n_iterations = A['n_iterations'] # Load a parameter\n",
+    "for it in range(n_iterations): # Use parameter in the analysis\n",
+    " if not it%2: oplot(A['G%i'%it].imag, '-o', name='Im G%i'%it) # Plot every second result\n",
+    "xlim(0,5)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
