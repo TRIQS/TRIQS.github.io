@@ -412,8 +412,19 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="issues.html">Reporting issues</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Changelog</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#version-3-1-0">Version 3.1.0</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#version-4-0-0">Version 4.0.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#bindings-c2py-clair">Bindings (c2py + clair)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dlr">DLR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#alpha-tensor">Alpha tensor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nfft-finufft">NFFT / finufft</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#measurements">Measurements</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#general">General</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cmake-deps">cmake / deps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#jenkins-ghactions">jenkins / ghactions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#version-3-1-0">Version 3.1.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">General</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#doc">doc</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#cmake">cmake</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#gh-actions">gh-actions</a></li>
@@ -454,6 +465,88 @@
              
   <section class="tex2jax_ignore mathjax_ignore" id="changelog">
 <h1>Changelog<a class="headerlink" href="#changelog" title="Link to this heading"></a></h1>
+<section id="version-4-0-0">
+<h2>Version 4.0.0<a class="headerlink" href="#version-4-0-0" title="Link to this heading"></a></h2>
+<p>CTINT version 4.0.0 is a compatibility release for TRIQS version 4.0.0 that</p>
+<ul class="simple">
+<li><p>ports the Python bindings from cpp2py to the new c2py + clair framework</p></li>
+<li><p>migrates the single-particle and bosonic quantities to the DLR Matsubara mesh</p></li>
+<li><p>introduces a new per-term alpha tensor with support for dynamic interactions</p></li>
+<li><p>replaces nfft with finufft for the non-uniform Fourier transforms</p></li>
+<li><p>uses the latest <a class="reference external" href="https://github.com/TRIQS/app4triqs" rel="noopener noreferrer" target="_blank">app4triqs</a> skeleton</p></li>
+<li><p>migrates the Jenkins CI to the new k8s-based system</p></li>
+<li><p>fixes a number of application issues</p></li>
+</ul>
+<p>We provide a more detailed description of the changes below.</p>
+<section id="bindings-c2py-clair">
+<h3>Bindings (c2py + clair)<a class="headerlink" href="#bindings-c2py-clair" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Port the Python bindings from cpp2py to c2py + clair</p></li>
+<li><p>Generate the <code class="docutils literal notranslate"><span class="pre">solver_core</span></code> and <code class="docutils literal notranslate"><span class="pre">post_process</span></code> Python modules via <code class="docutils literal notranslate"><span class="pre">c2py_add_module</span></code></p></li>
+<li><p>Disable C++20 module scanning for clair-c2py compatibility</p></li>
+<li><p>Update the doxygen documentation in the public headers (<code class="docutils literal notranslate"><span class="pre">params.hpp</span></code>, <code class="docutils literal notranslate"><span class="pre">container_set.hpp</span></code>, <code class="docutils literal notranslate"><span class="pre">post_process.hpp</span></code>, <code class="docutils literal notranslate"><span class="pre">solver_core.hpp</span></code>) for the c2py docstring pipeline</p></li>
+</ul>
+</section>
+<section id="dlr">
+<h3>DLR<a class="headerlink" href="#dlr" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Migrate the single-particle and bosonic quantities to the DLR Matsubara mesh</p></li>
+<li><p>Adjust the ctint solver to use the DLR mesh version of the Hartree-Fock solver</p></li>
+<li><p>Use the mesh-based <code class="docutils literal notranslate"><span class="pre">triqs_hartree_fock</span></code> API for the alpha determination</p></li>
+</ul>
+</section>
+<section id="alpha-tensor">
+<h3>Alpha tensor<a class="headerlink" href="#alpha-tensor" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Implement a new per-term alpha tensor and start the search from the last alpha</p></li>
+<li><p>Restore dynamic D0 interactions for the new per-term alpha tensor</p></li>
+<li><p>Allow <code class="docutils literal notranslate"><span class="pre">n_s</span> <span class="pre">=</span> <span class="pre">2</span></code> for non-density-density terms</p></li>
+<li><p>Add an auxiliary spin-flip move</p></li>
+</ul>
+</section>
+<section id="nfft-finufft">
+<h3>NFFT / finufft<a class="headerlink" href="#nfft-finufft" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Replace nfft with finufft (v2.5.1) for the non-uniform Fourier transforms; set <code class="docutils literal notranslate"><span class="pre">nfft_tol=1e-14</span></code></p></li>
+<li><p>Extend <code class="docutils literal notranslate"><span class="pre">nfft_buf_t</span></code> with type-3 and direct DFT modes and refactor the direct NUDFT kernel with rank-specialized algorithms</p></li>
+<li><p>Build finufft with a portable architecture by default (no <code class="docutils literal notranslate"><span class="pre">-march=native</span></code>)</p></li>
+<li><p>Relax the default finufft type-3 tolerance to 1e-13</p></li>
+</ul>
+</section>
+<section id="measurements">
+<h3>Measurements<a class="headerlink" href="#measurements" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Migrate <code class="docutils literal notranslate"><span class="pre">auto_corr_time</span></code> to the new TRIQS <code class="docutils literal notranslate"><span class="pre">log_binning</span></code> API and add density observables</p></li>
+<li><p>Add error-bar estimation for <code class="docutils literal notranslate"><span class="pre">average_sign</span></code> and <code class="docutils literal notranslate"><span class="pre">average_k</span></code></p></li>
+<li><p>Enable <code class="docutils literal notranslate"><span class="pre">measure_density</span></code> by default</p></li>
+</ul>
+</section>
+<section id="general">
+<h3>General<a class="headerlink" href="#general" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Port ctint to TRIQS 4.0 (<code class="docutils literal notranslate"><span class="pre">triqs.gf</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">triqs.gfs</span></code>)</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">parity_sort</span></code>/<code class="docutils literal notranslate"><span class="pre">insertion_sort</span></code> for insert and remove moves</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">rethrow_exception</span></code> to <code class="docutils literal notranslate"><span class="pre">solve_params_t</span></code> and backwards compatibility for insertion parameters</p></li>
+<li><p>Install <code class="docutils literal notranslate"><span class="pre">triqs_hartree_fock</span></code> as part of the ctint installation</p></li>
+<li><p>Convert the implementation notes to reStructuredText and update them for the new alpha tensor</p></li>
+</ul>
+</section>
+<section id="cmake-deps">
+<h3>cmake / deps<a class="headerlink" href="#cmake-deps" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Bump the <code class="docutils literal notranslate"><span class="pre">triqs_hartree_fock</span></code> dependency version to 4.0</p></li>
+<li><p>Increase the h5diff test tolerance to 5e-5 for BLAS portability</p></li>
+</ul>
+</section>
+<section id="jenkins-ghactions">
+<h3>jenkins / ghactions<a class="headerlink" href="#jenkins-ghactions" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Migrate the Jenkins CI to the new k8s-based system (#26)</p></li>
+<li><p>Synchronize the GitHub Actions configuration with app4triqs</p></li>
+</ul>
+<p>We thank all contributors: Marco Barbone, Jennifer Coulter, Thomas Hahn, Alexander Hampel, Marcel Klett, Henri Menke, Dylan Simon, Nils Wentzell</p>
+</section>
+</section>
 <section id="version-3-1-0">
 <h2>Version 3.1.0<a class="headerlink" href="#version-3-1-0" title="Link to this heading"></a></h2>
 <p>CTINT version 3.1.0 is a compatibility
@@ -465,8 +558,8 @@ release for TRIQS version 3.1.0 that</p>
 <li><p>fixes a number of application issues</p></li>
 </ul>
 <p>We provide a more detailed description of the changes below.</p>
-<section id="general">
-<h3>General<a class="headerlink" href="#general" title="Link to this heading"></a></h3>
+<section id="id1">
+<h3>General<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Port ctint to triqs 3.1</p></li>
 <li><p>Fix runaway memory in G2c_from_M4</p></li>
