@@ -1,0 +1,665 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Step-by-step guide &mdash; CTSEG - TRIQS segment picture solver  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=f7f783a0" />
+      <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+
+  
+    <link rel="shortcut icon" href="../_static/triqs_favicon.ico"/>
+      <script src="../_static/jquery.js?v=958b65b0"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=default"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Monte Carlo moves" href="moves.html" />
+    <link rel="prev" title="Implementation notes" href="../algorithm_implementation/implementation_notes.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #7E588A" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CTSEG - TRIQS segment picture solver
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Install CTSEG</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#packaged-versions-of-ctseg">Packaged Versions of CTSEG</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../install.html#ubuntu-debian-packages">Ubuntu Debian packages</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../install.html#anaconda">Anaconda</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../install.html#docker">Docker</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#compiling-ctseg-from-source">Compiling CTSEG from source</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../install.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../install.html#installation-steps">Installation steps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../install.html#version-compatibility">Version compatibility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../install.html#custom-cmake-options">Custom CMake options</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="../documentation.html">Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../documentation.html#algorithm-and-implementation">Algorithm and implementation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../algorithm_implementation/ctseg.html">The CTSEG double expansion algorithm</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../algorithm_implementation/ctseg.html#double-expansion">Double expansion</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../algorithm_implementation/ctseg.html#configuration">Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../algorithm_implementation/ctseg.html#sign">Sign</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../algorithm_implementation/implementation_notes.html">Implementation notes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../algorithm_implementation/implementation_notes.html#solver-core">Solver core</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../algorithm_implementation/implementation_notes.html#inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../algorithm_implementation/implementation_notes.html#configuration">Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../algorithm_implementation/implementation_notes.html#imaginary-time-points">Imaginary time points</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../algorithm_implementation/implementation_notes.html#work-data">Work data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../algorithm_implementation/implementation_notes.html#determinants">Determinants</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../algorithm_implementation/implementation_notes.html#miscellaneous">Miscellaneous</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../algorithm_implementation/implementation_notes.html#automatic-tests">Automatic tests</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 current"><a class="reference internal" href="../documentation.html#user-guide">User guide</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Step-by-step guide</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#step-1-choose-the-construction-parameters">Step 1 - Choose the construction parameters</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#green-s-function-structure">Green’s function structure</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#step-2-construct-the-solver">Step 2 - Construct the solver</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#step-3-supply-the-solver-inputs">Step 3 - Supply the solver inputs</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#local-hamiltonian">Local Hamiltonian</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#hybridization-function">Hybridization function</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#dynamical-density-density-interaction">Dynamical density-density interaction</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#spin-spin-interaction">Spin-spin interaction</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#conditions-for-half-filling">Conditions for half-filling</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#solve-parameters">Solve parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#step-4-run-the-solver">Step 4 - Run the solver</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#step-5-access-the-results">Step 5 - Access the results</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#step-6-save-the-results">Step 6 - Save the results</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#running-the-solver-in-parallel">Running the solver in parallel</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="moves.html">Monte Carlo moves</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="moves.html#insert-segment">Insert segment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="moves.html#remove-segment">Remove segment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="moves.html#split-segment">Split segment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="moves.html#regroup-segment">Regroup segment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="moves.html#move-segment">Move segment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="moves.html#double-insert-segment">Double insert segment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="moves.html#double-remove-segment">Double remove segment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="moves.html#insert-spin-segment">Insert spin segment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="moves.html#remove-spin-segment">Remove spin segment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="moves.html#swap-spin-lines">Swap spin lines</a></li>
+<li class="toctree-l4"><a class="reference internal" href="moves.html#split-spin-segment">Split spin segment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="moves.html#regroup-spin-segment">Regroup spin segment</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="measurements.html">Measurements</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="measurements.html#imaginary-time-green-s-function">Imaginary time Green’s function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="measurements.html#self-energy-improved-estimator">Self-energy improved estimator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="measurements.html#density">Density</a></li>
+<li class="toctree-l4"><a class="reference internal" href="measurements.html#static-density-correlation-function">Static density correlation function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="measurements.html#dynamic-density-correlation-function">Dynamic density correlation function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="measurements.html#two-particle-three-frequency-green-s-function">Two-particle, three-frequency Green’s function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="measurements.html#two-particle-two-frequency-green-s-function">Two-particle, two-frequency Green’s function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="measurements.html#perpendicular-spin-spin-correlation-function">Perpendicular spin-spin correlation function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="measurements.html#state-histogram">State histogram</a></li>
+<li class="toctree-l4"><a class="reference internal" href="measurements.html#average-sign">Average sign</a></li>
+<li class="toctree-l4"><a class="reference internal" href="measurements.html#perturbation-order-histograms">Perturbation order histograms</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation.html#tutorials">Tutorials</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../tutorials/One-boson%20retarded%20interaction.html">One-boson retarded interaction</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../tutorials/One-boson%20retarded%20interaction.html#Simulating-the-retarded-action-\mathcal{S}">Simulating the retarded action <span class="math notranslate nohighlight">\(\mathcal{S}\)</span></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tutorials/One-boson%20retarded%20interaction.html#Single-particle-Green's-function">Single particle Green’s function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../tutorials/One-boson%20retarded%20interaction.html#Dynamic-density-correlation">Dynamic density correlation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation.html#python-reference-manual">Python reference manual</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../_ref/triqs_ctseg.solver.html">triqs_ctseg.solver</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_ref/triqs_ctseg.solver.Solver.html">triqs_ctseg.solver.Solver</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver.Solver.html#triqs_ctseg.solver.Solver"><code class="docutils literal notranslate"><span class="pre">Solver</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver.Solver.D0_tau.html">triqs_ctseg.solver.Solver.D0_tau</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver.Solver.Delta_tau.html">triqs_ctseg.solver.Solver.Delta_tau</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver.Solver.Jperp_tau.html">triqs_ctseg.solver.Solver.Jperp_tau</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver.Solver.constr_params.html">triqs_ctseg.solver.Solver.constr_params</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver.Solver.results.html">triqs_ctseg.solver.Solver.results</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver.Solver.solve_params.html">triqs_ctseg.solver.Solver.solve_params</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver.Solver.solve.html">triqs_ctseg.solver.Solver.solve</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.html">triqs_ctseg.solver_core</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.ConstrParamsT.html">triqs_ctseg.solver_core.ConstrParamsT</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.ConstrParamsT.html#triqs_ctseg.solver_core.ConstrParamsT"><code class="docutils literal notranslate"><span class="pre">ConstrParamsT</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.ConstrParamsT.beta.html">triqs_ctseg.solver_core.ConstrParamsT.beta</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.ConstrParamsT.gf_struct.html">triqs_ctseg.solver_core.ConstrParamsT.gf_struct</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.ConstrParamsT.n_tau.html">triqs_ctseg.solver_core.ConstrParamsT.n_tau</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.ConstrParamsT.n_tau_bosonic.html">triqs_ctseg.solver_core.ConstrParamsT.n_tau_bosonic</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.ResultsT.html">triqs_ctseg.solver_core.ResultsT</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.ResultsT.html#triqs_ctseg.solver_core.ResultsT"><code class="docutils literal notranslate"><span class="pre">ResultsT</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.ResultsT.F_tau.html">triqs_ctseg.solver_core.ResultsT.F_tau</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.ResultsT.G_tau.html">triqs_ctseg.solver_core.ResultsT.G_tau</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.ResultsT.Sperp_tau.html">triqs_ctseg.solver_core.ResultsT.Sperp_tau</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.ResultsT.average_order_Delta.html">triqs_ctseg.solver_core.ResultsT.average_order_Delta</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.ResultsT.average_order_Jperp.html">triqs_ctseg.solver_core.ResultsT.average_order_Jperp</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.ResultsT.average_sign.html">triqs_ctseg.solver_core.ResultsT.average_sign</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.ResultsT.densities.html">triqs_ctseg.solver_core.ResultsT.densities</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.ResultsT.g2w.html">triqs_ctseg.solver_core.ResultsT.g2w</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.ResultsT.g3w.html">triqs_ctseg.solver_core.ResultsT.g3w</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.ResultsT.nn_nu_dlr.html">triqs_ctseg.solver_core.ResultsT.nn_nu_dlr</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.ResultsT.nn_static.html">triqs_ctseg.solver_core.ResultsT.nn_static</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.ResultsT.nn_tau.html">triqs_ctseg.solver_core.ResultsT.nn_tau</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.ResultsT.pert_order_Delta.html">triqs_ctseg.solver_core.ResultsT.pert_order_Delta</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.ResultsT.pert_order_Jperp.html">triqs_ctseg.solver_core.ResultsT.pert_order_Jperp</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.ResultsT.state_hist.html">triqs_ctseg.solver_core.ResultsT.state_hist</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.html">triqs_ctseg.solver_core.SolveParamsT</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.html#triqs_ctseg.solver_core.SolveParamsT"><code class="docutils literal notranslate"><span class="pre">SolveParamsT</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.det_init_size.html">triqs_ctseg.solver_core.SolveParamsT.det_init_size</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.det_n_operations_before_check.html">triqs_ctseg.solver_core.SolveParamsT.det_n_operations_before_check</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.det_precision_error.html">triqs_ctseg.solver_core.SolveParamsT.det_precision_error</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.det_precision_warning.html">triqs_ctseg.solver_core.SolveParamsT.det_precision_warning</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.det_singular_threshold.html">triqs_ctseg.solver_core.SolveParamsT.det_singular_threshold</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.dlr_epsilon.html">triqs_ctseg.solver_core.SolveParamsT.dlr_epsilon</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.dlr_omega_max.html">triqs_ctseg.solver_core.SolveParamsT.dlr_omega_max</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.h_int.html">triqs_ctseg.solver_core.SolveParamsT.h_int</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.h_loc0.html">triqs_ctseg.solver_core.SolveParamsT.h_loc0</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.histogram_max_order.html">triqs_ctseg.solver_core.SolveParamsT.histogram_max_order</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.imag_threshold.html">triqs_ctseg.solver_core.SolveParamsT.imag_threshold</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.length_cycle.html">triqs_ctseg.solver_core.SolveParamsT.length_cycle</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.max_time.html">triqs_ctseg.solver_core.SolveParamsT.max_time</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.measure_F_tau.html">triqs_ctseg.solver_core.SolveParamsT.measure_F_tau</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.measure_G_tau.html">triqs_ctseg.solver_core.SolveParamsT.measure_G_tau</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.measure_Sperp_tau.html">triqs_ctseg.solver_core.SolveParamsT.measure_Sperp_tau</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.measure_average_sign.html">triqs_ctseg.solver_core.SolveParamsT.measure_average_sign</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.measure_densities.html">triqs_ctseg.solver_core.SolveParamsT.measure_densities</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.measure_g2w.html">triqs_ctseg.solver_core.SolveParamsT.measure_g2w</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.measure_g3w.html">triqs_ctseg.solver_core.SolveParamsT.measure_g3w</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.measure_nn_nu_dlr.html">triqs_ctseg.solver_core.SolveParamsT.measure_nn_nu_dlr</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.measure_nn_static.html">triqs_ctseg.solver_core.SolveParamsT.measure_nn_static</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.measure_nn_tau.html">triqs_ctseg.solver_core.SolveParamsT.measure_nn_tau</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.measure_pert_order.html">triqs_ctseg.solver_core.SolveParamsT.measure_pert_order</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.measure_state_hist.html">triqs_ctseg.solver_core.SolveParamsT.measure_state_hist</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.move_double_insert_segment.html">triqs_ctseg.solver_core.SolveParamsT.move_double_insert_segment</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.move_double_remove_segment.html">triqs_ctseg.solver_core.SolveParamsT.move_double_remove_segment</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.move_insert_segment.html">triqs_ctseg.solver_core.SolveParamsT.move_insert_segment</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.move_insert_spin_segment.html">triqs_ctseg.solver_core.SolveParamsT.move_insert_spin_segment</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.move_move_segment.html">triqs_ctseg.solver_core.SolveParamsT.move_move_segment</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.move_regroup_segment.html">triqs_ctseg.solver_core.SolveParamsT.move_regroup_segment</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.move_regroup_spin_segment.html">triqs_ctseg.solver_core.SolveParamsT.move_regroup_spin_segment</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.move_remove_segment.html">triqs_ctseg.solver_core.SolveParamsT.move_remove_segment</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.move_remove_spin_segment.html">triqs_ctseg.solver_core.SolveParamsT.move_remove_spin_segment</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.move_split_segment.html">triqs_ctseg.solver_core.SolveParamsT.move_split_segment</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.move_split_spin_segment.html">triqs_ctseg.solver_core.SolveParamsT.move_split_spin_segment</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.move_swap_spin_lines.html">triqs_ctseg.solver_core.SolveParamsT.move_swap_spin_lines</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.n_cycles.html">triqs_ctseg.solver_core.SolveParamsT.n_cycles</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.n_tau_G.html">triqs_ctseg.solver_core.SolveParamsT.n_tau_G</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.n_tau_chi2.html">triqs_ctseg.solver_core.SolveParamsT.n_tau_chi2</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.n_w_b_vertex.html">triqs_ctseg.solver_core.SolveParamsT.n_w_b_vertex</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.n_w_f_vertex.html">triqs_ctseg.solver_core.SolveParamsT.n_w_f_vertex</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.n_warmup_cycles.html">triqs_ctseg.solver_core.SolveParamsT.n_warmup_cycles</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.random_name.html">triqs_ctseg.solver_core.SolveParamsT.random_name</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.random_seed.html">triqs_ctseg.solver_core.SolveParamsT.random_seed</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.verbosity.html">triqs_ctseg.solver_core.SolveParamsT.verbosity</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolveParamsT.visualize_config.html">triqs_ctseg.solver_core.SolveParamsT.visualize_config</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolverCore.html">triqs_ctseg.solver_core.SolverCore</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolverCore.html#triqs_ctseg.solver_core.SolverCore"><code class="docutils literal notranslate"><span class="pre">SolverCore</span></code></a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolverCore.D0_tau.html">triqs_ctseg.solver_core.SolverCore.D0_tau</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolverCore.Delta_tau.html">triqs_ctseg.solver_core.SolverCore.Delta_tau</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolverCore.Jperp_tau.html">triqs_ctseg.solver_core.SolverCore.Jperp_tau</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolverCore.constr_params.html">triqs_ctseg.solver_core.SolverCore.constr_params</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolverCore.results.html">triqs_ctseg.solver_core.SolverCore.results</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolverCore.solve_params.html">triqs_ctseg.solver_core.SolverCore.solve_params</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../_ref/triqs_ctseg.solver_core.SolverCore.solve.html">triqs_ctseg.solver_core.SolverCore.solve</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation.html#c-reference-manual">C++ reference manual</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../issues.html">Reporting issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ChangeLog.html">Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../ChangeLog.html#version-4-0-0">Version 4.0.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#porting-and-compatibility">Porting and compatibility</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#general">General</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#doc">doc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ChangeLog.html#jenkins-cmake-ghactions">jenkins / cmake / ghactions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../ChangeLog.html#version-3-3-0">Version 3.3.0</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About CTSEG</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html#references">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #7E588A" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CTSEG - TRIQS segment picture solver</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../documentation.html">Documentation</a></li>
+      <li class="breadcrumb-item active">Step-by-step guide</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/guide/step_by_step.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="step-by-step-guide">
+<span id="step-by-step"></span><h1>Step-by-step guide<a class="headerlink" href="#step-by-step-guide" title="Link to this heading"></a></h1>
+<p>Below is a step-by-step guide to setting up a CTQMC calculation with the CTSEG solver.</p>
+<section id="step-1-choose-the-construction-parameters">
+<h2>Step 1 - Choose the construction parameters<a class="headerlink" href="#step-1-choose-the-construction-parameters" title="Link to this heading"></a></h2>
+<p>We first need to specify the parameters that will define the structure of the solver object.
+They can be conveniently supplied as a Python dictionary:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">constr_params</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;gf_struct&quot;</span><span class="p">:</span> <span class="n">gf_struct</span><span class="p">,</span>
+    <span class="s2">&quot;beta&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="s2">&quot;n_tau&quot;</span><span class="p">:</span> <span class="mi">1001</span><span class="p">,</span>
+    <span class="s2">&quot;n_tau_bosonic&quot;</span><span class="p">:</span> <span class="mi">1001</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">gf_struct</span></code> specifies the block structure of the impurity Green’s function (see below).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">beta</span></code> is the inverse temperature.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_tau</span></code> is the number of points of the imaginary time grid on which the input hybridization <span class="math notranslate nohighlight">\(\Delta(\tau)\)</span> is sampled. It is also the default number of samples for the measured fermionic two-point functions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_tau_bosonic</span></code> is the number of points of the imaginary time grid on which the bosonic two-point function inputs (<span class="math notranslate nohighlight">\(D_0(\tau)\)</span> and <span class="math notranslate nohighlight">\(\mathcal{J}_{\perp}(\tau)\)</span>) are sampled. It is also the default number of samples for the measured bosonic two-point functions.</p></li>
+</ul>
+<section id="green-s-function-structure">
+<h3>Green’s function structure<a class="headerlink" href="#green-s-function-structure" title="Link to this heading"></a></h3>
+<p>The parameter <code class="docutils literal notranslate"><span class="pre">gf_struct</span></code> is a list of pairs of the form <code class="docutils literal notranslate"><span class="pre">(block_name,</span> <span class="pre">block_size)</span></code>.
+The choice of the blocks is not unique, but choosing the smallest possible blocks
+ensures the best performance. The impurity problems solved by CTSEG are always spin-conserving,
+it is therfore always possible to define at least two blocks <code class="docutils literal notranslate"><span class="pre">up</span></code> and <code class="docutils literal notranslate"><span class="pre">down</span></code>. For example, for a
+single orbital:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gf_struct</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;up&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;down&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>It is suboptimal, but equivalent, to define a single-block structure for the same single-orbital problem:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gf_struct</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;orb&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The choice of the block structure affects the Markov chain, unless <code class="docutils literal notranslate"><span class="pre">move_move</span></code> is disabled.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>For a problem with <span class="math notranslate nohighlight">\(\mathcal{J}_{\perp}\)</span> interactions, the structure <strong>must</strong> have
+two blocks of size 1.</p>
+</div>
+</section>
+</section>
+<section id="step-2-construct-the-solver">
+<h2>Step 2 - Construct the solver<a class="headerlink" href="#step-2-construct-the-solver" title="Link to this heading"></a></h2>
+<p>With the parameters set, we are ready to construct the solver object:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">triqs_ctseg</span><span class="w"> </span><span class="kn">import</span> <span class="n">Solver</span>
+<span class="n">S</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="o">**</span><span class="n">constr_params</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="step-3-supply-the-solver-inputs">
+<h2>Step 3 - Supply the solver inputs<a class="headerlink" href="#step-3-supply-the-solver-inputs" title="Link to this heading"></a></h2>
+<p>We now need to provide the solver with the parameters of the action that define the impurity problem.
+Here, we will give examples for a single-orbital impurity (<code class="docutils literal notranslate"><span class="pre">gf_struct</span> <span class="pre">=</span> <span class="pre">[(&quot;up&quot;,</span> <span class="pre">1),</span> <span class="pre">(&quot;down&quot;,</span> <span class="pre">1)]</span></code>).
+The CTSEG input structure is similar to the <a class="reference external" href="https://triqs.github.io/cthyb/latest/" rel="noopener noreferrer" target="_blank">CTHYB</a> Delta interface.
+The time-independent part of the action (i.e., the local Hamiltonian) is supplied as a TRIQS many-body operator, and the time-dependent parts
+are supplied as the appropriate type of TRIQS Green’s functions.</p>
+<section id="local-hamiltonian">
+<h3>Local Hamiltonian<a class="headerlink" href="#local-hamiltonian" title="Link to this heading"></a></h3>
+<p>The impurity problem must be supplied to CTSEG in the basis where the quadratic part of the local Hamiltonian is diagonal.</p>
+<section id="quadratic-part">
+<h4>Quadratic part<a class="headerlink" href="#quadratic-part" title="Link to this heading"></a></h4>
+<p>In its eigenbasis, the quadratic part of the local Hamiltonian <code class="docutils literal notranslate"><span class="pre">h_loc0</span></code> is
+proportional to the density operator. Density operators are represented by <code class="docutils literal notranslate"><span class="pre">n(block_name,</span> <span class="pre">orbital_number)</span></code>.
+For our single orbital problem:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">triqs.operators</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="n">h_loc0</span> <span class="o">=</span> <span class="p">(</span><span class="n">eps</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span><span class="p">(</span><span class="s2">&quot;up&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">n</span><span class="p">(</span><span class="s2">&quot;down&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Here, <code class="docutils literal notranslate"><span class="pre">eps</span></code> is the orbital energy and <code class="docutils literal notranslate"><span class="pre">mu</span></code> the chemical potential.
+The interaction Hamiltonian is passed to the solver as part of the solve parameters (see below).</p>
+</section>
+<section id="quartic-part">
+<h4>Quartic part<a class="headerlink" href="#quartic-part" title="Link to this heading"></a></h4>
+<p>In the impurity problems handled by CTSEG, the quartic part of the local Hamiltonian is always a density-density interaction.
+For our single orbital problem:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">triqs.operators</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="n">h_int</span> <span class="o">=</span> <span class="n">U</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="s2">&quot;up&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="s2">&quot;down&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For more complex Hamiltonians (in multi-orbital problems), it is possible to use the <code class="docutils literal notranslate"><span class="pre">h_int_density</span></code> function.
+For example, for a two-orbital system (<code class="docutils literal notranslate"><span class="pre">gf_struct</span> <span class="pre">=</span> <span class="pre">[(&quot;up&quot;,</span> <span class="pre">2),</span> <span class="pre">(&quot;down&quot;,</span> <span class="pre">2)]</span></code>), one defines the interaction matrix for electrons of the same spin:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Umat</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="n">V</span><span class="p">],</span>
+               <span class="p">[</span><span class="n">V</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+</pre></div>
+</div>
+<p>And the interaction matrix for electrons of opposite spin:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Upmat</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">([[</span><span class="n">U</span><span class="p">,</span> <span class="n">V</span><span class="p">],</span>
+                <span class="p">[</span><span class="n">V</span><span class="p">,</span> <span class="n">U</span><span class="p">]])</span>
+</pre></div>
+</div>
+<p>Then, the Hamiltonian is constructed as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">triqs.operators.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">h_int_density</span>
+<span class="n">block_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;up&quot;</span><span class="p">,</span> <span class="s2">&quot;down&quot;</span><span class="p">]</span>
+<span class="n">n_orb</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">h_int</span> <span class="o">=</span> <span class="n">h_int_density</span><span class="p">(</span><span class="n">block_names</span><span class="p">,</span> <span class="n">n_orb</span><span class="p">,</span> <span class="n">Umat</span><span class="p">,</span> <span class="n">Upmat</span><span class="p">,</span> <span class="n">off_diag</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The interaction Hamiltonian is passed to the solver as part of the solve parameters (see below).</p>
+</section>
+</section>
+<section id="hybridization-function">
+<h3>Hybridization function<a class="headerlink" href="#hybridization-function" title="Link to this heading"></a></h3>
+<p>The CTSEG solver takes as an input the hybridization function <span class="math notranslate nohighlight">\(\Delta(\tau)\)</span> that appears in the
+impurity action (see <a class="reference internal" href="../algorithm_implementation/ctseg.html"><span class="doc">CTSEG algorithm</span></a>). It is initialized as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">triqs.gfs</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">triqs.gfs.tools</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="n">tau_mesh</span> <span class="o">=</span> <span class="n">MeshImTime</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="s1">&#39;Fermion&#39;</span><span class="p">,</span> <span class="n">n_tau</span><span class="p">)</span>
+<span class="n">Delta_tau</span> <span class="o">=</span> <span class="n">BlockGf</span><span class="p">(</span><span class="n">mesh</span> <span class="o">=</span> <span class="n">tau_mesh</span><span class="p">,</span> <span class="n">gf_struct</span> <span class="o">=</span> <span class="n">gf_struct</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The data in <code class="docutils literal notranslate"><span class="pre">Delta_tau</span></code> can be specified manually (<code class="docutils literal notranslate"><span class="pre">Delta_tau[&quot;block_name&quot;].data</span> <span class="pre">=</span> <span class="pre">...</span></code>), or with one
+of the TRIQS built-in functions. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">iw_mesh</span> <span class="o">=</span> <span class="n">MeshImFreq</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="s1">&#39;Fermion&#39;</span><span class="p">,</span> <span class="n">n_tau</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">Delta_iw</span> <span class="o">=</span> <span class="n">BlockGf</span><span class="p">(</span><span class="n">mesh</span> <span class="o">=</span> <span class="n">iw_mesh</span><span class="p">,</span> <span class="n">gf_struct</span> <span class="o">=</span> <span class="n">gf_struct</span><span class="p">)</span>
+<span class="n">Delta_iw</span> <span class="o">&lt;&lt;</span> <span class="n">Fourier</span><span class="p">(</span><span class="n">Delta_tau</span><span class="p">)</span>
+<span class="n">Delta_iw</span> <span class="o">&lt;&lt;</span> <span class="n">t</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">SemiCircular</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">t</span><span class="p">,</span> <span class="n">chem_potential</span> <span class="o">=</span> <span class="n">mu</span><span class="p">)</span>
+<span class="n">Delta_tau</span> <span class="o">&lt;&lt;</span> <span class="n">Fourier</span><span class="p">(</span><span class="n">Delta_iw</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The hybridization function is supplied to the solver via:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">S</span><span class="o">.</span><span class="n">Delta_tau</span> <span class="o">&lt;&lt;</span> <span class="n">Delta_tau</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The value of <code class="docutils literal notranslate"><span class="pre">n_tau</span></code> supplied in the <code class="docutils literal notranslate"><span class="pre">constr_params</span></code> and the number of points in the <span class="math notranslate nohighlight">\(\tau\)</span> grid of
+the <span class="math notranslate nohighlight">\(\Delta(\tau)\)</span> input must match.</p>
+</div>
+<p>This is different from the default interface of the <a class="reference external" href="https://triqs.github.io/cthyb/latest/" rel="noopener noreferrer" target="_blank">CTHYB</a> solver,
+which takes as input the non-interacting impurity Green’s function <span class="math notranslate nohighlight">\(G_0(i\omega_n)\)</span>. It is defined as</p>
+<div class="math notranslate nohighlight">
+\[G_0(i \omega_n) = \frac{1}{i \omega_n - \hat h_0 - \Delta(i \omega_n)}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\hat h_0\)</span> is the quadratic part of the local Hamiltonian. Note that <span class="math notranslate nohighlight">\(\Delta(i\omega_n)\)</span> vanishes in the high frequency limit.
+The following code extracts from a <code class="docutils literal notranslate"><span class="pre">BlockGf</span></code> <code class="docutils literal notranslate"><span class="pre">G0_iw</span></code> a <code class="docutils literal notranslate"><span class="pre">BlockGf</span></code> <code class="docutils literal notranslate"><span class="pre">Delta_iw</span></code> and a matrix <code class="docutils literal notranslate"><span class="pre">h0</span></code> for each block:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">get_h0_Delta</span><span class="p">(</span><span class="n">G0_iw</span><span class="p">):</span>
+    <span class="n">h0_lst</span><span class="p">,</span> <span class="n">Delta_iw</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">G0_iw</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">bl</span> <span class="ow">in</span> <span class="n">G0_iw</span><span class="o">.</span><span class="n">indices</span><span class="p">:</span>
+        <span class="n">Delta_iw</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">iOmega_n</span> <span class="o">-</span> <span class="n">inverse</span><span class="p">(</span><span class="n">G0_iw</span><span class="p">[</span><span class="n">bl</span><span class="p">])</span>
+        <span class="n">tail</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">fit_hermitian_tail</span><span class="p">(</span><span class="n">Delta_iw</span><span class="p">[</span><span class="n">bl</span><span class="p">])</span>
+        <span class="n">Delta_iw</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">Delta_iw</span><span class="p">[</span><span class="n">bl</span><span class="p">]</span> <span class="o">-</span> <span class="n">tail</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">h0_lst</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tail</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">h0_lst</span><span class="p">,</span> <span class="n">Delta_iw</span>
+
+<span class="n">h0_lst</span><span class="p">,</span> <span class="n">Delta_iw</span> <span class="o">=</span> <span class="n">get_h0_Delta</span><span class="p">(</span><span class="n">G0_iw</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If the <code class="docutils literal notranslate"><span class="pre">h0</span></code> are already expressed in the local eigenbasis, the obtained hybridization function can be
+directly used as the solver input. In the general case, they need to be rotated to the eigenbasis:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">linalg</span>
+<span class="n">rot_lst</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">h0_bl</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">h0_bl</span> <span class="ow">in</span> <span class="n">h0</span><span class="p">]</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">bl</span><span class="p">,</span> <span class="n">g0_bl</span><span class="p">),</span> <span class="n">rot_bl</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">Delta_iw</span><span class="p">,</span> <span class="n">rot_lst</span><span class="p">):</span>
+    <span class="n">g0_bl</span> <span class="o">&lt;&lt;</span> <span class="n">rot_bl</span><span class="o">.</span><span class="n">H</span> <span class="o">*</span> <span class="n">g0_bl</span> <span class="o">*</span> <span class="n">rot_bl</span>
+</pre></div>
+</div>
+<p>If a rotation is required, then the interactions should also be rotated accordingly.
+The non-interacting Hamiltonian operator in its eigenbasis is obtained as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">bl_name</span><span class="p">,</span> <span class="n">bl_size</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">gf_struct</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">bl_size</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="n">h_loc0</span> <span class="o">=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">h0_lst</span><span class="p">[</span><span class="n">i</span><span class="p">])[</span><span class="mi">0</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="n">bl_name</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">h_loc0</span> <span class="o">+=</span> <span class="n">linalg</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">h0_lst</span><span class="p">[</span><span class="n">i</span><span class="p">])[</span><span class="mi">0</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">n</span><span class="p">(</span><span class="n">bl_name</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="dynamical-density-density-interaction">
+<h3>Dynamical density-density interaction<a class="headerlink" href="#dynamical-density-density-interaction" title="Link to this heading"></a></h3>
+<p>The dynamical density-density interaction <span class="math notranslate nohighlight">\(D(\tau)\)</span> (see <a class="reference internal" href="../algorithm_implementation/ctseg.html"><span class="doc">CTSEG algorithm</span></a>) is initialized as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tau_mesh</span> <span class="o">=</span> <span class="n">MeshImTime</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="s1">&#39;Boson&#39;</span><span class="p">,</span> <span class="n">n_tau_bosonic</span><span class="p">)</span>
+<span class="n">D_tau</span> <span class="o">=</span> <span class="n">Block2Gf</span><span class="p">(</span><span class="n">mesh</span> <span class="o">=</span> <span class="n">tau_mesh</span><span class="p">,</span> <span class="n">gf_struct</span> <span class="o">=</span> <span class="n">gf_struct</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>It is a two-block-index Green’s function, since the dynamical interaction does not necessarily have the same block
+diagonal structure as the hybridization function.</p>
+<p>The data in <code class="docutils literal notranslate"><span class="pre">D_tau</span></code> can be specified manually (<code class="docutils literal notranslate"><span class="pre">D_tau[&quot;block1&quot;,</span> <span class="pre">&quot;block2&quot;].data</span> <span class="pre">=</span> <span class="pre">...</span></code>) or by using an analytical expression.
+For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">triqs.gfs.descriptors</span><span class="w"> </span><span class="kn">import</span> <span class="n">Function</span>
+<span class="n">wp</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">D_iw</span> <span class="o">=</span> <span class="n">GfImFreq</span><span class="p">(</span><span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span><span class="p">,</span> <span class="n">statistic</span> <span class="o">=</span> <span class="s2">&quot;Boson&quot;</span><span class="p">,</span> <span class="n">n_points</span> <span class="o">=</span> <span class="n">n_tau_bosonic</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">d_tau</span> <span class="o">=</span> <span class="n">GfImTime</span><span class="p">(</span><span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span><span class="p">,</span> <span class="n">statistic</span> <span class="o">=</span> <span class="s2">&quot;Boson&quot;</span><span class="p">,</span> <span class="n">n_points</span> <span class="o">=</span> <span class="n">n_tau_bosonic</span><span class="p">)</span>
+<span class="n">D_iw</span> <span class="o">&lt;&lt;</span> <span class="n">Function</span><span class="p">(</span><span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="n">wp</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="n">w</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">wp</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">d_tau</span> <span class="o">&lt;&lt;</span> <span class="n">Fourier</span><span class="p">(</span><span class="n">D_iw</span><span class="p">)</span>
+<span class="n">D_tau</span><span class="p">[</span><span class="s2">&quot;up&quot;</span><span class="p">,</span> <span class="s2">&quot;up&quot;</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">d_tau</span>
+<span class="n">D_tau</span><span class="p">[</span><span class="s2">&quot;up&quot;</span><span class="p">,</span> <span class="s2">&quot;down&quot;</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">d_tau</span>
+<span class="n">D_tau</span><span class="p">[</span><span class="s2">&quot;down&quot;</span><span class="p">,</span> <span class="s2">&quot;up&quot;</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">d_tau</span>
+<span class="n">D_tau</span><span class="p">[</span><span class="s2">&quot;down&quot;</span><span class="p">,</span> <span class="s2">&quot;down&quot;</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="n">d_tau</span>
+</pre></div>
+</div>
+<p>The dynamical interaction is supplied to the solver via:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">S</span><span class="o">.</span><span class="n">D0_tau</span> <span class="o">&lt;&lt;</span> <span class="n">D_tau</span>
+</pre></div>
+</div>
+</section>
+<section id="spin-spin-interaction">
+<h3>Spin-spin interaction<a class="headerlink" href="#spin-spin-interaction" title="Link to this heading"></a></h3>
+<p>The perpendicular spin-spin interaction <span class="math notranslate nohighlight">\(J_{\perp}(\tau)\)</span> (see <a class="reference internal" href="../algorithm_implementation/ctseg.html"><span class="doc">CTSEG algorithm</span></a>) is initialized as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Jperp_tau</span> <span class="o">=</span> <span class="n">GfImTime</span><span class="p">(</span><span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span><span class="p">,</span> <span class="n">statistic</span> <span class="o">=</span> <span class="s2">&quot;Boson&quot;</span><span class="p">,</span> <span class="n">n_points</span> <span class="o">=</span> <span class="n">n_tau_bosonic</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>It is a <span class="math notranslate nohighlight">\(1 \times 1\)</span> matrix Green’s function, since perpendicular spin-spin interactions are
+only implemented for a single orbital. It is supplied to the solver via:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">S</span><span class="o">.</span><span class="n">Jperp_tau</span> <span class="o">&lt;&lt;</span> <span class="n">Jperp_tau</span>
+</pre></div>
+</div>
+<p>If the impurity action contains a spin-spin interaction term of the form <span class="math notranslate nohighlight">\((1/2) \cdot Q(\tau - \tau') \sum_i s_i(\tau) s_i(\tau')\)</span>,
+it can be split into a density-density and a perpendicular spin-spin term. Indeed, making use of symmetry properties, we may replace in the action</p>
+<div class="math notranslate nohighlight">
+\[\frac{1}{2} Q(\tau - \tau') \sum_i s_i(\tau) \cdot s_i(\tau') \mapsto \frac{1}{2} Q(\tau - \tau') \left[s^+(\tau) s^-(\tau') + \frac{1}{4}\sum_{\sigma \sigma'} (-1)^{\sigma \sigma'} n_{\sigma}(\tau) n_{\sigma'}(\tau') \right]\]</div>
+<p>The solver is then accordingly set up as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">S</span><span class="o">.</span><span class="n">Jperp_tau</span> <span class="o">&lt;&lt;</span> <span class="n">Q_tau</span>
+<span class="n">S</span><span class="o">.</span><span class="n">D0_tau</span><span class="p">[</span><span class="s2">&quot;up&quot;</span><span class="p">,</span> <span class="s2">&quot;up&quot;</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span> <span class="o">*</span> <span class="n">Q_tau</span>
+<span class="n">S</span><span class="o">.</span><span class="n">D0_tau</span><span class="p">[</span><span class="s2">&quot;up&quot;</span><span class="p">,</span> <span class="s2">&quot;down&quot;</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span> <span class="o">*</span> <span class="n">Q_tau</span>
+<span class="n">S</span><span class="o">.</span><span class="n">D0_tau</span><span class="p">[</span><span class="s2">&quot;down&quot;</span><span class="p">,</span> <span class="s2">&quot;up&quot;</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span> <span class="o">*</span> <span class="n">Q_tau</span>
+<span class="n">S</span><span class="o">.</span><span class="n">D0_tau</span><span class="p">[</span><span class="s2">&quot;down&quot;</span><span class="p">,</span> <span class="s2">&quot;down&quot;</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span> <span class="o">*</span> <span class="n">Q_tau</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The value of <code class="docutils literal notranslate"><span class="pre">n_tau_bosonic</span></code> supplied in the <code class="docutils literal notranslate"><span class="pre">constr_params</span></code> and the number of points in the <span class="math notranslate nohighlight">\(\tau\)</span> grids of
+the <span class="math notranslate nohighlight">\(D(\tau)\)</span> and <span class="math notranslate nohighlight">\(J_{\perp}(\tau)\)</span> inputs must match.</p>
+</div>
+</section>
+<section id="conditions-for-half-filling">
+<h3>Conditions for half-filling<a class="headerlink" href="#conditions-for-half-filling" title="Link to this heading"></a></h3>
+<p>For a particle-hole symmetric, spin-symmetric single-orbital problem, the following values of the chemical potential correspond to half-filling (assuming that the orbital energy <code class="docutils literal notranslate"><span class="pre">eps</span></code> is 0):</p>
+<ul class="simple">
+<li><p>In the absence of dynamical density-density interaction: <span class="math notranslate nohighlight">\(\mu = U/2\)</span>.</p></li>
+<li><p>In the presence of a dynamical density-density interaction <span class="math notranslate nohighlight">\(D_{\sigma \sigma'} (\tau)\)</span> and possibly a perpendicular spin-spin interaction <span class="math notranslate nohighlight">\(J_{\perp}(\tau)\)</span>:</p></li>
+</ul>
+<div class="math notranslate nohighlight">
+\[\mu = \frac{U + [D_{\uparrow\uparrow} + D_{\uparrow \downarrow}](i\omega_n = 0)}{2}\]</div>
+</section>
+<section id="solve-parameters">
+<h3>Solve parameters<a class="headerlink" href="#solve-parameters" title="Link to this heading"></a></h3>
+<p>The parameters required to perform a CTQMC run are conveniently supplied as a Python dictionary.
+The following parameters need to be specified for every run. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">solve_params</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;h_int&quot;</span><span class="p">:</span> <span class="n">h_int</span><span class="p">,</span>
+    <span class="s2">&quot;h_loc0&quot;</span><span class="p">:</span> <span class="n">h_loc0</span><span class="p">,</span>
+    <span class="s2">&quot;length_cycle&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+    <span class="s2">&quot;n_warmup_cycles&quot;</span><span class="p">:</span> <span class="mi">20000</span><span class="p">,</span>
+    <span class="s2">&quot;n_cycles&quot;</span><span class="p">:</span> <span class="mi">200000</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">h_int</span></code> is the local interaction Hamiltonian (see above).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">h_loc0</span></code> is quadratic part of the local Hamiltonian (see above).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">length_cycle</span></code> is the length of a Monte Carlo cycle. Observables are sampled every <code class="docutils literal notranslate"><span class="pre">length_cycle</span></code> Monte Carlo moves (either accepted or rejected).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_warmup_cycles</span></code> is the number of cycles to do before any observables are samples, so as to “forget” the initial configuration.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_cycles</span></code> is the number of cycles used for the production run.</p></li>
+</ul>
+<p>Other parameters include:</p>
+<ul class="simple">
+<li><p><strong>Measure control</strong>. All the <a class="reference internal" href="measurements.html"><span class="doc">measurements</span></a> can be switched on and off. Some of the measurements (self-energy improved estimator,
+density correlation functions) can be time-consuming, and they are off by default. For example, to turn the improved estimator
+measurement on, one should set <code class="docutils literal notranslate"><span class="pre">solve_params[&quot;measure_F_tau&quot;]</span> <span class="pre">=</span> <span class="pre">True</span></code>.</p></li>
+<li><p><strong>Move control</strong>. All the <a class="reference internal" href="moves.html"><span class="doc">Monte Carlo moves</span></a> can be switched on and off. This functionality exists to facilitate testing
+for developers. The solver chooses the relevant moves depending on its inputs, and regular users should not need move control.</p></li>
+<li><p>Optional sample numbers for the measured two-point functions: <code class="docutils literal notranslate"><span class="pre">n_tau_G</span></code> (defaults to <code class="docutils literal notranslate"><span class="pre">n_tau</span></code>) for fermionic functions
+and <code class="docutils literal notranslate"><span class="pre">n_tau_chi2</span></code> (defaults to <code class="docutils literal notranslate"><span class="pre">n_tau_bosonic</span></code>) for bosonic functions.</p></li>
+</ul>
+<p>The complete list of parameters is available <a class="reference internal" href="../_ref/triqs_ctseg.solver.Solver.solve.html"><span class="doc">here</span></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The moves <code class="docutils literal notranslate"><span class="pre">double_insert_segment</span></code> and <code class="docutils literal notranslate"><span class="pre">double_remove_segment</span></code> are off by default. They may be switched on by the user when solving impurities with strong attractive interactions to improve ergodicity.</p>
+</div>
+</section>
+</section>
+<section id="step-4-run-the-solver">
+<h2>Step 4 - Run the solver<a class="headerlink" href="#step-4-run-the-solver" title="Link to this heading"></a></h2>
+<p>The CTQMC run is triggered by:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">S</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="o">**</span><span class="n">solve_params</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>After it is done accumulating, the solver prints the average acceptance rates. Very low acceptance rates for all moves (below 0.01)
+are generally a sign that something went wrong. However, some of the moves (<code class="docutils literal notranslate"><span class="pre">split_spin_segment</span></code>, <code class="docutils literal notranslate"><span class="pre">regroup_spin_segment</span></code>)
+often have low acceptance rates, even if the calculation runs as it should.</p>
+</section>
+<section id="step-5-access-the-results">
+<h2>Step 5 - Access the results<a class="headerlink" href="#step-5-access-the-results" title="Link to this heading"></a></h2>
+<p>The results of the accumulation are stored in <code class="docutils literal notranslate"><span class="pre">S.results</span></code>. For example, the impurity Green’s function is accessed with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">G_tau</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">G_tau</span>
+</pre></div>
+</div>
+<p>The results can be analyzed using the TRIQS plotting tools (<code class="docutils literal notranslate"><span class="pre">oplot</span></code>) or by directly extracting the data:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">G_up_data</span> <span class="o">=</span> <span class="n">G_tau</span><span class="p">[</span><span class="s2">&quot;up&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+<span class="n">G_down_data</span> <span class="o">=</span> <span class="n">G_tau</span><span class="p">[</span><span class="s2">&quot;down&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+<span class="n">times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">tau</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">tau</span> <span class="ow">in</span> <span class="n">G_tau</span><span class="o">.</span><span class="n">mesh</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>For a rotationally-invariant impurity, the spin-spin correlation function <span class="math notranslate nohighlight">\(\chi(\tau) = (1/3) \sum_{i = x, y, z} \langle s_i(\tau) s_i(0) \rangle\)</span> can be obtained from the density-density
+correlation function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">nn_tau</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">nn_tau</span>
+<span class="n">chi_tau</span> <span class="o">=</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="p">(</span><span class="n">nn_tau</span><span class="p">[</span><span class="s2">&quot;up&quot;</span><span class="p">,</span> <span class="s2">&quot;up&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">nn_tau</span><span class="p">[</span><span class="s2">&quot;down&quot;</span><span class="p">,</span> <span class="s2">&quot;down&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">nn_tau</span><span class="p">[</span><span class="s2">&quot;up&quot;</span><span class="p">,</span> <span class="s2">&quot;down&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">nn_tau</span><span class="p">[</span><span class="s2">&quot;down&quot;</span><span class="p">,</span> <span class="s2">&quot;up&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>If rotational invariance is broken (for instance, in the presence of a Zeeman field), one needs to measure separately the
+perpendicular spin-spin correlation function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">nn_tau</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">nn_tau</span>
+<span class="n">sperp_tau</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">sperp_tau</span>
+<span class="n">chi_tau</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.25</span> <span class="o">*</span> <span class="p">(</span><span class="n">nn_tau</span><span class="p">[</span><span class="s2">&quot;up&quot;</span><span class="p">,</span> <span class="s2">&quot;up&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">nn_tau</span><span class="p">[</span><span class="s2">&quot;down&quot;</span><span class="p">,</span> <span class="s2">&quot;down&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">nn_tau</span><span class="p">[</span><span class="s2">&quot;up&quot;</span><span class="p">,</span> <span class="s2">&quot;down&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">nn_tau</span><span class="p">[</span><span class="s2">&quot;down&quot;</span><span class="p">,</span> <span class="s2">&quot;up&quot;</span><span class="p">])</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">sperp_tau</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3</span>
+</pre></div>
+</div>
+</section>
+<section id="step-6-save-the-results">
+<h2>Step 6 - Save the results<a class="headerlink" href="#step-6-save-the-results" title="Link to this heading"></a></h2>
+<p>The TRIQS <code class="docutils literal notranslate"><span class="pre">h5</span></code> module is convenient for saving the results to an hdf5 file. It is possible to save all the data at once
+by saving the solver object:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">h5</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="s2">&quot;results.h5&quot;</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">A</span><span class="p">:</span>
+    <span class="n">A</span><span class="p">[</span><span class="s2">&quot;Solver&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span>
+</pre></div>
+</div>
+</section>
+<section id="running-the-solver-in-parallel">
+<h2>Running the solver in parallel<a class="headerlink" href="#running-the-solver-in-parallel" title="Link to this heading"></a></h2>
+<p>The CTSEG solver supports MPI parallelism. If the solver run is set up in a file <code class="docutils literal notranslate"><span class="pre">script.py</span></code>, a parallel run
+is typically achieved with the command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mpirun</span> <span class="o">-</span><span class="n">np</span> <span class="o">&lt;</span><span class="n">n_cores</span><span class="o">&gt;</span> <span class="n">python</span> <span class="n">script</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>Each core then runs its own Markov chain of length <code class="docutils literal notranslate"><span class="pre">n_cycles</span></code> (starting from a different random number generator seed)
+and at the end the results from the different cores are averaged together.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../algorithm_implementation/implementation_notes.html" class="btn btn-neutral float-left" title="Implementation notes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="moves.html" class="btn btn-neutral float-right" title="Monte Carlo moves" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022--present The Simons Foundation, Max-Planck-Institut for Polymer Research Mainz.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
