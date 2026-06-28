@@ -1,7 +1,7 @@
-var dir_260bd9db5ed8f08d88b20305723fcbdd =
+var dir_0605aacecc4aa23ab59f3861ac0050e8 =
 [
-    [ "fourier", "dir_32788e90ca3ad80f31c1a6da568cb960.html", "dir_32788e90ca3ad80f31c1a6da568cb960" ],
-    [ "lattice", "dir_0bfc57e9d9f97e02221426f8d1fc2e1b.html", "dir_0bfc57e9d9f97e02221426f8d1fc2e1b" ],
+    [ "fourier", "dir_f02fb455a1b9db075a93ce3cd1b9fe96.html", "dir_f02fb455a1b9db075a93ce3cd1b9fe96" ],
+    [ "lattice", "dir_255ed4f1831c2950b09a0c2022fab3cd.html", "dir_255ed4f1831c2950b09a0c2022fab3cd" ],
     [ "channel_grouping.hpp", "channel__grouping_8hpp_source.html", null ],
     [ "chi_from_gg2.cpp", "chi__from__gg2_8cpp_source.html", null ],
     [ "chi_from_gg2.hpp", "chi__from__gg2_8hpp_source.html", null ],
