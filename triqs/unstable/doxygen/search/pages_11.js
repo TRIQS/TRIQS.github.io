@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['utilities_0',['Utilities',['../documentation.html#autotoc_md10',1,'']]]
+  ['where_20to_20start_0',['Where to start?',['../index.html#start',1,'']]],
+  ['with_20placeholders_1',['Filling a GF with placeholders',['../gf_ex.html#gf_ex_placeholders',1,'']]]
 ];

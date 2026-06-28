@@ -1,9 +1,8 @@
 var searchData=
 [
-  ['imaginary_20frequency_20mesh_0',['Imaginary-frequency mesh',['../mesh_ex1.html#mesh_ex1_imfreq',1,'']]],
-  ['imaginary_20frequency_20mesh_1',['DLR imaginary-frequency mesh',['../mesh_ex1.html#mesh_ex1_dlr_imfreq',1,'']]],
-  ['imaginary_20time_20mesh_2',['Imaginary-time mesh',['../mesh_ex1.html#mesh_ex1_imtime',1,'']]],
-  ['imaginary_20time_20mesh_3',['DLR imaginary-time mesh',['../mesh_ex1.html#mesh_ex1_dlr_imtime',1,'']]],
-  ['in_20c_20projects_4',['Integration in C++ projects',['../integration.html',1,'']]],
-  ['integration_20in_20c_20projects_5',['Integration in C++ projects',['../integration.html',1,'']]]
+  ['lattice_20mesh_0',['Cyclic-lattice mesh',['../mesh_ex.html#mesh_ex_cyclat',1,'']]],
+  ['lattice_20tools_1',['Lattice tools',['../documentation.html#autotoc_md5',1,'']]],
+  ['legendre_20mesh_2',['Legendre mesh',['../mesh_ex.html#mesh_ex_legendre',1,'']]],
+  ['list_3',['Deprecated List',['../deprecated.html',1,'']]],
+  ['logarithmic_20real_20frequency_20mesh_4',['Logarithmic real-frequency mesh',['../mesh_ex.html#mesh_ex_refreq_log',1,'']]]
 ];

@@ -94,7 +94,7 @@ $(function(){initNavTree('fourier__lattice_8cpp_source.html','',''); });
   <div class="headertitle"><div class="title">fourier_lattice.cpp</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">// Copyright (c) 2014-2018 Commissariat à l&#39;énergie atomique et aux énergies alternatives (CEA)</span></div>
+<a href="fourier__lattice_8cpp.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">// Copyright (c) 2014-2018 Commissariat à l&#39;énergie atomique et aux énergies alternatives (CEA)</span></div>
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment">// Copyright (c) 2014-2018 Centre national de la recherche scientifique (CNRS)</span></div>
 <div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment">// Copyright (c) 2018-2021 Simons Foundation</span></div>
 <div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="comment">//</span></div>
@@ -112,56 +112,53 @@ $(function(){initNavTree('fourier__lattice_8cpp_source.html','',''); });
 <div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="comment">//     https://www.gnu.org/licenses/gpl-3.0.txt</span></div>
 <div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="comment">//</span></div>
 <div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="comment">// Authors: Michel Ferrero, Olivier Parcollet, Nils Wentzell</span></div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span> </div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="preprocessor">#include &quot;../../gfs.hpp&quot;</span></div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="preprocessor">#include &quot;./fourier_common.hpp&quot;</span></div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="preprocessor">#include &lt;itertools/itertools.hpp&gt;</span></div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span> </div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="preprocessor">#define ASSERT_EQUAL(X, Y, MESS)                                                                                                                     \</span></div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="preprocessor">  if (X != Y) TRIQS_RUNTIME_ERROR &lt;&lt; MESS;</span></div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span> </div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="keyword">namespace </span>triqs::gfs {</div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span> </div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>  <span class="comment">// The implementation is almost the same in both cases...</span></div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>  <span class="keyword">template</span> &lt;<span class="keyword">typename</span> M1, <span class="keyword">typename</span> M2&gt; gf_vec_t&lt;M1&gt; __impl(<span class="keywordtype">int</span> fftw_backward_forward, M1 <span class="keyword">const</span> &amp;out_mesh, gf_vec_cvt&lt;M2&gt; g_in) {</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span> </div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="preprocessor">#include &quot;<a class="code" href="fourier_8hpp.html">./fourier.hpp</a>&quot;</span></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="preprocessor">#include &quot;<a class="code" href="fourier__common_8hpp.html">./fourier_common.hpp</a>&quot;</span></div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span> </div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="preprocessor">#include &lt;array&gt;</span></div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span> </div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="keyword">namespace </span>triqs::gfs {</div>
 <div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span> </div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    <span class="comment">//ASSERT_EQUAL(g_out.data().shape(), g_in.data().shape(), &quot;Meshes are different&quot;);</span></div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    <span class="comment">//ASSERT_EQUAL(g_out.data().indexmap().strides()[1], g_out.data().shape()[1], &quot;Unexpected strides in fourier implementation&quot;);</span></div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <span class="comment">//ASSERT_EQUAL(g_out.data().indexmap().strides()[2], 1, &quot;Unexpected strides in fourier implementation&quot;);</span></div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    <span class="comment">//ASSERT_EQUAL(g_in.data().indexmap().strides()[1], g_in.data().shape()[1], &quot;Unexpected strides in fourier implementation&quot;);</span></div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    <span class="comment">//ASSERT_EQUAL(g_in.data().indexmap().strides()[2], 1, &quot;Unexpected strides in fourier implementation&quot;);</span></div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>  <span class="comment">// Shared driver for both lattice transform directions: batched multi-dimensional FFT of g_in onto out_mesh.</span></div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>  <span class="keyword">template</span> &lt;<span class="keyword">typename</span> M1, <span class="keyword">typename</span> M2&gt; gf_vec_t&lt;M1&gt; fourier_lattice_impl(<span class="keywordtype">int</span> fftw_backward_forward, M1 <span class="keyword">const</span> &amp;out_mesh, gf_vec_cvt&lt;M2&gt; g_in) {</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span> </div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    <span class="keyword">auto</span> g_out    = gf_vec_t&lt;M1&gt;{out_mesh, std::array{g_in.target_shape()[0]}};</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    <span class="keywordtype">long</span> n_others = second_dim(g_in.data());</div>
 <div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span> </div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>    <span class="keyword">auto</span> g_out    = gf_vec_t&lt;M1&gt;{out_mesh, std::array{g_in.target_shape()[0]}};</div>
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>    <span class="keywordtype">long</span> n_others = second_dim(g_in.data());</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>    <span class="keyword">auto</span> dims     = g_in.mesh().dims();</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>    <span class="keyword">auto</span> dims_int = stdutil::make_std_array&lt;int&gt;(dims);</div>
 <div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span> </div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    <span class="keyword">auto</span> dims     = g_in.mesh().dims();</div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    <span class="keyword">auto</span> dims_int = stdutil::make_std_array&lt;int&gt;(dims);</div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    _fourier_base(g_in.data(), g_out.data(), dims.size(), dims_int.data(), n_others, fftw_backward_forward);</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    _fourier_base(g_in.data(), g_out.data(), dims.size(), dims_int.data(), n_others, fftw_backward_forward);</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span> </div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>    <span class="keywordflow">return</span> g_out;</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>  }</div>
 <div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span> </div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    <span class="keywordflow">return</span> g_out;</div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>  }</div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span> </div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>  <span class="comment">// ------------------------ DIRECT TRANSFORM --------------------------------------------</span></div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span> </div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>  gf_vec_t&lt;mesh::cyclat&gt; _fourier_impl(mesh::cyclat <span class="keyword">const</span> &amp;r_mesh, gf_vec_cvt&lt;mesh::brzone&gt; gk) {</div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    <span class="keyword">auto</span> gr = __impl(FFTW_FORWARD, r_mesh, gk);</div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    gr.data() /= gk.mesh().size();</div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    <span class="keywordflow">return</span> gr;</div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>  }</div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span> </div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>  <span class="comment">// ------------------------ INVERSE TRANSFORM --------------------------------------------</span></div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span> </div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>  gf_vec_t&lt;mesh::brzone&gt; _fourier_impl(mesh::brzone <span class="keyword">const</span> &amp;k_mesh, gf_vec_cvt&lt;mesh::cyclat&gt; gr) { <span class="keywordflow">return</span> __impl(FFTW_BACKWARD, k_mesh, gr); }</div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span> </div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>} <span class="comment">// namespace triqs::gfs</span></div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>  <span class="comment">// ------------------------ DIRECT TRANSFORM --------------------------------------------</span></div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>  gf_vec_t&lt;mesh::cyclat&gt; _fourier_impl(mesh::cyclat <span class="keyword">const</span> &amp;r_mesh, gf_vec_cvt&lt;mesh::brzone&gt; gk) {</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    <span class="keyword">auto</span> gr = fourier_lattice_impl(FFTW_FORWARD, r_mesh, gk);</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    gr.data() /= gk.mesh().size();</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    <span class="keywordflow">return</span> gr;</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>  }</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span> </div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>  <span class="comment">// ------------------------ INVERSE TRANSFORM --------------------------------------------</span></div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span> </div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>  gf_vec_t&lt;mesh::brzone&gt; _fourier_impl(mesh::brzone <span class="keyword">const</span> &amp;k_mesh, gf_vec_cvt&lt;mesh::cyclat&gt; gr) {</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    <span class="keywordflow">return</span> fourier_lattice_impl(FFTW_BACKWARD, k_mesh, gr);</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>  }</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span> </div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>} <span class="comment">// namespace triqs::gfs</span></div>
+<div class="ttc" id="afourier_8hpp_html"><div class="ttname"><a href="fourier_8hpp.html">fourier.hpp</a></div><div class="ttdoc">Provides the Fourier transform factories and the lazy fourier(...) assignment for Green&#39;s functions.</div></div>
+<div class="ttc" id="afourier__common_8hpp_html"><div class="ttname"><a href="fourier__common_8hpp.html">fourier_common.hpp</a></div><div class="ttdoc">Declares the low-level FFTW wrapper shared by the Fourier transform implementations.</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 </div><!-- container -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><b>triqs</b></li><li class="navelem"><b>gfs</b></li><li class="navelem"><b>transform</b></li><li class="navelem"><b>fourier_lattice.cpp</b></li>
+    <li class="navelem"><b>triqs</b></li><li class="navelem"><b>gfs</b></li><li class="navelem"><b>transform</b></li><li class="navelem"><a href="fourier__lattice_8cpp.html">fourier_lattice.cpp</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
   </ul>
 </div>

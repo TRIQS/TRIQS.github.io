@@ -1,9 +1,5 @@
 var searchData=
 [
-  ['check_5fcycles_5finterval_0',['check_cycles_interval',['../structtriqs_1_1mc__tools_1_1mc__generic_1_1run__param__t.html#acfbb50cd59ce9468126f6504d4b8c834',1,'triqs::mc_tools::mc_generic::run_param_t']]],
-  ['check_5fexception_5finterval_1',['check_exception_interval',['../structtriqs_1_1mc__tools_1_1mc__generic_1_1run__param__t.html#a9c64153282253f7fb999788895e47fa4',1,'triqs::mc_tools::mc_generic::run_param_t']]],
-  ['comm_2',['comm',['../structtriqs_1_1mc__tools_1_1mc__generic_1_1run__param__t.html#abac3d9e349bea62e9b0a2c0952efa37a',1,'triqs::mc_tools::mc_generic::run_param_t']]],
-  ['connection_3',['connection',['../structtriqs_1_1atom__diag_1_1atom__diag_1_1op__block__mat__t.html#ac4fca59e522af934a1ebbe8e23613092',1,'triqs::atom_diag::atom_diag::op_block_mat_t']]],
-  ['continue_5fafter_5fncycles_5fdone_4',['continue_after_ncycles_done',['../structtriqs_1_1mc__tools_1_1mc__generic_1_1run__param__t.html#a2f8413d7b4ee3cd59b99b09277f2a468',1,'triqs::mc_tools::mc_generic::run_param_t']]],
-  ['cycle_5flength_5',['cycle_length',['../structtriqs_1_1mc__tools_1_1mc__generic_1_1run__param__t.html#abb55f00269ac55c1f7d91bfa63ff0f43',1,'triqs::mc_tools::mc_generic::run_param_t']]]
+  ['beta_0',['beta',['../structtriqs_1_1mesh_1_1matsubara__freq.html#a33ac5a82fb994f02a5a9418f861e4dfa',1,'triqs::mesh::matsubara_freq::beta'],['../structtriqs_1_1utility_1_1time__segment.html#afecbb6511e6b12f90b3de3322eec8ac7',1,'triqs::utility::time_segment::beta'],['../structtriqs_1_1gfs_1_1matsubara__freq.html#a33ac5a82fb994f02a5a9418f861e4dfa',1,'triqs::gfs::matsubara_freq::beta']]],
+  ['block_5fmat_1',['block_mat',['../structtriqs_1_1atom__diag_1_1atom__diag_1_1op__block__mat__t.html#a1903d6d3ba6c0df3f7cf599162bba414',1,'triqs::atom_diag::atom_diag::op_block_mat_t']]]
 ];

@@ -1,8 +1,8 @@
 var searchData=
 [
-  ['s_20functions_0',['Green&apos;s functions',['../group__triqs-gfs.html',1,'']]],
-  ['simulation_1',['MC simulation',['../group__triqs-mc-simulation.html',1,'']]],
-  ['space_20meshes_2',['Function space meshes',['../group__triqs-meshes-func.html',1,'']]],
-  ['states_20and_20operators_3',['Many-body states and operators',['../group__triqs-ops.html',1,'']]],
-  ['statistical_20analysis_20tools_4',['Statistical analysis tools',['../group__triqs-stat.html',1,'']]]
+  ['real_20time_20and_20frequency_20meshes_0',['Real time and frequency meshes',['../group__triqs-meshes-real.html',1,'']]],
+  ['reality_20and_20hermiticity_1',['GF reality and hermiticity',['../group__triqs-gfs-reality.html',1,'']]],
+  ['resampling_20techniques_2',['Resampling techniques',['../group__triqs-stat-resampling.html',1,'']]],
+  ['reshaping_20and_20slicing_3',['GF reshaping and slicing',['../group__triqs-gfs-reshape.html',1,'']]],
+  ['runtime_20utilities_4',['Runtime utilities',['../group__triqs-utility-runtime.html',1,'']]]
 ];

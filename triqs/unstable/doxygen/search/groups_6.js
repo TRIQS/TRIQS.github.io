@@ -1,4 +1,25 @@
 var searchData=
 [
-  ['green_20s_20functions_0',['Green&apos;s functions',['../group__triqs-gfs.html',1,'']]]
+  ['gf_20algebra_0',['GF algebra',['../group__triqs-gfs-algebra.html',1,'']]],
+  ['gf_20basis_20conversions_1',['GF basis conversions',['../group__triqs-gfs-basis.html',1,'']]],
+  ['gf_20block_20mapping_2',['GF block mapping',['../group__triqs-gfs-map.html',1,'']]],
+  ['gf_20concepts_3',['GF concepts',['../group__triqs-gfs-concepts.html',1,'']]],
+  ['gf_20containers_4',['GF containers',['../group__triqs-gfs-containers.html',1,'']]],
+  ['gf_20density_5',['GF density',['../group__triqs-gfs-density.html',1,'']]],
+  ['gf_20evaluation_6',['GF evaluation',['../group__triqs-gfs-evaluation.html',1,'']]],
+  ['gf_20factories_7',['GF factories',['../group__triqs-gfs-factories.html',1,'']]],
+  ['gf_20fourier_20transform_8',['GF Fourier transform',['../group__triqs-gfs-fourier.html',1,'']]],
+  ['gf_20functions_9',['GF functions',['../group__triqs-gfs-functions.html',1,'']]],
+  ['gf_20input_20output_10',['GF input/output',['../group__triqs-gfs-io.html',1,'']]],
+  ['gf_20legendre_20matsubara_20transform_11',['GF Legendre-Matsubara transform',['../group__triqs-gfs-legendre-matsubara.html',1,'']]],
+  ['gf_20mpi_20support_12',['GF MPI support',['../group__triqs-gfs-mpi.html',1,'']]],
+  ['gf_20padé_20continuation_13',['GF Padé continuation',['../group__triqs-gfs-pade.html',1,'']]],
+  ['gf_20reality_20and_20hermiticity_14',['GF reality and hermiticity',['../group__triqs-gfs-reality.html',1,'']]],
+  ['gf_20reshaping_20and_20slicing_15',['GF reshaping and slicing',['../group__triqs-gfs-reshape.html',1,'']]],
+  ['gf_20symmetries_16',['GF symmetries',['../group__triqs-gfs-symmetry.html',1,'']]],
+  ['gf_20tail_20fitting_17',['GF tail fitting',['../group__triqs-gfs-tailfitting.html',1,'']]],
+  ['gf_20targets_18',['GF targets',['../group__triqs-gfs-targets.html',1,'']]],
+  ['gf_20transforms_19',['GF transforms',['../group__triqs-gfs-transforms.html',1,'']]],
+  ['gf_20utilities_20',['GF utilities',['../group__triqs-gfs-utils.html',1,'']]],
+  ['green_20s_20functions_21',['Green s functions',['../group__triqs-gfs-block.html',1,'Block Green&apos;s functions'],['../group__triqs-gfs.html',1,'Green&apos;s functions']]]
 ];

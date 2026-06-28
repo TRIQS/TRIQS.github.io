@@ -1,5 +1,27 @@
 var searchData=
 [
-  ['operators_0',['Many-body states and operators',['../group__triqs-ops.html',1,'']]],
-  ['other_20mesh_20types_1',['Other mesh types',['../group__triqs-meshes-other.html',1,'']]]
+  ['macros_20and_20exceptions_0',['Macros and exceptions',['../group__triqs-utility-macros.html',1,'']]],
+  ['manipulation_1',['Determinant manipulation',['../group__triqs-detmanip.html',1,'']]],
+  ['many_20body_20operators_2',['Many-body operators',['../group__triqs-ops-mbo.html',1,'']]],
+  ['mapping_3',['GF block mapping',['../group__triqs-gfs-map.html',1,'']]],
+  ['math_20helpers_4',['Math helpers',['../group__triqs-utility-math.html',1,'']]],
+  ['matsubara_20frequencies_5',['Matsubara frequencies',['../group__triqs-meshes-matsubara.html',1,'']]],
+  ['matsubara_20transform_6',['GF Legendre-Matsubara transform',['../group__triqs-gfs-legendre-matsubara.html',1,'']]],
+  ['mc_20concepts_7',['MC concepts',['../group__triqs-mc-concepts.html',1,'']]],
+  ['mc_20measurements_8',['MC measurements',['../group__triqs-mc-measures.html',1,'']]],
+  ['mc_20moves_9',['MC moves',['../group__triqs-mc-moves.html',1,'']]],
+  ['mc_20simulation_10',['MC simulation',['../group__triqs-mc-simulation.html',1,'']]],
+  ['mc_20tools_11',['MC tools',['../group__triqs-mc.html',1,'']]],
+  ['mc_20utilities_12',['MC utilities',['../group__triqs-mc-utils.html',1,'']]],
+  ['mean_20and_20error_20estimation_13',['Mean and error estimation',['../group__triqs-stat-meanerr.html',1,'']]],
+  ['measurements_14',['MC measurements',['../group__triqs-mc-measures.html',1,'']]],
+  ['mesh_20concepts_15',['Mesh concepts',['../group__triqs-meshes-concepts.html',1,'']]],
+  ['mesh_20types_16',['Mesh types',['../group__triqs-meshes-types.html',1,'']]],
+  ['mesh_20types_17',['Other mesh types',['../group__triqs-meshes-other.html',1,'']]],
+  ['mesh_20utilities_18',['Mesh utilities',['../group__triqs-meshes-utils.html',1,'']]],
+  ['meshes_19',['Meshes',['../group__triqs-meshes.html',1,'']]],
+  ['meshes_20',['meshes',['../group__triqs-meshes-func.html',1,'Function space meshes'],['../group__triqs-meshes-imag.html',1,'Imaginary time and frequency meshes'],['../group__triqs-meshes-lattice.html',1,'Lattice meshes'],['../group__triqs-meshes-prod.html',1,'Product meshes'],['../group__triqs-meshes-real.html',1,'Real time and frequency meshes']]],
+  ['metaprogramming_21',['Type traits and metaprogramming',['../group__triqs-utility-traits.html',1,'']]],
+  ['moves_22',['MC moves',['../group__triqs-mc-moves.html',1,'']]],
+  ['mpi_20support_23',['GF MPI support',['../group__triqs-gfs-mpi.html',1,'']]]
 ];

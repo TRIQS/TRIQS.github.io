@@ -1,6 +1,8 @@
 var searchData=
 [
-  ['tail_5ffitter_2ehpp_0',['tail_fitter.hpp',['../tail__fitter_8hpp.html',1,'']]],
-  ['tight_5fbinding_2ecpp_1',['tight_binding.cpp',['../tight__binding_8cpp.html',1,'']]],
-  ['tight_5fbinding_2ehpp_2',['tight_binding.hpp',['../tight__binding_8hpp.html',1,'']]]
+  ['pade_2ecpp_0',['pade.cpp',['../pade_8cpp.html',1,'']]],
+  ['pade_2ehpp_1',['pade.hpp',['../pade_8hpp.html',1,'']]],
+  ['pade_5fapproximants_2ehpp_2',['pade_approximants.hpp',['../pade__approximants_8hpp.html',1,'']]],
+  ['partial_5ftransform_2ehpp_3',['partial_transform.hpp',['../partial__transform_8hpp.html',1,'']]],
+  ['prod_2ehpp_4',['prod.hpp',['../prod_8hpp.html',1,'']]]
 ];

@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['real_20time_20and_20frequency_20meshes_0',['Real time and frequency meshes',['../group__triqs-meshes-real.html',1,'']]],
-  ['resampling_20techniques_1',['Resampling techniques',['../group__triqs-stat-resampling.html',1,'']]]
+  ['padé_20continuation_0',['GF Padé continuation',['../group__triqs-gfs-pade.html',1,'']]],
+  ['problem_20diagonalization_1',['Atomic problem diagonalization',['../group__triqs-atom-diag.html',1,'']]],
+  ['product_20meshes_2',['Product meshes',['../group__triqs-meshes-prod.html',1,'']]]
 ];

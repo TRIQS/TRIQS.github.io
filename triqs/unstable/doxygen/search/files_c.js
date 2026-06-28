@@ -1,22 +1,11 @@
 var searchData=
 [
-  ['many_5fbody_5foperator_2ecpp_0',['many_body_operator.cpp',['../many__body__operator_8cpp.html',1,'']]],
-  ['many_5fbody_5foperator_2ehpp_1',['many_body_operator.hpp',['../operators_2many__body__operator_8hpp.html',1,'']]],
-  ['matsubara_5ffreq_2ehpp_2',['matsubara_freq.hpp',['../matsubara__freq_8hpp.html',1,'']]],
-  ['mc_5fgeneric_2ecpp_3',['mc_generic.cpp',['../mc__generic_8cpp.html',1,'']]],
-  ['mc_5fgeneric_2ehpp_4',['mc_generic.hpp',['../mc__generic_8hpp.html',1,'']]],
-  ['mc_5fmeasure_2ecpp_5',['mc_measure.cpp',['../mc__measure_8cpp.html',1,'']]],
-  ['mc_5fmeasure_2ehpp_6',['mc_measure.hpp',['../mc__measure_8hpp.html',1,'']]],
-  ['mc_5fmeasure_5faux_5fset_2ehpp_7',['mc_measure_aux_set.hpp',['../mc__measure__aux__set_8hpp.html',1,'']]],
-  ['mc_5fmeasure_5fset_2ecpp_8',['mc_measure_set.cpp',['../mc__measure__set_8cpp.html',1,'']]],
-  ['mc_5fmeasure_5fset_2ehpp_9',['mc_measure_set.hpp',['../mc__measure__set_8hpp.html',1,'']]],
-  ['mc_5fmove_2ecpp_10',['mc_move.cpp',['../mc__move_8cpp.html',1,'']]],
-  ['mc_5fmove_2ehpp_11',['mc_move.hpp',['../mc__move_8hpp.html',1,'']]],
-  ['mc_5fmove_5fset_2ecpp_12',['mc_move_set.cpp',['../mc__move__set_8cpp.html',1,'']]],
-  ['mc_5fmove_5fset_2ehpp_13',['mc_move_set.hpp',['../mc__move__set_8hpp.html',1,'']]],
-  ['mean_5ferror_2ehpp_14',['mean_error.hpp',['../mean__error_8hpp.html',1,'']]],
-  ['mersennerng_2ecpp_15',['MersenneRNG.cpp',['../MersenneRNG_8cpp.html',1,'']]],
-  ['mersennerng_2ehpp_16',['MersenneRNG.hpp',['../MersenneRNG_8hpp.html',1,'']]],
-  ['mesh_5fiterator_2ehpp_17',['mesh_iterator.hpp',['../mesh__iterator_8hpp.html',1,'']]],
-  ['mpi_2ehpp_18',['mpi.hpp',['../block_2mpi_8hpp.html',1,'(Global Namespace)'],['../gf_2mpi_8hpp.html',1,'(Global Namespace)']]]
+  ['lattice_2ehpp_0',['lattice.hpp',['../lattice_8hpp.html',1,'']]],
+  ['lazy_5fbracket_2ehpp_1',['lazy_bracket.hpp',['../lazy__bracket_8hpp.html',1,'']]],
+  ['legendre_2ecpp_2',['legendre.cpp',['../c_09_09_2triqs_2gfs_2functions_2legendre_8cpp.html',1,'(Global Namespace)'],['../c_09_09_2triqs_2utility_2legendre_8cpp.html',1,'(Global Namespace)']]],
+  ['legendre_2ehpp_3',['legendre.hpp',['../gfs_2functions_2legendre_8hpp.html',1,'(Global Namespace)'],['../mesh_2legendre_8hpp.html',1,'(Global Namespace)'],['../utility_2legendre_8hpp.html',1,'(Global Namespace)']]],
+  ['legendre_5fmatsubara_2ehpp_4',['legendre_matsubara.hpp',['../legendre__matsubara_8hpp.html',1,'']]],
+  ['lin_5fbinning_2ehpp_5',['lin_binning.hpp',['../lin__binning_8hpp.html',1,'']]],
+  ['linear_2ehpp_6',['linear.hpp',['../linear_8hpp.html',1,'']]],
+  ['log_5fbinning_2ehpp_7',['log_binning.hpp',['../log__binning_8hpp.html',1,'']]]
 ];

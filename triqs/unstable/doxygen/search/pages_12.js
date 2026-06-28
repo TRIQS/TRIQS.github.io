@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['where_20to_20start_0',['Where to start?',['../index.html#start',1,'']]]
+  ['zone_20mesh_0',['Brillouin-zone mesh',['../mesh_ex.html#mesh_ex_brzone',1,'']]]
 ];

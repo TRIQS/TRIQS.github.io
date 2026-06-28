@@ -1,9 +1,11 @@
 var searchData=
 [
-  ['c_20projects_0',['Integration in C++ projects',['../integration.html',1,'']]],
-  ['chebyshev_20mesh_1',['Chebyshev mesh',['../mesh_ex1.html#mesh_ex1_chebyshev',1,'']]],
-  ['cmake_2',['CMake',['../integration.html#cmake',1,'']]],
-  ['compiling_20the_20examples_3',['Compiling the examples',['../examples.html#compiling',1,'']]],
-  ['custom_20point_20real_20frequency_20mesh_4',['Custom-point real-frequency mesh',['../mesh_ex1.html#mesh_ex1_refreq_pts',1,'']]],
-  ['cyclic_20lattice_20mesh_5',['Cyclic-lattice mesh',['../mesh_ex1.html#mesh_ex1_cyclat',1,'']]]
+  ['deprecated_20list_0',['Deprecated List',['../deprecated.html',1,'']]],
+  ['determinant_20manipulation_1',['Determinant manipulation',['../documentation.html#autotoc_md1',1,'']]],
+  ['diagonalization_2',['Atomic problem diagonalization',['../documentation.html#autotoc_md0',1,'']]],
+  ['discrete_20mesh_3',['Discrete mesh',['../mesh_ex.html#mesh_ex_discrete',1,'']]],
+  ['dlr_20imaginary_20frequency_20mesh_4',['DLR imaginary-frequency mesh',['../mesh_ex.html#mesh_ex_dlr_imfreq',1,'']]],
+  ['dlr_20imaginary_20time_20mesh_5',['DLR imaginary-time mesh',['../mesh_ex.html#mesh_ex_dlr_imtime',1,'']]],
+  ['dlr_20mesh_6',['DLR mesh',['../mesh_ex.html#mesh_ex_dlr',1,'']]],
+  ['documentation_7',['API Documentation',['../documentation.html',1,'']]]
 ];

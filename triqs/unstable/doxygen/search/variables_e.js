@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['unitary_5fmatrix_0',['unitary_matrix',['../structtriqs_1_1atom__diag_1_1atom__diag_1_1eigensystem__t.html#a0c9e30548d64e67dc521b9ebabb13baf',1,'triqs::atom_diag::atom_diag::eigensystem_t']]]
+  ['phase_0',['phase',['../structtriqs_1_1mc__tools_1_1mc__generic_1_1run__param__t.html#af82064a7c9f22d3e4e7873ab52c2a697',1,'triqs::mc_tools::mc_generic::run_param_t']]],
+  ['propagate_5fexception_1',['propagate_exception',['../structtriqs_1_1mc__tools_1_1mc__generic_1_1run__param__t.html#ac2d0b6de79ad42c1973eef9c77b57693',1,'triqs::mc_tools::mc_generic::run_param_t']]]
 ];

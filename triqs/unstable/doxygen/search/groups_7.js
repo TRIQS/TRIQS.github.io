@@ -1,4 +1,6 @@
 var searchData=
 [
-  ['imaginary_20time_20and_20frequency_20meshes_0',['Imaginary time and frequency meshes',['../group__triqs-meshes-imag.html',1,'']]]
+  ['helpers_0',['Math helpers',['../group__triqs-utility-math.html',1,'']]],
+  ['hermiticity_1',['GF reality and hermiticity',['../group__triqs-gfs-reality.html',1,'']]],
+  ['hilbert_20space_2',['Hilbert space',['../group__triqs-hilbert.html',1,'']]]
 ];

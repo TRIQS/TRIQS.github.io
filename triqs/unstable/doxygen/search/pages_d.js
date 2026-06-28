@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['point_20real_20frequency_20mesh_0',['Custom-point real-frequency mesh',['../mesh_ex1.html#mesh_ex1_refreq_pts',1,'']]],
-  ['problem_20diagonalization_1',['Atomic problem diagonalization',['../documentation.html#autotoc_md0',1,'']]],
-  ['product_20mesh_2',['Product mesh',['../mesh_ex1.html#mesh_ex1_prod',1,'']]],
-  ['projects_3',['Integration in C++ projects',['../integration.html',1,'']]]
+  ['real_20frequency_20mesh_0',['Real-frequency mesh',['../mesh_ex.html#mesh_ex_refreq',1,'']]],
+  ['real_20frequency_20mesh_1',['real frequency mesh',['../mesh_ex.html#mesh_ex_refreq_pts',1,'Custom-point real-frequency mesh'],['../mesh_ex.html#mesh_ex_refreq_log',1,'Logarithmic real-frequency mesh']]],
+  ['real_20time_20green_20s_20functions_2',['Real-time Green&apos;s functions',['../gf_ex.html#gf_ex_retime',1,'']]],
+  ['real_20time_20mesh_3',['Real-time mesh',['../mesh_ex.html#mesh_ex_retime',1,'']]]
 ];
