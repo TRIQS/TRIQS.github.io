@@ -1,0 +1,19 @@
+var searchData=
+[
+  ['file_20i_20o_0',['File I/O',['../group__checkpoint.html',1,'']]],
+  ['find_5fblocks_1',['find_blocks',['../namespacenda.html#a57bacd06cb0c9d8d0d9df5329e141b0e',1,'nda']]],
+  ['find_5fchemical_5fpotential_2',['find_chemical_potential',['../group__mu.html#ga077aa54ac48f57eb1e41c3b254e626c6',1,'triqs::modest::find_chemical_potential(double const target_density, one_body_elements_on_grid const &amp;obe, double beta, std::string method=&quot;dichotomy&quot;, double precision=1.e-5, bool verbosity=true)'],['../group__mu.html#gafc5309f235cc8971a86dc6e1c27efcd5',1,'triqs::modest::find_chemical_potential(double const target_density, one_body_elements_on_grid const &amp;obe, block2_gf&lt; Mesh, matrix_valued &gt; const &amp;Sigma_dynamic, nda::array&lt; nda::matrix&lt; dcomplex &gt;, 2 &gt; const &amp;Sigma_static, std::string method=&quot;dichotomy&quot;, double precision=1.e-5, bool verbosity=true)'],['../group__mu.html#gaf4034950bf225c3bc4a822ae94fa2a9a',1,'triqs::modest::find_chemical_potential(double const target_density, one_body_elements_tb const &amp;obe, block2_gf&lt; Mesh, matrix_valued &gt; const &amp;Sigma_dynamic, nda::array&lt; nda::matrix&lt; dcomplex &gt;, 2 &gt; const &amp;Sigma_static, bz_int_options const &amp;opt, std::string method=&quot;dichotomy&quot;, double precision=1.e-5, bool verbosity=true)'],['../group__mu.html#ga0811f92a6f4b3523dcfaef3f546db551',1,'triqs::modest::find_chemical_potential(double const target_density, one_body_elements_tb const &amp;obe, Mesh const &amp;mesh, bz_int_options const &amp;opt, std::string method=&quot;dichotomy&quot;, double precision=1.e-5, bool verbosity=true)']]],
+  ['finders_3',['Root finders',['../group__root.html',1,'']]],
+  ['first_5fshell_5fof_5fits_5fequiv_5fcls_4',['first_shell_of_its_equiv_cls',['../classtriqs_1_1modest_1_1local__space.html#af8fef0c86aada0af84bca4c3f6dd1a8f',1,'triqs::modest::local_space']]],
+  ['flatten_5',['flatten',['../namespacenda.html#ab54960677fe558a2cf105d60eff07973',1,'nda']]],
+  ['fold_6',['fold',['../namespacetriqs_1_1modest.html#ad4e8aa70592005b85e8a4ca85b2e8ab7',1,'triqs::modest']]],
+  ['format_7',['format',['../structfmt_1_1formatter_3_01nda_1_1matrix_3_01U_01_4_01_4.html#a70788de6c447871f28da879db15eb00c',1,'fmt::formatter&lt; nda::matrix&lt; U &gt; &gt;::format()'],['../structfmt_1_1formatter_3_01nda_1_1matrix_3_01std_1_1complex_3_01T_01_4_01_4_01_4.html#a381e2ea5bce2c3419388557e6f53b7a0',1,'fmt::formatter&lt; nda::matrix&lt; std::complex&lt; T &gt; &gt; &gt;::format()']]],
+  ['format_5fas_8',['format_as',['../namespacetriqs_1_1modest.html#a9037eeb34b31e0f73f75ac4733185cb3',1,'triqs::modest']]],
+  ['format_5fas_5ftable_9',['format_as_table',['../namespacenda.html#a1d217d16303e0bcfc19c7733f460a22b',1,'nda']]],
+  ['formatter_3c_20m_20_3e_10',['formatter&lt; M &gt;',['../structfmt_1_1formatter_3_01M_01_4.html',1,'fmt']]],
+  ['formatter_3c_20nda_3a_3aarray_3c_20u_2c_202_20_3e_20_3e_11',['formatter&lt; nda::array&lt; U, 2 &gt; &gt;',['../structfmt_1_1formatter_3_01nda_1_1array_3_01U_00_012_01_4_01_4.html',1,'fmt']]],
+  ['formatter_3c_20nda_3a_3amatrix_3c_20std_3a_3acomplex_3c_20t_20_3e_20_3e_20_3e_12',['formatter&lt; nda::matrix&lt; std::complex&lt; T &gt; &gt; &gt;',['../structfmt_1_1formatter_3_01nda_1_1matrix_3_01std_1_1complex_3_01T_01_4_01_4_01_4.html',1,'fmt']]],
+  ['formatter_3c_20nda_3a_3amatrix_3c_20u_20_3e_20_3e_13',['formatter&lt; nda::matrix&lt; U &gt; &gt;',['../structfmt_1_1formatter_3_01nda_1_1matrix_3_01U_01_4_01_4.html',1,'fmt']]],
+  ['function_14',['function',['../group__hybridization.html',1,'Atomic levels and Hybridization function'],['../group__gloc.html',1,'Local Green&apos;s function'],['../documentation.html#autotoc_md3',1,'Local Green&apos;s function']]],
+  ['functions_15',['Analyze Green&apos;s functions',['../group__deg.html',1,'']]]
+];
