@@ -1,4 +1,0 @@
-var dir_25c39d380248267e1fe708869039369a =
-[
-    [ "doxygen", "dir_85d328e1a79c7327882e60ef01c6a6a5.html", "dir_85d328e1a79c7327882e60ef01c6a6a5" ]
-];
