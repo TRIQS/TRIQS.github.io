@@ -1,6 +1,5 @@
 var NAVTREEINDEX3 =
 {
-"namespacetriqs__xca_1_1block__sparse.html#ae6711bab13df3b14b6c98561ca41d273":[1,1,0,1,2,31],
 "namespacetriqs__xca_1_1block__sparse.html#ae6edd27cee2c857369e3d1ae320dcc44":[1,1,0,1,2,22],
 "namespacetriqs__xca_1_1block__sparse.html#af2b376b15e1a1c3be47c69c6399ec8c6":[1,1,0,1,2,9],
 "namespacetriqs__xca_1_1block__sparse.html#af79b72ae40cd405110765f73ed506361":[1,1,0,1,2,52],
