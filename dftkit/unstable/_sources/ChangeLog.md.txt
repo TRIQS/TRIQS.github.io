@@ -17,12 +17,11 @@ We thank all contributors: Markus Aichhorn, Jennifer Coulter, Michel Ferrero, Ol
 Find below an itemized list of changes in this release.
 
 ### General
-* Port the DFT converters (Elk, Wien2k, Wannier90, generic H(k), VASP/PLOVasp) from the `triqs_modest` repository
+* Port the DFT converters (Elk, Wien2k, Wannier90, generic H(k), VASP/PLOVasp) from the `triqs_dft_tools` repository
 * Port the `dmftproj` Fortran component used by the Wien2k interface from `triqs_dft_tools`
 
 ### Drivers
 * Add drivers that wrap the DFT executable for charge self-consistent DFT+DMFT runs, covering Quantum Espresso, Wien2k, Abinit and VASP
-* Poll the charge self-consistency barriers more slowly while the DFT code runs
 
 ### VASP
 * Add a VASP driver for charge self-consistent DFT+DMFT calculations
