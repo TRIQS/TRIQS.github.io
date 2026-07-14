@@ -1,0 +1,806 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "c354bf6a-d261-4b3a-8bcf-7520e7ca3cc3",
+   "metadata": {},
+   "source": [
+    "# SrVO$_{3}$\n",
+    "\n",
+    "\n",
+    "SrVO$_{3}$ adopts the ideal cubic perovskite structure, with corner-sharing VO$_{6}$ octahedra and a nominal V$^{4+}$ ($3d^{1}$) configuration. The low-energy electronic structure is dominated by the V $t_{2g}$ manifold, which forms a moderately correlated metallic state. SrVO$_{3}$ is often used as a benchmark system for studying dynamical correlations because it exhibits a clear separation between coherent quasiparticle states near the Fermi level and incoherent Hubbard sidebands in photoemission experiments. While DFT correctly predicts a metallic state, it significantly overestimates the bandwidth, and it fails to reproduce the observed mass renormalization and spectral weight redistribution. Going beyond DFT with DFT+DMFT incorporates local Coulomb interactions and frequency-dependent self-energies, yielding a quantitative description of the electronic spectrum and quasiparticle properties in excellent agreement with experiment.\n",
+    "\n",
+    "\n",
+    "In this tutorial, we learn how to write a DMFT calculation for SrVO$_{3}$ using TRIQS/ModEST. Specifically, we will cover:\n",
+    "- a OneBodyElementsOnGrid object\n",
+    "- a multi-orbital embedding\n",
+    "- the interaction Hamiltonian factories\n",
+    "- the double-counting term in the DMFT loop\n",
+    "- writing the DMFT loop\n",
+    "- plotting the momentum-resolved spectral function"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "61300800-6aef-4263-8328-0d70b42a3dff",
+   "metadata": {},
+   "source": [
+    "### 🧪 Exercise 0: Import Modest and Load the DFT data\n",
+    "Load the ``triqs_modest`` module and use the function ``one_body_elements_from_dft_converter`` to load the HDF5 file produced by the Wien2k DFT converter in ``ref_data/srvo3.h5``.\n",
+    "\n",
+    "\n",
+    "> 💡 **Tip:** The function ``one_body_elements_from_dft_converter`` returns the target density and the one-body elements.\n",
+    "\n",
+    "\n",
+    "Print both the target electron density and the one_body_elements, and pause for a moment, to see if this information makes sense for SrVO$_{3}$."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "4bce6174-2fe3-459c-aef6-f0cbdba3a9d4",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "SyntaxError",
+     "evalue": "invalid syntax (4266201020.py, line 3)",
+     "output_type": "error",
+     "traceback": [
+      "  \u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[1]\u001b[39m\u001b[32m, line 3\u001b[39m\n\u001b[31m    \u001b[39m\u001b[31mtarget_density, obe =\u001b[39m\n                          ^\n\u001b[31mSyntaxError\u001b[39m\u001b[31m:\u001b[39m invalid syntax\n"
+     ]
+    }
+   ],
+   "source": [
+    "import triqs_modest as modest\n",
+    "\n",
+    "target_density, obe = \n",
+    "print(f\"target_density= {round(target_density)}e-\\n\")\n",
+    "print(obe)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "282bc630-01e5-4a05-bdea-b1f8c97def5a",
+   "metadata": {},
+   "source": [
+    "#### 🔎 Explanation of the OBE"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ed628877-da0b-4193-a911-2798413c5bdb",
+   "metadata": {},
+   "source": [
+    "We are studying SrVO$_{3}$ within a large-energy window which fully includes the hybridization between the O($2p$) and V($3d$) states. The ``OneBodyElementsOnGrid`` is composed of four pieces that represent the one-body physics obtained from DFT and will be used in the DMFT calculation.\n",
+    "\n",
+    "\n",
+    "The one-body elements (OBE) class contains four pieces:\n",
+    "\n",
+    "\n",
+    "##### 🔹 H: Band dispersion $\\varepsilon^{\\sigma}(k)$\n",
+    "\n",
+    "\n",
+    "This is the DFT Kohn-Sham eigenvalues: $\\varepsilon^{\\sigma}(k)$ is the **band energy** for spin ($\\sigma$) at $k$.\n",
+    "\n",
+    "\n",
+    "##### 🔹 C_space: Local (correlated) orbital space\n",
+    "\n",
+    "\n",
+    "This describes the **correlated subspace** $\\mathcal{C}$ -- the one that will be used in the DMFT impurity model. We created a projector for all three V-$t_{2g}$ orbitals and indicated we wanted to treat this atom as correlated. This is reflected in the printout: '(1) correlated atom with orbital dimension 3'.\n",
+    "\n",
+    "\n",
+    "##### 🔹 P: Downfolding projector\n",
+    "\n",
+    "\n",
+    "This is the projector that we introduced in [Tutorial 05](05s-dftdmft.ipynb). Importantly, we print the shape of the projector so that the user can confirm that this is what they expect.\n",
+    "\n",
+    "\n",
+    "##### 🔹 IBZ: Irreducible Brillouin zone Ops\n",
+    "\n",
+    "\n",
+    "Some DFT codes perform the summation in the Brillouin zone within the irreducible Brillouin zone. For those cases, to obtain observables like the local Green's function, we must symmetrize.  Internally, we read these IBZ symmetry operations and store them. We apply them whenever we perform a k-summation. In practice, there is no need to worry about them 🙂. The 48 symmetry operations correspond to the cubic space group."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "af2e7fae-a317-4e09-a9ec-ebfc51342bea",
+   "metadata": {},
+   "source": [
+    "## ⚛️ The role of dynamical correlations in the spectral properties of SrVO$_{3}$\n",
+    "\n",
+    "\n",
+    "Our goal is to study SrVO$_{3}$ within DFT+DMFT, where we treat the full V-$t_{2g}$ manifold as our quantum impurity, solved within DMFT using a rotationally invariant Hubbard-Kanamori interaction. All other states will be treated at the Hartree level within DFT. While we will not consider charge self-consistency in this tutorial, the workflow we develop can easily be adapted for fully charge self-consistent calculations.\n",
+    "\n",
+    "\n",
+    "Within DFT+DMFT, a double-counting term is included to account for interactions already present in DFT. SrVO$_{3}$ exhibits a hallmark three-peak spectral structure of a correlated metal: a renormalized quasiparticle peak at the Fermi level, accompanied by lower and upper Hubbard bands. We will develop a script using TRIQS/modest to reproduce this spectral function."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e155edb0-ae77-438a-9d90-586de1a906d7",
+   "metadata": {},
+   "source": [
+    "### 🧪 Exercise 1: Create an Embedding Description\n",
+    "\n",
+    "\n",
+    "Create an embedding from the local space in the one-body elements and print it to the screen."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "1db32170-7b92-4156-bfe5-71c317727ceb",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "SyntaxError",
+     "evalue": "invalid syntax (2154576115.py, line 1)",
+     "output_type": "error",
+     "traceback": [
+      "  \u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[2]\u001b[39m\u001b[32m, line 1\u001b[39m\n\u001b[31m    \u001b[39m\u001b[31mE =\u001b[39m\n        ^\n\u001b[31mSyntaxError\u001b[39m\u001b[31m:\u001b[39m invalid syntax\n"
+     ]
+    }
+   ],
+   "source": [
+    "E = \n",
+    "print(E)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "84c27963-6628-4368-b46a-bcf9edc83338",
+   "metadata": {},
+   "source": [
+    "Up until now we've only seen rather simple embeddings. However, to see the full information contained within the embedding class, use the ``description`` method to get a full print out."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "1b4d7b39-7e74-4bc5-846c-5cfa5699ea3c",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "NameError",
+     "evalue": "name 'E' is not defined",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[31m---------------------------------------------------------------------------\u001b[39m",
+      "\u001b[31mNameError\u001b[39m                                 Traceback (most recent call last)",
+      "\u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[3]\u001b[39m\u001b[32m, line 1\u001b[39m\n\u001b[32m----> \u001b[39m\u001b[32m1\u001b[39m \u001b[38;5;28mprint\u001b[39m(\u001b[43mE\u001b[49m.description(\u001b[38;5;28;01mTrue\u001b[39;00m))\n",
+      "\u001b[31mNameError\u001b[39m: name 'E' is not defined"
+     ]
+    }
+   ],
+   "source": [
+    "print(E.description(True))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f89f2562-29ae-48ab-9510-07406a3db267",
+   "metadata": {},
+   "source": [
+    "#### 🔎 Explanation of Embedding"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "2f07e913-3904-491d-80b7-ba2cbd9a4400",
+   "metadata": {},
+   "source": [
+    "In DMFT, the **embedding** tells you how the _correlated subspace_ (from the DFT/Wannier model) is mapped to one or more **impurity problems**. Thus, it is essential to be able to flexibly construct impurity model(s) for your correlated subspace and ensure the correct assignment of local orbitals and spin channels. Below is a detailed breakdown of the printout from the ``Embedding`` object.\n",
+    "\n",
+    "\n",
+    "##### 🔹 spin index ($\\sigma/\\tau$) names: [\"up\", \"down\"]\n",
+    "\n",
+    "\n",
+    "These are the names of the block-diagonal spin indices $\\sigma$ used in the impurity model. They correspond to the spin-up and spin-down electrons and will be used to construct the fermionic creation and annihilation operators for the impurity model.\n",
+    "\n",
+    "\n",
+    "We distinguish between:\n",
+    "\n",
+    "\n",
+    "- $\\sigma$: the spin index in the **embedded problem**, and\n",
+    "\n",
+    "\n",
+    "- $\\tau$: the internal spin index used by the **impurity solver** (e.g., in the impurity solver Green's function blocks).\n",
+    "\n",
+    "\n",
+    "This distinction allows us to support more generic embeddings.\n",
+    "\n",
+    "\n",
+    "##### 🔹  $\\Sigma$_embed block decomposition\n",
+    "\n",
+    "\n",
+    "This section describes the **block structure** of the embedded self-energy $\\Sigma_{\\text{embed}}^{\\sigma}(\\omega)$. In our case, there are 3 orbitals each representing a $1\\times1$ block in the self-energy (see $\\alpha$ and dim_$\\alpha$).\n",
+    "\n",
+    "\n",
+    "##### 🔹  Impurities\n",
+    "\n",
+    "\n",
+    "This describes the structure of the **impurity problems** constructed from the local space:\n",
+    "\n",
+    "\n",
+    "- ``n_imp = 0``: There is one impurity solver (index 0).\n",
+    "\n",
+    "\n",
+    "- For this impurity solver: there are 3 correlated orbitals with dimension 1 (``dim_γ``).\n",
+    "\n",
+    "\n",
+    "- The impurity Green's function will therefore have **6 blocks**: 3 for spin-up and 3 for spin-down.\n",
+    "\n",
+    "\n",
+    "The solver's block structure (``gf_struct``) is printed:\n",
+    "\n",
+    "\n",
+    "```\n",
+    "\n",
+    "\n",
+    "[imp_idx = 0] up_0 [1], up_1 [1], up_2 [1], down_0 [1], down_1 [1], down_2 [1]\n",
+    "\n",
+    "\n",
+    "```\n",
+    "\n",
+    "\n",
+    "This means:\n",
+    "\n",
+    "\n",
+    "- The impurity solver has **6 blocks**, 3 for each spin, and\n",
+    "\n",
+    "\n",
+    "- Each block is of dimension 1.\n",
+    "\n",
+    "\n",
+    "##### 🔹 Mapping ψ(α,σ) = (imp_idx, γ, τ) \n",
+    "\n",
+    "\n",
+    "This table gives the **mapping from the embedded indices** ``(α,σ)`` to the **impurity solver indices** ``(imp_idx, γ, τ)``.\n",
+    "\n",
+    "\n",
+    "For this case, the mapping is simple: the three blocks of the impurity self-energy are directly mapped to the three blocks in the embedded self-energy. For trivial cases like this, the printing of the embedding is greatly simplified."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4e794f22-ac35-46bc-a530-abd5c0534f80",
+   "metadata": {},
+   "source": [
+    "### 🧪 Exercise 2: Hubbard-Kanamori interaction\n",
+    "\n",
+    "\n",
+    "Create a Hubbard-Kanamori interaction for the V-$t_{2g}$ quantum impurity. TRIQS/modest provides Hamiltonian factories for different interactions. Use the function ``make_kanamori`` to construct the interaction Hamiltonian for your impurity problem and print it to the screen. Let's use $U$ = 4.6 eV, $J$ = 0.65 eV, and $U' = U - 2J$."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "c794ef5f-e4bd-4f82-9a7e-5f82b359dc32",
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "ename": "SyntaxError",
+     "evalue": "invalid syntax (3057614350.py, line 7)",
+     "output_type": "error",
+     "traceback": [
+      "  \u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[4]\u001b[39m\u001b[32m, line 7\u001b[39m\n\u001b[31m    \u001b[39m\u001b[31mh_int =\u001b[39m\n            ^\n\u001b[31mSyntaxError\u001b[39m\u001b[31m:\u001b[39m invalid syntax\n"
+     ]
+    }
+   ],
+   "source": [
+    "from triqs.operators import c_dag, c\n",
+    "\n",
+    "U = 4.6\n",
+    "J = 0.65\n",
+    "Up = U - 2*J\n",
+    "\n",
+    "h_int = \n",
+    "print(h_int)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "b1d369a5-6ac9-4fe7-85b1-d1a126d82c08",
+   "metadata": {},
+   "source": [
+    "## 2️⃣ Double-Counting\n",
+    "\n",
+    "\n",
+    "Because we are working in a large energy window and have included the O($2p$) orbitals implicitly in the calculation, we need to properly incorporate the double-counting term, which controls the relative splitting between the correlated orbitals and the uncorrelated orbitals.  The double-counting term controls the energy difference between the V($3d$) and the O($2p$) levels. \n",
+    "\n",
+    "\n",
+    "#### ❓ Where does the double-counting term appear in the DMFT loop\n",
+    "\n",
+    "\n",
+    "The DMFT self-consistency condition is\n",
+    "\n",
+    "\n",
+    "$$ G_{\\mathrm{loc}} \\overset{!}{=} G_{\\mathrm{imp}},$$\n",
+    "\n",
+    "\n",
+    "which reads\n",
+    "\n",
+    "\n",
+    "$$ \\sum_{k} P(k)[i\\omega_{n} + \\mu - H(k) - P^{\\dagger}(\\Sigma_{\\mathrm{imp}}(i\\omega_{n})-\\Sigma_{\\mathrm{DC}})P]^{-1}P^{\\dagger}(k) = \\frac{1}{ i\\omega_{n} - E_{\\mathrm{imp}} - \\Delta(i\\omega_{n})-\\Sigma_{\\mathrm{imp}}(i\\omega_{n})},$$\n",
+    "\n",
+    "\n",
+    "In the local Green's function, it is important that we subtract off the double-counting term from the self-energy when we embed the self-energy back to the lattice. Now, let's find the definition of the impurity levels $E_{\\mathrm{imp}}$. Taking the high-frequency expansion of both sides gives,\n",
+    "\n",
+    "\n",
+    "$$ \\mu - \\langle H(k) \\rangle_{k} - \\Sigma_{\\infty} + \\Sigma_{\\mathrm{DC}}  = - E_{\\mathrm{imp}} - \\Sigma_{\\infty},$$\n",
+    "\n",
+    "\n",
+    "and solving for $E_{\\mathrm{imp}}$ gives\n",
+    "\n",
+    "\n",
+    "$$ E_{\\mathrm{imp}} = \\langle H(k) \\rangle_{k} -\\mu - \\Sigma_{\\mathrm{DC}}.$$\n",
+    "\n",
+    "\n",
+    "So the double-counting term appears in two places:\n",
+    "\n",
+    "\n",
+    "1. The embedded self-energy, $\\Sigma_{\\mathrm{embed}} = \\Sigma_{\\mathrm{imp}} - \\Sigma_{\\mathrm{DC}}$\n",
+    "\n",
+    "\n",
+    "2. The local impurity levels, which are defined as: $E_{\\mathrm{imp}} = \\langle H(k) \\rangle_{k} -\\mu - \\Sigma_{\\mathrm{DC}}$."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "b5dd011c-d470-4ae2-a410-dbbaf335c581",
+   "metadata": {},
+   "source": [
+    "### 🧪 Exercise 3: The double-counting term\n",
+    "\n",
+    "\n",
+    "Use the double-counting utilities to set up a double-counting \"solver\". The double-counting term is a phenomenological term in DFT+DMFT. It can take many forms and is sometimes treated as an adjustable parameter within the framework. For our calculation, we will use the so-called \"Held\" double-counting formula (mean-field of the Kanamori interaction), which takes the following functional form (for 3 orbitals):\n",
+    "\n",
+    "\n",
+    "$$ \\Sigma_{\\mathrm{DC}} = (U - 2J)(n_{d} - \\frac{1}{2}),$$\n",
+    "\n",
+    "\n",
+    "where $n$ is the total electron density of the quantum impurity.\n",
+    "\n",
+    "\n",
+    "### 🧩 Your Task\n",
+    "\n",
+    "\n",
+    "1. Use the ``DcSolver`` in ModEST to compute the double-counting term. We set it up for you. The inputs are the dimension of the $\\sigma$ index, the double-counting formula to use (we choose Held), and interaction parameters $U$, $J$.\n",
+    "\n",
+    "\n",
+    "Given a Green's function, the double-counting solver computes the double-counting correction using the orbital-resolved density matrix. For SrVO$_{3}$, this amounts to a single number. Because we are not performing a charge self-consistent calculation, we will fix the double-counting term based on the DFT density. This means we will compute the local Green's function at the level of DFT and use its density matrix to evaluate the term.\n",
+    "\n",
+    "\n",
+    "2. Calculate the chemical potential.\n",
+    "3. Compute the local Green's function.\n",
+    "4. Extract the local Green's function to reshape it into its \"impurity view\".\n",
+    "5. Compute ``Sigma_DC = DcTerm.dc_self_energy(Gimp)[0][0,0]``.\n",
+    "\n",
+    "\n",
+    "Check if your result matches what you'd expect from the above equation. You should get $\\Sigma_{\\mathrm{DC}} \\approx 4.03$ eV."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "6f789aff-06b9-4f97-bfb2-878a90022130",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "SyntaxError",
+     "evalue": "invalid syntax (667589842.py, line 10)",
+     "output_type": "error",
+     "traceback": [
+      "  \u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[5]\u001b[39m\u001b[32m, line 10\u001b[39m\n\u001b[31m    \u001b[39m\u001b[31mmu     =\u001b[39m\n             ^\n\u001b[31mSyntaxError\u001b[39m\u001b[31m:\u001b[39m invalid syntax\n"
+     ]
+    }
+   ],
+   "source": [
+    "#1.\n",
+    "DcTerm = modest.DcSolver(\"NonPolarized\", \"cHeld\", U, J)\n",
+    "\n",
+    "from triqs.gfs import MeshImFreq\n",
+    "\n",
+    "beta = 10.0\n",
+    "mesh = MeshImFreq(beta, statistic=\"Fermion\", n_iw=250)\n",
+    "\n",
+    "# 2.\n",
+    "mu     = \n",
+    "\n",
+    "# 3. \n",
+    "Gimp   = E.extract(modest.local_gf.gloc(mesh, obe, mu))[0]\n",
+    "\n",
+    "nd = Gimp.total_density().real\n",
+    "print(f\"ρ(imp) = {nd}\")\n",
+    "\n",
+    "# 4.\n",
+    "Sigma_DC = DcTerm.dc_self_energy(Gimp)[0][0,0].real\n",
+    "\n",
+    "# compare\n",
+    "print(Sigma_DC)\n",
+    "print(f\"(U - 2J)*(nd - 0.5)= {(U - 2*J)*(nd-0.5)}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "1b0da9ab-6fc4-497c-8218-e453f62abd38",
+   "metadata": {},
+   "source": [
+    "## 🧠 DMFT loop"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "a2150e11-dd39-4882-bb76-a1d301a6eb35",
+   "metadata": {},
+   "source": [
+    "### 🧪 Exercise 4: Write the DMFT loop\n",
+    "\n",
+    "\n",
+    "The DMFT loop can be written identically to the one that you worked on in the previous tutorials. You will make a slight modification to the static part of the self-energy and the local impurity levels to incorporate the double-counting correctly."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "5f43252c-38f1-4c8e-95ac-7dd3dc5a5bbb",
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "ename": "SyntaxError",
+     "evalue": "invalid syntax (685250995.py, line 15)",
+     "output_type": "error",
+     "traceback": [
+      "  \u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[6]\u001b[39m\u001b[32m, line 15\u001b[39m\n\u001b[31m    \u001b[39m\u001b[31mtarget_density, obe =\u001b[39m\n                          ^\n\u001b[31mSyntaxError\u001b[39m\u001b[31m:\u001b[39m invalid syntax\n"
+     ]
+    }
+   ],
+   "source": [
+    "import numpy as np\n",
+    "from triqs.gfs import MeshImFreq, make_hermitian\n",
+    "from triqs.operators import n\n",
+    "from triqs_cthyb import solve_generic, TailFitParams\n",
+    "\n",
+    "# Coulomb interaction\n",
+    "U = 4.6\n",
+    "J = 0.65\n",
+    "Up = U-2*J\n",
+    "\n",
+    "# Matsubara Mesh\n",
+    "mesh = MeshImFreq(beta = 10.0, statistic = \"Fermion\", n_iw = 250)\n",
+    "\n",
+    "# load in density and obe\n",
+    "target_density, obe = \n",
+    "\n",
+    "# create embedding\n",
+    "E = \n",
+    "# setup-solver parameters (realistic solver parameters: length_cycle = 5000, n_cycles = 1e+7, n_warmup_cycles = 1e+4)\n",
+    "solver_params = dict(length_cycle=50, n_cycles = int(1e+5),\n",
+    "                     n_warmup_cycles = int(1e+3), \n",
+    "                     perform_tail_fit=True, \n",
+    "                     imag_threshold = 1e-6)\n",
+    "tail_fit_params = TailFitParams(fit_min_w=24, fit_max_w=28)\n",
+    "\n",
+    "# make an empty self-energy\n",
+    "Sigma_imp_dynamic, Sigma_imp_infty = \n",
+    "\n",
+    "# initialize the impurity self-energy to the hartree shift\n",
+    "for SH in Sigma_imp_infty: SH += Sigma_DC\n",
+    "\n",
+    "# interaction Hamiltonian\n",
+    "U = 4.6\n",
+    "J = 0.65\n",
+    "Up = U - 2*J\n",
+    "h_int = \n",
+    "\n",
+    "# number of DMFT iterations\n",
+    "n_dmft_loops = 1\n",
+    "\n",
+    "epsilon_d = E.extract(modest.atomic_impurity_levels(obe))[0]\n",
+    "\n",
+    "for n_iter in range(n_dmft_loops):\n",
+    "\n",
+    "    # 1. subtract the double-counting to computed the embedded self-energy\n",
+    "    Sigma_imp_infty_minus_dc = \n",
+    "\n",
+    "    # embed the impurity self-energy\n",
+    "    Sigma_C_dynamic, Sigma_C_infty = \n",
+    "\n",
+    "    # find the chemical potential\n",
+    "    mu = \n",
+    "\n",
+    "    # compute the local Green's function\n",
+    "    Gloc = \n",
+    "\n",
+    "    # Compute the effective impurity levels\n",
+    "    E_imp = \n",
+    "\n",
+    "    # Compute hybridization function\n",
+    "    Delta_iw = \n",
+    "\n",
+    "    # solve the quantum impurity problem\n",
+    "    solver_results = solve(Delta_iw, E_imp, h_int, **solver_params)\n",
+    "\n",
+    "    print(f\"Δn = |n_lattice - n_impurity| = {abs(Gloc.total_density()-solver_results.G_iw.total_density())}\")\n",
+    "\n",
+    "    # update the impurity self-energy\n",
+    "    Sigma_imp_dynamic, Sigma_imp_infty = solver_results.Sigma_dynamic, solver_results.Sigma_Hartree"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f5f95b15-3aa8-4ed4-a676-ae6bd08c9b5e",
+   "metadata": {},
+   "source": [
+    "## 📊 Analyze Results"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4fcc65a6-5d9e-4ece-8654-9fb8a705b123",
+   "metadata": {},
+   "source": [
+    "### 🧪 Exercise 5: Load in converged results\n",
+    "\n",
+    "\n",
+    "Now that you have your DMFT loop, we provide you with pre-converged results for this calculation at $\\beta = 40.0$ 1/eV. Load the converged data from the file ``ref_data/srvo3-beta=40-U=4.6-J=0.65.h5``. Plot the self-energy from the last iteration and comment on your result. Try computing the quasiparticle renormalization $Z$ from the self-energy."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "515932a6-52f8-40d0-81f4-f03f76a920c9",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "SyntaxError",
+     "evalue": "incomplete input (2808009578.py, line 12)",
+     "output_type": "error",
+     "traceback": [
+      "  \u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[7]\u001b[39m\u001b[32m, line 12\u001b[39m\n\u001b[31m    \u001b[39m\u001b[31m# plot ImΣ\u001b[39m\n              ^\n\u001b[31mSyntaxError\u001b[39m\u001b[31m:\u001b[39m incomplete input\n"
+     ]
+    }
+   ],
+   "source": [
+    "from h5 import HDFArchive\n",
+    "from triqs.plot.mpl_interface import oplot, plt\n",
+    "import numpy as np\n",
+    "\n",
+    "\n",
+    "with HDFArchive('ref_data/srvo3-beta=40-U=4.6-J=0.65.h5', 'r') as ar:\n",
+    "   # load data\n",
+    "\n",
+    "# compute Z\n",
+    "\n",
+    "\n",
+    "# plot ImΣ\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "598a8ac5-2d05-41ff-86fd-6fac6a817a79",
+   "metadata": {},
+   "source": [
+    "The Matsubara self-energy indicates metallic behavior with a very small scattering rate ($\\mathrm{Im}\\Sigma(i\\omega_{n}\\rightarrow 0) \\rightarrow 0$). We estimate a $Z$ of 0.68, which is slightly larger than experiment, but this could be due to our choice of interaction parameters as well as our method of estimating this quantity. We see that the three V-$t_{2g}$ are degenerate as all curves collapse on top of each other as expected."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "9b2388bd-3ffc-4529-a693-898d33d54821",
+   "metadata": {},
+   "source": [
+    "### 🧪 Exercise 6: Analytically continue the Matsubara self-energy\n",
+    "\n",
+    "\n",
+    "Now let us analytically continue the self-energy onto the real axis so that we can plot real-frequency spectra. Use the maximum entropy utilities from before to analytically continue the self-energy from the last iteration. Plot your result."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "035c66ca-a5dd-456b-af36-1977f75bd591",
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Warning: could not identify MPI environment!\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "Starting serial run at: 2026-06-28 07:48:29.268317\n"
+     ]
+    },
+    {
+     "ename": "NameError",
+     "evalue": "name 'Sigma_iw' is not defined",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[31m---------------------------------------------------------------------------\u001b[39m",
+      "\u001b[31mNameError\u001b[39m                                 Traceback (most recent call last)",
+      "\u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[8]\u001b[39m\u001b[32m, line 3\u001b[39m\n\u001b[32m      1\u001b[39m \u001b[38;5;28;01mfrom\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[34;01mtriqs_tutorials_utils\u001b[39;00m\u001b[34;01m.\u001b[39;00m\u001b[34;01mmaxent\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[38;5;28;01mimport\u001b[39;00m Sigma_w_from_maxent\n\u001b[32m----> \u001b[39m\u001b[32m3\u001b[39m Sigma_w = Sigma_w_from_maxent(\u001b[43mSigma_iw\u001b[49m, alpha_min=\u001b[32m1e-2\u001b[39m, alpha_max=\u001b[32m1e2\u001b[39m, error=\u001b[32m0.01\u001b[39m)\n",
+      "\u001b[31mNameError\u001b[39m: name 'Sigma_iw' is not defined"
+     ]
+    }
+   ],
+   "source": [
+    "from triqs_tutorials_utils.maxent import Sigma_w_from_maxent\n",
+    "\n",
+    "Sigma_w = Sigma_w_from_maxent(Sigma_iw, alpha_min=1e-2, alpha_max=1e2, error=0.01)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "345bd0ed-5546-4fd2-a501-d258bd99a95b",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# plot ReΣ and ImΣ"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ce729dde-92f8-44cc-a7f2-8f63bce4dff6",
+   "metadata": {},
+   "source": [
+    "### 🧪 Exercise 7: Compute real-frequency spectra\n",
+    "\n",
+    "\n",
+    "Now we plot the momentum-resolved spectral function along a high-symmetry path in the Brillouin zone. This is achieved by recomputing the Kohn-Sham eigenvalues and projectors along the high-symmetry path that we would like to see, and then computing the lattice Green's function along this path. The momentum-resolved spectral function corresponds to:\n",
+    "\n",
+    "\n",
+    "$$ A(\\mathbf{k},\\omega) = -\\frac{1}{\\pi}\\mathrm{ImTr}G_{\\nu\\nu'}(\\mathbf{k},\\omega),$$\n",
+    "\n",
+    "\n",
+    "where the trace is over the band indices $\\nu, \\nu'$.\n",
+    "\n",
+    "\n",
+    "\n",
+    "We have pre-computed the DFT data along the high-symmetry path R-$\\Gamma$-X-M-$\\Gamma$. This data is then converted using the Wien2kConverter (see [Tutorial 05](05s-dftdmft.ipynb) for more details).\n",
+    "\n",
+    "\n",
+    "#### 🧩 Your Task\n",
+    "\n",
+    "\n",
+    "1. Load a new one-body elements object using the function: ``one_body_elements_along_high_symmetry_path``. Print out the new obe and try to spot any differences.\n",
+    "2. Embed your real-frequency self-energy using the Embedding (E).\n",
+    "3. Use the function ``spectral_function_on_high_symmetry_path`` to compute $A(k,\\omega)$.\n",
+    "4. Plot your result."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "f0b8022e-66d4-4f08-a58b-d360c34482db",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "SyntaxError",
+     "evalue": "invalid syntax (708583486.py, line 2)",
+     "output_type": "error",
+     "traceback": [
+      "  \u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[10]\u001b[39m\u001b[32m, line 2\u001b[39m\n\u001b[31m    \u001b[39m\u001b[31mobe2 =\u001b[39m\n           ^\n\u001b[31mSyntaxError\u001b[39m\u001b[31m:\u001b[39m invalid syntax\n"
+     ]
+    }
+   ],
+   "source": [
+    "# 1. load in obe along high-symmetry path\n",
+    "obe2 = \n",
+    "print(obe2)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "ff9aa648-a109-45da-95d3-14e6bd8c963f",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "SyntaxError",
+     "evalue": "invalid syntax (1628174519.py, line 2)",
+     "output_type": "error",
+     "traceback": [
+      "  \u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[11]\u001b[39m\u001b[32m, line 2\u001b[39m\n\u001b[31m    \u001b[39m\u001b[31mSigma_C_w =\u001b[39m\n                ^\n\u001b[31mSyntaxError\u001b[39m\u001b[31m:\u001b[39m invalid syntax\n"
+     ]
+    }
+   ],
+   "source": [
+    "# 2. embed the self-energy\n",
+    "Sigma_C_w = "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "300e7fc8-bc5e-4b8e-9bef-8cc29f1f478c",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "SyntaxError",
+     "evalue": "invalid syntax (1625309326.py, line 2)",
+     "output_type": "error",
+     "traceback": [
+      "  \u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[12]\u001b[39m\u001b[32m, line 2\u001b[39m\n\u001b[31m    \u001b[39m\u001b[31mAkw =\u001b[39m\n          ^\n\u001b[31mSyntaxError\u001b[39m\u001b[31m:\u001b[39m invalid syntax\n"
+     ]
+    }
+   ],
+   "source": [
+    "# 3. compute A(k,w)\n",
+    "Akw = "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "6f3f6de1-1269-47ca-bcdd-ebec63eff8cb",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "NameError",
+     "evalue": "name 'plt' is not defined",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[31m---------------------------------------------------------------------------\u001b[39m",
+      "\u001b[31mNameError\u001b[39m                                 Traceback (most recent call last)",
+      "\u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[13]\u001b[39m\u001b[32m, line 3\u001b[39m\n\u001b[32m      1\u001b[39m \u001b[38;5;66;03m# 4. Plot\u001b[39;00m\n\u001b[32m      2\u001b[39m \u001b[38;5;66;03m# matplotlib canvas and ticks\u001b[39;00m\n\u001b[32m----> \u001b[39m\u001b[32m3\u001b[39m fig, ax = \u001b[43mplt\u001b[49m.subplots(figsize=(\u001b[32m4\u001b[39m,\u001b[32m6\u001b[39m))\n\u001b[32m      4\u001b[39m ax.tick_params(right=\u001b[38;5;28;01mTrue\u001b[39;00m);ax.tick_params(which=\u001b[33m'\u001b[39m\u001b[33mboth\u001b[39m\u001b[33m'\u001b[39m, axis=\u001b[33m'\u001b[39m\u001b[33mx\u001b[39m\u001b[33m'\u001b[39m, length=\u001b[32m0\u001b[39m)\n\u001b[32m      6\u001b[39m \u001b[38;5;66;03m# high-symmetry info printed in case.outband\u001b[39;00m\n",
+      "\u001b[31mNameError\u001b[39m: name 'plt' is not defined"
+     ]
+    }
+   ],
+   "source": [
+    "# 4. Plot\n",
+    "# matplotlib canvas and ticks\n",
+    "fig, ax = plt.subplots(figsize=(4,6))\n",
+    "ax.tick_params(right=True);ax.tick_params(which='both', axis='x', length=0)\n",
+    "\n",
+    "# high-symmetry info printed in case.outband\n",
+    "high_kpts = [1,169,266,363,500]; high_labels = ['R', r'$\\Gamma$', 'X', 'M', r'$\\Gamma$']\n",
+    "\n",
+    "# plot A(k,ω) using imshow\n",
+    "data = ax.imshow(Akw.data[0].T,origin='lower', cmap='Purples', aspect='auto', vmin=0, vmax=10, extent=(1,500, -10,10))\n",
+    "\n",
+    "# create a colorbar\n",
+    "cbar = fig.colorbar(data, location='top', shrink=0.7, aspect=30)\n",
+    "cbar.set_ticks([]); cbar.outline.set_visible(False)\n",
+    "\n",
+    "# decorate and set high-symmetry points\n",
+    "ax.set_xticks(high_kpts); ax.set_xticklabels(high_labels)\n",
+    "for k in high_kpts: ax.axvline(k, lw=0.5, ls='dotted', color='k')\n",
+    "ax.axhline(0.0, color='k', ls='dotted', lw=0.5)\n",
+    "ax.set_ylim(-8,6); ax.set_ylabel(r'$\\omega$ (eV)')\n",
+    "plt.show()"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

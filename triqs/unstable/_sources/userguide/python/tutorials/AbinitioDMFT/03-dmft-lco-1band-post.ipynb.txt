@@ -1,0 +1,596 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "a531daa1-68a7-400d-a2a1-88a7c9d1b3f0",
+   "metadata": {},
+   "source": [
+    "# A single-band approximation for La$_{2}$CuO$_{4}$: Post-processing and Analysis\n",
+    "\n",
+    "In the previous tutorial, you solved an effective one-band model for La$_{2}$CuO$_{4}$ derived from first-principles within DMFT. We will now learn how to analyze and post-process the results obtained in the [previous tutorial](). In this tutorial, you will learn how to:\n",
+    "\n",
+    "- Analytically continue Matsubara Green's functions and self-energies\n",
+    "\n",
+    "- Post-process and interpret spectral functions and self-energies"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "2a76c578-9c7f-4583-a2f3-f2aeafe68b22",
+   "metadata": {},
+   "source": [
+    "### 🧪 Exercise 0: Load the converged DMFT from HDF5\n",
+    "\n",
+    "We have pre-converged the DMFT loop for you. The data is saved in HDF5 format, with each group corresponding to an iteration. The data is saved in the file ``ref_data/lco-beta=10.0-U=3.6.h5``. From the last iteration: \n",
+    "\n",
+    "* Load the chemical potential (stored under ``'mu'``),\n",
+    "\n",
+    "* The self-energy (stored under ``'Sigma_iw'``),\n",
+    "\n",
+    "* The impurity Green's function (stored under ``'G_iw'``).\n",
+    "\n",
+    "\n",
+    "\n",
+    "Plot your Green's function and self-energy."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "b5658d11-46f1-4330-870c-ed42e5c2107d",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "SyntaxError",
+     "evalue": "invalid syntax (231585885.py, line 9)",
+     "output_type": "error",
+     "traceback": [
+      "  \u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[1]\u001b[39m\u001b[32m, line 9\u001b[39m\n\u001b[31m    \u001b[39m\u001b[31mmu =\u001b[39m\n         ^\n\u001b[31mSyntaxError\u001b[39m\u001b[31m:\u001b[39m invalid syntax\n"
+     ]
+    }
+   ],
+   "source": [
+    "from h5 import HDFArchive\n",
+    "from triqs.gfs import MeshImFreq, BlockGf\n",
+    "from triqs.plot.mpl_interface import oplot, plt\n",
+    "import numpy as np\n",
+    "\n",
+    "# load data\n",
+    "with HDFArchive('ref_data/lco-beta=10.0-U=3.6.h5') as ar:\n",
+    "    last_iter = str(len(ar)-1)\n",
+    "    mu = \n",
+    "    Sigma_iw =\n",
+    "    G_iw = \n",
+    "    \n",
+    "# plot the data\n",
+    "fig, (ax1,ax2) = plt.subplots(1,2,sharex=True, figsize=(7,3))\n",
+    "oplot(G_iw.imag, 'o-', axes=ax1)\n",
+    "oplot(Sigma_iw.imag, 'o-', axes=ax2)\n",
+    "ax1.set_xlim(0,10)\n",
+    "plt.subplots_adjust(wspace=0.4)\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "a84f78d4-a967-4d61-8eea-69b145b98eed",
+   "metadata": {},
+   "source": [
+    "### 🧪 Exercise 1: Estimate Z from the Matsubara self-energy\n",
+    "\n",
+    "Using the self-energy that you obtained above, estimate the quasiparticle renormalization factor, which is defined as\n",
+    "\n",
+    "\n",
+    "$$ Z = (1 - \\partial_{\\omega_{n}}\\text{Im}\\Sigma(i\\omega_{n}) |_{\\omega_{n}\\rightarrow 0})^{-1}. $$\n",
+    "\n",
+    "\n",
+    "We can estimate this quantity in a couple of different ways. The simplest is to just look at the first Matsubara point:\n",
+    "\n",
+    "\n",
+    "$$ Z \\sim \\Big (1 - \\frac{\\mathrm{Im}\\Sigma(i\\omega_{0})}{\\omega_{0}} \\Big )^{-1},$$\n",
+    "\n",
+    "where $\\omega_{0} = \\frac{\\pi}{\\beta}$.\n",
+    "\n",
+    "> ⚠️ **Warning**: In practice, the derivatve in the formula for $Z$ is estimated by fitting a polynomial to the self-energy at the first few Matsubara frequencies."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "8625f2b8-dfd1-4fab-9752-6f754eb1be9f",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "SyntaxError",
+     "evalue": "invalid syntax (171253515.py, line 4)",
+     "output_type": "error",
+     "traceback": [
+      "  \u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[2]\u001b[39m\u001b[32m, line 4\u001b[39m\n\u001b[31m    \u001b[39m\u001b[31mZ =\u001b[39m\n        ^\n\u001b[31mSyntaxError\u001b[39m\u001b[31m:\u001b[39m invalid syntax\n"
+     ]
+    }
+   ],
+   "source": [
+    "beta = 10.0\n",
+    "\n",
+    "# compute Z\n",
+    "Z = \n",
+    "print(f'Z= {Z}')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "03c8ed2b-d623-44db-9dc7-537d26dad512",
+   "metadata": {},
+   "source": [
+    "## 🌀 Analytic continuation: from Matsubara to real frequencies"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "aab7231b-2ca9-457f-847a-7d2c16dc7c0e",
+   "metadata": {},
+   "source": [
+    "In this section, we will learn how to **analytically continue** our results from Matsubara (imaginary) frequencies onto the real-frequency axis, so that we may plot spectral functions. Because analytic continuation is an ill-posed problem, it is notoriously unstable, and the method itself remains an active area of research. However, there are two common analytic continuation techniques: Padé analytic continuation and the maximum entropy (MaxEnt) method. In this section, we will use Padé analytic continuation since it is simpler. We will then compare our results with MaxEnt.\n",
+    "\n",
+    "### ❓The problem\n",
+    "\n",
+    "We assume the Matsubara Green's function $G(i\\omega_{n})$ corresponds to a dynamic correlation function $G(\\omega)$, where $\\omega_{n}$ is the Matsubara frequency, and $\\omega$ is the real frequency. The function $G(z)$ is analytic in the whole upper complex plane of $z$ excluding the real axis. The retarded Green's function can be obtained by analytic continuation: $$G(\\omega) = G(i\\omega_{n}\\rightarrow \\omega + i0^{+}).$$ The spectral function $A(\\omega)$ is determined by taking the imaginary part of $G(\\omega + i0^{+})$ using the formula\n",
+    "\n",
+    "$$ A(\\omega) = -\\frac{1}{\\pi}\\mathrm{Im}G(\\omega + i0^{+}).$$\n",
+    "\n",
+    "### 📐 Padé method\n",
+    "\n",
+    "Padé analytic continuation is based on the assumption that the Matsubara Green's function can be approximated by a rational function of degree $r$:\n",
+    "\n",
+    "$$ G(z) = \\frac{\\sum_{i=0}^{r-1} p_{i}z^{i}}{\\sum_{j=0}^{r-1}q_{j}z^{j} + z^{r}}, $$\n",
+    "\n",
+    "where $p_{i}$ and $q_{j}$ are complex. The coefficients can be determined by solving $2r$ linear equations from $2r$ arbitrary but different input points ${i\\omega_{n}, G(i\\omega_{n})}$. Once the coefficients are determined, we replace $z$ with $\\omega + i0^{+}$ to obtain the retarded correlation function."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0ab915e0-95ac-46f2-acfd-53bceb715b18",
+   "metadata": {},
+   "source": [
+    "### 🧪 Exercise 2: Analytically continue the Matsubara Green's function\n",
+    "\n",
+    "In this exercise, we will analytically continue the Matsubara Green's function onto the real frequency axis.\n",
+    "\n",
+    "#### 🧩 Your task\n",
+    "\n",
+    "1. Set up a ``BlockGf`` with a real frequency mesh ``MeshReFreq``.\n",
+    "2. For each block in the Matsubara Green's function, use the ``set_from_pade`` method to obtain the real-frequency Green's function for each block.\n",
+    "3. Plot the resulting spectral function using the formula $A(\\omega) = -\\frac{1}{\\pi}\\text{Im}G(\\omega + i0^{+})$."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "aa2fe95d-bfbf-41ea-ac87-395771dac59d",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "SyntaxError",
+     "evalue": "invalid syntax (2851219194.py, line 9)",
+     "output_type": "error",
+     "traceback": [
+      "  \u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[3]\u001b[39m\u001b[32m, line 9\u001b[39m\n\u001b[31m    \u001b[39m\u001b[31mgf_struct =\u001b[39m\n                ^\n\u001b[31mSyntaxError\u001b[39m\u001b[31m:\u001b[39m invalid syntax\n"
+     ]
+    }
+   ],
+   "source": [
+    "from triqs.gfs import MeshReFreq\n",
+    "\n",
+    "n_w = 1000\n",
+    "window = (-10, 10)\n",
+    "\n",
+    "# Step 1: set up real-frequency mesh and BlockGf\n",
+    "\n",
+    "## get the block shape of the Matsubara Green's function\n",
+    "gf_struct = \n",
+    "\n",
+    "## set up real-frequency mesh\n",
+    "mesh =\n",
+    "\n",
+    "## construct Block Green's function on real-frequency mesh\n",
+    "G_w = \n",
+    "\n",
+    "# Step 2: loop over the blocks and call set_from_pade\n",
+    "n_points = 25\n",
+    "freq_offset = 0.0\n",
+    "for block, g in G_w: \n",
+    "    # use set_from_pade method\n",
+    "\n",
+    "# Step 3: plot the spectral function: A(w) = -1/π ImG(ω)\n",
+    "\n",
+    "plt.figure(figsize=(5,3))\n",
+    "oplot(-1/np.pi*G_w.imag, lw=1)\n",
+    "plt.ylabel(r'$A(\\omega)$'); plt.xlim(-5,5); plt.ylim(0, 1)\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "7b986898-9bed-4732-8771-bd19aef1261d",
+   "metadata": {},
+   "source": [
+    "> ⚠️ **Warning**: The Padé method can be sensitive to the choice of ``n_points``, which corresponds to the amount of Matsubara data you allow the algorithm to see. Try changing this parameter to see how the resulting spectral function changes."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "53ea7088-5253-4468-9fc8-cdb8140df439",
+   "metadata": {},
+   "source": [
+    "### 🌀 MaxEnt for a Green's function\n",
+    "\n",
+    "Let's compare our Padé results to those obtained using the maximum entropy method. Within the TRIQS ecosystem, we have a maximum entropy suite (TRIQS/maxent) which allows one to analytically continue TRIQS Green's function objects to obtain real-frequency spectra. Here, we have abstracted away much of the boilerplate code and provide you with a free function ``Aw_from_maxent`` inside the ``triqs_tutorials_utils.maxent`` module. Let's try loading this module:\n",
+    "\n",
+    "```python\n",
+    "\n",
+    "from triqs_tutorials_utils.maxent import Aw_from_maxent\n",
+    "\n",
+    "```\n",
+    "\n",
+    "Then use the function ``Aw_from_maxent``, which takes as an argument a Matsubara Green's function.\n",
+    "\n",
+    "> 💡 **Tip**: Don't forget about the ``?function_name`` functionality of Jupyter notebooks, which allows you to check the API of a function within the notebook itself.\n",
+    "\n",
+    "\n",
+    "Plot your results for MaxEnt and Padé.\n",
+    "\n",
+    "> ⚠️ **Warning:** The maxent module you are using is not yet part of the TRIQS library. You are using a prototype function that is included with these tutorials."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "1584d7c8-c1fd-4260-93f6-224463acbdcc",
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Warning: could not identify MPI environment!\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "Starting serial run at: 2026-06-28 07:48:19.185023\n"
+     ]
+    },
+    {
+     "ename": "NameError",
+     "evalue": "name 'G_iw' is not defined",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[31m---------------------------------------------------------------------------\u001b[39m",
+      "\u001b[31mNameError\u001b[39m                                 Traceback (most recent call last)",
+      "\u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[4]\u001b[39m\u001b[32m, line 3\u001b[39m\n\u001b[32m      1\u001b[39m \u001b[38;5;28;01mfrom\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[34;01mtriqs_tutorials_utils\u001b[39;00m\u001b[34;01m.\u001b[39;00m\u001b[34;01mmaxent\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[38;5;28;01mimport\u001b[39;00m Aw_from_maxent\n\u001b[32m----> \u001b[39m\u001b[32m3\u001b[39m mesh, Aw = Aw_from_maxent(\u001b[43mG_iw\u001b[49m, omega_min=-\u001b[32m10\u001b[39m, \n\u001b[32m      4\u001b[39m                                 omega_max= \u001b[32m10\u001b[39m, \n\u001b[32m      5\u001b[39m                                 alpha_min=\u001b[32m1e-6\u001b[39m, \n\u001b[32m      6\u001b[39m                                 alpha_max=\u001b[32m1e2\u001b[39m, \n\u001b[32m      7\u001b[39m                                 n_alpha_points=\u001b[32m50\u001b[39m, \n\u001b[32m      8\u001b[39m                                 n_omega_points=\u001b[32m200\u001b[39m, \n\u001b[32m      9\u001b[39m                                 error=\u001b[32m0.02\u001b[39m)\n",
+      "\u001b[31mNameError\u001b[39m: name 'G_iw' is not defined"
+     ]
+    }
+   ],
+   "source": [
+    "from triqs_tutorials_utils.maxent import Aw_from_maxent\n",
+    "\n",
+    "mesh, Aw = Aw_from_maxent(G_iw, omega_min=-10, \n",
+    "                                omega_max= 10, \n",
+    "                                alpha_min=1e-6, \n",
+    "                                alpha_max=1e2, \n",
+    "                                n_alpha_points=50, \n",
+    "                                n_omega_points=200, \n",
+    "                                error=0.02)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "5626da0d-64a1-42ae-8a18-b5169ae307c9",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# plot Maxent and Pade spectral functions here."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "361f6c7e",
+   "metadata": {},
+   "source": [
+    "As you can see, the two analytic continuation methods, Padé and MaxEnt, yield different results that share only some qualitative features. MaxEnt is generally more robust to numerical noise and produces smooth spectral functions, making it a reliable choice when the input data are noisy, as is often the case in quantum Monte Carlo simulations. Padé approximants, by contrast, can capture fine structures with the high accuracy when provided with very precise data, but they are highly sensitive to noise as you've observed.\n",
+    "\n",
+    "In practice, MaxEnt is typically preferred for stochastic data, while Padé is more useful when working with high-precision input or for cross-checking features suggested by MaxEnt. Both methods remain viable and can produce high-quality spectra when applied in the appropriate context."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4edace13-53f1-4911-b65c-e4321702404e",
+   "metadata": {},
+   "source": [
+    "### 🧪 Exercise 3: Understanding your spectral function\n",
+    "\n",
+    "Let's take a closer look at the spectral functions that we just obtained. Specifically, let's see if they reproduce the features that we expect: spectral weight transfer into the upper and lower Hubbard bands around $\\pm U/2$, as well as the width of the quasiparticle peak, which goes as $\\sim -Z\\mathrm{Im}\\Sigma(0)$."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "a2e7601f-02c5-4523-93d6-dbf17fcfd54a",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# plot from above\n",
+    "\n",
+    "# Step 1: add lines where the upper and lower Hubbard bands should be\n",
+    "\n",
+    "# We expect upper and lower Hubbard bands at +/- U/2\n",
+    "\n",
+    "# Step 2: add a column that is proportional to the width of the quasiparticle peak\n",
+    "\n",
+    "# We expect the width of the peak to be -Z*ImΣ(0)\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "21653c5d-86a5-4a6b-bac4-9b731425355c",
+   "metadata": {},
+   "source": [
+    "### 🧪 Exercise 4: Analytically continue the Matsubara self-energy\n",
+    "\n",
+    "In this exercise, we will analytically continue the Matsubara self-energy onto the real-frequency axis. Due to implementation details, you can directly use the same Python code to analytically continue a self-energy in the same way as a Green's function in TRIQS."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "6602b41f-437a-45d2-ba21-ffe55f32edef",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "SyntaxError",
+     "evalue": "invalid syntax (4277834114.py, line 7)",
+     "output_type": "error",
+     "traceback": [
+      "  \u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[7]\u001b[39m\u001b[32m, line 7\u001b[39m\n\u001b[31m    \u001b[39m\u001b[31mSigma_w_pade =\u001b[39m\n                  ^\n\u001b[31mSyntaxError\u001b[39m\u001b[31m:\u001b[39m invalid syntax\n"
+     ]
+    }
+   ],
+   "source": [
+    "n_w = 1000\n",
+    "window = (-10, 10)\n",
+    "\n",
+    "mesh = MeshReFreq(window, n_w)\n",
+    "\n",
+    "# Step 1: construct Block Green's function on real-frequency mesh\n",
+    "Sigma_w_pade =\n",
+    "\n",
+    "# Step 2: loop over the blocks and call set_from_pade\n",
+    "n_points = 25\n",
+    "freq_offset = 0.0\n",
+    "for block, g in Sigma_w_pade: \n",
+    "    \n",
+    "# Step 3: plot the real and imaginary part of the self-energy. Is your result physical?"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "8c1e7b26-5594-4d0b-85cb-aa1c32e4a66d",
+   "metadata": {
+    "scrolled": true
+   },
+   "source": [
+    "### 🌀 MaxEnt for a Self-energy\n",
+    "\n",
+    "Again, let's compare our Padé results to those obtained using the maximum entropy method. This time, you will use the free function ``Sigma_w_from_maxent`` inside the ``triqs_tutorials_utils.maxent`` module. Let's try loading this module:\n",
+    "\n",
+    "```python\n",
+    "\n",
+    "from triqs_tutorials_utils.maxent import Sigma_w_from_maxent\n",
+    "\n",
+    "```\n",
+    "\n",
+    "Then use the function ``Sigma_w_from_maxent``, which takes as an argument a Matsubara self-energy."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "ffd3f797-09d2-4d32-be21-d9a436ce5c5c",
+   "metadata": {
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "ename": "NameError",
+     "evalue": "name 'Sigma_iw' is not defined",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[31m---------------------------------------------------------------------------\u001b[39m",
+      "\u001b[31mNameError\u001b[39m                                 Traceback (most recent call last)",
+      "\u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[8]\u001b[39m\u001b[32m, line 3\u001b[39m\n\u001b[32m      1\u001b[39m \u001b[38;5;28;01mfrom\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[34;01mtriqs_tutorials_utils\u001b[39;00m\u001b[34;01m.\u001b[39;00m\u001b[34;01mmaxent\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[38;5;28;01mimport\u001b[39;00m Sigma_w_from_maxent\n\u001b[32m----> \u001b[39m\u001b[32m3\u001b[39m Sigma_w = Sigma_w_from_maxent(\u001b[43mSigma_iw\u001b[49m, error=\u001b[32m0.02\u001b[39m)\n",
+      "\u001b[31mNameError\u001b[39m: name 'Sigma_iw' is not defined"
+     ]
+    }
+   ],
+   "source": [
+    "from triqs_tutorials_utils.maxent import Sigma_w_from_maxent\n",
+    "\n",
+    "Sigma_w = Sigma_w_from_maxent(Sigma_iw, error=0.02)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "715807e7-1e39-4cf8-bdfb-b43ddf395ae5",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# plot Maxent and Pade self-energy here."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "5908ca74-2e8f-4617-b6c7-03f82ee62223",
+   "metadata": {},
+   "source": [
+    "### 🧪 Exercise 5: Estimate Z and the scattering rate from the self-energy\n",
+    "\n",
+    "Using the self-energy that you obtained above, estimate the quasiparticle renormalization factor and the scattering rate, which are defined as:\n",
+    "\n",
+    "\n",
+    "$$ Z = (1 - \\partial_{\\omega}\\text{Re}\\Sigma(\\omega) |_{\\omega\\rightarrow0})^{-1}. $$\n",
+    "\n",
+    "\n",
+    "The scattering rate is proportional to $-\\mathrm{Im}\\Sigma(\\omega=0)$. For $Z$, you can fit a linear line to the low-frequency data in the real part of the spectrum and use the slope of the line to estimate the derivative. For the scattering rate, you can ask what is the value of $\\Sigma(\\omega = 0)$.\n",
+    "\n",
+    "Compare your result to Exercise 1."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "8d69af5a-942b-4edc-ac25-8a45e8a28cba",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "NameError",
+     "evalue": "name 'np' is not defined",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[31m---------------------------------------------------------------------------\u001b[39m",
+      "\u001b[31mNameError\u001b[39m                                 Traceback (most recent call last)",
+      "\u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[10]\u001b[39m\u001b[32m, line 1\u001b[39m\n\u001b[32m----> \u001b[39m\u001b[32m1\u001b[39m x = \u001b[43mnp\u001b[49m.linspace(-\u001b[32m0.2\u001b[39m, \u001b[32m0.2\u001b[39m,\u001b[32m10\u001b[39m)\n\u001b[32m      2\u001b[39m y = [Sigma_w[\u001b[33m'\u001b[39m\u001b[33mup_0\u001b[39m\u001b[33m'\u001b[39m][\u001b[32m0\u001b[39m,\u001b[32m0\u001b[39m](xx).real \u001b[38;5;28;01mfor\u001b[39;00m xx \u001b[38;5;129;01min\u001b[39;00m x]\n\u001b[32m      3\u001b[39m dSdw = np.polyfit(x,y,\u001b[32m1\u001b[39m)[\u001b[32m0\u001b[39m]\n",
+      "\u001b[31mNameError\u001b[39m: name 'np' is not defined"
+     ]
+    }
+   ],
+   "source": [
+    "x = np.linspace(-0.2, 0.2,10)\n",
+    "y = [Sigma_w['up_0'][0,0](xx).real for xx in x]\n",
+    "dSdw = np.polyfit(x,y,1)[0]\n",
+    "Z = 1/(1 - dSdw)\n",
+    "print(f'     Z  =  {Z}')\n",
+    "print(f'-ImΣ(0) =  {-Sigma_w['up_0'][0,0](0.0).imag}')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "5be62503-95f7-4d76-a063-dcc19fe7d7f4",
+   "metadata": {},
+   "source": [
+    "## 📊 Plotting your results"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "65d115ad-e7a3-43c2-a9ca-f5022d4d5907",
+   "metadata": {},
+   "source": [
+    "### 🧪 Exercise 6: Plot the momentum-resolved spectral function along the high-symmetry path in the Brillouin zone\n",
+    "\n",
+    "Let's plot the spectral function along a high-symmetry path in the Brillouin zone. This means we will compute\n",
+    "\n",
+    "\n",
+    "$$ A(k,\\omega) = -\\frac{1}{\\pi} \\mathrm{Im} \\mathrm{Tr}G_{\\mathrm{latt}}(k, \\omega), $$\n",
+    "\n",
+    "where $G_{\\mathrm{latt}}$ is the lattice Green's function defined previously. First, we will prepare a list of $k$ points along a high-symmetry direction in the first Brillouin zone of La$_{2}$CuO$_{4}$. Using our converged chemical potential ($\\mu$) and self-energy in real frequencies ($\\Sigma(\\omega)$), we can compute $A(k,\\omega)$ with the utility function ``momentum_resolved_spectral_function``.\n",
+    "\n",
+    "Additionally, we can add the quasiparticle (QP) dispersion and compare. The QP dispersion corresponds to the renormalized electronic dispersion that emerges from electron correlations, describing long-lived excitations whose energies and spectral weight are modified by interactions relative to the non-interacting band structure."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "0ef876c3-d7cc-4949-9e01-1287a33ba331",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "SyntaxError",
+     "evalue": "invalid syntax (2180244637.py, line 16)",
+     "output_type": "error",
+     "traceback": [
+      "  \u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[11]\u001b[39m\u001b[32m, line 16\u001b[39m\n\u001b[31m    \u001b[39m\u001b[31mobe  =\u001b[39m\n          ^\n\u001b[31mSyntaxError\u001b[39m\u001b[31m:\u001b[39m invalid syntax\n"
+     ]
+    }
+   ],
+   "source": [
+    "import triqs_modest as modest\n",
+    "from triqs.lattice.utils import k_space_path\n",
+    "from triqs_tutorials_utils.mpl_interface import momentum_resolved_spectral_function, plot_spectral_function\n",
+    "\n",
+    "# create high-symmetry path\n",
+    "G = [0.00,  0.00,  0.00]\n",
+    "X = [0.25, -0.25,  0.25]\n",
+    "M = [0.00,  0.00,  0.50]\n",
+    "Z = [0.25,  0.25, -0.25]\n",
+    "\n",
+    "segments = [(G,X), (X,M), (M, G), (G,Z)]\n",
+    "k_points, k_lin, k_ticks = k_space_path(segments, num=20)\n",
+    "\n",
+    "\n",
+    "# load in obe or the TB hamiltonian\n",
+    "obe  =\n",
+    "\n",
+    "# compute the dispersion along the high-symmetry directions\n",
+    "e_k = obe.H[0].eigenvalues(k_points).real\n",
+    "\n",
+    "# compute the spectral function\n",
+    "A_kw =\n",
+    "\n",
+    "w_min, w_max = -10, +10\n",
+    "plt.figure(figsize=(4,3))\n",
+    "\n",
+    "# plot the spectral function\n",
+    "plot_spectral_function(A_kw, k_lin, w_min, w_max, k_ticks, [r'$\\Gamma$', 'X', 'M', r'$\\Gamma$', 'Z'], cmap='Purples', vmin=0)\n",
+    "\n",
+    "# plot the QP dispersion Z*(ek - μ + ReΣ(0))\n",
+    "\n",
+    "plt.legend()\n",
+    "plt.ylim(-4,4)\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f9470e6c-9beb-4d4f-baaa-91b89b4f5f3f",
+   "metadata": {},
+   "source": [
+    "### 🧪 Exercise 7: Describe your results\n",
+    "\n",
+    "In a few words, describe your spectral function results $A(k, \\omega)$. Compare the interacting spectrum to the non-interacting you graphed in [Tutorial 01](01-dft.ipynb). Can you connect any of these changes to features in the self-energy?"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "a01e4e82-0a38-4908-b185-5cbbc75da70d",
+   "metadata": {},
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

@@ -1,0 +1,237 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "9b623d96-2d7a-4fd6-968e-03b2de1d46e1",
+   "metadata": {},
+   "source": [
+    "# ⬆️ Towards even more realistic DFT + DMFT"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c98cdf44-75de-4a68-9490-76f47a3e3757",
+   "metadata": {},
+   "source": [
+    "Now that we have plenty of experience writing DMFT scripts, we will develop another script for even more realistic DFT+DMFT, so that you can study realistic quantum embedding in combination with electronic structure bases on density-functional theory. In this tutorial, we will learn how to:\n",
+    "\n",
+    "- use the ``Embedding`` class for defining the embedding description and modify it to match your problem,\n",
+    "- introduce the **double-counting correction** to maintain the relative energy splitting between the correlated and non-correlated orbitals.\n",
+    "\n",
+    "By the end of this tutorial, you will be able to write a DFT+DMFT script that can be used for any DFT+DMFT calculation for any correlated material.\n",
+    "\n",
+    "Please choose one of the following materials below to build your script from scratch:\n",
+    "\n",
+    "- [**La$_{2}$CuO$_{4}$**](05a-la2cuo4.ipynb) is the parent compound of the high-temperature cuprate superconductors and exhibits a Mott insulating ground state driven by strong electron-electron interactions. In large energy window DFT+DMFT calculations, both copper and oxygen states are explicitly retained, allowing us to capture the full multi-orbital character of the electronic structure -- unlike single-band models (which we've studied so far) that downfold to a low-energy subspace. This approach reveals the formation of Hubbard bands and a charge-transfer gap, emphasizing the essential role of strong correlations and ligand hybridization in driving the insulating state.\n",
+    "\n",
+    "- [**SrVO$_{3}$**](05b-srvo3.ipynb) is a correlated metal with a nominal $d^{1}$ configuration, often studied as a benchmark for moderately correlated systems. DFT+DMFT reveals the coexistence of coherent quasiparticle states at the Fermi level and incoherent Hubbard bands, highlighting the importance of dynamical correlations in systems that appear metallic within conventional band theory."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c7c81668-ce5d-44a5-ab93-9ac7e2d912f3",
+   "metadata": {},
+   "source": [
+    "# 🧩 Quantum Embedding and Connecting to Electronic Structure Codes"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4b84c1f7-7001-4283-87df-92716134fdde",
+   "metadata": {},
+   "source": [
+    "We saw previously in the lectures that quantum embedding boils down to upfolding the self-energy that we compute from a quantum impurity problem back to the global electronic structure of a crystal. This means the lattice self-energy is obtained from\n",
+    "\n",
+    "$$ \\Sigma_{\\nu\\nu'}^{\\sigma}(\\mathbf{k},\\omega) = [P^{\\sigma}_{m\\nu}(\\mathbf{k})]^{\\dagger}[\\Sigma_{\\mathrm{embed}}(\\omega)]_{m m'}^{\\sigma} P^{\\sigma}_{m'\\nu'}(\\mathbf{k}), $$\n",
+    "where $m$ are orbital indices and $\\nu$ are Kohn-Sham band indices. We refer to $P^{\\sigma}_{m\\nu}(\\mathbf{k})$ as a projector which projects the Kohn-Sham states onto a set of localized atomic orbitals. In practice, in order to connect to electronic structure codes like density-functional theory or many-body perturbation theory, we need the Kohn-Sham band structure ($\\varepsilon^{\\sigma}_{\\nu}(\\mathbf{k})$) and the projector $P^{\\sigma}_{m\\nu}(\\mathbf{k})$. The TRIQS ecosystem supports interfaces (converters) to many different electronic structure codes available to the community. The currently supported DFT codes that have interfaces that support charge self-consistent DFT + DMFT are listed below in the table. The projection scheme corresponds to the program that is used to create the projectors mentioned above.\n",
+    "\n",
+    "| DFT Code |  Basis | Projection Scheme(s) |\n",
+    "|:----------|:--------|:--------------------:|\n",
+    "| [Wien2k](http://susi.theochem.tuwien.ac.at) |  All-electron, full potential (LAPW+lo) | [Projectors (dmftproj)](https://triqs.github.io/dft_tools/latest/guide/conv_wien2k.html)  |\n",
+    "| [VASP](https://www.vasp.at)    | Pseudopotentials (PAW) | [Projectors (LOCPROJ)](https://triqs.github.io/dft_tools/latest/guide/conv_vasp.html), [Wannier90](https://triqs.github.io/dft_tools/latest/guide/conv_W90.html) |\n",
+    "| [Quantum Espresso](https://www.quantum-espresso.org) | Pseudopotentials | [Wannier90](https://triqs.github.io/dft_tools/latest/guide/conv_W90.html) |\n",
+    "| [Elk](https://elk.sourceforge.io) | All-electron, full potential (LAPW) | [Projectors](https://triqs.github.io/dft_tools/latest/guide/conv_elk.html) |\n",
+    "\n",
+    "The tutorials for SrVO$_{3}$ and La$_{2}$CuO$_{4}$ were produced using the [Wien2k DFT code](), which is an all-electron, full potential code and often referred to as the gold standard for total energy calculations. TRIQS provides a Fortran90 program ``dmftproj`` which creates the projectors from the Wien2k data. We can then use the ``Wien2kConverter`` from our suite of DFT converters to prepare an HDF5 file which contains all of the data that we need to run a DMFT calculation. In the following, we describe the input files for ``dmftproj`` for SrVO$_{3}$ and La$_{2}$CuO$_{4}$. Additionally, we provide a utility program called ``init_dmftpr`` which helps the user prepare the input file for your material. For more information and details on how the DFT calculation was run and how the projectors were created, see the remainder of the notebook."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c0d30a44-d25d-4435-8399-2544b482093c",
+   "metadata": {},
+   "source": [
+    "# ↔️ DFT Converters"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "2b101e4d-5cae-4e57-9532-860cae9666c8",
+   "metadata": {},
+   "source": [
+    "While we are demonstrating the workflow for Wien2k + TRIQS, the general workflow is the same for all of the DFT codes that TRIQS has an interface to. After running the DFT code and creating the projectors either through the projection code or Wannier90, we must run a DFT converter. TRIQS provides:\n",
+    "\n",
+    "- [Wannier90Converter](https://triqs.github.io/dft_tools/latest/_python_api/triqs_dft_tools.converters.wannier90.Wannier90Converter.html)\n",
+    "- [Wien2kConverter](https://triqs.github.io/dft_tools/latest/_python_api/triqs_dft_tools.converters.wien2k.Wien2kConverter.html#triqs_dft_tools.converters.wien2k.Wien2kConverter)\n",
+    "- [VaspConverter](https://triqs.github.io/dft_tools/latest/_python_api/triqs_dft_tools.converters.vasp.VaspConverter.html#triqs_dft_tools.converters.vasp.VaspConverter)\n",
+    "\n",
+    "An example of how to run one of these converters is below.\n",
+    "\n",
+    "```python\n",
+    "from triqs_modest.converters import Wien2kConverter\n",
+    "Wien2kConverter(\"case\").convert_dft_input()\n",
+    "```\n",
+    "\n",
+    "This will produce a ``case.h5`` file which contains the group ``dft_input``."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "8b951ae3-0799-4350-a84c-dfe7ac3db2a7",
+   "metadata": {},
+   "source": [
+    "# ⚛️ Materials Specifics"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4df63d99-0bd3-4b44-953a-233411d10bd8",
+   "metadata": {},
+   "source": [
+    "## 🧱 La$_{2}$CuO$_{4}$"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "04f004f5-e74e-40f1-a6a3-7e9792b9e656",
+   "metadata": {
+    "jp-MarkdownHeadingCollapsed": true
+   },
+   "source": [
+    "##### DFT\n",
+    "In Wien2k, we can set up all the input files from only the Wien2k structure file which we provide in reference data. To follow along, one can execute the following commands:\n",
+    "\n",
+    "**Initialization**\n",
+    "```bash\n",
+    "init_lapw -prec 1 -vxc LDA\n",
+    "```\n",
+    "\n",
+    "**Self-consistent field**\n",
+    "```bash\n",
+    "run_lapw -ec 0.00001 -cc 0.0001\n",
+    "```\n",
+    "\n",
+    "For more details, we refer to the Wien2k documentation.\n",
+    "\n",
+    "##### Projectors\n",
+    "\n",
+    "To create the projectors, we need to run the following commands\n",
+    "```bash\n",
+    "x lapw1       # compute the KS eigenvalues\n",
+    "x lapw2 -almd # compute coefficients in the local orbital basis\n",
+    "```\n",
+    "\n",
+    "The ``dmftproj`` program takes the following input file which can be generated using ``init_dmftpr``:\n",
+    "\n",
+    "```\n",
+    "!case.indmft\n",
+    "4         ! number of atoms in the structure file\n",
+    "2 1 2 2   ! multiplicity of each atom\n",
+    "3         ! the maximum angular quantum number l; we repeat the following block for each atom\n",
+    "cubic     ! (La) choice of spherical harmonics (cubic/spherical/custom)\n",
+    "0 0 1 0   ! Create a projector for s/p/d/f? 0 = No, 1 = Yes (do not treat as correlated), 2 = Yes (treat as correlated)\n",
+    "0 0 0 0   ! Split into irreps 0 = No, X = number of irreps\n",
+    "cubic     ! (Cu) cubic harmonics\n",
+    "0 0 2 0   ! Treat d-orbitals as correlated\n",
+    "0 0 0 0   ! No splitting\n",
+    "0         ! Do we have spin-orbit? 0 = No, 1 = Yes\n",
+    "cubic     ! (O) cubic harmonics\n",
+    "0 1 0 0   ! Create a projector for p\n",
+    "0 0 0 0   ! No splitting\n",
+    "cubic     ! (O) cubic harmonics\n",
+    "0 1 0 0   ! Create a projector for p\n",
+    "0 0 0 0   ! No splitting\n",
+    "-0.73 0.73 ! energy window around the Fermi level (in Ry)\n",
+    " ```"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "8dbca9e8-89e5-4a02-aa1b-f6c7bea93b29",
+   "metadata": {},
+   "source": [
+    "## 🧱 SrVO3"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "2fb7aa13-9237-41dc-843f-c8dc240de8c3",
+   "metadata": {
+    "jp-MarkdownHeadingCollapsed": true
+   },
+   "source": [
+    "##### DFT\n",
+    "In Wien2k, we can set up all the input files from only the Wien2k structure file which we provide in reference data. To follow along, one can execute the following commands:\n",
+    "\n",
+    "**Initialization**\n",
+    "```bash\n",
+    "init_lapw -prec 1 -vxc LDA\n",
+    "```\n",
+    "\n",
+    "**Self-consistent field**\n",
+    "```bash\n",
+    "run_lapw -ec 0.00001 -cc 0.0001\n",
+    "```\n",
+    "\n",
+    "For more details, we refer to the Wien2k documentation.\n",
+    "\n",
+    "##### Projectors\n",
+    "\n",
+    "To create the projectors, we need to run the following commands\n",
+    "```bash\n",
+    "x lapw1       # compute the KS eigenvalues\n",
+    "x lapw2 -almd # compute coefficients in the local orbital basis\n",
+    "```\n",
+    "\n",
+    "The ``dmftproj`` program takes the following input file which can be generated using ``init_dmftpr``:\n",
+    "\n",
+    "```\n",
+    "3          ! number of atoms in the structure file\n",
+    "1 1 3      ! multiplicity of each atom\n",
+    "3          ! the maximum angular quantum number l; we repeat the following block for each atom\n",
+    "cubic      ! (V) choice of spherical harmonics (cubic/spherical/custom)\n",
+    "0 0 2 0    ! Treat d-orbitals as correlated\n",
+    "0 0 2 0    ! Split the d-orbitals into eg and t2g irreps \n",
+    "01         ! choose only the t2g orbitals\n",
+    "0          ! No spin-orbit coupling\n",
+    "cubic      ! (Sr) cubic harmonics\n",
+    "1 0 0 0    ! Create a projector for s\n",
+    "0 0 0 0    ! No splitting\n",
+    "cubic      ! (O) cubic harmonics\n",
+    "0 1 0 0    ! Create a projector for p\n",
+    "0 0 0 0    ! No splitting\n",
+    "-0.73 0.73 ! energy window around the Fermi level (in Ry)\n",
+    " ```"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

@@ -98,7 +98,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 1,
    "metadata": {},
    "outputs": [],
    "source": [
@@ -107,7 +107,7 @@
     "from triqs.plot.mpl_interface import plt, oplot\n",
     "\n",
     "import numpy as np\n",
-    "from triqs.gf import *"
+    "from triqs.gfs import *"
    ]
   },
   {
@@ -116,7 +116,7 @@
    "source": [
     "## Compute the susceptibility $\\chi_0(\\mathbf{q}, i\\omega_n)$\n",
     "\n",
-    "The effective Fourier transform based routine for computing the susceptibility is implemented in TPRF in the function `triqs_trpf.lattice_utils.imtime_bubble_chi0_wk`. To construct $\\chi_0$ as defined above it can be called using the lattice Green's function `g0_wk` from the previous notebook.\n",
+    "The effective Fourier transform based routine for computing the susceptibility is implemented in TPRF in the function `triqs_tprf.lattice_utils.imtime_bubble_chi0_wk`. To construct $\\chi_0$ as defined above it can be called using the lattice Green's function `g0_wk` from the previous notebook.\n",
     "\n",
     "```python\n",
     "from triqs_tprf.lattice_utils import imtime_bubble_chi0_wk\n",
@@ -128,7 +128,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 2,
    "metadata": {},
    "outputs": [],
    "source": [
@@ -143,7 +143,7 @@
     "\n",
     "As you saw in the previous notebook, the square lattice with nearest-neighbour hopping $t$ has a perfectly nested Fermi surface at half-filling. In other words, large parts of the Fermi surface are mapped on to each other by a single momentum transfer $\\mathbf{Q}$, called the *nesting vector*. Go back to the previous notebook and the plot of $-\\frac{1}{\\pi} Im G_0(\\mathbf{k}, i\\omega_0)$ and remind your self about the nesting vector $\\mathbf{Q} = (\\pi, \\pi)$. The perfect nesting greatly enhances the susceptibility $\\chi_0$ which has a dominant peak at $\\chi_0(\\mathbf{Q}, \\omega=0)$.\n",
     "\n",
-    "Analytically this can be derived using the expression for the Greens function and performing the Matsubara frequency sum, giving\n",
+    "Analytically this can be derived using the expression for the Green's function and performing the Matsubara frequency sum, giving\n",
     "\n",
     "\\begin{equation}\n",
     "  \\chi_0(\\mathbf{q}, \\omega=0) = \n",
@@ -170,12 +170,12 @@
    "source": [
     "### <i class=\"fa fa-gear fa-x\" style=\"color: #186391\"></i> Exercise 1\n",
     "\n",
-    "Investigate the momentum structure of the susceptibility $\\chi_0$ by making a two-dinensional color plot of $\\chi_0(\\mathbf{q}, \\omega=0)$ over the Brillouin zone."
+    "Investigate the momentum structure of the susceptibility $\\chi_0$ by making a two-dimensional color plot of $\\chi_0(\\mathbf{q}, \\omega=0)$ over the Brillouin zone."
    ]
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 3,
    "metadata": {},
    "outputs": [],
    "source": [
@@ -206,7 +206,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 4,
    "metadata": {},
    "outputs": [],
    "source": [
@@ -231,9 +231,9 @@
    "source": [
     "### <i class=\"fa fa-gear fa-x\" style=\"color: #186391\"></i> Exercise 3\n",
     "\n",
-    "So far you we have only been studying the susecptibility $\\chi_0$ in the \"static\" zero frequency limit $\\omega=0$. However, the Matsubara frequency dependence of $\\chi_0(\\mathbf{q}, i\\omega_n)$ encodes information about the dynamical response properties of the system.\n",
+    "So far we have only been studying the susecptibility $\\chi_0$ in the \"static\" zero frequency limit $\\omega=0$. However, the Matsubara frequency dependence of $\\chi_0(\\mathbf{q}, i\\omega_n)$ encodes information about the dynamical response properties of the system.\n",
     "\n",
-    "Here we will take a close look at the frequency depdendence at the high-symmetry momentum points. \n",
+    "Here we will take a close look at the frequency dependence at the high-symmetry momentum points. \n",
     "\n",
     "To get the Matsubara frequency dependent suceptibility at a given momentum $k$ we use the partial interpolation feature of TRIQS using the keyword `all` to select all Matsubara frequencies at a fixed momenta:\n",
     "\n",
@@ -247,7 +247,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 5,
    "metadata": {},
    "outputs": [],
    "source": [
@@ -281,11 +281,11 @@
     "\n",
     "Go back to the first notebook where you constructed the dispersion and write it to disk and read it back into this notebook.\n",
     "\n",
-    "The analytical formula can be implemented in numpy using\n",
+    "The analytical formula can be implemented in NumPy using\n",
     "```\n",
     "kmesh = e_k.mesh\n",
     "beta = chi0_wk.mesh[0].beta\n",
-    "chi_Q_ref = np.sum(np.nan_to_num(np.tanh(e_k.data.real * beta/2) / e_k.data.real, nan=0.)) / len(kmesh) \n",
+    "chi_Q_ref = np.sum(np.nan_to_num(np.tanh(e_k.data.real * beta/2) / e_k.data.real, nan=beta/2.0)) / len(kmesh) \n",
     "```\n",
     "\n",
     "Make a combined plot of the Matsubara frequency dependent susceptibility at $\\mathbf{Q}$ and the analytical value of the static response. "
@@ -293,7 +293,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 6,
    "metadata": {},
    "outputs": [],
    "source": [
@@ -317,7 +317,7 @@
     "\n",
     "From the Matsubara frequency dependence of the susceptibility it is also possible to (approximately) determine the real frequency behaviour using analytical continuation.\n",
     "\n",
-    "TRIQS provides Padé based routines for analytical continuation as a member function of a real-fequency Green's function:\n",
+    "TRIQS provides Padé based routines for analytical continuation as a member function of a real-frequency Green's function:\n",
     "\n",
     "```python\n",
     "fmesh = MeshReFreq(w_min=-10, w_max=10, n_w=100)\n",
@@ -330,7 +330,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 7,
    "metadata": {},
    "outputs": [],
    "source": [
@@ -367,7 +367,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 8,
    "metadata": {},
    "outputs": [],
    "source": [
@@ -404,8 +404,7 @@
    "mimetype": "text/x-python",
    "name": "python",
    "nbconvert_exporter": "python",
-   "pygments_lexer": "ipython3",
-   "version": "3.10.11"
+   "pygments_lexer": "ipython3"
   }
  },
  "nbformat": 4,
