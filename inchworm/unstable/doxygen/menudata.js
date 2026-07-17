@@ -27,10 +27,9 @@ var menudata={children:[
 {text:"Installation",url:"installation.html"},
 {text:"Integration in C++ projects",url:"integration.html"},
 {text:"Examples",url:"examples.html",children:[
-{text:"Example 1: Test example",url:"ex1.html"}]},
+{text:"Single-site Anderson impurity model",url:"ex1.html"}]},
 {text:"API Documentation",url:"documentation.html",children:[
-{text:"My Group",url:"group__mygroup.html",children:[
-{text:"toto",url:"@ref inchworm::toto"}]},
+{text:"Class List",url:"annotated.html"},
 {text:"File List",url:"files.html"}]},
 {text:"Changelog",url:"../ChangeLog.html"},
 {text:"Issues",url:"../issues.html"}]}

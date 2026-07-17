@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['overview_0',['Overview',['../index.html',1,'']]]
+  ['options_0',['Custom CMake options',['../installation.html#install_options',1,'']]],
+  ['overview_1',['Overview',['../index.html',1,'']]]
 ];

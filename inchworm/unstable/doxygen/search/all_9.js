@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['idx_0',['idx',['../structinchworm_1_1fop__t.html#a1656da689feef6a444b5bdc86ce8f68e',1,'inchworm::fop_t']]],
-  ['in_20c_20projects_1',['Integration in C++ projects',['../integration.html',1,'']]],
-  ['installation_2',['Installation',['../installation.html',1,'']]],
-  ['integration_20in_20c_20projects_3',['Integration in C++ projects',['../integration.html',1,'']]]
+  ['left_5fwidth_0',['left_width',['../structinchworm_1_1fop__t.html#a2bdde2c69f12797dd4bf8aa935389fe9',1,'inchworm::fop_t']]],
+  ['length_5fcycle_1',['length_cycle',['../structinchworm_1_1solve__params__t.html#a508c130fd783e8e1e46bb1441fb7b73d',1,'inchworm::solve_params_t']]],
+  ['linear_5findex_2',['linear_index',['../structinchworm_1_1fop__t.html#a67966aff84872653bbf0ec8b24ab87a8',1,'inchworm::fop_t']]]
 ];

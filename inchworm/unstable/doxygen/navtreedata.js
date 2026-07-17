@@ -29,12 +29,10 @@ var NAVTREE =
     [ "Installation", "installation.html", null ],
     [ "Integration in C++ projects", "integration.html", null ],
     [ "Examples", "examples.html", [
-      [ "Example 1: Test example", "ex1.html", null ]
+      [ "Single-site Anderson impurity model", "ex1.html", null ]
     ] ],
     [ "API Documentation", "documentation.html", [
-      [ "My Group", "group__mygroup.html", [
-        [ "toto", "@ref inchworm::toto", null ]
-      ] ],
+      [ "Class List", "annotated.html", "annotated" ],
       [ "File List", "files.html", "files" ]
     ] ],
     [ "Changelog", "../ChangeLog.html", null ],

@@ -1,6 +1,10 @@
 var searchData=
 [
-  ['h5_5fread_0',['h5_read',['../structinchworm_1_1container__set.html#ae159b63c9372b66648b98430d05192a0',1,'inchworm::container_set::h5_read()'],['../structinchworm_1_1constr__params__t.html#a90316aa6c7146b9ccfa222307a6cd9e6',1,'inchworm::constr_params_t::h5_read()'],['../structinchworm_1_1solve__params__t.html#a283cd0c404e96fbf33c48c76bc6d8341',1,'inchworm::solve_params_t::h5_read()']]],
-  ['h5_5fwrite_1',['h5_write',['../structinchworm_1_1container__set.html#af1cf39e8f3b4b0c3c36775936b476e2d',1,'inchworm::container_set::h5_write()'],['../structinchworm_1_1constr__params__t.html#a1f3c2226b35eb90d73a6528d8f07deac',1,'inchworm::constr_params_t::h5_write()'],['../structinchworm_1_1solve__params__t.html#a50188644467230dcaaa9db334b750d2c',1,'inchworm::solve_params_t::h5_write(h5::group h5group, std::string subgroup_name, solve_params_t const &amp;sp)']]],
-  ['h_5fimp_2',['h_imp',['../structinchworm_1_1solve__params__t.html#ac84835675683b60948fc1d42b74f0669',1,'inchworm::solve_params_t']]]
+  ['idx_0',['idx',['../structinchworm_1_1fop__t.html#a1656da689feef6a444b5bdc86ce8f68e',1,'inchworm::fop_t']]],
+  ['impurity_20model_1',['Single-site Anderson impurity model',['../ex1.html',1,'']]],
+  ['in_20c_20projects_2',['Integration in C++ projects',['../integration.html',1,'']]],
+  ['including_20the_20headers_3',['Including the headers',['../integration.html#integration_include',1,'']]],
+  ['installation_4',['Installation',['../installation.html',1,'']]],
+  ['installation_20steps_5',['Installation steps',['../installation.html#install_steps',1,'']]],
+  ['integration_20in_20c_20projects_6',['Integration in C++ projects',['../integration.html',1,'']]]
 ];

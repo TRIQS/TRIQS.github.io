@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['1_3a_20test_20example_0',['Example 1: Test example',['../ex1.html',1,'']]]
+  ['anderson_20impurity_20model_0',['Single-site Anderson impurity model',['../ex1.html',1,'']]],
+  ['api_20documentation_1',['API Documentation',['../documentation.html',1,'']]]
 ];

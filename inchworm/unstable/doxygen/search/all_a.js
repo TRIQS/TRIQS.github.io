@@ -1,6 +1,11 @@
 var searchData=
 [
-  ['left_5fwidth_0',['left_width',['../structinchworm_1_1fop__t.html#a2bdde2c69f12797dd4bf8aa935389fe9',1,'inchworm::fop_t']]],
-  ['length_5fcycle_1',['length_cycle',['../structinchworm_1_1solve__params__t.html#a508c130fd783e8e1e46bb1441fb7b73d',1,'inchworm::solve_params_t']]],
-  ['linear_5findex_2',['linear_index',['../structinchworm_1_1fop__t.html#a67966aff84872653bbf0ec8b24ab87a8',1,'inchworm::fop_t']]]
+  ['max_5forder_0',['max_order',['../structinchworm_1_1solve__params__t.html#a19b4120ef826fe6ecfaf5d05f994b41c',1,'inchworm::solve_params_t']]],
+  ['max_5fprob_5fzeroth_5forder_1',['max_prob_zeroth_order',['../structinchworm_1_1solve__params__t.html#a9328219fe7347240eaf060a9d7879d0d',1,'inchworm::solve_params_t']]],
+  ['max_5ftime_2',['max_time',['../structinchworm_1_1solve__params__t.html#a03ad6392a5f94b02fa9a354a923fe8cb',1,'inchworm::solve_params_t']]],
+  ['measure_5faverage_5forder_3',['measure_average_order',['../structinchworm_1_1solve__params__t.html#ae92f317fc706781d534bcf5c082ab034',1,'inchworm::solve_params_t']]],
+  ['measure_5faverage_5fsign_4',['measure_average_sign',['../structinchworm_1_1solve__params__t.html#af6f0bb1adfd8e9ac918281b25a666e35',1,'inchworm::solve_params_t']]],
+  ['measure_5fframe_5fby_5forder_5',['measure_frame_by_order',['../structinchworm_1_1solve__params__t.html#ac2d19ba083d9621225a912286afa2b33',1,'inchworm::solve_params_t']]],
+  ['measure_5forder_5fhistogram_6',['measure_order_histogram',['../structinchworm_1_1solve__params__t.html#a424e14a64da7334c7590fe829e64a44e',1,'inchworm::solve_params_t']]],
+  ['model_7',['Single-site Anderson impurity model',['../ex1.html',1,'']]]
 ];

@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>TRIQS/inchworm: Example 1: Test example</title>
+<title>TRIQS/inchworm: Single-site Anderson impurity model</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -100,16 +100,31 @@ $(function(){initNavTree('ex1.html','',''); });
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">Example 1: Test example </div></div>
+  <div class="headertitle"><div class="title">Single-site Anderson impurity model </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>Overview of the example.</p>
-<h1 class="doxsection"><a class="anchor" id="ex1_p1"></a>
-More details</h1>
-<p>More details.</p>
-<h1 class="doxsection"><a class="anchor" id="ex1_p2"></a>
-Maybe even more details</h1>
-<p>Maybe even more details. </p>
+<div class="textblock"><p>This example solves a single-site, spinful Anderson impurity model with the Inchworm QMC solver. It corresponds to <span class="tt">test/c++/onesite.cpp</span> (C++) and <span class="tt">examples/onesite.py</span> (Python).</p>
+<h1 class="doxsection"><a class="anchor" id="ex1_setup"></a>
+Setup</h1>
+<p>Construct the solver from a set of construction parameters — the inverse temperature, the block structure of the Green's functions, and the imaginary-time mesh sizes: </p><pre class="fragment">inchworm::constr_params_t cp;
+cp.beta        = 2.0;
+cp.gf_struct   = {{"up", 1}, {"dn", 1}};
+cp.n_tau_green = 5;
+cp.n_tau_inch  = 21;
+cp.n_tau       = 10001;
+
+inchworm::solver_core S{cp};
+</pre><p>Set the imaginary-time hybridization function <span class="tt">S.Delta_tau</span> and define the local interaction Hamiltonian (here a Hubbard \(U\) on the impurity site) in the solve parameters.</p>
+<h1 class="doxsection"><a class="anchor" id="ex1_solve"></a>
+Solving</h1>
+<p>The solver exposes several strategies, all taking the solve parameters <span class="tt">sp</span>: </p><pre class="fragment">S.solve_cthyb(sp, tau_max);                        // bare hybridization expansion
+S.solve_self_consistently(sp, u_tau, tau_split, tau_max);
+S.solve_inchworm(sp);                              // full inchworm propagation
+S.solve_green(sp);                                 // sample G(tau) from U(tau)
+</pre><p>After solving, the impurity propagator is available as <span class="tt">S.u_tau</span> and the impurity Green's function as <span class="tt">S.G_tau</span>.</p>
+<h1 class="doxsection"><a class="anchor" id="ex1_ref"></a>
+Full source</h1>
+<p>See <span class="tt">test/c++/onesite.cpp</span> for the complete, compilable version and <span class="tt">examples/onesite.py</span> for the equivalent Python script. </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

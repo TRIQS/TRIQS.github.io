@@ -1,14 +1,14 @@
 var searchData=
 [
-  ['max_5forder_0',['max_order',['../structinchworm_1_1solve__params__t.html#a19b4120ef826fe6ecfaf5d05f994b41c',1,'inchworm::solve_params_t']]],
-  ['max_5fprob_5fzeroth_5forder_1',['max_prob_zeroth_order',['../structinchworm_1_1solve__params__t.html#a9328219fe7347240eaf060a9d7879d0d',1,'inchworm::solve_params_t']]],
-  ['max_5ftime_2',['max_time',['../structinchworm_1_1solve__params__t.html#a03ad6392a5f94b02fa9a354a923fe8cb',1,'inchworm::solve_params_t']]],
-  ['maybe_20even_20more_20details_3',['Maybe even more details',['../ex1.html#ex1_p2',1,'']]],
-  ['measure_5faverage_5forder_4',['measure_average_order',['../structinchworm_1_1solve__params__t.html#ae92f317fc706781d534bcf5c082ab034',1,'inchworm::solve_params_t']]],
-  ['measure_5faverage_5fsign_5',['measure_average_sign',['../structinchworm_1_1solve__params__t.html#af6f0bb1adfd8e9ac918281b25a666e35',1,'inchworm::solve_params_t']]],
-  ['measure_5fframe_5fby_5forder_6',['measure_frame_by_order',['../structinchworm_1_1solve__params__t.html#ac2d19ba083d9621225a912286afa2b33',1,'inchworm::solve_params_t']]],
-  ['measure_5forder_5fhistogram_7',['measure_order_histogram',['../structinchworm_1_1solve__params__t.html#a424e14a64da7334c7590fe829e64a44e',1,'inchworm::solve_params_t']]],
-  ['more_20details_8',['More details',['../ex1.html#ex1_p1',1,'']]],
-  ['more_20details_9',['Maybe even more details',['../ex1.html#ex1_p2',1,'']]],
-  ['my_20group_10',['My Group',['../group__mygroup.html',1,'']]]
+  ['n_5fbath_5fsites_5fed_0',['n_bath_sites_ED',['../structinchworm_1_1solve__params__t.html#aed2dbf111ccec46e2fc2475ff4474e04',1,'inchworm::solve_params_t']]],
+  ['n_5fblocks_1',['n_blocks',['../structinchworm_1_1constr__params__t.html#af6c727f0242c164dcd3574d900907dc1',1,'inchworm::constr_params_t']]],
+  ['n_5fcallibration_5fcycles_2',['n_callibration_cycles',['../structinchworm_1_1solve__params__t.html#adb22516517640e45af638edff63a4b1e',1,'inchworm::solve_params_t']]],
+  ['n_5fcycles_3',['n_cycles',['../structinchworm_1_1solve__params__t.html#ae712ae4ca039b83d657800396b3021db',1,'inchworm::solve_params_t']]],
+  ['n_5fiw_4',['n_iw',['../structinchworm_1_1constr__params__t.html#aa68b5c78cf58b346565c031d919850ea',1,'inchworm::constr_params_t']]],
+  ['n_5ftau_5',['n_tau',['../structinchworm_1_1constr__params__t.html#a0376ee12917e1ba74623cfcfe2f0a4f1',1,'inchworm::constr_params_t']]],
+  ['n_5ftau_5fgreen_6',['n_tau_green',['../structinchworm_1_1constr__params__t.html#a978d4e8acd5b9aa15b1939c4540f08cc',1,'inchworm::constr_params_t']]],
+  ['n_5ftau_5finch_7',['n_tau_inch',['../structinchworm_1_1constr__params__t.html#a31ad44c8aa3643d63f7cce11aea9247e',1,'inchworm::constr_params_t']]],
+  ['n_5ftau_5finch_5fstop_8',['n_tau_inch_stop',['../structinchworm_1_1solve__params__t.html#a155a9f22f9993d6b09b62fb85fba8544',1,'inchworm::solve_params_t']]],
+  ['n_5fwarmup_5fcycles_9',['n_warmup_cycles',['../structinchworm_1_1solve__params__t.html#ae517c08dc16d7e09c04c7e096f3dc7ab',1,'inchworm::solve_params_t']]],
+  ['name_10',['name',['../structinchworm_1_1moves_1_1base__move.html#acbeb82c4efefee34a0e42cc506c0c465',1,'inchworm::moves::base_move']]]
 ];

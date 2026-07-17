@@ -67,7 +67,7 @@ The compilation of ``inchworm`` can be configured using CMake-options::
 +-----------------------------------------------------------------+-----------------------------------------------+
 | Options                                                         | Syntax                                        |
 +=================================================================+===============================================+
-| Specify an installation path other than path_to_triqs           | -DCMAKE_INSTALL_PREFIX=path_to_inchworm      |
+| Specify an installation path other than path_to_triqs           | -DCMAKE_INSTALL_PREFIX=path_to_inchworm       |
 +-----------------------------------------------------------------+-----------------------------------------------+
 | Build in Debugging Mode                                         | -DCMAKE_BUILD_TYPE=Debug                      |
 +-----------------------------------------------------------------+-----------------------------------------------+
