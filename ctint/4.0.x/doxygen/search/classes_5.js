@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['insert_0',['insert',['../structtriqs__ctint_1_1moves_1_1insert.html',1,'triqs_ctint::moves']]]
+  ['lazy_5fdet_5foperation_5ft_0',['lazy_det_operation_t',['../classtriqs__ctint_1_1lazy__det__operation__t.html',1,'triqs_ctint']]]
 ];

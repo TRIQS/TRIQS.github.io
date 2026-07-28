@@ -7,6 +7,7 @@ var dir_978983a4f828d2fdda91fb92bb8793d3 =
     [ "lazy_det_operation.cpp", "lazy__det__operation_8cpp_source.html", null ],
     [ "lazy_det_operation.hpp", "lazy__det__operation_8hpp_source.html", null ],
     [ "measures.hpp", "measures_8hpp_source.html", null ],
+    [ "nfft_buf.cpp", "nfft__buf_8cpp_source.html", null ],
     [ "nfft_buf.hpp", "nfft__buf_8hpp_source.html", null ],
     [ "params.cpp", "params_8cpp_source.html", null ],
     [ "params.hpp", "params_8hpp_source.html", null ],

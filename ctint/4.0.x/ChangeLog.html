@@ -413,8 +413,16 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="issues.html">Reporting issues</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Changelog</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#version-4-0-1">Version 4.0.1</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#version-4-0-2">Version 4.0.2</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#general">General</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doc">doc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cmake">cmake</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#packaging">packaging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#gh-actions">gh-actions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#version-4-0-1">Version 4.0.1</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">General</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#version-4-0-0">Version 4.0.0</a><ul>
@@ -423,16 +431,16 @@
 <li class="toctree-l3"><a class="reference internal" href="#alpha-tensor">Alpha tensor</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#nfft-finufft">NFFT / finufft</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#measurements">Measurements</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id1">General</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">General</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#cmake-deps">cmake / deps</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#jenkins-ghactions">jenkins / ghactions</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#version-3-1-0">Version 3.1.0</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id2">General</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#doc">doc</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#cmake">cmake</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#gh-actions">gh-actions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">General</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">doc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">cmake</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">gh-actions</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#version-3-0-1">Version 3.0.1</a></li>
@@ -470,6 +478,56 @@
              
   <section class="tex2jax_ignore mathjax_ignore" id="changelog">
 <h1>Changelog<a class="headerlink" href="#changelog" title="Link to this heading"></a></h1>
+<section id="version-4-0-2">
+<h2>Version 4.0.2<a class="headerlink" href="#version-4-0-2" title="Link to this heading"></a></h2>
+<p>CTINT version 4.0.2 is a patch release that cleans up the installed interface
+and the packaging of the 4.0.x release branch. The install tree no longer ships
+or re-exports any third-party dependency, a downstream C++ consumer of the
+installed headers no longer fails on a missing header, and the conda package
+builds against the host dependencies. It further drops the poet dependency and
+updates the documentation website.</p>
+<p>We thank all contributors: Alexander Hampel, Dylan Simon, Nils Wentzell, Thomas Hahn</p>
+<p>Find below an itemized list of changes in this release.</p>
+<section id="general">
+<h3>General<a class="headerlink" href="#general" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Remove the <code class="docutils literal notranslate"><span class="pre">triqs/arrays/block_matrix.hpp</span></code> shim, as ctint does not use the <code class="docutils literal notranslate"><span class="pre">triqs::arrays::block_matrix&lt;T&gt;</span></code> template anywhere: its own <code class="docutils literal notranslate"><span class="pre">block_matrix_t</span></code> is a <code class="docutils literal notranslate"><span class="pre">std::vector&lt;matrix&lt;...&gt;&gt;</span></code>. The dead include in <code class="docutils literal notranslate"><span class="pre">types.hpp</span></code> only ever resolved against the bundled shim, which is not installed, so a downstream C++ consumer of the installed ctint headers failed to resolve it</p></li>
+<li><p>Replace the poet dependency with an in-house <code class="docutils literal notranslate"><span class="pre">detail::static_for</span></code>, removing the dependency, its cmake resolution and its git clone</p></li>
+<li><p>Move the FINUFFT and xsimd code out of the installed <code class="docutils literal notranslate"><span class="pre">nfft_buf.hpp</span></code> into a new <code class="docutils literal notranslate"><span class="pre">nfft_buf.cpp</span></code>, so neither dependency forces its headers into our prefix, and store the <code class="docutils literal notranslate"><span class="pre">finufft_opts</span></code> as a constructor local rather than a member of every <code class="docutils literal notranslate"><span class="pre">nfft_buf_t</span></code></p></li>
+<li><p>Trim the public surface of <code class="docutils literal notranslate"><span class="pre">nfft_buf.hpp</span></code> by dropping the dead <code class="docutils literal notranslate"><span class="pre">nfft_buf_t</span></code> deduction guides and moving <code class="docutils literal notranslate"><span class="pre">to_array_vector</span></code> into <code class="docutils literal notranslate"><span class="pre">detail</span></code></p></li>
+<li><p>Remove an unused private member from the <code class="docutils literal notranslate"><span class="pre">average_sign</span></code> measure</p></li>
+</ul>
+</section>
+<section id="doc">
+<h3>doc<a class="headerlink" href="#doc" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Fix the documentation website URLs to not use the <code class="docutils literal notranslate"><span class="pre">triqs_</span></code> prefix</p></li>
+<li><p>Add a version switcher flyout and use dedicated cmake variables to set the displayed version and to distinguish unstable from release branches</p></li>
+<li><p>Add a canonical URL pointing to <code class="docutils literal notranslate"><span class="pre">latest/</span></code> for SEO</p></li>
+</ul>
+</section>
+<section id="cmake">
+<h3>cmake<a class="headerlink" href="#cmake" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Drop finufft and xsimd from the installed interface: both are build-time only dependencies now, finufft’s objects are absorbed into <code class="docutils literal notranslate"><span class="pre">libtriqs_ctint_c.a</span></code>, and the exported interface names only triqs, shrinking the install tree from 158 to 51 files</p></li>
+<li><p>Resolve fftw with <code class="docutils literal notranslate"><span class="pre">find_library</span></code> at consumer configure time instead of baking the absolute paths from finufft’s own <code class="docutils literal notranslate"><span class="pre">fftlibs</span></code> list into <code class="docutils literal notranslate"><span class="pre">triqs_ctint-config.cmake</span></code></p></li>
+<li><p>Stop bundling the <code class="docutils literal notranslate"><span class="pre">triqs_hartree_fock</span></code> python module, which was installed twice for a from-source build and pointed at a <code class="docutils literal notranslate"><span class="pre">deps/triqs_hartree_fock</span></code> path that only exists for a manual source checkout</p></li>
+<li><p>Declare <code class="docutils literal notranslate"><span class="pre">BUILD_DEBIAN_PACKAGE</span></code> with the other project options</p></li>
+</ul>
+</section>
+<section id="packaging">
+<h3>packaging<a class="headerlink" href="#packaging" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Build the conda package against the host dependencies: <code class="docutils literal notranslate"><span class="pre">triqs_hartree_fock</span></code> and fftw become host and run requirements resolved via <code class="docutils literal notranslate"><span class="pre">-DBuild_Deps=IfNotFound</span></code>, and finufft is fetched as a release tarball since conda-forge ships no C++ package for it</p></li>
+</ul>
+</section>
+<section id="gh-actions">
+<h3>gh-actions<a class="headerlink" href="#gh-actions" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Switch the macOS CI runners to macos-26</p></li>
+</ul>
+</section>
+</section>
 <section id="version-4-0-1">
 <h2>Version 4.0.1<a class="headerlink" href="#version-4-0-1" title="Link to this heading"></a></h2>
 <p>CTINT version 4.0.1 is a patch release that pins the build dependencies for
@@ -478,8 +536,8 @@ dynamic-interaction tests pass with the reference BLAS used in the conda-forge
 build environment.</p>
 <p>We thank all contributors: Nils Wentzell</p>
 <p>Find below an itemized list of changes in this release.</p>
-<section id="general">
-<h3>General<a class="headerlink" href="#general" title="Link to this heading"></a></h3>
+<section id="id1">
+<h3>General<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Pin c2py (0.9.x), triqs_hartree_fock (4.0.x) and poet (v0.0.0) for the 4.0.x release</p></li>
 <li><p>Loosen the h5diff tolerance of the dynamic-interaction tests (all, all_continuousBoson, densdens, jperp) from 5e-5 to 1e-4</p></li>
@@ -542,8 +600,8 @@ build environment.</p>
 <li><p>Enable <code class="docutils literal notranslate"><span class="pre">measure_density</span></code> by default</p></li>
 </ul>
 </section>
-<section id="id1">
-<h3>General<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<section id="id2">
+<h3>General<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Port ctint to TRIQS 4.0 (<code class="docutils literal notranslate"><span class="pre">triqs.gf</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">triqs.gfs</span></code>)</p></li>
 <li><p>Use <code class="docutils literal notranslate"><span class="pre">parity_sort</span></code>/<code class="docutils literal notranslate"><span class="pre">insertion_sort</span></code> for insert and remove moves</p></li>
@@ -579,8 +637,8 @@ release for TRIQS version 3.1.0 that</p>
 <li><p>fixes a number of application issues</p></li>
 </ul>
 <p>We provide a more detailed description of the changes below.</p>
-<section id="id2">
-<h3>General<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<section id="id3">
+<h3>General<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Port ctint to triqs 3.1</p></li>
 <li><p>Fix runaway memory in G2c_from_M4</p></li>
@@ -596,22 +654,22 @@ release for TRIQS version 3.1.0 that</p>
 <li><p>Fix move constructor of nfft_buf_t to properly call rebind</p></li>
 </ul>
 </section>
-<section id="doc">
-<h3>doc<a class="headerlink" href="#doc" title="Link to this heading"></a></h3>
+<section id="id4">
+<h3>doc<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Fix sphinx recursion error and two build warnings</p></li>
 <li><p>Update implementation notes to latest version</p></li>
 </ul>
 </section>
-<section id="cmake">
-<h3>cmake<a class="headerlink" href="#cmake" title="Link to this heading"></a></h3>
+<section id="id5">
+<h3>cmake<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>Avoid policy warning for CMP0115</p></li>
 <li><p>Add option to compile with MSAN</p></li>
 </ul>
 </section>
-<section id="gh-actions">
-<h3>gh-actions<a class="headerlink" href="#gh-actions" title="Link to this heading"></a></h3>
+<section id="id6">
+<h3>gh-actions<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>brew install nfft from wentzell/triqs/nfft</p></li>
 </ul>
@@ -665,7 +723,7 @@ release for TRIQS version 2.2.0</p>
 <div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="Versions">
   <span class="rst-current-version" data-toggle="rst-current-version">
     <span class="fa fa-book"> Versions</span>
-    v: 4.0.x
+    v: unstable
     <span class="fa fa-caret-down"></span>
   </span>
   <div class="rst-other-versions">
