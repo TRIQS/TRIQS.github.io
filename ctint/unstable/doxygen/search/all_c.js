@@ -42,6 +42,5 @@ var searchData=
   ['measure_5fsign_5fonly_39',['measure_sign_only',['../structtriqs__ctint_1_1solve__params__t.html#ac5440f27d9621e8133d291de83824c95',1,'triqs_ctint::solve_params_t']]],
   ['more_20details_40',['More details',['../ex1.html#ex1_p1',1,'']]],
   ['more_20details_41',['Maybe even more details',['../ex1.html#ex1_p2',1,'']]],
-  ['mpi_5freduce_42',['mpi_reduce',['../structtriqs_1_1arrays_1_1block__matrix.html#ad1cc1cc4ed5c0cd7beb9c355fb803d0d',1,'triqs::arrays::block_matrix']]],
-  ['my_20group_43',['My Group',['../group__mygroup.html',1,'']]]
+  ['my_20group_42',['My Group',['../group__mygroup.html',1,'']]]
 ];

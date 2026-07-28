@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['params_5ft_0',['params_t',['../structtriqs__ctint_1_1params__t.html',1,'triqs_ctint']]]
+  ['qmc_5fconfig_5ft_0',['qmc_config_t',['../classtriqs__ctint_1_1qmc__config__t.html',1,'triqs_ctint']]]
 ];

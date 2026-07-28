@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['density_0',['density',['../structtriqs__ctint_1_1measures_1_1density.html',1,'triqs_ctint::measures']]]
+  ['g0hat_5ft_0',['G0hat_t',['../structtriqs__ctint_1_1G0hat__t.html',1,'triqs_ctint']]]
 ];
