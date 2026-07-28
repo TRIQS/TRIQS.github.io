@@ -344,9 +344,9 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "MersenneRNG_8cpp.html",
-"dir_6ad6efbed23654276a6cfd7144baa173.html",
-"group__triqs-utility-traits.html",
-"traits_8hpp.html"
+"dir_637353008f97467af61e59cfd4c9dc44.html",
+"group__triqs-utility-tuple.html",
+"traits_8hpp_source.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronization';

@@ -1,6 +1,5 @@
 var NAVTREEINDEX3 =
 {
-"traits_8hpp.html":[3,12,2,14,34],
 "traits_8hpp_source.html":[3,12,2,14,34],
 "tuple__serialize_8hpp.html":[3,12,2,14,35],
 "tuple__serialize_8hpp_source.html":[3,12,2,14,35],
