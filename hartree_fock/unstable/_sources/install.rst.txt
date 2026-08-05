@@ -9,6 +9,7 @@ Packaged Versions of hartree_fock
 =================================
 
 .. _ubuntu_debian:
+
 Ubuntu Debian packages
 ----------------------
 
@@ -30,6 +31,7 @@ Note that the PyPI package requires a TRIQS installation with a matching major.m
 See also `pypi.org/project/triqs_hartree_fock <https://pypi.org/project/triqs_hartree_fock/>`_.
 
 .. _docker:
+
 Docker
 ------
 
