@@ -68,6 +68,18 @@ in the corresponding guide page of the DFTTools documentation:
      - ✗
      - `conv_generalhk <https://triqs.github.io/dft_tools/latest/guide/conv_generalhk.html>`_
 
+Resulting hdf5 archive
+======================
+
+All converters write into the same, standardized hdf5 layout that is read by
+:py:class:`SumkDFT <triqs_dft_tools.sumk_dft.SumkDFT>`. The groups and datasets
+are documented in :ref:`hdfstructure`.
+
+.. toctree::
+   :maxdepth: 2
+
+   h5structure
+
 Tutorials
 =========
 
