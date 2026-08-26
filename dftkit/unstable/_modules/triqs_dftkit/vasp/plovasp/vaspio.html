@@ -218,6 +218,28 @@
 
 <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;plovasp.vaspio&#39;</span><span class="p">)</span>
 
+<span class="n">ORB_LABELS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="s2">&quot;py&quot;</span><span class="p">,</span> <span class="s2">&quot;pz&quot;</span><span class="p">,</span> <span class="s2">&quot;px&quot;</span><span class="p">,</span> <span class="s2">&quot;dxy&quot;</span><span class="p">,</span> <span class="s2">&quot;dyz&quot;</span><span class="p">,</span> <span class="s2">&quot;dz2&quot;</span><span class="p">,</span> <span class="s2">&quot;dxz&quot;</span><span class="p">,</span> <span class="s2">&quot;dx2-y2&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;fy(3x2-y2)&quot;</span><span class="p">,</span> <span class="s2">&quot;fxyz&quot;</span><span class="p">,</span> <span class="s2">&quot;fyz2&quot;</span><span class="p">,</span> <span class="s2">&quot;fz3&quot;</span><span class="p">,</span> <span class="s2">&quot;fxz2&quot;</span><span class="p">,</span> <span class="s2">&quot;fz(x2-y2)&quot;</span><span class="p">,</span> <span class="s2">&quot;fx(x2-3y2)&quot;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="label_to_l_m">
+<a class="viewcode-back" href="../../../../_autosummary/triqs_dftkit.vasp.plovasp.vaspio.label_to_l_m.html#triqs_dftkit.vasp.plovasp.vaspio.label_to_l_m">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">label_to_l_m</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">iproj</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nc_flag</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">label</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">)</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">label</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ORB_LABELS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown LOCPROJ orbital label &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">label</span><span class="p">)</span>
+    <span class="n">lm</span> <span class="o">=</span> <span class="n">ORB_LABELS</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+    <span class="n">l</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">lm</span><span class="p">))</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">lm</span> <span class="o">-</span> <span class="n">l</span> <span class="o">*</span> <span class="n">l</span>
+    <span class="k">if</span> <span class="n">nc_flag</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">iproj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Projector index is required for non-collinear LOCPROJ labels&quot;</span><span class="p">)</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">m</span> <span class="k">if</span> <span class="p">(</span><span class="n">iproj</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">m</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">l</span><span class="p">,</span> <span class="n">m</span></div>
+
+
 
 <div class="viewcode-block" id="read_lines">
 <a class="viewcode-back" href="../../../../_autosummary/triqs_dftkit.vasp.plovasp.vaspio.read_lines.html#triqs_dftkit.vasp.plovasp.vaspio.read_lines">[docs]</a>
@@ -359,14 +381,6 @@
 <span class="sd">        Returns projector parameters (site/orbital indices etc.) and an array</span>
 <span class="sd">        with projectors.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">orb_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="s2">&quot;py&quot;</span><span class="p">,</span> <span class="s2">&quot;pz&quot;</span><span class="p">,</span> <span class="s2">&quot;px&quot;</span><span class="p">,</span> <span class="s2">&quot;dxy&quot;</span><span class="p">,</span> <span class="s2">&quot;dyz&quot;</span><span class="p">,</span> <span class="s2">&quot;dz2&quot;</span><span class="p">,</span> <span class="s2">&quot;dxz&quot;</span><span class="p">,</span> <span class="s2">&quot;dx2-y2&quot;</span><span class="p">,</span>
-                      <span class="s2">&quot;fy(3x2-y2)&quot;</span><span class="p">,</span> <span class="s2">&quot;fxyz&quot;</span><span class="p">,</span> <span class="s2">&quot;fyz2&quot;</span><span class="p">,</span> <span class="s2">&quot;fz3&quot;</span><span class="p">,</span> <span class="s2">&quot;fxz2&quot;</span><span class="p">,</span> <span class="s2">&quot;fz(x2-y2)&quot;</span><span class="p">,</span> <span class="s2">&quot;fx(x2-3y2)&quot;</span><span class="p">]</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">lm_to_l_m</span><span class="p">(</span><span class="n">lm</span><span class="p">):</span>
-            <span class="n">l</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">lm</span><span class="p">))</span>
-            <span class="n">m</span> <span class="o">=</span> <span class="n">lm</span> <span class="o">-</span> <span class="n">l</span> <span class="o">*</span> <span class="n">l</span>
-            <span class="k">return</span> <span class="n">l</span><span class="p">,</span> <span class="n">m</span>
-
         <span class="c1"># Read the first line of LOCPROJ to get the dimensions</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">locproj_filename</span><span class="p">,</span> <span class="s1">&#39;rt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="n">line</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
@@ -407,20 +421,13 @@
                 <span class="n">sline</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
                 <span class="n">isite</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sline</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
                 <span class="n">label</span> <span class="o">=</span> <span class="n">sline</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-                <span class="n">lm</span> <span class="o">=</span> <span class="n">orb_labels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
-                <span class="n">l</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">lm_to_l_m</span><span class="p">(</span><span class="n">lm</span><span class="p">)</span>
+                <span class="n">l</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">label_to_l_m</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">ip</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nc_flag</span><span class="p">)</span>
                 <span class="c1">#                    ip_new = iproj_site * norb + il</span>
                 <span class="c1">#                    ip_prev = (iproj_site - 1) * norb + il</span>
                 <span class="n">proj_params</span><span class="p">[</span><span class="n">ip</span><span class="p">][</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">label</span>
                 <span class="n">proj_params</span><span class="p">[</span><span class="n">ip</span><span class="p">][</span><span class="s1">&#39;isite&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">isite</span>
                 <span class="n">proj_params</span><span class="p">[</span><span class="n">ip</span><span class="p">][</span><span class="s1">&#39;l&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">l</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nc_flag</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="p">(</span><span class="n">ip</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                        <span class="n">proj_params</span><span class="p">[</span><span class="n">ip</span><span class="p">][</span><span class="s1">&#39;m&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">m</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">proj_params</span><span class="p">[</span><span class="n">ip</span><span class="p">][</span><span class="s1">&#39;m&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">m</span> <span class="o">+</span> <span class="mi">1</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">proj_params</span><span class="p">[</span><span class="n">ip</span><span class="p">][</span><span class="s1">&#39;m&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span>
+                <span class="n">proj_params</span><span class="p">[</span><span class="n">ip</span><span class="p">][</span><span class="s1">&#39;m&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span>
 
                 <span class="n">ip</span> <span class="o">+=</span> <span class="mi">1</span>
 
@@ -1019,9 +1026,6 @@
 
         <span class="c1"># self.proj_params, self.plo = self.locproj_parser(locproj_filename=vasp_dir + &quot;LOCPROJ&quot;)</span>
 
-        <span class="n">orb_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="s2">&quot;py&quot;</span><span class="p">,</span> <span class="s2">&quot;pz&quot;</span><span class="p">,</span> <span class="s2">&quot;px&quot;</span><span class="p">,</span> <span class="s2">&quot;dxy&quot;</span><span class="p">,</span> <span class="s2">&quot;dyz&quot;</span><span class="p">,</span> <span class="s2">&quot;dz2&quot;</span><span class="p">,</span> <span class="s2">&quot;dxz&quot;</span><span class="p">,</span> <span class="s2">&quot;dx2-y2&quot;</span><span class="p">,</span>
-                      <span class="s2">&quot;fy(3x2-y2)&quot;</span><span class="p">,</span> <span class="s2">&quot;fxyz&quot;</span><span class="p">,</span> <span class="s2">&quot;fyz2&quot;</span><span class="p">,</span> <span class="s2">&quot;fz3&quot;</span><span class="p">,</span> <span class="s2">&quot;fxz2&quot;</span><span class="p">,</span> <span class="s2">&quot;fz(x2-y2)&quot;</span><span class="p">,</span> <span class="s2">&quot;fx(x2-3y2)&quot;</span><span class="p">]</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">plo</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nproj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nspin</span><span class="p">,</span> <span class="n">nk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nband</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">proj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nproj</span><span class="p">):</span>
@@ -1032,11 +1036,6 @@
                         <span class="n">imag_plo</span> <span class="o">=</span> <span class="n">plo</span><span class="p">[</span><span class="n">proj</span><span class="p">,</span> <span class="n">spin</span><span class="p">,</span> <span class="n">kpt</span><span class="p">,</span> <span class="n">band</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>  <span class="c1"># Imaginary part</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">plo</span><span class="p">[</span><span class="n">proj</span><span class="p">,</span> <span class="n">spin</span><span class="p">,</span> <span class="n">kpt</span><span class="p">,</span> <span class="n">band</span><span class="p">]</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">real_plo</span><span class="p">,</span> <span class="n">imag_plo</span><span class="p">)</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">lm_to_l_m</span><span class="p">(</span><span class="n">lm</span><span class="p">):</span>
-            <span class="n">l</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">lm</span><span class="p">))</span>
-            <span class="n">m</span> <span class="o">=</span> <span class="n">lm</span> <span class="o">-</span> <span class="n">l</span> <span class="o">*</span> <span class="n">l</span>
-            <span class="k">return</span> <span class="n">l</span><span class="p">,</span> <span class="n">m</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">proj_params</span> <span class="o">=</span> <span class="p">[{}</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nproj</span><span class="p">)]</span>
         <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">h5path</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">archive</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nproj</span><span class="p">):</span>
@@ -1046,16 +1045,9 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">proj_params</span><span class="p">[</span><span class="n">it</span><span class="p">][</span><span class="s1">&#39;coord&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">projectors</span><span class="p">[</span><span class="s1">&#39;coordinates&#39;</span><span class="p">][</span><span class="n">it</span><span class="p">]</span>
 
         <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nproj</span><span class="p">):</span>
-            <span class="n">lm</span> <span class="o">=</span> <span class="n">orb_labels</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_params</span><span class="p">[</span><span class="n">it</span><span class="p">][</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
-            <span class="n">l</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">lm_to_l_m</span><span class="p">(</span><span class="n">lm</span><span class="p">)</span>
+            <span class="n">l</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">label_to_l_m</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_params</span><span class="p">[</span><span class="n">it</span><span class="p">][</span><span class="s1">&#39;label&#39;</span><span class="p">],</span> <span class="n">it</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nc_flag</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">proj_params</span><span class="p">[</span><span class="n">it</span><span class="p">][</span><span class="s1">&#39;l&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">l</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nc_flag</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
-                <span class="k">if</span> <span class="p">(</span><span class="n">it</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">proj_params</span><span class="p">[</span><span class="n">it</span><span class="p">][</span><span class="s1">&#39;m&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">m</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">proj_params</span><span class="p">[</span><span class="n">it</span><span class="p">][</span><span class="s1">&#39;m&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">m</span> <span class="o">+</span> <span class="mi">1</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">proj_params</span><span class="p">[</span><span class="n">it</span><span class="p">][</span><span class="s1">&#39;m&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">proj_params</span><span class="p">[</span><span class="n">it</span><span class="p">][</span><span class="s1">&#39;m&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span>
         <span class="c1"># assert ip == nproj, &quot;Number of projectors in the header is wrong in LOCPROJ&quot;</span>
 
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Read parameters: LOCPROJ&quot;</span><span class="p">)</span>

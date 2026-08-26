@@ -204,6 +204,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">h5</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..converter_tools</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os.path</span>
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">simplejson</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">json</span>
@@ -322,7 +323,10 @@
 <a class="viewcode-back" href="../../../_autosummary/triqs_dftkit.vasp.converter.Converter.convert_dft_input.html#triqs_dftkit.vasp.converter.Converter.convert_dft_input">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">convert_dft_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Reads the input files, and stores the data in the HDFfile</span>
+<span class="sd">        Reads the input files, and stores the data in the HDFfile.</span>
+
+<span class="sd">        If KPOINTS_OPT projector data is detected in vaspout.h5, the bands</span>
+<span class="sd">        input is converted automatically by calling convert_bands_input().</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">energy_unit</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="c1"># VASP interface always uses eV</span>
         <span class="n">k_dep_projection</span> <span class="o">=</span> <span class="mi">1</span>
@@ -590,12 +594,353 @@
                 <span class="n">ar</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">misc_subgrp</span><span class="p">][</span><span class="s1">&#39;n_k_ibz&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">n_k_ibz</span>
 
         <span class="c1"># Symmetries are used, so now convert symmetry information for *correlated* orbitals:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">convert_symmetry_input</span><span class="p">(</span><span class="n">ctrl_head</span><span class="p">,</span> <span class="n">orbits</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">corr_shells</span><span class="p">,</span> <span class="n">symm_subgrp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">symmcorr_subgrp</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">convert_symmetry_input</span><span class="p">(</span><span class="n">ctrl_head</span><span class="p">,</span> <span class="n">orbits</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">corr_shells</span><span class="p">,</span> <span class="n">symm_subgrp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">symmcorr_subgrp</span><span class="p">)</span>
+
+        <span class="c1"># Auto-convert KPOINTS_OPT band/projector data when available.</span>
+        <span class="n">vaspout_candidates</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basename</span><span class="p">,</span> <span class="s1">&#39;vaspout.h5&#39;</span><span class="p">),</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basename</span><span class="p">),</span> <span class="s1">&#39;vaspout.h5&#39;</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="n">kpoints_opt_found</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">vaspout_candidates</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">candidate</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">candidate</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+                    <span class="n">_</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;results/electron_eigenvalues_kpoints_opt/eigenvalues&#39;</span><span class="p">]</span>
+                    <span class="n">_</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;results/locproj_opt/data&#39;</span><span class="p">]</span>
+                <span class="n">kpoints_opt_found</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">break</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">kpoints_opt_found</span><span class="p">:</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Detected KPOINTS_OPT band data in </span><span class="si">%s</span><span class="s2">. Converting </span><span class="si">%s</span><span class="s2">...&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">candidate</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bands_subgrp</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">convert_bands_input</span><span class="p">()</span></div>
 
 
 <span class="c1"># TODO: Implement misc_input</span>
 <span class="c1">#        self.convert_misc_input(bandwin_file=self.bandwin_file,struct_file=self.struct_file,outputs_file=self.outputs_file,</span>
 <span class="c1">#                                misc_subgrp=self.misc_subgrp,SO=self.SO,SP=self.SP,n_k=self.n_k)</span>
+
+
+<div class="viewcode-block" id="Converter.convert_bands_input">
+<a class="viewcode-back" href="../../../_autosummary/triqs_dftkit.vasp.converter.Converter.convert_bands_input.html#triqs_dftkit.vasp.converter.Converter.convert_bands_input">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">convert_bands_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cfg_filename</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reads KPOINTS_OPT band and projector data from vaspout.h5 and stores</span>
+<span class="sd">        it in the bands_subgrp in the hdf5 archive.</span>
+
+<span class="sd">        The PLO config is required so shell transforms, energy windows, and</span>
+<span class="sd">        orthonormalization are applied via the same PLOVasp path as for</span>
+<span class="sd">        convert_dft_input().</span>
+
+<span class="sd">        This routine requires that convert_dft_input() has been called first,</span>
+<span class="sd">        because correlated shell definitions are taken from dft_subgrp.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_decode_string</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_read_kpath_labels</span><span class="p">(</span><span class="n">vaspout_path</span><span class="p">,</span> <span class="n">n_k</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Read the high-symmetry k-path labels for a KPOINTS_OPT line-mode run</span>
+<span class="sd">            directly from vaspout.h5 (/input/kpoints_opt) and map them onto the</span>
+<span class="sd">            flattened band k-point index.</span>
+
+<span class="sd">            Returns (labels, idx) where labels is a list of label strings and idx</span>
+<span class="sd">            is a 0-based numpy int array giving, for each label, the position of</span>
+<span class="sd">            that high-symmetry point in the n_k band path. Consecutive duplicate</span>
+<span class="sd">            labels at segment boundaries (e.g. the shared endpoint of two adjacent</span>
+<span class="sd">            segments) are collapsed into a single tick. Returns (None, None) if no</span>
+<span class="sd">            line-mode label data is available.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">vaspout_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+                    <span class="n">kopt</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;input/kpoints_opt&#39;</span><span class="p">]</span>
+                    <span class="n">mode</span> <span class="o">=</span> <span class="n">_decode_string</span><span class="p">(</span><span class="n">kopt</span><span class="p">[</span><span class="s1">&#39;mode&#39;</span><span class="p">])</span>
+                    <span class="n">raw_labels</span> <span class="o">=</span> <span class="n">kopt</span><span class="p">[</span><span class="s1">&#39;labels_kpoints&#39;</span><span class="p">]</span>
+                    <span class="n">nkps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">kopt</span><span class="p">[</span><span class="s1">&#39;number_kpoints&#39;</span><span class="p">])</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="n">mode</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">&#39;l&#39;</span> <span class="ow">or</span> <span class="n">nkps</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+            <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">_decode_string</span><span class="p">(</span><span class="n">lbl</span><span class="p">)</span> <span class="k">for</span> <span class="n">lbl</span> <span class="ow">in</span> <span class="n">raw_labels</span><span class="p">]</span>
+            <span class="n">n_seg</span> <span class="o">=</span> <span class="n">n_k</span> <span class="o">//</span> <span class="n">nkps</span>
+            <span class="c1"># KPOINTS_OPT line mode stores two labels (start, end) per segment.</span>
+            <span class="k">if</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n_seg</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">):</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;convert_bands_input: KPOINTS_OPT label count (</span><span class="si">%i</span><span class="s2">) inconsistent with </span><span class="si">%i</span><span class="s2"> segments; skipping k-path labels.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">),</span> <span class="n">n_seg</span><span class="p">))</span>
+                <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+            <span class="n">merged_labels</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">merged_idx</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">lab</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">labels</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">lab</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">seg</span> <span class="o">=</span> <span class="n">i</span> <span class="o">//</span> <span class="mi">2</span>
+                <span class="n">idx</span> <span class="o">=</span> <span class="n">seg</span> <span class="o">*</span> <span class="n">nkps</span> <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">seg</span> <span class="o">*</span> <span class="n">nkps</span> <span class="o">+</span> <span class="n">nkps</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="c1"># Collapse the shared endpoint of two adjacent segments.</span>
+                <span class="k">if</span> <span class="n">merged_labels</span> <span class="ow">and</span> <span class="n">merged_labels</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">lab</span> <span class="ow">and</span> <span class="n">idx</span> <span class="o">-</span> <span class="n">merged_idx</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">merged_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lab</span><span class="p">)</span>
+                <span class="n">merged_idx</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">merged_labels</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+            <span class="k">return</span> <span class="n">merged_labels</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">merged_idx</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Processing VASP KPOINTS_OPT band/projector data...&quot;</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_to_complex</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span> <span class="ow">and</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">arr</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">arr</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">arr</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">complex</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_locproj_to_canonical</span><span class="p">(</span><span class="n">locproj_data</span><span class="p">,</span> <span class="n">locproj_format</span><span class="p">):</span>
+            <span class="n">format_raw</span> <span class="o">=</span> <span class="n">locproj_format</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">format_raw</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;[&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">format_raw</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;]&#39;</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;convert_bands_input: Unexpected locproj_opt format string &#39;</span><span class="si">%s</span><span class="s2">&#39;.&quot;</span> <span class="o">%</span> <span class="n">locproj_format</span><span class="p">)</span>
+
+            <span class="n">axis_labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">format_raw</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+            <span class="n">axis_to_index</span> <span class="o">=</span> <span class="p">{</span><span class="n">label</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">axis_labels</span><span class="p">)}</span>
+            <span class="n">required_axes</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;proj_index&#39;</span><span class="p">,</span> <span class="s1">&#39;spin_index&#39;</span><span class="p">,</span> <span class="s1">&#39;kpts_index&#39;</span><span class="p">,</span> <span class="s1">&#39;band_index&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">axis_to_index</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">!=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">required_axes</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;convert_bands_input: Unsupported locproj_opt axis labels &#39;</span><span class="si">%s</span><span class="s2">&#39;.&quot;</span> <span class="o">%</span> <span class="n">axis_labels</span><span class="p">)</span>
+
+            <span class="n">locproj_complex</span> <span class="o">=</span> <span class="n">_to_complex</span><span class="p">(</span><span class="n">locproj_data</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">locproj_complex</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">axis_labels</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;convert_bands_input: Unsupported locproj_opt data rank </span><span class="si">%i</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">locproj_complex</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+
+            <span class="n">perm</span> <span class="o">=</span> <span class="p">[</span><span class="n">axis_to_index</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">required_axes</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">locproj_complex</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">perm</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_find_cfg_path</span><span class="p">(</span><span class="n">user_cfg_filename</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">user_cfg_filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">user_cfg_filename</span>
+            <span class="n">cfg_candidates</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">basename</span> <span class="o">+</span> <span class="s1">&#39;.cfg&#39;</span><span class="p">,</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basename</span><span class="p">),</span> <span class="s1">&#39;plo.cfg&#39;</span><span class="p">)</span>
+            <span class="p">]</span>
+            <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">cfg_candidates</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">candidate</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">candidate</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_build_from_plovasp</span><span class="p">(</span><span class="n">cfg_path</span><span class="p">,</span> <span class="n">eigvals_raw</span><span class="p">,</span> <span class="n">fermiweights_raw</span><span class="p">,</span> <span class="n">kpoint_coords</span><span class="p">,</span> <span class="n">kpoint_weights</span><span class="p">,</span>
+                                <span class="n">locproj_raw</span><span class="p">,</span> <span class="n">proj_sites_raw</span><span class="p">,</span> <span class="n">proj_labels_raw</span><span class="p">,</span> <span class="n">nc_flag</span><span class="p">,</span> <span class="n">efermi</span><span class="p">):</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">.plovasp.inpconf</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConfigParameters</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">.plovasp.plotools</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_plo</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">.plovasp.vaspio</span><span class="w"> </span><span class="kn">import</span> <span class="n">label_to_l_m</span>
+
+            <span class="k">class</span><span class="w"> </span><span class="nc">_BandsElStruct</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+            <span class="n">eigvals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">eigvals_raw</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">eigvals</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">eigvals</span> <span class="o">=</span> <span class="n">eigvals</span><span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
+            <span class="n">ferw</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">fermiweights_raw</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ferw</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">ferw</span> <span class="o">=</span> <span class="n">ferw</span><span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
+
+            <span class="n">n_spin</span><span class="p">,</span> <span class="n">n_k_loc</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">eigvals</span><span class="o">.</span><span class="n">shape</span>
+
+            <span class="n">proj_params</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">ip</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">proj_labels_raw</span><span class="p">)):</span>
+                <span class="n">l</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">label_to_l_m</span><span class="p">(</span><span class="n">proj_labels_raw</span><span class="p">[</span><span class="n">ip</span><span class="p">],</span> <span class="n">ip</span><span class="p">,</span> <span class="n">nc_flag</span><span class="p">)</span>
+                <span class="n">proj_params</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;isite&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">proj_sites_raw</span><span class="p">[</span><span class="n">ip</span><span class="p">]),</span> <span class="s1">&#39;l&#39;</span><span class="p">:</span> <span class="n">l</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span> <span class="n">m</span><span class="p">})</span>
+
+            <span class="n">natom</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">proj_sites_raw</span><span class="p">)),</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">qcoords</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">natom</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">ip</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">proj_sites_raw</span><span class="p">)):</span>
+                <span class="n">iat</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">proj_sites_raw</span><span class="p">[</span><span class="n">ip</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">iat</span> <span class="o">&lt;</span> <span class="n">natom</span><span class="p">:</span>
+                    <span class="n">qcoords</span><span class="p">[</span><span class="n">iat</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+            <span class="n">kweights</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">kpoint_weights</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">kweights</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">n_k_loc</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;convert_bands_input: k-point weights have incompatible shape </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">kweights</span><span class="o">.</span><span class="n">shape</span><span class="p">,))</span>
+            <span class="n">wsum</span> <span class="o">=</span> <span class="n">kweights</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">wsum</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">kweights</span> <span class="o">=</span> <span class="n">kweights</span> <span class="o">/</span> <span class="n">wsum</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">kweights</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">n_k_loc</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">n_k_loc</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+            <span class="n">pars</span> <span class="o">=</span> <span class="n">ConfigParameters</span><span class="p">(</span><span class="n">cfg_path</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">pars</span><span class="o">.</span><span class="n">parse_input</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s1">&#39;dosmesh&#39;</span> <span class="ow">in</span> <span class="n">pars</span><span class="o">.</span><span class="n">general</span><span class="p">:</span>
+                <span class="k">del</span> <span class="n">pars</span><span class="o">.</span><span class="n">general</span><span class="p">[</span><span class="s1">&#39;dosmesh&#39;</span><span class="p">]</span>
+            <span class="n">efermi</span> <span class="o">=</span> <span class="n">pars</span><span class="o">.</span><span class="n">general</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;efermi&#39;</span><span class="p">,</span> <span class="n">efermi</span><span class="p">)</span>
+
+            <span class="n">el_struct</span> <span class="o">=</span> <span class="n">_BandsElStruct</span><span class="p">()</span>
+            <span class="n">el_struct</span><span class="o">.</span><span class="n">natom</span> <span class="o">=</span> <span class="n">natom</span>
+            <span class="n">el_struct</span><span class="o">.</span><span class="n">type_of_ion</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">natom</span><span class="p">)]</span>
+            <span class="n">el_struct</span><span class="o">.</span><span class="n">kmesh</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;nktot&#39;</span><span class="p">:</span> <span class="n">n_k_loc</span><span class="p">,</span> <span class="s1">&#39;nkibz&#39;</span><span class="p">:</span> <span class="n">n_k_loc</span><span class="p">,</span> <span class="s1">&#39;kpoints&#39;</span><span class="p">:</span> <span class="n">kpoint_coords</span><span class="p">,</span> <span class="s1">&#39;kweights&#39;</span><span class="p">:</span> <span class="n">kweights</span><span class="p">}</span>
+            <span class="n">el_struct</span><span class="o">.</span><span class="n">nc_flag</span> <span class="o">=</span> <span class="n">nc_flag</span>
+            <span class="n">el_struct</span><span class="o">.</span><span class="n">efermi</span> <span class="o">=</span> <span class="n">efermi</span>
+            <span class="c1"># generate_plo expects eigvals with shape [nk, nb, ns]</span>
+            <span class="n">el_struct</span><span class="o">.</span><span class="n">eigvals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">eigvals</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+            <span class="c1"># ferw is used as [spin, k, band]</span>
+            <span class="n">el_struct</span><span class="o">.</span><span class="n">ferw</span> <span class="o">=</span> <span class="n">ferw</span>
+            <span class="n">el_struct</span><span class="o">.</span><span class="n">proj_raw</span> <span class="o">=</span> <span class="n">locproj_raw</span>
+            <span class="n">el_struct</span><span class="o">.</span><span class="n">proj_params</span> <span class="o">=</span> <span class="n">proj_params</span>
+            <span class="n">el_struct</span><span class="o">.</span><span class="n">structure</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;qcoords&#39;</span><span class="p">:</span> <span class="n">qcoords</span><span class="p">}</span>
+
+            <span class="n">pshells</span><span class="p">,</span> <span class="n">pgroups</span> <span class="o">=</span> <span class="n">generate_plo</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="n">el_struct</span><span class="p">,</span> <span class="n">print_projector_diagnostics</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pgroups</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;convert_bands_input: Exactly one PLO group is supported, found </span><span class="si">%i</span><span class="s2"> in </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pgroups</span><span class="p">),</span> <span class="n">cfg_path</span><span class="p">))</span>
+
+            <span class="n">pgroup</span> <span class="o">=</span> <span class="n">pgroups</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">ib_win</span> <span class="o">=</span> <span class="n">pgroup</span><span class="o">.</span><span class="n">ib_win</span>
+            <span class="n">nspin_ib</span> <span class="o">=</span> <span class="n">ib_win</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="n">n_orbitals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_k_loc</span><span class="p">,</span> <span class="n">n_spin_blocs</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">isp</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_spin_blocs</span><span class="p">):</span>
+                <span class="n">is_b</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">isp</span><span class="p">,</span> <span class="n">nspin_ib</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">ik</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_k_loc</span><span class="p">):</span>
+                    <span class="n">ib1</span><span class="p">,</span> <span class="n">ib2</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ib_win</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span> <span class="n">is_b</span><span class="p">,</span> <span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">ib_win</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span> <span class="n">is_b</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+                    <span class="n">n_orbitals</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span> <span class="n">isp</span><span class="p">]</span> <span class="o">=</span> <span class="n">ib2</span> <span class="o">-</span> <span class="n">ib1</span> <span class="o">+</span> <span class="mi">1</span>
+
+            <span class="n">nb_max</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">n_orbitals</span><span class="p">))</span>
+            <span class="n">hopping</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">n_k_loc</span><span class="p">,</span> <span class="n">n_spin_blocs</span><span class="p">,</span> <span class="n">nb_max</span><span class="p">,</span> <span class="n">nb_max</span><span class="p">],</span> <span class="nb">complex</span><span class="p">)</span>
+            <span class="n">eigvals_shifted</span> <span class="o">=</span> <span class="n">eigvals</span> <span class="o">-</span> <span class="n">efermi</span>
+            <span class="k">for</span> <span class="n">isp</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_spin_blocs</span><span class="p">):</span>
+                <span class="n">is_b</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">isp</span><span class="p">,</span> <span class="n">nspin_ib</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">is_e</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">isp</span><span class="p">,</span> <span class="n">eigvals_shifted</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">ik</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_k_loc</span><span class="p">):</span>
+                    <span class="n">ib1</span><span class="p">,</span> <span class="n">ib2</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ib_win</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span> <span class="n">is_b</span><span class="p">,</span> <span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">ib_win</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span> <span class="n">is_b</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+                    <span class="n">nb</span> <span class="o">=</span> <span class="n">ib2</span> <span class="o">-</span> <span class="n">ib1</span> <span class="o">+</span> <span class="mi">1</span>
+                    <span class="k">for</span> <span class="n">ib</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb</span><span class="p">):</span>
+                        <span class="n">hopping</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span> <span class="n">isp</span><span class="p">,</span> <span class="n">ib</span><span class="p">,</span> <span class="n">ib</span><span class="p">]</span> <span class="o">=</span> <span class="n">eigvals_shifted</span><span class="p">[</span><span class="n">is_e</span><span class="p">,</span> <span class="n">ik</span><span class="p">,</span> <span class="n">ib1</span> <span class="o">+</span> <span class="n">ib</span><span class="p">]</span>
+
+            <span class="n">max_corr_dim</span> <span class="o">=</span> <span class="nb">max</span><span class="p">([</span><span class="n">crsh</span><span class="p">[</span><span class="s1">&#39;dim&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">crsh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">corr_shells</span><span class="p">])</span>
+            <span class="n">proj_mat</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">n_k_loc</span><span class="p">,</span> <span class="n">n_spin_blocs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_corr_shells</span><span class="p">,</span> <span class="n">max_corr_dim</span><span class="p">,</span> <span class="n">nb_max</span><span class="p">],</span> <span class="nb">complex</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">icrsh</span><span class="p">,</span> <span class="n">crsh</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">corr_shells</span><span class="p">):</span>
+                <span class="n">shell_atom</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">crsh</span><span class="p">[</span><span class="s1">&#39;atom&#39;</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="n">shell_l</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">crsh</span><span class="p">[</span><span class="s1">&#39;l&#39;</span><span class="p">])</span>
+                <span class="n">shell_dim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">crsh</span><span class="p">[</span><span class="s1">&#39;dim&#39;</span><span class="p">])</span>
+
+                <span class="n">matches</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">ish</span><span class="p">,</span> <span class="n">pshell</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pshells</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">pshell</span><span class="o">.</span><span class="n">corr</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">pshell</span><span class="o">.</span><span class="n">lorb</span><span class="p">)</span> <span class="o">!=</span> <span class="n">shell_l</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="k">if</span> <span class="n">shell_atom</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">pshell</span><span class="o">.</span><span class="n">ion_list</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">io</span> <span class="o">=</span> <span class="n">pshell</span><span class="o">.</span><span class="n">ion_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">shell_atom</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">pshell</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span> <span class="o">!=</span> <span class="n">shell_dim</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">matches</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">ish</span><span class="p">,</span> <span class="n">io</span><span class="p">))</span>
+
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;convert_bands_input: Could not uniquely match correlated shell </span><span class="si">%i</span><span class="s2"> (atom=</span><span class="si">%i</span><span class="s2">, l=</span><span class="si">%i</span><span class="s2">, dim=</span><span class="si">%i</span><span class="s2">) to transformed PLO shells from </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span>
+                                  <span class="p">(</span><span class="n">icrsh</span><span class="p">,</span> <span class="n">shell_atom</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">shell_l</span><span class="p">,</span> <span class="n">shell_dim</span><span class="p">,</span> <span class="n">cfg_path</span><span class="p">))</span>
+
+                <span class="n">ish</span><span class="p">,</span> <span class="n">io</span> <span class="o">=</span> <span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">pshell</span> <span class="o">=</span> <span class="n">pshells</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span>
+                <span class="n">ns_proj</span> <span class="o">=</span> <span class="n">pshell</span><span class="o">.</span><span class="n">proj_win</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">isp</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_spin_blocs</span><span class="p">):</span>
+                    <span class="n">is_p</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">isp</span><span class="p">,</span> <span class="n">ns_proj</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="n">is_b</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">isp</span><span class="p">,</span> <span class="n">nspin_ib</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">ik</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_k_loc</span><span class="p">):</span>
+                        <span class="n">ib1</span><span class="p">,</span> <span class="n">ib2</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ib_win</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span> <span class="n">is_b</span><span class="p">,</span> <span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">ib_win</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span> <span class="n">is_b</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+                        <span class="n">nb</span> <span class="o">=</span> <span class="n">ib2</span> <span class="o">-</span> <span class="n">ib1</span> <span class="o">+</span> <span class="mi">1</span>
+                        <span class="n">proj_mat</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span> <span class="n">isp</span><span class="p">,</span> <span class="n">icrsh</span><span class="p">,</span> <span class="p">:</span><span class="n">shell_dim</span><span class="p">,</span> <span class="p">:</span><span class="n">nb</span><span class="p">]</span> <span class="o">=</span> <span class="n">pshell</span><span class="o">.</span><span class="n">proj_win</span><span class="p">[</span><span class="n">io</span><span class="p">,</span> <span class="n">is_p</span><span class="p">,</span> <span class="n">ik</span><span class="p">,</span> <span class="p">:</span><span class="n">shell_dim</span><span class="p">,</span> <span class="p">:</span><span class="n">nb</span><span class="p">]</span>
+
+            <span class="k">return</span> <span class="n">n_orbitals</span><span class="p">,</span> <span class="n">proj_mat</span><span class="p">,</span> <span class="n">hopping</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">()):</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Read shell information from converter output</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dft_subgrp</span> <span class="ow">in</span> <span class="n">ar</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;convert_bands_input: No </span><span class="si">%s</span><span class="s2"> subgroup in hdf file found! Call convert_dft_input first.&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">dft_subgrp</span><span class="p">)</span>
+                <span class="n">things_to_read</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;SP&#39;</span><span class="p">,</span> <span class="s1">&#39;SO&#39;</span><span class="p">,</span> <span class="s1">&#39;n_corr_shells&#39;</span><span class="p">,</span> <span class="s1">&#39;corr_shells&#39;</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">things_to_read</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">it</span><span class="p">):</span>
+                        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">it</span><span class="p">,</span> <span class="n">ar</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dft_subgrp</span><span class="p">][</span><span class="n">it</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;convert_bands_input: Needed data not found in hdf file. Call convert_dft_input first.&quot;</span><span class="p">)</span>
+
+        <span class="n">n_spin_blocs</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SO</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SP</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="c1"># Read KPOINTS_OPT data directly from vaspout.h5</span>
+        <span class="n">vaspout_candidates</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basename</span><span class="p">,</span> <span class="s1">&#39;vaspout.h5&#39;</span><span class="p">),</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basename</span><span class="p">),</span> <span class="s1">&#39;vaspout.h5&#39;</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="n">vaspout_h5</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">vaspout_candidates</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">candidate</span><span class="p">):</span>
+                <span class="n">vaspout_h5</span> <span class="o">=</span> <span class="n">candidate</span>
+                <span class="k">break</span>
+        <span class="k">if</span> <span class="n">vaspout_h5</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;convert_bands_input: Could not find vaspout.h5. Tried: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">vaspout_candidates</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="n">vaspout_h5</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+                <span class="n">eigvals</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ar</span><span class="p">[</span><span class="s1">&#39;results/electron_eigenvalues_kpoints_opt/eigenvalues&#39;</span><span class="p">])</span>
+                <span class="n">fermiweights</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ar</span><span class="p">[</span><span class="s1">&#39;results/electron_eigenvalues_kpoints_opt/fermiweights&#39;</span><span class="p">])</span>
+                <span class="n">kpoint_coords</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ar</span><span class="p">[</span><span class="s1">&#39;results/electron_eigenvalues_kpoints_opt/kpoint_coords&#39;</span><span class="p">])</span>
+                <span class="n">kpoint_weights</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ar</span><span class="p">[</span><span class="s1">&#39;results/electron_eigenvalues_kpoints_opt/kpoints_symmetry_weight&#39;</span><span class="p">])</span>
+                <span class="n">efermi</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ar</span><span class="p">[</span><span class="s1">&#39;results/electron_dos/efermi&#39;</span><span class="p">])</span>
+
+                <span class="n">locproj_data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ar</span><span class="p">[</span><span class="s1">&#39;results/locproj_opt/data&#39;</span><span class="p">])</span>
+                <span class="n">locproj_format</span> <span class="o">=</span> <span class="n">_decode_string</span><span class="p">(</span><span class="n">ar</span><span class="p">[</span><span class="s1">&#39;results/locproj_opt/format&#39;</span><span class="p">])</span>
+                <span class="n">lnoncollinear</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">ar</span><span class="p">[</span><span class="s1">&#39;results/locproj_opt/parameters/lnoncollinear&#39;</span><span class="p">]))</span>
+                <span class="n">proj_sites</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ar</span><span class="p">[</span><span class="s1">&#39;results/locproj_opt/parameters/site&#39;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+                <span class="n">proj_labels_raw</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ar</span><span class="p">[</span><span class="s1">&#39;results/locproj_opt/parameters/ang_type&#39;</span><span class="p">])</span>
+                <span class="n">proj_labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">_decode_string</span><span class="p">(</span><span class="n">lbl</span><span class="p">)</span> <span class="k">for</span> <span class="n">lbl</span> <span class="ow">in</span> <span class="n">proj_labels_raw</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;convert_bands_input: Missing KPOINTS_OPT dataset in </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">vaspout_h5</span><span class="p">,</span> <span class="n">err</span><span class="p">))</span>
+
+        <span class="n">locproj_canonical</span> <span class="o">=</span> <span class="n">_locproj_to_canonical</span><span class="p">(</span><span class="n">locproj_data</span><span class="p">,</span> <span class="n">locproj_format</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">fermiweights</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">eigvals</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;convert_bands_input: Fermi weights shape </span><span class="si">%s</span><span class="s2"> does not match eigenvalues shape </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">fermiweights</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">eigvals</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+        <span class="n">cfg_path</span> <span class="o">=</span> <span class="n">_find_cfg_path</span><span class="p">(</span><span class="n">cfg_filename</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cfg_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;convert_bands_input: Could not find the PLO config needed to convert KPOINTS_OPT consistently. Provide cfg_filename or place plo.cfg next to </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">vaspout_h5</span><span class="p">)</span>
+
+        <span class="n">n_orbitals</span><span class="p">,</span> <span class="n">proj_mat</span><span class="p">,</span> <span class="n">hopping</span> <span class="o">=</span> <span class="n">_build_from_plovasp</span><span class="p">(</span>
+            <span class="n">cfg_path</span><span class="p">,</span>
+            <span class="n">eigvals</span><span class="p">,</span>
+            <span class="n">fermiweights</span><span class="p">,</span>
+            <span class="n">kpoint_coords</span><span class="p">,</span>
+            <span class="n">kpoint_weights</span><span class="p">,</span>
+            <span class="n">locproj_canonical</span><span class="p">,</span>
+            <span class="n">proj_sites</span><span class="p">,</span>
+            <span class="n">proj_labels</span><span class="p">,</span>
+            <span class="n">lnoncollinear</span><span class="p">,</span>
+            <span class="n">efermi</span>
+        <span class="p">)</span>
+        <span class="n">n_k</span> <span class="o">=</span> <span class="n">kpoint_coords</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">n_parproj</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">proj_mat_all</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">kpts_labels</span><span class="p">,</span> <span class="n">kpts_labels_idx</span> <span class="o">=</span> <span class="n">_read_kpath_labels</span><span class="p">(</span><span class="n">vaspout_h5</span><span class="p">,</span> <span class="n">n_k</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf_file</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bands_subgrp</span> <span class="ow">in</span> <span class="n">ar</span><span class="p">):</span>
+                <span class="n">ar</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bands_subgrp</span><span class="p">)</span>
+            <span class="n">things_to_save</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;n_k&#39;</span><span class="p">,</span> <span class="s1">&#39;n_orbitals&#39;</span><span class="p">,</span> <span class="s1">&#39;proj_mat&#39;</span><span class="p">,</span> <span class="s1">&#39;hopping&#39;</span><span class="p">,</span> <span class="s1">&#39;n_parproj&#39;</span><span class="p">,</span> <span class="s1">&#39;proj_mat_all&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">kpts_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">things_to_save</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;kpts_labels&#39;</span><span class="p">,</span> <span class="s1">&#39;kpts_labels_idx&#39;</span><span class="p">]</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;  Stored </span><span class="si">%i</span><span class="s2"> high-symmetry k-path labels: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">kpts_labels</span><span class="p">),</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">kpts_labels</span><span class="p">)))</span>
+            <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">things_to_save</span><span class="p">:</span>
+                <span class="n">ar</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bands_subgrp</span><span class="p">][</span><span class="n">it</span><span class="p">]</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()[</span><span class="n">it</span><span class="p">]</span></div>
+
 
 
 <div class="viewcode-block" id="Converter.convert_misc_input">
