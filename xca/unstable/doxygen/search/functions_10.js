@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['update_5fhybridization_0',['update_hybridization',['../classtriqs__xca_1_1dense_1_1DenseFSet.html#a44ec1de4746b39daeb75d55c431964bb',1,'triqs_xca::dense::DenseFSet::update_hybridization()'],['../classtriqs__xca_1_1atom__diag_1_1DenseFSet.html#a44ec1de4746b39daeb75d55c431964bb',1,'triqs_xca::atom_diag::DenseFSet::update_hybridization()'],['../classtriqs__xca_1_1dynint_1_1DenseFSet.html#a44ec1de4746b39daeb75d55c431964bb',1,'triqs_xca::dynint::DenseFSet::update_hybridization()']]],
-  ['update_5finplace_1',['update_inplace',['../classhyb__F.html#af45c771efaf521925190c2033509c287',1,'hyb_F']]]
+  ['_7ebackbone_0',['~Backbone',['../namespacetriqs__xca_1_1backbone.html#a895dfe3f17bfa77a43a2154e303a80c0',1,'triqs_xca::backbone']]],
+  ['_7edensediagramevaluator_1',['~DenseDiagramEvaluator',['../classtriqs__xca_1_1dense_1_1DenseDiagramEvaluator.html#a7dbb3b1b354311b810178be5464fd5c3',1,'triqs_xca::dense::DenseDiagramEvaluator']]],
+  ['_7ediagramevaluator_2',['~DiagramEvaluator',['../classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#aee8bafd5172fcffd090c7937f9298a1e',1,'triqs_xca::block_sparse::DiagramEvaluator']]]
 ];

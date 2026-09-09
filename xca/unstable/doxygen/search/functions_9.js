@@ -1,8 +1,9 @@
 var searchData=
 [
-  ['multiplicate_5fonto_0',['multiplicate_onto',['../strong__cpl_8cpp.html#a92bceeeba3af17cda4674b96fc8ef5c2',1,'multiplicate_onto(nda::array_const_view&lt; dcomplex, 3 &gt; Ft, nda::array_view&lt; dcomplex, 3 &gt; Gt):&#160;strong_cpl.cpp'],['../strong__cpl_8hpp.html#a92bceeeba3af17cda4674b96fc8ef5c2',1,'multiplicate_onto(nda::array_const_view&lt; dcomplex, 3 &gt; Ft, nda::array_view&lt; dcomplex, 3 &gt; Gt):&#160;strong_cpl.cpp']]],
-  ['multiplicate_5fonto_5fleft_1',['multiplicate_onto_left',['../strong__cpl_8cpp.html#a0e33166ffbef540a7de9e56089f8d3e9',1,'multiplicate_onto_left(nda::array_view&lt; dcomplex, 3 &gt; Ft, nda::array_const_view&lt; dcomplex, 3 &gt; Gt):&#160;strong_cpl.cpp'],['../strong__cpl_8hpp.html#a0e33166ffbef540a7de9e56089f8d3e9',1,'multiplicate_onto_left(nda::array_view&lt; dcomplex, 3 &gt; Ft, nda::array_const_view&lt; dcomplex, 3 &gt; Gt):&#160;strong_cpl.cpp']]],
-  ['multiply_5fkernel_5fon_5fvertex_2',['multiply_kernel_on_vertex',['../classtriqs__xca_1_1hyb_1_1Hybridization.html#a549ffb77938ef1e7097a8670dd7f26c2',1,'triqs_xca::hyb::Hybridization']]],
-  ['multiply_5fkernels_5fon_5fedge_3',['multiply_kernels_on_edge',['../classtriqs__xca_1_1hyb_1_1Hybridization.html#ae60eb23e9384495a658a2b50d4c01e44',1,'triqs_xca::hyb::Hybridization']]],
-  ['multiply_5fkernels_5fprefactor_4',['multiply_kernels_prefactor',['../classtriqs__xca_1_1hyb_1_1Hybridization.html#a480cb527ab1e973f92c2a74595a4088a',1,'triqs_xca::hyb::Hybridization']]]
+  ['nca_5fbs_0',['NCA_bs',['../namespacetriqs__xca_1_1block__sparse.html#a3856467562ded2390d849ac49cdca5c9',1,'triqs_xca::block_sparse::NCA_bs(nda::array_const_view&lt; dcomplex, 3 &gt; hyb, nda::array_const_view&lt; dcomplex, 3 &gt; hyb_refl, const BlockDiagOpFun &amp;Gt, const std::vector&lt; BlockOp &gt; &amp;Fs)'],['../namespacetriqs__xca_1_1block__sparse.html#a3add4037d8987ba492578e008e08fc9e',1,'triqs_xca::block_sparse::NCA_bs(nda::array_const_view&lt; dcomplex, 3 &gt; hyb, nda::array_const_view&lt; dcomplex, 3 &gt; hyb_refl, BlockDiagOpFun const &amp;Gt, const BlockOpSymQuartet &amp;Fq)']]],
+  ['nca_5fdense_1',['NCA_dense',['../namespacetriqs__xca_1_1block__sparse.html#a8f4d466e10eded087fd26c2a15ae7e35',1,'triqs_xca::block_sparse']]],
+  ['nca_5fgf_5fbs_2',['NCA_gf_bs',['../namespacetriqs__xca_1_1block__sparse.html#a27a192ae3f384f734141448615a73dc4',1,'triqs_xca::block_sparse']]],
+  ['nca_5fgf_5fdense_3',['NCA_gf_dense',['../namespacetriqs__xca_1_1block__sparse.html#ae6edd27cee2c857369e3d1ae320dcc44',1,'triqs_xca::block_sparse']]],
+  ['nonint_5fgf_5fbdof_4',['nonint_gf_BDOF',['../namespacetriqs__xca_1_1block__sparse.html#aafdb474dbc7541b8abf328cb6717e192',1,'triqs_xca::block_sparse']]],
+  ['number_5fof_5fdiagrams_5',['number_of_diagrams',['../classfastdiagram.html#a9ded7bef5516bf6ec97c79d710fc3313',1,'fastdiagram']]]
 ];

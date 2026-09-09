@@ -8,8 +8,8 @@ var namespacetriqs__xca_1_1block__sparse =
     [ "BlockOpSymSet", "classtriqs__xca_1_1block__sparse_1_1BlockOpSymSet.html", "classtriqs__xca_1_1block__sparse_1_1BlockOpSymSet" ],
     [ "BlockOpSymSetBar", "classtriqs__xca_1_1block__sparse_1_1BlockOpSymSetBar.html", "classtriqs__xca_1_1block__sparse_1_1BlockOpSymSetBar" ],
     [ "DiagramEvaluator", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator" ],
+    [ "atom_prop_from_eigensystem", "namespacetriqs__xca_1_1block__sparse.html#ad62f9c1f9da56afe6801d9c3f2e1c913", null ],
     [ "BDOF_to_block_gf", "namespacetriqs__xca_1_1block__sparse.html#a44fa1a272e01367a3083dca64b554c4d", null ],
-    [ "BOFtoBDOF", "namespacetriqs__xca_1_1block__sparse.html#af2b376b15e1a1c3be47c69c6399ec8c6", null ],
     [ "convolve_ppsc", "namespacetriqs__xca_1_1block__sparse.html#a0ce7c2ba4f17d4298dc3c8c5ee4a08ed", null ],
     [ "dagger_bs", "namespacetriqs__xca_1_1block__sparse.html#a8fe9ed10007d37ff33291dfb43722242", null ],
     [ "eval_eq", "namespacetriqs__xca_1_1block__sparse.html#a3ee29e40ac549c00bc2d65fc13feeed5", null ],
@@ -17,7 +17,6 @@ var namespacetriqs__xca_1_1block__sparse =
     [ "expectation_value", "namespacetriqs__xca_1_1block__sparse.html#a09c6ec57731dc7eb34af11e5260996fc", null ],
     [ "expectation_value", "namespacetriqs__xca_1_1block__sparse.html#a460d144419c8368caace251f28750ac6", null ],
     [ "get_operators", "namespacetriqs__xca_1_1block__sparse.html#ac75d137b907f6658858cc4faf3f6a3cd", null ],
-    [ "K_mat", "namespacetriqs__xca_1_1block__sparse.html#a45193fcd896d0036c12c76527f87c8c1", null ],
     [ "NCA_bs", "namespacetriqs__xca_1_1block__sparse.html#a3add4037d8987ba492578e008e08fc9e", null ],
     [ "NCA_bs", "namespacetriqs__xca_1_1block__sparse.html#a3856467562ded2390d849ac49cdca5c9", null ],
     [ "NCA_dense", "namespacetriqs__xca_1_1block__sparse.html#a8f4d466e10eded087fd26c2a15ae7e35", null ],
@@ -51,6 +50,7 @@ var namespacetriqs__xca_1_1block__sparse =
     [ "operator<<", "namespacetriqs__xca_1_1block__sparse.html#a3bb54082fa70f2b424cbfca9ab993b01", null ],
     [ "operator<<", "namespacetriqs__xca_1_1block__sparse.html#ad3bf9168135e6a477e195ad6f862e0d3", null ],
     [ "setup_ops_from_triqs_2nd_quant_ops", "namespacetriqs__xca_1_1block__sparse.html#ad15b3180f82d85999f22d0eebb596914", null ],
-    [ "third_order_dense_partial", "namespacetriqs__xca_1_1block__sparse.html#a1cc4472b093f61c40a647cce776a503b", null ],
+    [ "third_order_gf_tpz", "namespacetriqs__xca_1_1block__sparse.html#a401ab2355b72d1f9b7aa7eb5683b4326", null ],
+    [ "third_order_tpz", "namespacetriqs__xca_1_1block__sparse.html#a6812ece2148e30bba4929c5069456bd5", null ],
     [ "trace", "namespacetriqs__xca_1_1block__sparse.html#af79b72ae40cd405110765f73ed506361", null ]
 ];

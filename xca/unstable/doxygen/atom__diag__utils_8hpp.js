@@ -19,5 +19,8 @@ var atom__diag__utils_8hpp =
     [ "triqs_xca::atom_diag::get_operators_dense", "namespacetriqs__xca_1_1atom__diag.html#ae1f6ba8b632ec60b0ce53cb3d6f01916", null ],
     [ "triqs_xca::atom_diag::get_operators_dense", "namespacetriqs__xca_1_1atom__diag.html#aaa88d6f79f2188fdcc4e0248b0c3c79d", null ],
     [ "triqs_xca::atom_diag::get_tensor_in_atom_diag_subspace", "namespacetriqs__xca_1_1atom__diag.html#a9ad072bd7d03b7815f1b9a16b4b316d9", null ],
-    [ "triqs_xca::atom_diag::H_to_atom_prop_blocks", "namespacetriqs__xca_1_1atom__diag.html#a256820e69ecff3fd10268965ee31a922", null ]
+    [ "triqs_xca::atom_diag::get_tensor_in_full_hilbert_space", "namespacetriqs__xca_1_1atom__diag.html#a41775287c08cfc6229fec03bbee7326b", null ],
+    [ "triqs_xca::atom_diag::get_tensor_in_full_hilbert_space", "namespacetriqs__xca_1_1atom__diag.html#a2b1cf055f6d004061e89a500d58cfeea", null ],
+    [ "triqs_xca::atom_diag::get_tensor_in_full_hilbert_space", "namespacetriqs__xca_1_1atom__diag.html#a9f7752664adf22c5f99acb378704d03c", null ],
+    [ "triqs_xca::atom_diag::get_tensor_in_full_hilbert_space", "namespacetriqs__xca_1_1atom__diag.html#ae6f1ef3ad76e9840ccc8ebbaacbce9fb", null ]
 ];

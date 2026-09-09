@@ -4,5 +4,6 @@ var searchData=
   ['add_5fblock_1',['add_block',['../classtriqs__xca_1_1block__sparse_1_1BlockDiagOpFun.html#a797d2fae4385a4eff79d18aa98a865a0',1,'triqs_xca::block_sparse::BlockDiagOpFun::add_block()'],['../classtriqs__xca_1_1block__sparse_1_1BlockOpSymSetBar.html#a10ada0fb7280ee50ce4c581431a5e9f9',1,'triqs_xca::block_sparse::BlockOpSymSetBar::add_block()'],['../classtriqs__xca_1_1atom__diag_1_1BlockDiagOpFun.html#a797d2fae4385a4eff79d18aa98a865a0',1,'triqs_xca::atom_diag::BlockDiagOpFun::add_block()']]],
   ['api_20documentation_2',['API Documentation',['../documentation.html',1,'']]],
   ['atom_5fdiag_5futils_2ecpp_3',['atom_diag_utils.cpp',['../atom__diag__utils_8cpp.html',1,'']]],
-  ['atom_5fdiag_5futils_2ehpp_4',['atom_diag_utils.hpp',['../atom__diag__utils_8hpp.html',1,'']]]
+  ['atom_5fdiag_5futils_2ehpp_4',['atom_diag_utils.hpp',['../atom__diag__utils_8hpp.html',1,'']]],
+  ['atom_5fprop_5ffrom_5feigensystem_5',['atom_prop_from_eigensystem',['../namespacetriqs__xca_1_1block__sparse.html#ad62f9c1f9da56afe6801d9c3f2e1c913',1,'triqs_xca::block_sparse']]]
 ];

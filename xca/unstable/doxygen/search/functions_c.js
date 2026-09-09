@@ -1,9 +1,10 @@
 var searchData=
 [
-  ['partition_5ffunction_0',['partition_function',['../classfastdiagram.html#abd1ce2430f31a686cd85bffdc2f749a8',1,'fastdiagram']]],
-  ['permutation_5fparity_1',['permutation_parity',['../namespacetriqs__xca_1_1topology.html#aa105d3e9f260817c41c87da505291453',1,'triqs_xca::topology']]],
-  ['pown_2',['pown',['../namespacetriqs__xca_1_1utils.html#a97c215a5c9bfa915bac665a37187f5da',1,'triqs_xca::utils']]],
-  ['print_5fself_5fenergy_5fbackbone_3',['print_self_energy_backbone',['../classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a8c31992b2b4b3c2ef02be464a74f0393',1,'triqs_xca::block_sparse::DiagramEvaluator']]],
-  ['print_5fsingle_5fptcle_5fgf_5fbackbone_4',['print_single_ptcle_gf_backbone',['../classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a72fd676166759d838db90ff5f28d87e4',1,'triqs_xca::block_sparse::DiagramEvaluator']]],
-  ['print_5fslice_5',['print_slice',['../classtriqs__xca_1_1block__sparse_1_1BlockOp3D.html#a2c25baac2d0cb1e7df69c1699ff1e6b7',1,'triqs_xca::block_sparse::BlockOp3D']]]
+  ['reflect_0',['reflect',['../classtriqs__xca_1_1block__sparse_1_1BlockDiagOpFun.html#a9cc49cdf4ad4f2dceb567bef0d93c84d',1,'triqs_xca::block_sparse::BlockDiagOpFun::reflect()'],['../classtriqs__xca_1_1atom__diag_1_1BlockDiagOpFun.html#a9cc49cdf4ad4f2dceb567bef0d93c84d',1,'triqs_xca::atom_diag::BlockDiagOpFun::reflect()']]],
+  ['reset_1',['reset',['../classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#ae70fddfdaa0cd162580facfd1fb63864',1,'triqs_xca::block_sparse::DiagramEvaluator::reset()'],['../classtriqs__xca_1_1dense_1_1DenseDiagramEvaluator.html#ac347f0552740699654a8cf56cdd7e6e4',1,'triqs_xca::dense::DenseDiagramEvaluator::reset()']]],
+  ['reset_5fall_5finds_2',['reset_all_inds',['../namespacetriqs__xca_1_1backbone.html#aa13907653ff845371e54988cb9f05822',1,'triqs_xca::backbone']]],
+  ['reset_5fdirections_3',['reset_directions',['../namespacetriqs__xca_1_1backbone.html#ac0b59ca561f7e8dee347d1bc0dc9a0d0',1,'triqs_xca::backbone']]],
+  ['reset_5forb_5finds_4',['reset_orb_inds',['../namespacetriqs__xca_1_1backbone.html#a4d249de90257cdad185a7a4ed7f0ac6c',1,'triqs_xca::backbone']]],
+  ['reset_5fpole_5finds_5',['reset_pole_inds',['../namespacetriqs__xca_1_1backbone.html#aa124c991ace3f8d9ce6c9e12f057cd79',1,'triqs_xca::backbone']]],
+  ['reverse_5fhyb_5fline_5fzero_6',['reverse_hyb_line_zero',['../namespacetriqs__xca_1_1backbone.html#aba639b14c240cb893edb7b242f8c616c',1,'triqs_xca::backbone']]]
 ];

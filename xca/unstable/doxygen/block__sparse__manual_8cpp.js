@@ -16,5 +16,5 @@ var block__sparse__manual_8cpp =
     [ "triqs_xca::block_sparse::OCA_dense_middle_in_place", "namespacetriqs__xca_1_1block__sparse.html#a2d5cb4e76e7e7801f32da0daca6ef462", null ],
     [ "triqs_xca::block_sparse::OCA_dense_right_in_place", "namespacetriqs__xca_1_1block__sparse.html#abe6ba44abf239b9b7e36e6b48bd5058c", null ],
     [ "triqs_xca::block_sparse::OCA_tpz", "namespacetriqs__xca_1_1block__sparse.html#a0d97056723d4352c65a324a03ba26da3", null ],
-    [ "triqs_xca::block_sparse::third_order_dense_partial", "namespacetriqs__xca_1_1block__sparse.html#a1cc4472b093f61c40a647cce776a503b", null ]
+    [ "triqs_xca::block_sparse::third_order_tpz", "namespacetriqs__xca_1_1block__sparse.html#a6812ece2148e30bba4929c5069456bd5", null ]
 ];

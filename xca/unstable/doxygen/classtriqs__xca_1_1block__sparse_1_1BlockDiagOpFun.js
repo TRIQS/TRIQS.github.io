@@ -12,9 +12,9 @@ var classtriqs__xca_1_1block__sparse_1_1BlockDiagOpFun =
     [ "get_num_block_cols", "classtriqs__xca_1_1block__sparse_1_1BlockDiagOpFun.html#acf1fb7d3b13f518a92c7702857753c22", null ],
     [ "get_num_time_nodes", "classtriqs__xca_1_1block__sparse_1_1BlockDiagOpFun.html#a32155dc279f3d8d71f61d08c0e7a92aa", null ],
     [ "get_zero_block_index", "classtriqs__xca_1_1block__sparse_1_1BlockDiagOpFun.html#a53ce22ac0537e7d5604bed76da23a1fa", null ],
-    [ "hdf5_format", "classtriqs__xca_1_1block__sparse_1_1BlockDiagOpFun.html#a588ef91babcbdc3af92e672cedb119e8", null ],
     [ "operator*=", "classtriqs__xca_1_1block__sparse_1_1BlockDiagOpFun.html#a27fd6b410c1f56a3bc240f5314eb6f26", null ],
     [ "operator+=", "classtriqs__xca_1_1block__sparse_1_1BlockDiagOpFun.html#a60f5e17ca988b0f4cdee598d0f9f7aa5", null ],
+    [ "reflect", "classtriqs__xca_1_1block__sparse_1_1BlockDiagOpFun.html#a9cc49cdf4ad4f2dceb567bef0d93c84d", null ],
     [ "set_block", "classtriqs__xca_1_1block__sparse_1_1BlockDiagOpFun.html#a4d3831fb87ec191ae73a3c2a1b04d8ae", null ],
     [ "set_blocks", "classtriqs__xca_1_1block__sparse_1_1BlockDiagOpFun.html#abb14179ef28f1493efa7bc81536ce856", null ],
     [ "set_zero_block_indices", "classtriqs__xca_1_1block__sparse_1_1BlockDiagOpFun.html#afaf4eb86cac8a9ea24b63f7d885a65da", null ]
