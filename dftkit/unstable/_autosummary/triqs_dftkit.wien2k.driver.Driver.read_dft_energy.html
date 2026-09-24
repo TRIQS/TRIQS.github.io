@@ -6,14 +6,14 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>triqs_dftkit.wien2k.driver &mdash; triqs_dftkit  documentation</title>
+  <title>triqs_dftkit.wien2k.driver.Driver.read_dft_energy &mdash; triqs_dftkit  documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=f7f783a0" />
       <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
 
   
     <link rel="shortcut icon" href="../_static/triqs_favicon.ico"/>
-    <link rel="canonical" href="https://triqs.github.io/dftkit/latest/_autosummary/triqs_dftkit.wien2k.driver.html" />
+    <link rel="canonical" href="https://triqs.github.io/dftkit/latest/_autosummary/triqs_dftkit.wien2k.driver.Driver.read_dft_energy.html" />
       <script src="../_static/jquery.js?v=958b65b0"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=5929fcd5"></script>
@@ -24,8 +24,8 @@
     <link rel="author" title="About these documents" href="../about.html" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="triqs_dftkit.wien2k.driver.Driver" href="triqs_dftkit.wien2k.driver.Driver.html" />
-    <link rel="prev" title="triqs_dftkit.wien2k.converter.Converter.repack" href="triqs_dftkit.wien2k.converter.Converter.repack.html" /> 
+    <link rel="next" title="triqs_dftkit.wien2k.driver.Driver.run_dft_only" href="triqs_dftkit.wien2k.driver.Driver.run_dft_only.html" />
+    <link rel="prev" title="triqs_dftkit.wien2k.driver.Driver" href="triqs_dftkit.wien2k.driver.Driver.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -123,7 +123,7 @@
 </li>
 <li class="toctree-l4 current"><a class="reference internal" href="triqs_dftkit.wien2k.html">triqs_dftkit.wien2k</a><ul class="current">
 <li class="toctree-l5"><a class="reference internal" href="triqs_dftkit.wien2k.converter.html">triqs_dftkit.wien2k.converter</a></li>
-<li class="toctree-l5 current"><a class="current reference internal" href="#">triqs_dftkit.wien2k.driver</a></li>
+<li class="toctree-l5 current"><a class="reference internal" href="triqs_dftkit.wien2k.driver.html">triqs_dftkit.wien2k.driver</a></li>
 </ul>
 </li>
 </ul>
@@ -172,9 +172,11 @@
           <li class="breadcrumb-item"><a href="../documentation.html">Documentation</a></li>
           <li class="breadcrumb-item"><a href="triqs_dftkit.html">triqs_dftkit</a></li>
           <li class="breadcrumb-item"><a href="triqs_dftkit.wien2k.html">triqs_dftkit.wien2k</a></li>
-      <li class="breadcrumb-item active">triqs_dftkit.wien2k.driver</li>
+          <li class="breadcrumb-item"><a href="triqs_dftkit.wien2k.driver.html">triqs_dftkit.wien2k.driver</a></li>
+          <li class="breadcrumb-item"><a href="triqs_dftkit.wien2k.driver.Driver.html">triqs_dftkit.wien2k.driver.Driver</a></li>
+      <li class="breadcrumb-item active">triqs_dftkit.wien2k.driver.Driver.read_dft_energy</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/_autosummary/triqs_dftkit.wien2k.driver.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/_autosummary/triqs_dftkit.wien2k.driver.Driver.read_dft_energy.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -182,46 +184,27 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-triqs_dftkit.wien2k.driver">
-<span id="triqs-dftkit-wien2k-driver"></span><h1>triqs_dftkit.wien2k.driver<a class="headerlink" href="#module-triqs_dftkit.wien2k.driver" title="Link to this heading"></a></h1>
-<p>WIEN2k driver for TRIQS+DFT workflow automation.</p>
-<p>This module provides a driver class for automating WIEN2k calculations in the
-context of charge self-consistent (CSC) DMFT calculations with TRIQS/modest.</p>
-<p>WIEN2k is a <em>chain</em> of Fortran programs – lapw0, lapw1, lapw2, lcore,
-mixer – each launched through the <code class="docutils literal notranslate"><span class="pre">x</span></code> tcsh script, which writes the <code class="docutils literal notranslate"><span class="pre">.def</span></code>
-file of unit -&gt; filename assignments that the program reads.  The SCF loop that
-normally drives them lives in the <code class="docutils literal notranslate"><span class="pre">run_lapw</span></code> tcsh script.</p>
-<p>This driver replaces <code class="docutils literal notranslate"><span class="pre">run_lapw</span></code>: it owns the loop in Python so that modest’s
-DftDriver can inject a DMFT charge density correction between iterations.
-WIEN2k’s own QDMFT support cannot be reused because it inverts the control flow
-– <code class="docutils literal notranslate"><span class="pre">run_lapw</span></code> calls out to a user python script from inside its cycle, whereas
-DftDriver requires python to be the caller.</p>
-<p>Scope: serial, non-magnetic (SP=0, SO=0).  <code class="docutils literal notranslate"><span class="pre">lapw2</span> <span class="pre">-qdmft</span></code> cannot be run in
-parallel at all.  TODO: SOC and SP support will be added in the future</p>
-<p class="rubric">Classes</p>
-<table class="autosummary longtable docutils align-default">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="triqs_dftkit.wien2k.driver.Driver.html#triqs_dftkit.wien2k.driver.Driver" title="triqs_dftkit.wien2k.driver.Driver"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Driver</span></code></a>(seedname[, wienroot, dmftproj_exe, ...])</p></td>
-<td><p>Driver orchestrating the WIEN2k program chain for CSC DFT+DMFT.</p></td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Exceptions</p>
-<table class="autosummary longtable docutils align-default">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="triqs_dftkit.wien2k.driver.DFTWorkflowError.html#triqs_dftkit.wien2k.driver.DFTWorkflowError" title="triqs_dftkit.wien2k.driver.DFTWorkflowError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DFTWorkflowError</span></code></a></p></td>
-<td><p>Exception raised for errors in the DFT workflow.</p></td>
-</tr>
-</tbody>
-</table>
+  <section id="triqs-dftkit-wien2k-driver-driver-read-dft-energy">
+<h1>triqs_dftkit.wien2k.driver.Driver.read_dft_energy<a class="headerlink" href="#triqs-dftkit-wien2k-driver-driver-read-dft-energy" title="Link to this heading"></a></h1>
+<dl class="py method">
+<dt class="sig sig-object py" id="triqs_dftkit.wien2k.driver.Driver.read_dft_energy">
+<span class="sig-prename descclassname"><span class="pre">Driver.</span></span><span class="sig-name descname"><span class="pre">read_dft_energy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/triqs_dftkit/wien2k/driver.html#Driver.read_dft_energy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#triqs_dftkit.wien2k.driver.Driver.read_dft_energy" title="Link to this definition"></a></dt>
+<dd><p>Total energy in eV, from the last :ENE line in case.scf.</p>
+<p>After a charge update this <strong>already includes</strong> the interaction energy:
+lapw2 -qdmft folds <code class="docutils literal notranslate"><span class="pre">correner</span></code> into :SUM (ETOT = ETOT + correner) and
+subtracts the DFT in-window band energy itself.  Callers must therefore
+not add <code class="docutils literal notranslate"><span class="pre">Eint_m_dc</span></code> again, and there is no separate band energy
+correction to compute.</p>
+</dd></dl>
+
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="triqs_dftkit.wien2k.converter.Converter.repack.html" class="btn btn-neutral float-left" title="triqs_dftkit.wien2k.converter.Converter.repack" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="triqs_dftkit.wien2k.driver.Driver.html" class="btn btn-neutral float-right" title="triqs_dftkit.wien2k.driver.Driver" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="triqs_dftkit.wien2k.driver.Driver.html" class="btn btn-neutral float-left" title="triqs_dftkit.wien2k.driver.Driver" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="triqs_dftkit.wien2k.driver.Driver.run_dft_only.html" class="btn btn-neutral float-right" title="triqs_dftkit.wien2k.driver.Driver.run_dft_only" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

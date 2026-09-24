@@ -177,64 +177,904 @@
            <div itemprop="articleBody">
              
   <h1>Source code for triqs_dftkit.wien2k.driver</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">triqs.utility.mpi</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpi</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">h5</span><span class="w"> </span><span class="kn">import</span> <span class="n">HDFArchive</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">WIEN2k driver for TRIQS+DFT workflow automation.</span>
+
+<span class="sd">This module provides a driver class for automating WIEN2k calculations in the</span>
+<span class="sd">context of charge self-consistent (CSC) DMFT calculations with TRIQS/modest.</span>
+
+<span class="sd">WIEN2k is a *chain* of Fortran programs -- lapw0, lapw1, lapw2, lcore,</span>
+<span class="sd">mixer -- each launched through the ``x`` tcsh script, which writes the ``.def``</span>
+<span class="sd">file of unit -&gt; filename assignments that the program reads.  The SCF loop that</span>
+<span class="sd">normally drives them lives in the ``run_lapw`` tcsh script.</span>
+
+<span class="sd">This driver replaces ``run_lapw``: it owns the loop in Python so that modest&#39;s</span>
+<span class="sd">DftDriver can inject a DMFT charge density correction between iterations.</span>
+<span class="sd">WIEN2k&#39;s own QDMFT support cannot be reused because it inverts the control flow</span>
+<span class="sd">-- ``run_lapw`` calls out to a user python script from inside its cycle, whereas</span>
+<span class="sd">DftDriver requires python to be the caller.</span>
+
+<span class="sd">Scope: serial, non-magnetic (SP=0, SO=0).  ``lapw2 -qdmft`` cannot be run in</span>
+<span class="sd">parallel at all.  TODO: SOC and SP support will be added in the future</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span><span class="o">,</span><span class="w"> </span><span class="nn">re</span><span class="o">,</span><span class="w"> </span><span class="nn">shutil</span><span class="o">,</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">triqs.utility.mpi</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpi</span>
+
 <span class="kn">from</span><span class="w"> </span><span class="nn">.converter</span><span class="w"> </span><span class="kn">import</span> <span class="n">Converter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..converter_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConverterTools</span>
+
+
+<div class="viewcode-block" id="DFTWorkflowError">
+<a class="viewcode-back" href="../../../_autosummary/triqs_dftkit.wien2k.driver.DFTWorkflowError.html#triqs_dftkit.wien2k.driver.DFTWorkflowError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DFTWorkflowError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception raised for errors in the DFT workflow.&quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+
+<span class="c1"># Default environment variables to preserve for subprocess execution.  WIENROOT</span>
+<span class="c1"># and SCRATCH are WIEN2k specific: x interpolates $WIENROOT into every .def file</span>
+<span class="c1"># and tcsh aborts outright on an undefined variable, so the environment cannot simply</span>
+<span class="c1"># be stripped to the defaults the other drivers use.</span>
+<span class="n">_DEFAULT_ENV_VARS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;PATH&#39;</span><span class="p">,</span> <span class="s1">&#39;LD_LIBRARY_PATH&#39;</span><span class="p">,</span> <span class="s1">&#39;SHELL&#39;</span><span class="p">,</span> <span class="s1">&#39;PWD&#39;</span><span class="p">,</span> <span class="s1">&#39;HOME&#39;</span><span class="p">,</span> <span class="s1">&#39;OMP_NUM_THREADS&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;OMP_STACKSIZE&#39;</span><span class="p">,</span> <span class="s1">&#39;MKL_NUM_THREADS&#39;</span><span class="p">,</span> <span class="s1">&#39;LANG&#39;</span><span class="p">,</span> <span class="s1">&#39;LC_ALL&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;OMPI_MCA_btl_vader_single_copy_mechanism&#39;</span><span class="p">,</span> <span class="s1">&#39;WIENROOT&#39;</span><span class="p">,</span> <span class="s1">&#39;SCRATCH&#39;</span><span class="p">]</span>
+
+<span class="c1"># WIEN2k works in Rydberg, TRIQS in eV.</span>
+<span class="n">_RY_IN_EV</span> <span class="o">=</span> <span class="mf">13.605698</span>
+
+<span class="c1"># Flags that make x rewrite the first five characters of case.in2 in place and</span>
+<span class="c1"># restore the original from .oldin2 afterwards.</span>
+<span class="n">_IN2_MODE_FLAGS</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;-almd&#39;</span><span class="p">,</span> <span class="s1">&#39;-qdmft&#39;</span><span class="p">,</span> <span class="s1">&#39;-fermi&#39;</span><span class="p">,</span> <span class="s1">&#39;-qtl&#39;</span><span class="p">,</span> <span class="s1">&#39;-alm&#39;</span><span class="p">,</span> <span class="s1">&#39;-efg&#39;</span><span class="p">)</span>
+
+<span class="c1"># Programs that run_lapw calls with -c on a complex (no inversion symmetry) case,</span>
+<span class="c1"># which makes x launch lapw1c/lapw2c and read case.in1c/case.in2c.  lapw0, lcore</span>
+<span class="c1"># and mixer have no complex variant and reject the flag.</span>
+<span class="n">_CMPLX_PROGRAMS</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;lapw1&#39;</span><span class="p">,</span> <span class="s1">&#39;lapw2&#39;</span><span class="p">)</span>
+
+<span class="c1"># Files saved to &lt;name&gt;_old before lapw0 and before mixer as run_lapw.</span>
+<span class="c1"># case.clmsum_old is mixer&#39;s previous-iteration density</span>
+<span class="c1"># on unit 10, so the second set is required for mixing to work at all.</span>
+<span class="n">_LAPW0_SAVE</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;vsp&#39;</span><span class="p">,</span> <span class="s1">&#39;vns&#39;</span><span class="p">,</span> <span class="s1">&#39;r2v&#39;</span><span class="p">)</span>
+<span class="n">_MIXER_SAVE</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;clmsum&#39;</span><span class="p">,</span> <span class="s1">&#39;vrespsum&#39;</span><span class="p">,</span> <span class="s1">&#39;tausum&#39;</span><span class="p">)</span>
+
+<span class="c1"># Partial scf files concatenated into case.scf each cycle, in run_lapw&#39;s order</span>
+<span class="c1"># for the non-spin-polarised non-HF branch.  Missing ones are skipped.</span>
+<span class="n">_SCF_PARTS</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;so&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="s1">&#39;1s&#39;</span><span class="p">,</span> <span class="s1">&#39;2s&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">)</span>
+
+<span class="c1"># &#39;:DIS  :  CHARGE DISTANCE      (&lt;f11.7&gt; for atom&lt;i5&gt; spin&lt;i2&gt;)&lt;f15.7&gt;&#39;.  The</span>
+<span class="c1"># value inside the parentheses is the per-atom maximum, which is what testconv</span>
+<span class="c1"># tests against the -cc limit; the trailing number is the cell total.</span>
+<span class="n">_DIS_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\(\s*([-+0-9.EDed]+)\s+for atom&#39;</span><span class="p">)</span>
+
+<span class="c1"># DMFT label marker in the : LABEL style of run_lapw</span>
+<span class="n">_DMFT_MARKER</span> <span class="o">=</span> <span class="s1">&#39;:QDMFT:  CHARGE DENSITY UPDATED FROM DMFT OCCUPATIONS&#39;</span>
+
 
 <div class="viewcode-block" id="Driver">
 <a class="viewcode-back" href="../../../_autosummary/triqs_dftkit.wien2k.driver.Driver.html#triqs_dftkit.wien2k.driver.Driver">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Driver</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Driver orchestrating the WIEN2k program chain for CSC DFT+DMFT.</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seedname</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">seedname</span> <span class="o">=</span> <span class="n">seedname</span>
+<span class="sd">    Satisfies modest&#39;s DftDriver contract: it exposes ``seedname``,</span>
+<span class="sd">    ``run_initial_stage`` and ``run_update_stage``, and leaves</span>
+<span class="sd">    ``&lt;seedname&gt;.h5`` fully re-converted before either hook returns.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    seedname : str</span>
+<span class="sd">        WIEN2k case name.  All WIEN2k files are ``&lt;seedname&gt;.&lt;ext&gt;`` and the</span>
+<span class="sd">        archive modest reads is ``&lt;seedname&gt;.h5``.</span>
+<span class="sd">    wienroot : str</span>
+<span class="sd">        WIEN2k installation directory; ``&lt;wienroot&gt;/x`` launches every program.</span>
+<span class="sd">    dmftproj_exe : str</span>
+<span class="sd">        The dmftproj executable.  Looked up on $PATH by default, matching how</span>
+<span class="sd">        run_lapw invokes it.</span>
+<span class="sd">    max_scf_iter : int</span>
+<span class="sd">        Iteration cap for the initial SCF loop.</span>
+<span class="sd">    ecut, ccut : float</span>
+<span class="sd">        Energy (Ry) and charge convergence limits, as run_lapw&#39;s -ec and -cc.</span>
+<span class="sd">    verbosity : int</span>
+<span class="sd">        0 -- warnings only; 1 -- also per-cycle convergence and restart messages</span>
+<span class="sd">        (default); 2 -- also one line per WIEN2k program launched.  Output is</span>
+<span class="sd">        written on the master rank only.  Settable at any time as an attribute.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    ``wienroot`` and ``dmftproj_exe`` are the only coupling to WIEN2k, so a fake</span>
+<span class="sd">    WIEN2k can be substituted for testing by pointing them elsewhere.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seedname</span><span class="p">,</span> <span class="n">wienroot</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dmftproj_exe</span><span class="o">=</span><span class="s1">&#39;dmftproj&#39;</span><span class="p">,</span>
+                 <span class="n">max_scf_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">ecut</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">ccut</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">verbosity</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seedname</span> <span class="o">=</span> <span class="n">seedname</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wienroot</span> <span class="o">=</span> <span class="n">wienroot</span> <span class="k">if</span> <span class="n">wienroot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;WIENROOT&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">wienroot</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DFTWorkflowError</span><span class="p">(</span>
+                <span class="s2">&quot;WIENROOT is not set and no wienroot= was given; cannot locate the WIEN2k &#39;x&#39; script.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_exe</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wienroot</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_exe</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">DFTWorkflowError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No &#39;x&#39; script at </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">x_exe</span><span class="si">}</span><span class="s2"> (is wienroot= correct?)&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dmftproj_exe</span> <span class="o">=</span> <span class="n">dmftproj_exe</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_scf_iter</span> <span class="o">=</span> <span class="n">max_scf_iter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ecut</span> <span class="o">=</span> <span class="n">ecut</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ccut</span> <span class="o">=</span> <span class="n">ccut</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span> <span class="o">=</span> <span class="n">verbosity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fortran_to_replace</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;D&#39;</span><span class="p">:</span> <span class="s1">&#39;E&#39;</span><span class="p">}</span>
+        <span class="c1"># Set when this process inherits an SCF it did not run, and cleared by the</span>
+        <span class="c1"># next mixer call.  See _flush_mixing_history.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mixing_flush_pending</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Wien2kDriver(seedname=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">seedname</span><span class="si">}</span><span class="s2">, wienroot=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">wienroot</span><span class="si">}</span><span class="s2">, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;dmftproj_exe=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dmftproj_exe</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+    <span class="fm">__str__</span> <span class="o">=</span> <span class="fm">__repr__</span>
+
+    <span class="c1"># ------------------------------------------------------------------ files</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Print progress on the master rank, if verbosity allows.</span>
+
+<span class="sd">        Deliberately a per-driver setting rather than TRIQS&#39;s module-level</span>
+<span class="sd">        ``mpi.Verbosity_Level_Report_Max``, since turning that down to quieten a</span>
+<span class="sd">        few hundred lines of DFT bookkeeping would also quieten the solver.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">level</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="p">:</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_warn</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Report a problem that does not stop the run.</span>
+
+<span class="sd">        Not gated on verbosity, and sent to stderr: these mean the calculation is</span>
+<span class="sd">        probably wrong rather than merely noisy, so silencing progress output</span>
+<span class="sd">        should not silence them too.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;WARNING: </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ext</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Path of the WIEN2k file ``&lt;seedname&gt;.&lt;ext&gt;``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">seedname</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">ext</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_cmplx</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;&#39;c&#39; when this is a complex (no inversion symmetry) case, else &#39;&#39;.&quot;&quot;&quot;</span>
+        <span class="n">in1c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="s1">&#39;in1c&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;c&#39;</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">in1c</span><span class="p">)</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">in1c</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_in2_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="s1">&#39;in2&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmplx</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_in2_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Overwrite the first five characters of case.in2 line 1 with ``mode``.</span>
+
+<span class="sd">        x does this itself for -almd/-qdmft, but a crashed run can leave the</span>
+<span class="sd">        wrong keyword behind, which would silently turn a plain density pass</span>
+<span class="sd">        into a projector pass.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_in2_file</span><span class="p">()</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">lines</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DFTWorkflowError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> is empty&quot;</span><span class="p">)</span>
+        <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mode</span><span class="si">:</span><span class="s2">&lt;5</span><span class="si">}</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)[</span><span class="mi">5</span><span class="p">:]</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="n">fh</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+
+    <span class="c1"># -------------------------------------------------------------- execution</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_env</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Environment for WIEN2k subprocesses, with WIENROOT forced to ours.&quot;&quot;&quot;</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_DEFAULT_ENV_VARS</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
+                <span class="n">env</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="n">env</span><span class="p">[</span><span class="s1">&#39;WIENROOT&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wienroot</span>
+        <span class="k">return</span> <span class="n">env</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_run_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">program</span><span class="p">,</span> <span class="o">*</span><span class="n">flags</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run ``x &lt;program&gt; &lt;flags&gt;`` and verify it succeeded.  Master node only.</span>
+
+<span class="sd">        Success is checked twice, because WIEN2k signals failure two ways: x</span>
+<span class="sd">        exits 9 when the program returns non-zero, and every program writes a</span>
+<span class="sd">        message into ``&lt;program&gt;.error`` on entry and truncates it again just</span>
+<span class="sd">        before a successful exit.  The error file therefore reports failures</span>
+<span class="sd">        that never reach the exit status, including untrapped runtime errors.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+        <span class="c1"># x does not detect a complex case on its own; run_lapw passes -c.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmplx</span> <span class="ow">and</span> <span class="n">program</span> <span class="ow">in</span> <span class="n">_CMPLX_PROGRAMS</span><span class="p">:</span>
+            <span class="n">flags</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;-c&#39;</span><span class="p">,)</span> <span class="o">+</span> <span class="n">flags</span>
+
+        <span class="c1"># x backs case.in2 up to .oldin2 only when that file is absent, and</span>
+        <span class="c1"># -qdmft seds .oldin2 rather than case.in2 -- so a .oldin2 left behind by</span>
+        <span class="c1"># an earlier crash is silently used as the source and then restored over</span>
+        <span class="c1"># the real input.  x warns about this but does not clean it up.</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">flag</span> <span class="ow">in</span> <span class="n">_IN2_MODE_FLAGS</span> <span class="k">for</span> <span class="n">flag</span> <span class="ow">in</span> <span class="n">flags</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">stale</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;.oldin2&#39;</span><span class="p">,</span> <span class="s1">&#39;.oldin2a&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">stale</span><span class="p">):</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">stale</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_checked</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">x_exe</span><span class="p">,</span> <span class="n">program</span><span class="p">,</span> <span class="o">*</span><span class="n">flags</span><span class="p">],</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">program</span><span class="si">}</span><span class="s1">.error&#39;</span><span class="p">,</span>
+                                 <span class="sa">f</span><span class="s2">&quot;x </span><span class="si">{</span><span class="n">program</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">flags</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">rstrip</span><span class="p">())</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_run_checked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">,</span> <span class="n">error_file</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run a WIEN2k command and verify it succeeded.</span>
+
+<span class="sd">        Success is checked twice, because WIEN2k signals failure two ways: a</span>
+<span class="sd">        non-zero exit status, and a message left in the .error file.  Every program</span>
+<span class="sd">        writes that message on entry and truncates it again just before a</span>
+<span class="sd">        successful exit, so it catches failures that never reach the exit status,</span>
+<span class="sd">        including untrapped runtime errors.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_report</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="si">}</span><span class="s2">] running </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">command</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">env</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_env</span><span class="p">())</span>
+        <span class="n">tail</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="p">[</span><span class="o">-</span><span class="mi">2000</span><span class="p">:]</span><span class="si">}{</span><span class="n">result</span><span class="o">.</span><span class="n">stderr</span><span class="p">[</span><span class="o">-</span><span class="mi">2000</span><span class="p">:]</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DFTWorkflowError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> failed with code </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">returncode</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                                   <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_error_text</span><span class="p">(</span><span class="n">error_file</span><span class="p">)</span><span class="si">}{</span><span class="n">tail</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_error_text</span><span class="p">(</span><span class="n">error_file</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">message</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DFTWorkflowError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> exited cleanly but left </span><span class="si">{</span><span class="n">error_file</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_error_text</span><span class="p">(</span><span class="n">error_file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Contents of a WIEN2k .error file; empty string means success.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">error_file</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">error_file</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">error_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_run_dmftproj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run dmftproj to build the projectors the converter reads.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+            <span class="k">return</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="s1">&#39;indmftpr&#39;</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="n">DFTWorkflowError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="s1">&#39;indmftpr&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> not found; copy and edit &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wienroot</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;SRC_templates&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;case.indmftpr&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="s2">&quot;or use the command line tool init_dmftpr&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_checked</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">dmftproj_exe</span><span class="p">],</span> <span class="s1">&#39;dmftproj.error&#39;</span><span class="p">,</span> <span class="s1">&#39;dmftproj&#39;</span><span class="p">)</span>
+
+    <span class="c1"># ------------------------------------------------------------- scf output</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_mark_dmft_cycle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Record in case.scf that the cycle starting here is a DMFT charge update.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+            <span class="k">return</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="s1">&#39;scf&#39;</span><span class="p">),</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">_DMFT_MARKER</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_remove_broyden_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Delete case.broyd*, which is how run_lapw discards a mixing history.</span>
+
+<span class="sd">        run_lapw removes them whenever it starts an SCF rather than continuing</span>
+<span class="sd">        one, unless -NI is given.  Deleting the files is unambiguous: mixer</span>
+<span class="sd">        rebuilds the history from scratch because there is nothing to read.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="s1">&#39;broyd&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">prefix</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_run_mixer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run mixer, first flushing the mixing history if this process inherited one.</span>
+
+<span class="sd">        The flush is deferred to here rather than done where it is decided, so</span>
+<span class="sd">        that case.broyd* is only ever removed immediately before the mixer call</span>
+<span class="sd">        that would otherwise have read it, leaving the history in place for every</span>
+<span class="sd">        other mixer call in the run.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mixing_flush_pending</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_remove_broyden_files</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mixing_flush_pending</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">(</span><span class="n">poll_msec</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_run_x</span><span class="p">(</span><span class="s1">&#39;mixer&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_flush_mixing_history</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reason</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Arrange for the next mixer call to restart its mixing, and say so.</span>
+
+<span class="sd">        Called when this process is about to mix against a case.broyd* history it</span>
+<span class="sd">        did not build.  The Broyden vectors encode a sequence of density updates,</span>
+<span class="sd">        so continuing against a history whose density had a different character --</span>
+<span class="sd">        a DMFT-corrected one, or one from an interrupted run -- mixes the current</span>
+<span class="sd">        residual into predictions derived from unrelated ones.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">reason</span><span class="si">}</span><span class="s2">; removing case.broyd* as run_lapw does, so the next &quot;</span>
+                   <span class="s2">&quot;mixer call rebuilds its mixing history from scratch&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mixing_flush_pending</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_append_to_scf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parts</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Append partial scf files to case.scf, as run_lapw does.</span>
+
+<span class="sd">        Called twice per cycle: once for the programs before mixer, once for</span>
+<span class="sd">        case.scfm after it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+            <span class="k">return</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="s1">&#39;scf&#39;</span><span class="p">),</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
+                <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="s1">&#39;scf&#39;</span> <span class="o">+</span> <span class="n">part</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+                        <span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_save_old</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exts</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Copy case.&lt;ext&gt; to case.&lt;ext&gt;_old for each ext that exists.</span>
+
+<span class="sd">        run_lapw does this at two points in every cycle and both are load</span>
+<span class="sd">        bearing.  Most importantly mixer reads case.clmsum_old on unit 10 as the</span>
+<span class="sd">        previous-iteration density: without the copy it mixes against a missing</span>
+<span class="sd">        or stale density, which emits no :DIS line and sends the SCF diverging until</span>
+<span class="sd">        the linearisation energies go bad.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+            <span class="k">return</span>
+        <span class="k">for</span> <span class="n">ext</span> <span class="ow">in</span> <span class="n">exts</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="n">ext</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+                <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="n">ext</span> <span class="o">+</span> <span class="s1">&#39;_old&#39;</span><span class="p">))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_scf_tags</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">stop_at_dmft</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse a WIEN2k scf file into one ``(ene, dis)`` pair per mixer record.</span>
+
+<span class="sd">        :ENE is written in three variants (**INFO****, *WARNING**, **********), so</span>
+<span class="sd">        the energy is the last whitespace token rather than a fixed column.  :DIS</span>
+<span class="sd">        carries two numbers; the one inside the parentheses is the per-atom</span>
+<span class="sd">        maximum, which is what testconv compares against the -cc limit, and the</span>
+<span class="sd">        trailing one is the cell total.</span>
+
+<span class="sd">        Pair by record, not by zipping: mixer writes :ENE every cycle but :DIS</span>
+<span class="sd">        only when it had a previous density.  :DIS precedes :ENE, which closes</span>
+<span class="sd">        the record.</span>
+
+<span class="sd">        ``stop_at_dmft`` stops at the first _DMFT_MARKER, leaving the caller only</span>
+<span class="sd">        the plain-DFT part of the history.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">history</span><span class="p">,</span> <span class="n">dis</span> <span class="o">=</span> <span class="p">[],</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">history</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">fh</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">stop_at_dmft</span> <span class="ow">and</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">_DMFT_MARKER</span><span class="p">):</span>
+                    <span class="k">break</span>
+                <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;:ENE&#39;</span><span class="p">):</span>
+                    <span class="n">history</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="n">dis</span><span class="p">))</span>
+                    <span class="n">dis</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;:DIS&#39;</span><span class="p">):</span>
+                    <span class="n">match</span> <span class="o">=</span> <span class="n">_DIS_RE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                    <span class="n">dis</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;D&#39;</span><span class="p">,</span> <span class="s1">&#39;E&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">))</span>
+                           <span class="k">if</span> <span class="n">match</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">history</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_read_scfm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return ``(ene, dis)`` from case.scfm: the total energy in Ry and the</span>
+<span class="sd">        per-atom charge distance.</span>
+
+<span class="sd">        :ENE is written in three variants (**INFO****, *WARNING**, **********),</span>
+<span class="sd">        so the value is taken as the last whitespace token rather than by column.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="s1">&#39;scfm&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">DFTWorkflowError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> was not written; mixer did not run&quot;</span><span class="p">)</span>
+        <span class="n">history</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scf_tags</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">history</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DFTWorkflowError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;no :ENE line in </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">ene</span><span class="p">,</span> <span class="n">dis</span> <span class="o">=</span> <span class="n">history</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">dis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># mixer omits :DIS when it has no previous density to compare</span>
+            <span class="c1"># against, which means case.clmsum_old was missing -- the mixing is</span>
+            <span class="c1"># then meaningless even though mixer exits cleanly.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;no :DIS line in </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">; mixer had no previous density, &quot;</span>
+                       <span class="s2">&quot;so the charge convergence test is being skipped&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ene</span><span class="p">,</span> <span class="n">dis</span>
+
+<div class="viewcode-block" id="Driver.read_dft_energy">
+<a class="viewcode-back" href="../../../_autosummary/triqs_dftkit.wien2k.driver.Driver.read_dft_energy.html#triqs_dftkit.wien2k.driver.Driver.read_dft_energy">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">read_dft_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Total energy in eV, from the last :ENE line in case.scf.</span>
+
+<span class="sd">        After a charge update this **already includes** the interaction energy:</span>
+<span class="sd">        lapw2 -qdmft folds ``correner`` into :SUM (ETOT = ETOT + correner) and</span>
+<span class="sd">        subtracts the DFT in-window band energy itself.  Callers must therefore</span>
+<span class="sd">        not add ``Eint_m_dc`` again, and there is no separate band energy</span>
+<span class="sd">        correction to compute.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">energy</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="s1">&#39;scf&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">DFTWorkflowError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> does not exist; no SCF has run&quot;</span><span class="p">)</span>
+            <span class="c1"># Deliberately not stop_at_dmft: this must report the current total</span>
+            <span class="c1"># energy, which after a charge update is the DMFT one.</span>
+            <span class="n">history</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scf_tags</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">history</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">DFTWorkflowError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;no :ENE line in </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">energy</span> <span class="o">=</span> <span class="n">history</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">_RY_IN_EV</span>
+        <span class="k">return</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">energy</span><span class="p">)</span></div>
+
+
+    <span class="c1"># -------------------------------------------------------------- scf cycle</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">need_projectors</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Verify the inputs are in place before launching anything.</span>
+
+<span class="sd">        ``case.indmftpr`` is only consumed at the very end, by dmftproj, so</span>
+<span class="sd">        without an up-front check a missing one would not surface until a full</span>
+<span class="sd">        SCF had already run.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;SCRATCH&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_warn</span><span class="p">(</span><span class="s2">&quot;SCRATCH is not set; x is a tcsh script and older WIEN2k &quot;</span>
+                       <span class="s2">&quot;versions dereference $SCRATCH unguarded, which aborts with &quot;</span>
+                       <span class="s2">&quot;an error this driver cannot attribute.  siteconfig normally &quot;</span>
+                       <span class="s2">&quot;sets it to ./&quot;</span><span class="p">)</span>
+
+        <span class="c1"># x takes the case name from the directory it runs in, while this driver</span>
+        <span class="c1"># takes it from seedname.  If the two disagree, x reads and writes a</span>
+        <span class="c1"># different set of case.* files than the driver looks at.</span>
+        <span class="n">cwd_case</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">())</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">seedname</span> <span class="o">!=</span> <span class="n">cwd_case</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;seedname is &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">seedname</span><span class="si">}</span><span class="s2">&#39; but the working directory is &quot;</span>
+                       <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">cwd_case</span><span class="si">}</span><span class="s2">&#39;; the x script derives the case name from the &quot;</span>
+                       <span class="s2">&quot;directory, so these must normally match&quot;</span><span class="p">)</span>
+
+        <span class="n">required</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;struct&#39;</span><span class="p">,</span> <span class="s1">&#39;in0&#39;</span><span class="p">,</span> <span class="s1">&#39;in1&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmplx</span><span class="p">,</span> <span class="s1">&#39;in2&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cmplx</span><span class="p">,</span> <span class="s1">&#39;inm&#39;</span><span class="p">,</span> <span class="s1">&#39;inc&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">need_projectors</span><span class="p">:</span>
+            <span class="n">required</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;indmftpr&#39;</span><span class="p">)</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="n">ext</span><span class="p">)</span> <span class="k">for</span> <span class="n">ext</span> <span class="ow">in</span> <span class="n">required</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="n">ext</span><span class="p">))]</span>
+        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="n">hint</span> <span class="o">=</span> <span class="s1">&#39;run init_lapw&#39;</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="s1">&#39;indmftpr&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="n">missing</span><span class="p">:</span>
+                <span class="n">hint</span> <span class="o">+=</span> <span class="p">(</span><span class="s2">&quot;; case.indmftpr is not made by init_lapw -- generate it with &quot;</span>
+                         <span class="s2">&quot;init_dmftpr, or copy and edit &quot;</span>
+                         <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wienroot</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;SRC_templates&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;case.indmftpr&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">DFTWorkflowError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;missing WIEN2k input file(s): </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span><span class="si">}</span><span class="s2">; </span><span class="si">{</span><span class="n">hint</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="s1">&#39;clmsum&#39;</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="s1">&#39;clmsum_old&#39;</span><span class="p">)):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="s1">&#39;clmsum&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> missing, recovering from clmsum_old&quot;</span><span class="p">)</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="s1">&#39;clmsum_old&#39;</span><span class="p">),</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="s1">&#39;clmsum&#39;</span><span class="p">),</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
+                    <span class="n">dst</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">DFTWorkflowError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;no </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="s1">&#39;clmsum&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> or </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="s1">&#39;clmsum_old&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">, which lapw0 needs; run dstart&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_scf_iteration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        One SCF cycle: lapw0 -&gt; lapw1 -&gt; lapw2 -&gt; lcore -&gt; mixer.</span>
+
+<span class="sd">        Returns ``(ene, dis)`` read from case.scfm and broadcast, so that every</span>
+<span class="sd">        rank reaches the same convergence verdict and stays in lockstep.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_in2_mode</span><span class="p">(</span><span class="s1">&#39;TOT&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_save_old</span><span class="p">(</span><span class="n">_LAPW0_SAVE</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">program</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;lapw0&#39;</span><span class="p">,</span> <span class="s1">&#39;lapw1&#39;</span><span class="p">,</span> <span class="s1">&#39;lapw2&#39;</span><span class="p">,</span> <span class="s1">&#39;lcore&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_run_x</span><span class="p">(</span><span class="n">program</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_append_to_scf</span><span class="p">(</span><span class="n">_SCF_PARTS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_save_old</span><span class="p">(</span><span class="n">_MIXER_SAVE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_run_mixer</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_append_to_scf</span><span class="p">((</span><span class="s1">&#39;m&#39;</span><span class="p">,))</span>
+
+        <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_scfm</span><span class="p">()</span> <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_converged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">history</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Apply testconv&#39;s criterion to the (ene, dis) history.</span>
+
+<span class="sd">        The energy test is the mean of the last two |dE| over three iterations,</span>
+<span class="sd">        not a single difference, and needs three points.</span>
+
+<span class="sd">        A newest record with no :DIS counts as not converged.  mixer omits :DIS</span>
+<span class="sd">        only when it had no case.clmsum_old to compare against, which makes that</span>
+<span class="sd">        cycle&#39;s mixing meaningless (see _read_scfm) -- so there is no case in</span>
+<span class="sd">        which the absence of the line should let the SCF stop or be reused.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">e3</span><span class="p">,</span> <span class="n">e2</span><span class="p">,</span> <span class="n">e1</span> <span class="o">=</span> <span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">history</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:])</span>
+        <span class="n">ene_ok</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">e1</span> <span class="o">-</span> <span class="n">e3</span><span class="p">)</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">e1</span> <span class="o">-</span> <span class="n">e2</span><span class="p">))</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">ecut</span>
+        <span class="n">dis</span> <span class="o">=</span> <span class="n">history</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">dis_ok</span> <span class="o">=</span> <span class="n">dis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">dis</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">ccut</span>
+        <span class="k">return</span> <span class="n">ene_ok</span> <span class="ow">and</span> <span class="n">dis_ok</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_prepare_fresh_scf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Housekeeping before the first cycle of a new SCF.</span>
+
+<span class="sd">        Only ever for a genuine fresh start.  Dropping case.broyd* part way</span>
+<span class="sd">        through would discard the mixing history and stall convergence, which</span>
+<span class="sd">        matters when the cycle is being stepped one iteration at a time.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_in2_mode</span><span class="p">(</span><span class="s1">&#39;TOT&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_remove_broyden_files</span><span class="p">()</span>
+        <span class="c1"># Truncate case.scf too.  Without this the abandoned cycles stay on disk</span>
+        <span class="c1"># and _scf_history_on_disk splices them onto the new ones, so a later</span>
+        <span class="c1"># restart applies the convergence test across the seam between two</span>
+        <span class="c1"># unrelated runs -- and the caller was promised the history was discarded.</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="s1">&#39;scf&#39;</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_report</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;discarding the </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scf_history_on_disk</span><span class="p">())</span><span class="si">}</span><span class="s2"> cycles &quot;</span>
+                         <span class="sa">f</span><span class="s2">&quot;already in </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="s1">&#39;scf&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="s1">&#39;scf&#39;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_run_scf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">history</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Iterate the SCF cycle.</span>
+
+<span class="sd">        ``n_iter=None`` runs to convergence, up to ``max_scf_iter``, and raises if</span>
+<span class="sd">        it is never reached.  ``n_iter=N`` runs exactly N cycles and returns</span>
+<span class="sd">        whatever state they reached, without requiring convergence.</span>
+
+<span class="sd">        ``history`` seeds the convergence test; when omitted it is recovered from</span>
+<span class="sd">        case.scf.  That matters for a stepped run: the energy criterion needs</span>
+<span class="sd">        three points, which a history rebuilt from scratch on every call would</span>
+<span class="sd">        never accumulate.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">history</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">history</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scf_history_on_disk</span><span class="p">()</span> <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">history</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">history</span><span class="p">)</span>
+        <span class="n">history</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">history</span><span class="p">)</span>
+        <span class="n">done</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="p">)</span>
+        <span class="n">limit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_scf_iter</span> <span class="k">if</span> <span class="n">n_iter</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">n_iter</span>
+
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">limit</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scf_iteration</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_report</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    cycle </span><span class="si">{</span><span class="n">done</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">step</span><span class="si">}</span><span class="s2">: :ENE = </span><span class="si">{</span><span class="n">history</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2"> Ry  &quot;</span>
+                       <span class="sa">f</span><span class="s2">&quot;:DIS = </span><span class="si">{</span><span class="n">history</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">n_iter</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_converged</span><span class="p">(</span><span class="n">history</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_report</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SCF converged after </span><span class="si">{</span><span class="n">done</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">step</span><span class="si">}</span><span class="s2"> cycles&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">history</span>
+
+        <span class="k">if</span> <span class="n">n_iter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DFTWorkflowError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;SCF did not converge in the </span><span class="si">{</span><span class="n">limit</span><span class="si">}</span><span class="s2"> cycles run here &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">done</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">limit</span><span class="si">}</span><span class="s2"> in case.scf in total; ecut=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ecut</span><span class="si">}</span><span class="s2"> Ry, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;ccut=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ccut</span><span class="si">}</span><span class="s2">); raise max_scf_iter and rerun to continue from &quot;</span>
+                <span class="s2">&quot;where this stopped&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">history</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ensure_converged_scf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">force_scf</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Bring the SCF to convergence, reusing whatever case.scf already holds.</span>
+
+<span class="sd">        Already converged -&gt; nothing to run.  Partially converged -&gt; continue from</span>
+<span class="sd">        there, keeping the Broyden history, since restarting would throw away both</span>
+<span class="sd">        the completed cycles and the mixing state.  Cold start, or force_scf -&gt;</span>
+<span class="sd">        begin afresh.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">history</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scf_history_on_disk</span><span class="p">()</span> <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">history</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">history</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">force_scf</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_converged</span><span class="p">(</span><span class="n">history</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_report</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;case.scf already holds a converged SCF (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="p">)</span><span class="si">}</span><span class="s2"> cycles); &quot;</span>
+                       <span class="s2">&quot;reusing it (force_scf=True to redo)&quot;</span><span class="p">)</span>
+            <span class="n">resumed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_dmft_cycles</span><span class="p">()</span> <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">resumed</span><span class="p">):</span>
+                <span class="c1"># A CSC run being resumed: case.clmsum is the DMFT-corrected</span>
+                <span class="c1"># density from the interrupted run, and the mixing history behind</span>
+                <span class="c1"># it belongs to that run.  Nothing here reruns the SCF -- the</span>
+                <span class="c1"># density is kept as it stands -- but the next charge update will</span>
+                <span class="c1"># mix against that inherited history.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_flush_mixing_history</span><span class="p">(</span>
+                    <span class="s2">&quot;case.scf records DMFT charge updates from an earlier run&quot;</span><span class="p">)</span>
+                <span class="c1"># run_update_stage ends with mixer, lapw0, lapw1, so an</span>
+                <span class="c1"># interrupted one can leave case.vector belonging to the</span>
+                <span class="c1"># pre-update potential while case.clmsum is already the</span>
+                <span class="c1"># post-update density.  The projectors built from that vector</span>
+                <span class="c1"># would then be inconsistent with the density on disk, silently.</span>
+                <span class="c1"># Redoing lapw0 and lapw1 is cheap next to one solver call.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_report</span><span class="p">(</span><span class="s2">&quot;redoing lapw0 and lapw1 so the eigenvectors match &quot;</span>
+                             <span class="s2">&quot;the density left by the interrupted run&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_save_old</span><span class="p">(</span><span class="n">_LAPW0_SAVE</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_run_x</span><span class="p">(</span><span class="s1">&#39;lapw0&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_run_x</span><span class="p">(</span><span class="s1">&#39;lapw1&#39;</span><span class="p">)</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">(</span><span class="n">poll_msec</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">history</span>
+
+        <span class="k">if</span> <span class="n">force_scf</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">history</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_fresh_scf</span><span class="p">()</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">(</span><span class="n">poll_msec</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_scf</span><span class="p">(</span><span class="n">history</span><span class="o">=</span><span class="p">[])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_report</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;continuing the SCF from </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="p">)</span><span class="si">}</span><span class="s2"> cycles already in case.scf&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_flush_mixing_history</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;resuming an SCF from </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="p">)</span><span class="si">}</span><span class="s2"> cycles this process did not run&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_scf</span><span class="p">(</span><span class="n">history</span><span class="o">=</span><span class="n">history</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_has_dmft_cycles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether case.scf records a DMFT charge update from an earlier run.&quot;&quot;&quot;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="s1">&#39;scf&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">_DMFT_MARKER</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">fh</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Driver.scf_converged">
+<a class="viewcode-back" href="../../../_autosummary/triqs_dftkit.wien2k.driver.Driver.scf_converged.html#triqs_dftkit.wien2k.driver.Driver.scf_converged">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">scf_converged</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Whether the SCF history in case.scf already meets the ecut/ccut criteria.</span>
+
+<span class="sd">        Exposed so the cycle can be driven a step at a time::</span>
+
+<span class="sd">            while not driver.scf_converged():</span>
+<span class="sd">                driver.run_dft_only(n_iter=1)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">history</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scf_history_on_disk</span><span class="p">()</span> <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_converged</span><span class="p">(</span><span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">history</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="Driver.run_dft_only">
+<a class="viewcode-back" href="../../../_autosummary/triqs_dftkit.wien2k.driver.Driver.run_dft_only.html#triqs_dftkit.wien2k.driver.Driver.run_dft_only">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_dft_only</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">force_scf</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the DFT SCF cycle and stop: no projectors, no dmftproj, no HDF5.</span>
+
+<span class="sd">        Not part of the DftDriver contract.  This is for plain WIEN2k runs and for</span>
+<span class="sd">        driving the cycle under external control; case.indmftpr is not needed.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n_iter : int, optional</span>
+<span class="sd">            Run exactly this many cycles and return, converged or not.  Pass 1 to</span>
+<span class="sd">            advance a single step.  The default, None, iterates to convergence and</span>
+<span class="sd">            raises if max_scf_iter is exhausted.</span>
+<span class="sd">        force_scf : bool, optional</span>
+<span class="sd">            Start over from scratch, discarding the accumulated case.scf history</span>
+<span class="sd">            and the Broyden files, instead of reusing a converged result or</span>
+<span class="sd">            continuing a partial one.  Ignored when n_iter is given, since a fixed</span>
+<span class="sd">            number of cycles was asked for explicitly.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list of (float, float)</span>
+<span class="sd">            The (:ENE in Ry, :DIS) history, including cycles already on disk.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_inputs</span><span class="p">(</span><span class="n">need_projectors</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">n_iter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_converged_scf</span><span class="p">(</span><span class="n">force_scf</span><span class="p">)</span>
+
+        <span class="n">history</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scf_history_on_disk</span><span class="p">()</span> <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">()</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">history</span> <span class="o">=</span> <span class="n">mpi</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">history</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">history</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_fresh_scf</span><span class="p">()</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">(</span><span class="n">poll_msec</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_scf</span><span class="p">(</span><span class="n">n_iter</span><span class="o">=</span><span class="n">n_iter</span><span class="p">,</span> <span class="n">history</span><span class="o">=</span><span class="n">history</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_scf_history_on_disk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        (ene, dis) pairs recovered from an existing case.scf, for restart.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scf_tags</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="s1">&#39;scf&#39;</span><span class="p">),</span> <span class="n">stop_at_dmft</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># --------------------------------------------------------- dmft interface</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_read_oubwin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read case.oubwin, written by dmftproj.</span>
+
+<span class="sd">        Returns the windows as a list of ``(included, nb_bot, nb_top, weight)``,</span>
+<span class="sd">        one per k-point, with 1-based inclusive band indices.  This file -- not</span>
+<span class="sd">        dft_input/n_orbitals -- is what lapw2 -qdmft cross-checks case.qdmft</span>
+<span class="sd">        against, so it is the authority on the per-k window.</span>
+
+<span class="sd">        The SO flag on the second record is read to advance past it and then</span>
+<span class="sd">        dropped: the converter already asserts it against case.ctqmcout, and</span>
+<span class="sd">        nothing here has any use for it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="s1">&#39;oubwin&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">DFTWorkflowError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> not found; dmftproj must run before the charge update&quot;</span><span class="p">)</span>
+        <span class="n">reader</span> <span class="o">=</span> <span class="n">ConverterTools</span><span class="o">.</span><span class="n">read_fortran_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_to_replace</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">n_k</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">reader</span><span class="p">))</span>
+            <span class="nb">next</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>                                     <span class="c1"># the SO flag</span>
+
+            <span class="n">windows</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_k</span><span class="p">):</span>
+                <span class="n">included</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">reader</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">included</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">nb_bot</span><span class="p">,</span> <span class="n">nb_top</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">reader</span><span class="p">)),</span> <span class="nb">int</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">reader</span><span class="p">))</span>
+                    <span class="n">weight</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
+                    <span class="n">windows</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">included</span><span class="p">,</span> <span class="n">nb_bot</span><span class="p">,</span> <span class="n">nb_top</span><span class="p">,</span> <span class="n">weight</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">windows</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">included</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DFTWorkflowError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;wien2k: reading file </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> failed!&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">windows</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_qdmft</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N_k</span><span class="p">,</span> <span class="n">Eint_m_dc</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write the DMFT band occupation matrices to case.qdmft for lapw2 -qdmft.</span>
+
+<span class="sd">        The layout is fixed by the reader in SRC_lapw2/qdmft.F::readdata_qdmft::</span>
+
+<span class="sd">            mu                       in Ry  (read, then unused)</span>
+<span class="sd">            beta                     in Ry^-1 (read, then unused)</span>
+<span class="sd">            per k-point:</span>
+<span class="sd">                nn                   must equal nb_top - nb_bot + 1</span>
+<span class="sd">                nn records of 2*nn reals: Re Im, one record per matrix *row*</span>
+<span class="sd">                one throwaway record</span>
+<span class="sd">            correner                 in eV; lapw2 divides it by 13.605698</span>
+
+<span class="sd">        Three conventions differ from the VASP and QE writers:</span>
+
+<span class="sd">        * the **full** occupation matrix is written, not the deviation from the</span>
+<span class="sd">          Kohn-Sham density -- lapw2 excises the in-window DFT bands itself;</span>
+<span class="sd">        * the matrix must be **unweighted**, because lapw2 multiplies it by the</span>
+<span class="sd">          k-point weight it reads from case.oubwin;</span>
+<span class="sd">        * ``correner`` is written in eV with no conversion.</span>
+
+<span class="sd">        The blank line after each matrix is mandatory: the reader issues a</span>
+<span class="sd">        ``READ(32,*)`` with an empty io-list, which consumes one whole record.</span>
+
+<span class="sd">        ``Eint_m_dc`` is written as given and must therefore already be the value</span>
+<span class="sd">        for the whole cell: summed over the inequivalent correlated shells, each</span>
+<span class="sd">        multiplied by the multiplicity of its equivalent atoms.  That is the</span>
+<span class="sd">        caller&#39;s responsibility.</span>
+
+<span class="sd">        The per-k window comes from case.oubwin while ``N_k`` is indexed by the</span>
+<span class="sd">        archive&#39;s n_orbitals, so the two must agree.  They do by construction:</span>
+<span class="sd">        _regenerate_projectors is the only producer of either, and it runs</span>
+<span class="sd">        dmftproj and the converter together.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+            <span class="k">return</span>
+
+        <span class="n">windows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_oubwin</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">windows</span><span class="p">)</span> <span class="o">!=</span> <span class="n">N_k</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="n">DFTWorkflowError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;case.oubwin has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">windows</span><span class="p">)</span><span class="si">}</span><span class="s2"> k-points but N_k has </span><span class="si">{</span><span class="n">N_k</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">excluded</span> <span class="o">=</span> <span class="p">[</span><span class="n">ik</span> <span class="k">for</span> <span class="n">ik</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">windows</span><span class="p">)</span> <span class="k">if</span> <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">excluded</span><span class="p">:</span>
+            <span class="c1"># lapw2 loops over every k-point when reading case.qdmft but only</span>
+            <span class="c1"># sets nn for included ones, so an excluded k-point is compared</span>
+            <span class="c1"># against uninitialised memory.</span>
+            <span class="k">raise</span> <span class="n">DFTWorkflowError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;case.oubwin marks k-point(s) </span><span class="si">{</span><span class="n">excluded</span><span class="si">}</span><span class="s2"> as not included; lapw2 -qdmft &quot;</span>
+                <span class="s2">&quot;requires every k-point to be inside the correlated window &quot;</span>
+                <span class="s2">&quot;(widen the energy window in case.indmftpr)&quot;</span><span class="p">)</span>
+
+        <span class="n">n_sigma</span> <span class="o">=</span> <span class="n">N_k</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">n_sigma</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DFTWorkflowError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;expected 2 spin channels for a non-magnetic case, got </span><span class="si">{</span><span class="n">n_sigma</span><span class="si">}</span><span class="s2">; &quot;</span>
+                <span class="s2">&quot;spin-polarised and spin-orbit cases are not supported yet&quot;</span><span class="p">)</span>
+        <span class="c1"># Both channels are computed independently even when SP=0, so average</span>
+        <span class="c1"># them.  Build a new array: modest hands over the caller&#39;s N_k uncopied.</span>
+        <span class="n">Nk_avg</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">N_k</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">N_k</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">for</span> <span class="n">ik</span><span class="p">,</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">nb_bot</span><span class="p">,</span> <span class="n">nb_top</span><span class="p">,</span> <span class="n">_w</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">windows</span><span class="p">):</span>
+            <span class="n">nn</span> <span class="o">=</span> <span class="n">nb_top</span> <span class="o">-</span> <span class="n">nb_bot</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">nn</span> <span class="o">&gt;</span> <span class="n">Nk_avg</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="n">DFTWorkflowError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;k-point </span><span class="si">{</span><span class="n">ik</span><span class="si">}</span><span class="s2">: case.oubwin window is </span><span class="si">{</span><span class="n">nn</span><span class="si">}</span><span class="s2"> bands but N_k only &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;has </span><span class="si">{</span><span class="n">Nk_avg</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="p">(</span><span class="s1">&#39;qdmft&#39;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="c1"># Converted to Ry / Ry^-1 for the file even though lapw2 discards</span>
+            <span class="c1"># both, so the values match what the format documents and what</span>
+            <span class="c1"># legacy dft_tools wrote.</span>
+            <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%.14f</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">mu</span> <span class="o">/</span> <span class="n">_RY_IN_EV</span><span class="p">))</span>
+            <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%.14f</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">beta</span> <span class="o">*</span> <span class="n">_RY_IN_EV</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">ik</span><span class="p">,</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">nb_bot</span><span class="p">,</span> <span class="n">nb_top</span><span class="p">,</span> <span class="n">_w</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">windows</span><span class="p">):</span>
+                <span class="n">nn</span> <span class="o">=</span> <span class="n">nb_top</span> <span class="o">-</span> <span class="n">nb_bot</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">nn</span><span class="p">)</span>
+                <span class="n">block</span> <span class="o">=</span> <span class="n">Nk_avg</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span> <span class="p">:</span><span class="n">nn</span><span class="p">,</span> <span class="p">:</span><span class="n">nn</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nn</span><span class="p">):</span>
+                    <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">block</span><span class="p">[</span><span class="n">row</span><span class="p">,</span><span class="w"> </span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="si">:</span><span class="s2">.14f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">block</span><span class="p">[</span><span class="n">row</span><span class="p">,</span><span class="w"> </span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">imag</span><span class="si">:</span><span class="s2">.14f</span><span class="si">}</span><span class="s2"> &quot;</span>
+                                     <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nn</span><span class="p">)))</span>
+                    <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>                       <span class="c1"># the mandatory throwaway record</span>
+            <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%.16f</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">Eint_m_dc</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_regenerate_projectors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Rebuild the projectors and reconvert the archive.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_run_x</span><span class="p">(</span><span class="s1">&#39;lapw2&#39;</span><span class="p">,</span> <span class="s1">&#39;-almd&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_run_dmftproj</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span>
+            <span class="n">Converter</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">seedname</span><span class="p">)</span><span class="o">.</span><span class="n">convert_dft_input</span><span class="p">()</span>
+            <span class="c1"># lapw2 -almd writes one fort.225 record per band, l and m for every</span>
+            <span class="c1"># atom and k-point through a unit with no .def entry.</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="s1">&#39;fort.225&#39;</span><span class="p">):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s1">&#39;fort.225&#39;</span><span class="p">)</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">(</span><span class="n">poll_msec</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+
+    <span class="c1"># ---------------------------------------------------------------- the API</span>
 
 <div class="viewcode-block" id="Driver.run_initial_stage">
 <a class="viewcode-back" href="../../../_autosummary/triqs_dftkit.wien2k.driver.Driver.run_initial_stage.html#triqs_dftkit.wien2k.driver.Driver.run_initial_stage">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">run_initial_stage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">Converter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seedname</span><span class="p">)</span><span class="o">.</span><span class="n">convert_dft_input</span><span class="p">()</span>
-        <span class="k">return</span> </div>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_initial_stage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">force_scf</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Converge the DFT SCF cycle, then build projectors and convert to HDF5.</span>
+
+<span class="sd">        Restart-aware: a converged case.scf is reused and a partial one continued</span>
+<span class="sd">        rather than recomputed, because modest calls this hook unconditionally and</span>
+<span class="sd">        keeps no DFT state of its own across a resumed run.  Pass</span>
+<span class="sd">        ``force_scf=True`` to redo the SCF from scratch regardless.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_inputs</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_converged_scf</span><span class="p">(</span><span class="n">force_scf</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_regenerate_projectors</span><span class="p">()</span>
+        <span class="k">return</span> <span class="mi">0</span></div>
 
 
 <div class="viewcode-block" id="Driver.run_update_stage">
 <a class="viewcode-back" href="../../../_autosummary/triqs_dftkit.wien2k.driver.Driver.run_update_stage.html#triqs_dftkit.wien2k.driver.Driver.run_update_stage">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">run_update_stage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N_k</span><span class="p">,</span> <span class="n">Ecorr</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">beta</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;beta&#39;</span><span class="p">);</span> <span class="n">mu</span>   <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;mu&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">write_charge_correction</span><span class="p">(</span><span class="n">N_k</span><span class="p">,</span> <span class="n">Ecorr</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">mu</span><span class="p">)</span>
-        <span class="k">return</span> </div>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_update_stage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N_k</span><span class="p">,</span> <span class="n">Eint_m_dc</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Apply the DMFT charge density correction and reconverge one cycle.</span>
 
+<span class="sd">        Runs lapw2 -qdmft (which rebuilds the valence density from ``N_k``),</span>
+<span class="sd">        lcore and mixer to obtain the new density, then lapw0 and lapw1 to get</span>
+<span class="sd">        the potential and eigenvectors that go with it, and finally rebuilds the</span>
+<span class="sd">        projectors so the archive is current when this returns.</span>
 
-<div class="viewcode-block" id="Driver.write_charge_correction">
-<a class="viewcode-back" href="../../../_autosummary/triqs_dftkit.wien2k.driver.Driver.write_charge_correction.html#triqs_dftkit.wien2k.driver.Driver.write_charge_correction">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">write_charge_correction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N_k</span><span class="p">,</span> <span class="n">Ecorr</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">mu</span><span class="p">):</span>
-        <span class="n">energy_unit</span> <span class="o">=</span> <span class="mf">13.605698</span> <span class="c1"># eV to Ry</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">():</span> <span class="k">return</span>
+<span class="sd">        Safe to call repeatedly with a fresh ``N_k``, which modest&#39;s CSC loop</span>
+<span class="sd">        does several times per DMFT iteration.</span>
 
-        <span class="n">n_k</span> <span class="o">=</span> <span class="n">N_k</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">seedname</span><span class="si">}</span><span class="s2">.h5&quot;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
-            <span class="n">n_bands_per_k</span> <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dft_input&#39;</span><span class="p">][</span><span class="s1">&#39;n_orbitals&#39;</span><span class="p">]</span>
-            <span class="n">SO</span>            <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dft_input&#39;</span><span class="p">][</span><span class="s1">&#39;SO&#39;</span><span class="p">]</span>
-            <span class="n">SP</span>            <span class="o">=</span> <span class="n">ar</span><span class="p">[</span><span class="s1">&#39;dft_input&#39;</span><span class="p">][</span><span class="s1">&#39;SP&#39;</span><span class="p">]</span>
+<span class="sd">        ``mu`` (eV) and ``beta`` (1/eV) are accepted only to fill their slots in</span>
+<span class="sd">        case.qdmft, converted to Ry there.  lapw2 reads both and uses neither, so</span>
+<span class="sd">        omitting them changes nothing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_write_qdmft</span><span class="p">(</span><span class="n">N_k</span><span class="p">,</span> <span class="n">Eint_m_dc</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="n">mu</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="n">beta</span><span class="p">)</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">(</span><span class="n">poll_msec</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">write_spin_block</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">Nksp</span><span class="p">,</span> <span class="n">isp</span><span class="p">):</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%.14f</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">mu</span> <span class="o">/</span> <span class="n">energy_unit</span><span class="p">)</span> <span class="p">)</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%.14f</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">beta</span> <span class="o">*</span> <span class="n">energy_unit</span><span class="p">)</span> <span class="p">)</span>
-            <span class="k">for</span> <span class="n">ik</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_k</span><span class="p">):</span>
-                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">n_bands_per_k</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span><span class="n">isp</span><span class="p">])</span>
-                <span class="n">mat</span> <span class="o">=</span> <span class="n">Nksp</span><span class="p">[</span><span class="n">ik</span><span class="p">]</span>
-                <span class="k">for</span> <span class="n">inu</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_bands_per_k</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span><span class="n">isp</span><span class="p">]):</span>
-                    <span class="k">for</span> <span class="n">imu</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_bands_per_k</span><span class="p">[</span><span class="n">ik</span><span class="p">,</span><span class="n">isp</span><span class="p">]):</span>
-                        <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mat</span><span class="p">[</span><span class="n">inu</span><span class="p">,</span><span class="n">imu</span><span class="p">]</span><span class="o">.</span><span class="n">real</span><span class="si">:</span><span class="s2">.14f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">mat</span><span class="p">[</span><span class="n">inu</span><span class="p">,</span><span class="n">imu</span><span class="p">]</span><span class="o">.</span><span class="n">imag</span><span class="si">:</span><span class="s2">.14f</span><span class="si">}</span><span class="s2"> &quot;</span><span class="p">)</span>
-                    <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%.16f</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">Ecorr</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+        <span class="c1"># Serial by necessity: the DMFT path is compiled out of lapw2_mpi.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_run_x</span><span class="p">(</span><span class="s1">&#39;lapw2&#39;</span><span class="p">,</span> <span class="s1">&#39;-qdmft&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_run_x</span><span class="p">(</span><span class="s1">&#39;lcore&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mark_dmft_cycle</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_append_to_scf</span><span class="p">(</span><span class="n">_SCF_PARTS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_save_old</span><span class="p">(</span><span class="n">_MIXER_SAVE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_run_mixer</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_append_to_scf</span><span class="p">((</span><span class="s1">&#39;m&#39;</span><span class="p">,))</span>
 
-        <span class="k">if</span> <span class="n">SP</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">Nk_avg</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">N_k</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">N_k</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">seedname</span><span class="si">}</span><span class="s2">.qdmft&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span> <span class="n">write_spin_block</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">Nk_avg</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">spin_to_data_idx</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">SO</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">seedname</span><span class="si">}</span><span class="s2">.qdmftup&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fup</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">seedname</span><span class="si">}</span><span class="s2">.qdmftdn&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fdn</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">isp</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="n">fup</span><span class="p">,</span> <span class="n">fdn</span><span class="p">],</span> <span class="n">spin_to_data_idx</span><span class="p">):</span> <span class="n">write_spin_block</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">N_k</span><span class="p">[:,</span> <span class="n">isp</span><span class="p">],</span> <span class="n">isp</span><span class="p">)</span>
-        <span class="k">return</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_save_old</span><span class="p">(</span><span class="n">_LAPW0_SAVE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_run_x</span><span class="p">(</span><span class="s1">&#39;lapw0&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_run_x</span><span class="p">(</span><span class="s1">&#39;lapw1&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_regenerate_projectors</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">()</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="s1">&#39;fort.77&#39;</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s1">&#39;fort.77&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_report</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DFT + DMFT total energy after the charge update: &quot;</span>
+                     <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">read_dft_energy</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> eV&quot;</span><span class="p">)</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">(</span><span class="n">poll_msec</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">0</span></div>
 </div>
 
 </pre></div>
