@@ -141,6 +141,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../../ChangeLog.html#drivers">Drivers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../ChangeLog.html#id2">VASP</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../ChangeLog.html#wannier90">Wannier90</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../ChangeLog.html#wien2k">Wien2k</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../ChangeLog.html#fix">Fix</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../ChangeLog.html#doc">doc</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../ChangeLog.html#build">build</a></li>
@@ -206,6 +207,91 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">h5</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">..converter_tools</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os.path</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_kpath_label_line</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse one line of the high-symmetry point block that dmftproj appends to</span>
+<span class="sd">    case.outband. The format is the fixed Fortran (2i6,a): columns 1-6 hold a</span>
+<span class="sd">    running counter, columns 7-12 the 1-based position of the point along the</span>
+<span class="sd">    band path, and columns 13 onwards the label.</span>
+
+<span class="sd">    Returns (counter, pos, label), or None if the line does not have that form.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">13</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">counter</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">6</span><span class="p">])</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">6</span><span class="p">:</span><span class="mi">12</span><span class="p">])</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">12</span><span class="p">:]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">label</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">counter</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">label</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_read_kpath_labels</span><span class="p">(</span><span class="n">band_file</span><span class="p">,</span> <span class="n">n_k</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read the high-symmetry k-path labels appended to the end of case.outband</span>
+<span class="sd">    and map them onto the flattened band k-point index.</span>
+
+<span class="sd">    dmftproj writes one line per high-symmetry point after the projector data,</span>
+<span class="sd">    in fixed Fortran format (2i6,a), e.g.</span>
+
+<span class="sd">            1     1GAMMA</span>
+<span class="sd">            2   122X</span>
+
+<span class="sd">    Returns (labels, idx) where labels is a list of label strings and idx is a</span>
+<span class="sd">    0-based numpy int array giving, for each label, the position of that</span>
+<span class="sd">    high-symmetry point in the n_k band path. Returns (None, None) if no label</span>
+<span class="sd">    block is present or if the block is incomplete.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># The block is a handful of lines at the very end of a file that holds all</span>
+    <span class="c1"># the projectors, so read the tail rather than the whole file.</span>
+    <span class="n">n_bytes</span> <span class="o">=</span> <span class="mi">8192</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">band_file</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">R</span><span class="p">:</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_END</span><span class="p">)</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">size</span> <span class="o">-</span> <span class="n">n_bytes</span><span class="p">))</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">,</span> <span class="s1">&#39;replace&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">size</span> <span class="o">&gt;</span> <span class="n">n_bytes</span><span class="p">:</span>
+        <span class="c1"># the first line of the chunk is in general cut in the middle</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="k">while</span> <span class="n">lines</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+    <span class="c1"># Walk backwards from the end of the file: the label block is the trailing</span>
+    <span class="c1"># run of (2i6,a) lines, and the counter of its first line is 1.</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">first_counter</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+        <span class="n">parsed</span> <span class="o">=</span> <span class="n">_parse_kpath_label_line</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">parsed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="n">first_counter</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">parsed</span>
+        <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+        <span class="n">idx</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pos</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">first_counter</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">break</span>
+    <span class="n">labels</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+    <span class="n">idx</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">labels</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">first_counter</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;convert_bands_input : WARNING : the high-symmetry point block in </span><span class="si">%s</span><span class="s2"> does not start at counter 1, so it is truncated or corrupted; skipping k-path labels.&quot;</span> <span class="o">%</span> <span class="n">band_file</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">idx</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">idx</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">n_k</span> <span class="ow">or</span> <span class="n">numpy</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;convert_bands_input : WARNING : inconsistent high-symmetry point indices in </span><span class="si">%s</span><span class="s2">; skipping k-path labels.&quot;</span> <span class="o">%</span> <span class="n">band_file</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">labels</span><span class="p">,</span> <span class="n">idx</span>
 
 
 <div class="viewcode-block" id="Converter">
@@ -671,6 +757,8 @@
 
         <span class="c1"># Reading done!</span>
 
+        <span class="n">kpts_labels</span><span class="p">,</span> <span class="n">kpts_labels_idx</span> <span class="o">=</span> <span class="n">_read_kpath_labels</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">band_file</span><span class="p">,</span> <span class="n">n_k</span><span class="p">)</span>
+
         <span class="c1"># Save it to the HDF:</span>
         <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf_file</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bands_subgrp</span> <span class="ow">in</span> <span class="n">ar</span><span class="p">):</span>
@@ -679,6 +767,9 @@
             <span class="c1"># created. If it exists, the data is overwritten!</span>
             <span class="n">things_to_save</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;n_k&#39;</span><span class="p">,</span> <span class="s1">&#39;n_orbitals&#39;</span><span class="p">,</span> <span class="s1">&#39;proj_mat&#39;</span><span class="p">,</span>
                           <span class="s1">&#39;hopping&#39;</span><span class="p">,</span> <span class="s1">&#39;n_parproj&#39;</span><span class="p">,</span> <span class="s1">&#39;proj_mat_all&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">kpts_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">things_to_save</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;kpts_labels&#39;</span><span class="p">,</span> <span class="s1">&#39;kpts_labels_idx&#39;</span><span class="p">]</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;  Stored </span><span class="si">%i</span><span class="s2"> high-symmetry k-path labels: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">kpts_labels</span><span class="p">),</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">kpts_labels</span><span class="p">)))</span>
             <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">things_to_save</span><span class="p">:</span>
                 <span class="n">ar</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">bands_subgrp</span><span class="p">][</span><span class="n">it</span><span class="p">]</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()[</span><span class="n">it</span><span class="p">]</span></div>
 
