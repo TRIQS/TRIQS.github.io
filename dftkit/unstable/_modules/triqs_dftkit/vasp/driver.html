@@ -107,6 +107,7 @@
 <li class="toctree-l5"><a class="reference internal" href="../../../_autosummary/triqs_dftkit.vasp.converter.html">triqs_dftkit.vasp.converter</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../_autosummary/triqs_dftkit.vasp.driver.html">triqs_dftkit.vasp.driver</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../_autosummary/triqs_dftkit.vasp.plovasp.html">triqs_dftkit.vasp.plovasp</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../_autosummary/triqs_dftkit.vasp.symmetry.html">triqs_dftkit.vasp.symmetry</a></li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/triqs_dftkit.version.html">triqs_dftkit.version</a><ul>
@@ -283,18 +284,24 @@
 <span class="sd">        VASP executable name (e.g., &quot;vasp_std&quot;).</span>
 <span class="sd">    mpi_handler : MPIHandler</span>
 <span class="sd">        MPI configuration handler.</span>
+<span class="sd">    use_ibz : bool or None</span>
+<span class="sd">        Passed to Converter.convert_dft_input(): run on the irreducible BZ</span>
+<span class="sd">        with symmetrization. None (default) enables it whenever VASP used</span>
+<span class="sd">        symmetry and vaspout.h5 holds the symmetry data.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seedname</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">plo_cfg</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mpi_handler</span><span class="p">:</span> <span class="n">MPIHandler</span><span class="p">,</span>
-                 <span class="n">vasp_command</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;vasp_std&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+                 <span class="n">vasp_command</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;vasp_std&quot;</span><span class="p">,</span> <span class="n">use_ibz</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seedname</span> <span class="o">=</span> <span class="n">seedname</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">plo_cfg</span> <span class="o">=</span> <span class="n">plo_cfg</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">vasp_command</span> <span class="o">=</span> <span class="n">vasp_command</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mpi_handler</span> <span class="o">=</span> <span class="n">mpi_handler</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_ibz</span> <span class="o">=</span> <span class="n">use_ibz</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_vasp_process_id</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;VaspDriver(seedname=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">seedname</span><span class="si">}</span><span class="s2">, plo_cfg=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">plo_cfg</span><span class="si">}</span><span class="s2">, vasp_command=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">vasp_command</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;VaspDriver(seedname=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">seedname</span><span class="si">}</span><span class="s2">, plo_cfg=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">plo_cfg</span><span class="si">}</span><span class="s2">, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;vasp_command=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">vasp_command</span><span class="si">}</span><span class="s2">, use_ibz=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">use_ibz</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
 
     <span class="fm">__str__</span> <span class="o">=</span> <span class="fm">__repr__</span>
 
@@ -390,7 +397,7 @@
             <span class="n">generate_and_output_as_text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plo_cfg</span><span class="p">,</span> <span class="n">vasp_dir</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">mpi_handler</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="si">}</span><span class="s2">] Running VASP HDF5 converter&quot;</span><span class="p">)</span>
-            <span class="n">Converter</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">seedname</span><span class="p">)</span><span class="o">.</span><span class="n">convert_dft_input</span><span class="p">()</span>
+            <span class="n">Converter</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">seedname</span><span class="p">)</span><span class="o">.</span><span class="n">convert_dft_input</span><span class="p">(</span><span class="n">use_ibz</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">use_ibz</span><span class="p">)</span>
 
         <span class="n">mpi</span><span class="o">.</span><span class="n">barrier</span><span class="p">(</span><span class="n">poll_msec</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
 

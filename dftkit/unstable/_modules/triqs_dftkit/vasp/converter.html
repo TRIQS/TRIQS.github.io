@@ -107,6 +107,7 @@
 <li class="toctree-l5"><a class="reference internal" href="../../../_autosummary/triqs_dftkit.vasp.converter.html">triqs_dftkit.vasp.converter</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../_autosummary/triqs_dftkit.vasp.driver.html">triqs_dftkit.vasp.driver</a></li>
 <li class="toctree-l5"><a class="reference internal" href="../../../_autosummary/triqs_dftkit.vasp.plovasp.html">triqs_dftkit.vasp.plovasp</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../_autosummary/triqs_dftkit.vasp.symmetry.html">triqs_dftkit.vasp.symmetry</a></li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="../../../_autosummary/triqs_dftkit.version.html">triqs_dftkit.version</a><ul>
@@ -327,18 +328,38 @@
 
 <div class="viewcode-block" id="Converter.convert_dft_input">
 <a class="viewcode-back" href="../../../_autosummary/triqs_dftkit.vasp.converter.Converter.convert_dft_input.html#triqs_dftkit.vasp.converter.Converter.convert_dft_input">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">convert_dft_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">convert_dft_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_ibz</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vasp_h5</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ibz_tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Reads the input files, and stores the data in the HDFfile.</span>
 
 <span class="sd">        If KPOINTS_OPT projector data is detected in vaspout.h5, the bands</span>
 <span class="sd">        input is converted automatically by calling convert_bands_input().</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        use_ibz : bool or None, optional</span>
+<span class="sd">            Run on the irreducible Brillouin zone (IBZ) with symmetrization</span>
+<span class="sd">            instead of unfolding to the full k-grid. Requires the VASP symmetry</span>
+<span class="sd">            data in ``vasp_h5``. If ``None`` (default) the IBZ path is enabled</span>
+<span class="sd">            automatically whenever symmetry was used (n_k_ibz &lt; n_k) and the</span>
+<span class="sd">            symmetry data is available, all correlated shells are supported</span>
+<span class="sd">            (l &lt;= 2, symmetry-closed orbital set, orthonormal TRANSFORM, all</span>
+<span class="sd">            equivalent atoms projected), there is no spin-orbit coupling, and</span>
+<span class="sd">            the symmetrized IBZ sums reproduce the full grid (see ``ibz_tol``);</span>
+<span class="sd">            otherwise the converter falls back to the full grid with a note.</span>
+<span class="sd">            ``True`` raises instead of falling back. In text-based mode (no</span>
+<span class="sd">            vaspout.h5) a note is printed suggesting the h5 interface.</span>
+<span class="sd">        vasp_h5 : string, optional</span>
+<span class="sd">            Path to vaspout.h5 holding the k-point symmetry data. By default it</span>
+<span class="sd">            is looked up next to the basename, as for the KPOINTS_OPT data.</span>
+<span class="sd">        ibz_tol : float, optional</span>
+<span class="sd">            Largest accepted deviation of the symmetrized IBZ occupation (and</span>
+<span class="sd">            local levels, in eV) of the correlated shells from the full-grid</span>
+<span class="sd">            ones. Default 1e-3.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">energy_unit</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="c1"># VASP interface always uses eV</span>
         <span class="n">k_dep_projection</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="c1"># Symmetries are switched off for the moment</span>
-<span class="c1"># TODO: implement symmetries</span>
-        <span class="n">symm_op</span> <span class="o">=</span> <span class="mi">0</span>                                   <span class="c1"># Use symmetry groups for the k-sum</span>
+        <span class="n">symm_op</span> <span class="o">=</span> <span class="mi">0</span>                                   <span class="c1"># Use symmetry groups for the k-sum (set to 1 in IBZ mode)</span>
 
         <span class="c1"># Read and write only on the master node</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">mpi</span><span class="o">.</span><span class="n">is_master_node</span><span class="p">()):</span> <span class="k">return</span>
@@ -411,6 +432,7 @@
 
                 <span class="n">shells</span> <span class="o">=</span> <span class="p">[]</span>
                 <span class="n">corr_shells</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">corr_transforms</span> <span class="o">=</span> <span class="p">[]</span>   <span class="c1"># per corr-shell (dim x 2l+1) real-harmonic -&gt; orbital transform</span>
                 <span class="n">shion_to_shell</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">ish</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">p_shells</span><span class="p">))]</span>
                 <span class="n">cr_shion_to_shell</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">ish</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">p_shells</span><span class="p">))]</span>
                 <span class="n">shorbs_to_globalorbs</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">ish</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">p_shells</span><span class="p">))]</span>
@@ -438,6 +460,16 @@
                             <span class="n">shion_to_shell</span><span class="p">[</span><span class="n">ish</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">icsh</span><span class="p">)</span>
                             <span class="n">icsh</span> <span class="o">+=</span> <span class="mi">1</span>
                             <span class="n">corr_shells</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span>
+                            <span class="c1"># Transform built by PLOVASP for this ion, read straight</span>
+                            <span class="c1"># from the .pg header (no plo.cfg re-parse). Falls back to</span>
+                            <span class="c1"># the identity for legacy files written without it.</span>
+                            <span class="k">if</span> <span class="s1">&#39;tmatrix_re&#39;</span> <span class="ow">in</span> <span class="n">sh</span><span class="p">:</span>
+                                <span class="n">tm</span> <span class="o">=</span> <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sh</span><span class="p">[</span><span class="s1">&#39;tmatrix_re&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+                                      <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sh</span><span class="p">[</span><span class="s1">&#39;tmatrix_im&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">nm</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">pars</span><span class="p">[</span><span class="s1">&#39;l&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+                                <span class="n">tm</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">nm</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)[:</span><span class="n">pars</span><span class="p">[</span><span class="s1">&#39;dim&#39;</span><span class="p">],</span> <span class="p">:]</span>
+                            <span class="n">corr_transforms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tm</span><span class="p">)</span>
 
 
 <span class="c1"># TODO: generalize this to the case of multiple shell groups</span>
@@ -578,6 +610,107 @@
         <span class="c1">#used for certain routines within dft_tools if treating the inputs differently is required.</span>
         <span class="n">dft_code</span> <span class="o">=</span> <span class="s1">&#39;vasp&#39;</span>
 
+<span class="c1"># -----------------------------------------------------------------------------</span>
+<span class="c1"># IBZ mode: reduce the data to the irreducible BZ and build the correlated-shell</span>
+<span class="c1"># symmetry operations, so that DMFT can run on the IBZ with symmetrization.</span>
+<span class="c1"># -----------------------------------------------------------------------------</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">symmetry</span> <span class="k">as</span> <span class="n">_sym</span>
+        <span class="n">symm_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">sym_was_on</span> <span class="o">=</span> <span class="p">(</span><span class="n">n_k_ibz</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">n_k_ibz</span> <span class="o">&lt;</span> <span class="n">n_k</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">vasp_h5</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">vasp_h5</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vaspout_candidates</span><span class="p">()</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">c</span><span class="p">)),</span> <span class="s1">&#39;vaspout.h5&#39;</span><span class="p">)</span>
+        <span class="n">h5_sym</span> <span class="o">=</span> <span class="n">_sym</span><span class="o">.</span><span class="n">read_vasp_symmetry</span><span class="p">(</span><span class="n">vasp_h5</span><span class="p">)</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">vasp_h5</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">h5_available</span> <span class="o">=</span> <span class="n">h5_sym</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+        <span class="n">auto_ibz</span> <span class="o">=</span> <span class="n">use_ibz</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">auto_ibz</span><span class="p">:</span>
+            <span class="n">use_ibz</span> <span class="o">=</span> <span class="n">sym_was_on</span> <span class="ow">and</span> <span class="n">h5_available</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">SO</span>
+            <span class="k">if</span> <span class="n">sym_was_on</span> <span class="ow">and</span> <span class="n">h5_available</span> <span class="ow">and</span> <span class="n">SO</span><span class="p">:</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;  Note: IBZ symmetrization is not implemented with spin-orbit &quot;</span>
+                           <span class="s2">&quot;coupling; unfolding to the full k-grid.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">use_ibz</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">h5_available</span><span class="p">:</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;  WARNING: use_ibz requested but no VASP symmetry data found in &quot;</span>
+                       <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">vasp_h5</span><span class="si">}</span><span class="s2">&#39;. Falling back to the full k-grid (use_ibz=False).&quot;</span><span class="p">)</span>
+            <span class="n">use_ibz</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">h5_available</span><span class="p">:</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Note: running in text-based mode (no &#39;</span><span class="si">{</span><span class="n">vasp_h5</span><span class="si">}</span><span class="s2">&#39;); using the full &quot;</span>
+                       <span class="s2">&quot;k-grid. For symmetry-reduced (IBZ) runs use the vaspout.h5 interface.&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="ow">not</span> <span class="n">use_ibz</span><span class="p">)</span> <span class="ow">and</span> <span class="n">sym_was_on</span><span class="p">:</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;  Note: symmetry was used in VASP but use_ibz=False; unfolding to the &quot;</span>
+                       <span class="s2">&quot;full k-grid.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">use_ibz</span><span class="p">:</span>
+            <span class="c1"># In auto mode a projector set that cannot be symmetrized falls back to</span>
+            <span class="c1"># the full grid, so that setups that worked before keep working.</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># Guard against under-determined correlated shells. If VASP emitted</span>
+                <span class="c1"># only a subset of the 2l+1 real harmonics (e.g. a partial LOCPROJ</span>
+                <span class="c1"># selection) without a TRANSFORM defining a proper subspace, the</span>
+                <span class="c1"># absent orbitals are zero-filled in proj_mat. Their symmetry</span>
+                <span class="c1"># partners are missing, so symmetrizing on the IBZ would leak the</span>
+                <span class="c1"># kept orbitals into the dead ones (the invariance guard cannot see</span>
+                <span class="c1"># this: an identity transform is trivially invariant). Detect and</span>
+                <span class="c1"># refuse before building the symmetry operations.</span>
+                <span class="k">for</span> <span class="n">icrsh</span><span class="p">,</span> <span class="n">csh</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">corr_shells</span><span class="p">):</span>
+                    <span class="n">dim</span> <span class="o">=</span> <span class="n">csh</span><span class="p">[</span><span class="s1">&#39;dim&#39;</span><span class="p">]</span>
+                    <span class="n">orb_weight</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">proj_mat</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">icrsh</span><span class="p">,</span> <span class="p">:</span><span class="n">dim</span><span class="p">,</span> <span class="p">:]),</span>
+                                           <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>            <span class="c1"># (dim,)</span>
+                    <span class="n">scale</span> <span class="o">=</span> <span class="n">orb_weight</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+                    <span class="n">dead</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">orb_weight</span> <span class="o">&lt;=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">1e-10</span><span class="p">,</span> <span class="mf">1e-8</span> <span class="o">*</span> <span class="n">scale</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">scale</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">dead</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;IBZ symmetrization: correlated shell </span><span class="si">{</span><span class="n">icrsh</span><span class="si">}</span><span class="s2"> (atom &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">csh</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;atom&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">, l=</span><span class="si">{</span><span class="n">csh</span><span class="p">[</span><span class="s1">&#39;l&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, dim=</span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s2">) has zero-weight &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;projector orbital(s) </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span><span class="w"> </span><span class="n">dead</span><span class="p">))</span><span class="si">}</span><span class="s2">. This happens when &quot;</span>
+                            <span class="s2">&quot;only a subset of the 2l+1 real harmonics was projected (e.g. a &quot;</span>
+                            <span class="s2">&quot;partial LOCPROJ selection) without a TRANSFORM defining a &quot;</span>
+                            <span class="s2">&quot;symmetry-adapted subspace. The missing symmetry partners cannot &quot;</span>
+                            <span class="s2">&quot;be restored, so the k-sum cannot be symmetrized on the &quot;</span>
+                            <span class="s2">&quot;irreducible BZ. Project the full shell (or a complete irrep via &quot;</span>
+                            <span class="s2">&quot;TRANSFORM), or run on the full grid (use_ibz=False).&quot;</span><span class="p">)</span>
+
+                <span class="n">symm_data</span> <span class="o">=</span> <span class="n">_sym</span><span class="o">.</span><span class="n">build_symmcorr</span><span class="p">(</span><span class="n">vasp_h5</span><span class="p">,</span> <span class="n">corr_shells</span><span class="p">,</span> <span class="n">corr_transforms</span><span class="p">,</span> <span class="n">SP</span><span class="p">,</span> <span class="n">SO</span><span class="p">,</span> <span class="n">sym</span><span class="o">=</span><span class="n">h5_sym</span><span class="p">)</span>
+
+                <span class="c1"># The symmetrized IBZ sums must reproduce the full grid, which</span>
+                <span class="c1"># is still at hand here, for the occupation and the local levels.</span>
+                <span class="n">err_occ</span><span class="p">,</span> <span class="n">err_hloc</span> <span class="o">=</span> <span class="n">_sym</span><span class="o">.</span><span class="n">symmetrization_error</span><span class="p">(</span><span class="n">symm_data</span><span class="p">,</span> <span class="n">proj_mat</span><span class="p">,</span> <span class="n">hopping</span><span class="p">,</span> <span class="n">f_weights</span><span class="p">,</span>
+                                                              <span class="n">bz_weights</span><span class="p">,</span> <span class="n">n_orbitals</span><span class="p">,</span> <span class="n">corr_shells</span><span class="p">)</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  IBZ check: max deviation from the full grid </span><span class="si">{</span><span class="n">err_occ</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2"> &quot;</span>
+                           <span class="sa">f</span><span class="s2">&quot;(occupation), </span><span class="si">{</span><span class="n">err_hloc</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2"> eV (local levels).&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">max</span><span class="p">(</span><span class="n">err_occ</span><span class="p">,</span> <span class="n">err_hloc</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">ibz_tol</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;IBZ symmetrization: the symmetrized IBZ sums deviate from the full &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;grid by more than ibz_tol=</span><span class="si">{</span><span class="n">ibz_tol</span><span class="si">:</span><span class="s2">.0e</span><span class="si">}</span><span class="s2">. Run on the full grid &quot;</span>
+                        <span class="s2">&quot;(use_ibz=False).&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">RuntimeError</span><span class="p">,</span> <span class="ne">NotImplementedError</span><span class="p">)</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">auto_ibz</span><span class="p">:</span> <span class="k">raise</span>
+                <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Note: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="se">\n</span><span class="s2">  Unfolding to the full k-grid instead.&quot;</span><span class="p">)</span>
+                <span class="n">use_ibz</span><span class="p">,</span> <span class="n">symm_data</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">use_ibz</span><span class="p">:</span>
+            <span class="n">nkibz</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">symm_data</span><span class="p">[</span><span class="s1">&#39;n_k_ibz&#39;</span><span class="p">])</span>
+            <span class="n">mpi</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  IBZ mode: reducing </span><span class="si">{</span><span class="n">n_k</span><span class="si">}</span><span class="s2"> k-points to </span><span class="si">{</span><span class="n">nkibz</span><span class="si">}</span><span class="s2"> irreducible &quot;</span>
+                       <span class="sa">f</span><span class="s2">&quot;k-points with </span><span class="si">{</span><span class="n">symm_data</span><span class="p">[</span><span class="s1">&#39;n_symm&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> symmetry operations.&quot;</span><span class="p">)</span>
+
+            <span class="c1"># The first nkibz points of the (plotools-ordered) full grid are the IBZ</span>
+            <span class="c1"># representatives, so slicing recovers the irreducible data.</span>
+            <span class="n">sl</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nkibz</span><span class="p">)</span>
+            <span class="n">hopping</span>       <span class="o">=</span> <span class="n">hopping</span><span class="p">[</span><span class="n">sl</span><span class="p">]</span>
+            <span class="n">f_weights</span>     <span class="o">=</span> <span class="n">f_weights</span><span class="p">[</span><span class="n">sl</span><span class="p">]</span>
+            <span class="n">n_orbitals</span>    <span class="o">=</span> <span class="n">n_orbitals</span><span class="p">[</span><span class="n">sl</span><span class="p">]</span>
+            <span class="n">proj_mat</span>      <span class="o">=</span> <span class="n">proj_mat</span><span class="p">[</span><span class="n">sl</span><span class="p">]</span>
+            <span class="n">kpts</span>          <span class="o">=</span> <span class="n">kpts</span><span class="p">[</span><span class="n">sl</span><span class="p">]</span>
+            <span class="n">kpts_cart</span>     <span class="o">=</span> <span class="n">kpts_cart</span><span class="p">[</span><span class="n">sl</span><span class="p">]</span>
+            <span class="n">band_window</span>   <span class="o">=</span> <span class="p">[</span><span class="n">bw</span><span class="p">[</span><span class="n">sl</span><span class="p">]</span> <span class="k">for</span> <span class="n">bw</span> <span class="ow">in</span> <span class="n">band_window</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_or_hk</span> <span class="o">==</span> <span class="s1">&#39;hk&#39;</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_or_hk</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">proj_mat_csc</span> <span class="o">=</span> <span class="n">proj_mat_csc</span><span class="p">[</span><span class="n">sl</span><span class="p">]</span>
+            <span class="n">n_k</span> <span class="o">=</span> <span class="n">nkibz</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_k</span> <span class="o">=</span> <span class="n">nkibz</span>
+            <span class="n">bz_weights</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">symm_data</span><span class="p">[</span><span class="s1">&#39;ibz_weights&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">kpt_weights</span> <span class="o">=</span> <span class="n">bz_weights</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">symm_op</span> <span class="o">=</span> <span class="mi">1</span>
+
         <span class="c1"># Save it to the HDF:</span>
         <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf_file</span><span class="p">,</span><span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dft_subgrp</span> <span class="ow">in</span> <span class="n">ar</span><span class="p">):</span> <span class="n">ar</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dft_subgrp</span><span class="p">)</span>
@@ -599,16 +732,15 @@
             <span class="k">if</span> <span class="n">n_k_ibz</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">ar</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">misc_subgrp</span><span class="p">][</span><span class="s1">&#39;n_k_ibz&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">n_k_ibz</span>
 
-        <span class="c1"># Symmetries are used, so now convert symmetry information for *correlated* orbitals:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">convert_symmetry_input</span><span class="p">(</span><span class="n">ctrl_head</span><span class="p">,</span> <span class="n">orbits</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">corr_shells</span><span class="p">,</span> <span class="n">symm_subgrp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">symmcorr_subgrp</span><span class="p">)</span>
+        <span class="c1"># Symmetry information for *correlated* orbitals:</span>
+        <span class="k">if</span> <span class="n">use_ibz</span> <span class="ow">and</span> <span class="n">symm_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write_symmetry_input</span><span class="p">(</span><span class="n">symm_data</span><span class="p">,</span> <span class="n">symm_subgrp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">symmcorr_subgrp</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">convert_symmetry_input</span><span class="p">(</span><span class="n">ctrl_head</span><span class="p">,</span> <span class="n">orbits</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">corr_shells</span><span class="p">,</span> <span class="n">symm_subgrp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">symmcorr_subgrp</span><span class="p">)</span>
 
         <span class="c1"># Auto-convert KPOINTS_OPT band/projector data when available.</span>
-        <span class="n">vaspout_candidates</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basename</span><span class="p">,</span> <span class="s1">&#39;vaspout.h5&#39;</span><span class="p">),</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basename</span><span class="p">),</span> <span class="s1">&#39;vaspout.h5&#39;</span><span class="p">)</span>
-        <span class="p">]</span>
         <span class="n">kpoints_opt_found</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">vaspout_candidates</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vaspout_candidates</span><span class="p">():</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">candidate</span><span class="p">):</span>
                 <span class="k">continue</span>
             <span class="k">try</span><span class="p">:</span>
@@ -880,10 +1012,7 @@
         <span class="n">n_spin_blocs</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SO</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SP</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
 
         <span class="c1"># Read KPOINTS_OPT data directly from vaspout.h5</span>
-        <span class="n">vaspout_candidates</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basename</span><span class="p">,</span> <span class="s1">&#39;vaspout.h5&#39;</span><span class="p">),</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basename</span><span class="p">),</span> <span class="s1">&#39;vaspout.h5&#39;</span><span class="p">)</span>
-        <span class="p">]</span>
+        <span class="n">vaspout_candidates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vaspout_candidates</span><span class="p">()</span>
         <span class="n">vaspout_h5</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">vaspout_candidates</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">candidate</span><span class="p">):</span>
@@ -1064,6 +1193,34 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">misc_subgrp</span> <span class="ow">in</span> <span class="n">ar</span><span class="p">):</span> <span class="n">ar</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="n">misc_subgrp</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">things_to_save</span><span class="p">:</span> <span class="n">ar</span><span class="p">[</span><span class="n">misc_subgrp</span><span class="p">][</span><span class="n">it</span><span class="p">]</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()[</span><span class="n">it</span><span class="p">]</span></div>
 
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_vaspout_candidates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Locations where vaspout.h5 is looked up, relative to the basename.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basename</span><span class="p">,</span> <span class="s1">&#39;vaspout.h5&#39;</span><span class="p">),</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basename</span><span class="p">),</span> <span class="s1">&#39;vaspout.h5&#39;</span><span class="p">)]</span>
+
+<div class="viewcode-block" id="Converter.write_symmetry_input">
+<a class="viewcode-back" href="../../../_autosummary/triqs_dftkit.vasp.converter.Converter.write_symmetry_input.html#triqs_dftkit.vasp.converter.Converter.write_symmetry_input">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_symmetry_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symm_data</span><span class="p">,</span> <span class="n">symm_subgrp</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write the correlated-shell symmetry operations (built from the VASP</span>
+<span class="sd">        symmetry data) to the symmetry subgroup of the HDF5 archive.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        symm_data : dict</span>
+<span class="sd">            Output of ``triqs_dftkit.vasp.symmetry.build_symmcorr`` holding</span>
+<span class="sd">            n_symm, n_atoms, perm, orbits, SO, SP, time_inv, mat, mat_tinv.</span>
+<span class="sd">        symm_subgrp : string</span>
+<span class="sd">            Name of the symmetry group in the HDF5 archive.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">HDFArchive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf_file</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ar</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">symm_subgrp</span> <span class="ow">in</span> <span class="n">ar</span><span class="p">):</span> <span class="n">ar</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="n">symm_subgrp</span><span class="p">)</span>
+            <span class="n">things_to_save</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;n_symm&#39;</span><span class="p">,</span> <span class="s1">&#39;n_atoms&#39;</span><span class="p">,</span> <span class="s1">&#39;perm&#39;</span><span class="p">,</span> <span class="s1">&#39;orbits&#39;</span><span class="p">,</span> <span class="s1">&#39;SO&#39;</span><span class="p">,</span> <span class="s1">&#39;SP&#39;</span><span class="p">,</span>
+                              <span class="s1">&#39;time_inv&#39;</span><span class="p">,</span> <span class="s1">&#39;mat&#39;</span><span class="p">,</span> <span class="s1">&#39;mat_tinv&#39;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">things_to_save</span><span class="p">:</span>
+                <span class="n">ar</span><span class="p">[</span><span class="n">symm_subgrp</span><span class="p">][</span><span class="n">it</span><span class="p">]</span> <span class="o">=</span> <span class="n">symm_data</span><span class="p">[</span><span class="n">it</span><span class="p">]</span></div>
 
 
 <div class="viewcode-block" id="Converter.convert_symmetry_input">
