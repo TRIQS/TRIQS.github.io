@@ -96,125 +96,341 @@ $(function(){initNavTree('dynint_8cpp_source.html','',''); });
 <div class="contents">
 <a href="dynint_8cpp.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span> </div>
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
-<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &quot;<a class="code" href="dynint_8hpp.html">triqs_xca/dynint.hpp</a>&quot;</span></div>
-<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span> </div>
-<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span> </div>
-<div class="foldopen" id="foldopen00006" data-start="{" data-end="}">
-<div class="line"><a id="l00006" name="l00006"></a><span class="lineno"><a class="line" href="namespacetriqs__xca_1_1dynint.html">    6</a></span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacetriqs__xca_1_1dynint.html">triqs_xca::dynint</a> {</div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &lt;set&gt;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &lt;sstream&gt;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &lt;stdexcept&gt;</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &lt;string&gt;</span></div>
 <div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span> </div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span>    <span class="keyword">using </span>cppdlr::_;</div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &quot;<a class="code" href="dynint_8hpp.html">triqs_xca/dynint.hpp</a>&quot;</span></div>
 <div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span>    <span class="keyword">using </span>nda::range;</div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span> </div>
-<div class="foldopen" id="foldopen00012" data-start="{" data-end="}">
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno"><a class="line" href="namespacetriqs__xca_1_1dynint.html#ac831b46445d14b4dedeb4521f2bbac54">   12</a></span>    nda::array&lt;dcomplex, 3&gt; <a class="code hl_function" href="namespacetriqs__xca_1_1dynint.html#ac831b46445d14b4dedeb4521f2bbac54">get_extended_coefficients</a>(</div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>        nda::array_const_view&lt;dcomplex, 3&gt; hyb_coeffs, </div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>        nda::array_const_view&lt;dcomplex, 3&gt; dynint_coeffs) {</div>
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span> </div>
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>        assert( hyb_coeffs.extent(0) == dynint_coeffs.extent(0) );</div>
-<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>        assert( hyb_coeffs.extent(1) == hyb_coeffs.extent(2) );</div>
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>        assert( dynint_coeffs.extent(1) == dynint_coeffs.extent(2) );</div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>        </div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>        <span class="keywordtype">int</span> r = hyb_coeffs.extent(0);</div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>        <span class="keywordtype">int</span> n_hyb = hyb_coeffs.extent(1);</div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>        <span class="keywordtype">int</span> n_dynint = dynint_coeffs.extent(1);</div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>        <span class="keywordtype">int</span> n_ext = n_hyb + n_dynint;</div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span> </div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>        <span class="keyword">auto</span> ext_coeffs = nda::array&lt;dcomplex, 3&gt;::zeros(r, n_ext, n_ext);</div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>        </div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>        ext_coeffs(_, range(0, n_hyb), range(0, n_hyb)) = hyb_coeffs;</div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>        ext_coeffs(_, range(n_hyb, n_ext), range(n_hyb, n_ext)) = dynint_coeffs;</div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
+<div class="foldopen" id="foldopen00011" data-start="{" data-end="}">
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno"><a class="line" href="namespacetriqs__xca_1_1dynint.html">   11</a></span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacetriqs__xca_1_1dynint.html">triqs_xca::dynint</a> {</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>    <span class="keyword">using </span>cppdlr::_;</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span> </div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>    <span class="keyword">using </span>nda::range;</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span> </div>
+<div class="foldopen" id="foldopen00017" data-start="{" data-end="}">
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno"><a class="line" href="namespacetriqs__xca_1_1dynint.html#ac831b46445d14b4dedeb4521f2bbac54">   17</a></span>    nda::array&lt;dcomplex, 3&gt; <a class="code hl_function" href="namespacetriqs__xca_1_1dynint.html#ac831b46445d14b4dedeb4521f2bbac54">get_extended_coefficients</a>(</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>        nda::array_const_view&lt;dcomplex, 3&gt; hyb_coeffs, </div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>        nda::array_const_view&lt;dcomplex, 3&gt; dynint_coeffs) {</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span> </div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>        assert( hyb_coeffs.extent(0) == dynint_coeffs.extent(0) );</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>        assert( hyb_coeffs.extent(1) == hyb_coeffs.extent(2) );</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>        assert( dynint_coeffs.extent(1) == dynint_coeffs.extent(2) );</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>        </div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>        <span class="keywordtype">int</span> r = hyb_coeffs.extent(0);</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>        <span class="keywordtype">int</span> n_hyb = hyb_coeffs.extent(1);</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>        <span class="keywordtype">int</span> n_dynint = dynint_coeffs.extent(1);</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>        <span class="keywordtype">int</span> n_ext = n_hyb + n_dynint;</div>
 <div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span> </div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>        <span class="keywordflow">return</span> ext_coeffs;</div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    }</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>        <span class="keyword">auto</span> ext_coeffs = nda::array&lt;dcomplex, 3&gt;::zeros(r, n_ext, n_ext);</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>        </div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>        ext_coeffs(_, range(0, n_hyb), range(0, n_hyb)) = hyb_coeffs;</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>        ext_coeffs(_, range(n_hyb, n_ext), range(n_hyb, n_ext)) = dynint_coeffs;</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span> </div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>        <span class="keywordflow">return</span> ext_coeffs;</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    }</div>
 </div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span> </div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    <span class="keyword">template</span> &lt;<span class="keywordtype">bool</span> IsComplex&gt;</div>
-<div class="foldopen" id="foldopen00034" data-start="{" data-end="}">
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno"><a class="line" href="namespacetriqs__xca_1_1dynint.html#a3702b08908b9d2e5da25af1a8c6c6f8b">   34</a></span>    <a class="code hl_class" href="classtriqs__xca_1_1dense_1_1DenseFSet.html">DenseFSet</a> <a class="code hl_function" href="namespacetriqs__xca_1_1dynint.html#a3702b08908b9d2e5da25af1a8c6c6f8b">get_operators_and_interactions_dense_impl</a>(</div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>        <span class="keyword">const</span> <a class="code hl_typedef" href="namespacetriqs__xca_1_1atom__diag.html#a927f2a2556c1c0173cdb5b693e765e5f">triqs_atom_diag_t&lt;IsComplex&gt;</a> &amp;ad, </div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>        nda::array_const_view&lt;dcomplex, 3&gt; hyb_coeffs, </div>
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>        nda::array_const_view&lt;dcomplex, 3&gt; dynint_coeffs,  </div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>        std::vector&lt;triqs::operators::many_body_operator_real&gt; <span class="keyword">const</span> &amp;dynint_ops) {</div>
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span> </div>
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>        <span class="keyword">auto</span> ext_coeffs = <a class="code hl_function" href="namespacetriqs__xca_1_1dynint.html#ac831b46445d14b4dedeb4521f2bbac54">get_extended_coefficients</a>(hyb_coeffs, dynint_coeffs);</div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>        <span class="keywordtype">int</span> n_ext = ext_coeffs.extent(1);</div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span> </div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>        <span class="keyword">auto</span> [Fs, Fdags] = <a class="code hl_function" href="namespacetriqs__xca_1_1atom__diag.html#ae1f6ba8b632ec60b0ce53cb3d6f01916">atom_diag::get_operators_dense</a>(ad);</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span> </div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>    <span class="keyword">template</span> &lt;<span class="keywordtype">bool</span> IsComplex&gt;</div>
+<div class="foldopen" id="foldopen00039" data-start="{" data-end="}">
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno"><a class="line" href="namespacetriqs__xca_1_1dynint.html#a3702b08908b9d2e5da25af1a8c6c6f8b">   39</a></span>    <a class="code hl_class" href="classtriqs__xca_1_1dense_1_1DenseFSet.html">DenseFSet</a> <a class="code hl_function" href="namespacetriqs__xca_1_1dynint.html#a3702b08908b9d2e5da25af1a8c6c6f8b">get_operators_and_interactions_dense_impl</a>(</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>        <span class="keyword">const</span> <a class="code hl_typedef" href="namespacetriqs__xca_1_1atom__diag.html#a927f2a2556c1c0173cdb5b693e765e5f">triqs_atom_diag_t&lt;IsComplex&gt;</a> &amp;ad, </div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>        nda::array_const_view&lt;dcomplex, 3&gt; hyb_coeffs, </div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>        nda::array_const_view&lt;dcomplex, 3&gt; dynint_coeffs,  </div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>        std::vector&lt;triqs::operators::many_body_operator_real&gt; <span class="keyword">const</span> &amp;dynint_ops) {</div>
 <div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>        <span class="comment">// Create DenseFSet with interactions included as additional operators</span></div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span> </div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>        <span class="keywordtype">int</span> N = ad.get_full_hilbert_space_dim();</div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span> </div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>        nda::array&lt;dcomplex, 3&gt; Fs_ext = nda::zeros&lt;dcomplex&gt;(n_ext, N, N);</div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>        nda::array&lt;dcomplex, 3&gt; Fdags_ext = nda::zeros&lt;dcomplex&gt;(n_ext, N, N);</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>        <span class="keyword">auto</span> ext_coeffs = <a class="code hl_function" href="namespacetriqs__xca_1_1dynint.html#ac831b46445d14b4dedeb4521f2bbac54">get_extended_coefficients</a>(hyb_coeffs, dynint_coeffs);</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>        <span class="keywordtype">int</span> n_ext = ext_coeffs.extent(1);</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>        <span class="keyword">auto</span> [Fs, Fdags] = <a class="code hl_function" href="namespacetriqs__xca_1_1atom__diag.html#ae1f6ba8b632ec60b0ce53cb3d6f01916">atom_diag::get_operators_dense</a>(ad);</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span> </div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>        <span class="comment">// Create DenseFSet with interactions included as additional operators</span></div>
 <div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span> </div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>        <span class="keywordtype">int</span> n_hyb = hyb_coeffs.extent(1);</div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>        </div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>        Fs_ext(range(0, n_hyb), _, _) = Fs;</div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>        Fdags_ext(range(0, n_hyb), _, _) = Fdags;</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>        <span class="keywordtype">int</span> N = ad.get_full_hilbert_space_dim();</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span> </div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>        nda::array&lt;dcomplex, 3&gt; Fs_ext = nda::zeros&lt;dcomplex&gt;(n_ext, N, N);</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>        nda::array&lt;dcomplex, 3&gt; Fdags_ext = nda::zeros&lt;dcomplex&gt;(n_ext, N, N);</div>
 <div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span> </div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>        <span class="comment">// Check atom diag subspaces.</span></div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>        assert( ad.n_subspaces() == 1 );</div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span> </div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>        <span class="keyword">auto</span> U_mat = ad.get_unitary_matrix(0);</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>        <span class="keywordtype">int</span> n_hyb = hyb_coeffs.extent(1);</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>        </div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>        Fs_ext(range(0, n_hyb), _, _) = Fs;</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>        Fdags_ext(range(0, n_hyb), _, _) = Fdags;</div>
 <div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span> </div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; dynint_ops.size(); ++i) {</div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>            <span class="keyword">auto</span> op = dynint_ops[i];</div>
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>            <span class="keyword">auto</span> op_mat = U_mat * ad.get_op_mat(op).block_mat[0] * nda::conj(nda::transpose(U_mat));</div>
-<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>            Fs_ext(n_hyb + i, _, _) = op_mat;</div>
-<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>            Fdags_ext(n_hyb + i, _, _) = nda::conj(nda::transpose(op_mat));</div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>            std::cout &lt;&lt; <span class="stringliteral">&quot;i = &quot;</span> &lt;&lt; i &lt;&lt; <span class="stringliteral">&quot;, op = &quot;</span> &lt;&lt; op &lt;&lt; std::endl;</div>
-<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>            std::cout &lt;&lt; <span class="stringliteral">&quot;op_mat =&quot;</span> &lt;&lt; op_mat &lt;&lt; std::endl;</div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>        }</div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span> </div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>        <span class="keywordflow">for</span>(<span class="keywordtype">int</span> i = 0; i &lt; n_ext; ++i) {</div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>            std::cout &lt;&lt; <span class="stringliteral">&quot;Operator (ext) &quot;</span> &lt;&lt; i &lt;&lt; <span class="stringliteral">&quot;:\n&quot;</span>;</div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>            std::cout &lt;&lt; <span class="stringliteral">&quot;F_ext =&quot;</span> &lt;&lt; Fs_ext(i, _, _) &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>            std::cout &lt;&lt; <span class="stringliteral">&quot;Fdag_ext =&quot;</span> &lt;&lt; Fdags_ext(i, _, _) &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>        }</div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span> </div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>        <span class="keywordflow">for</span>(<span class="keywordtype">int</span> i = 0; i &lt; n_ext; ++i) {</div>
-<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>            <span class="keywordflow">for</span>(<span class="keywordtype">int</span> j = 0; j &lt; n_ext; ++j) {</div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>                std::cout &lt;&lt; <span class="stringliteral">&quot;Coefficients for operators &quot;</span> &lt;&lt; i &lt;&lt; <span class="stringliteral">&quot; and &quot;</span> &lt;&lt; j &lt;&lt; <span class="stringliteral">&quot;:&quot;</span>;</div>
-<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>                std::cout &lt;&lt; ext_coeffs(_, i, j) &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>            }</div>
-<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>        }</div>
-<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>        </div>
-<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>        <span class="keywordflow">return</span> <a class="code hl_class" href="classtriqs__xca_1_1dense_1_1DenseFSet.html">DenseFSet</a>{Fs_ext, Fdags_ext, ext_coeffs};</div>
-<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>    }</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>        <span class="comment">// Check atom diag subspaces, the interaction operators are read from subspace 0 only</span></div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>        <span class="keywordflow">if</span> (ad.n_subspaces() != 1)</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>            <span class="keywordflow">throw</span> std::invalid_argument(<span class="stringliteral">&quot;get_operators_and_interactions_dense: dynamical interactions require an atom_diag &quot;</span></div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>                                        <span class="stringliteral">&quot;with a single subspace, got &quot;</span> + std::to_string(ad.n_subspaces())</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>                                        + <span class="stringliteral">&quot;. Build it with an empty list of conserved operators.&quot;</span>);</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span> </div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>        <span class="keyword">auto</span> U_mat = ad.get_unitary_matrix(0);</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span> </div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; dynint_ops.size(); ++i) {</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>            <span class="keyword">auto</span> op = dynint_ops[i];</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>            <span class="keyword">auto</span> op_mat = U_mat * ad.get_op_mat(op).block_mat[0] * nda::conj(nda::transpose(U_mat));</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>            Fs_ext(n_hyb + i, _, _) = op_mat;</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>            Fdags_ext(n_hyb + i, _, _) = nda::conj(nda::transpose(op_mat));</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>            <span class="comment">//std::cout &lt;&lt; &quot;i = &quot; &lt;&lt; i &lt;&lt; &quot;, op = &quot; &lt;&lt; op &lt;&lt; std::endl;</span></div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>            <span class="comment">//std::cout &lt;&lt; &quot;op_mat =&quot; &lt;&lt; op_mat &lt;&lt; std::endl;</span></div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>        }</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span> </div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>        <span class="comment">/*</span></div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span><span class="comment">        for(int i = 0; i &lt; n_ext; ++i) {</span></div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span><span class="comment">            std::cout &lt;&lt; &quot;Operator (ext) &quot; &lt;&lt; i &lt;&lt; &quot;:\n&quot;;</span></div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span><span class="comment">            std::cout &lt;&lt; &quot;F_ext =&quot; &lt;&lt; Fs_ext(i, _, _) &lt;&lt; &quot;\n&quot;;</span></div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span><span class="comment">            std::cout &lt;&lt; &quot;Fdag_ext =&quot; &lt;&lt; Fdags_ext(i, _, _) &lt;&lt; &quot;\n&quot;;</span></div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span><span class="comment">        }</span></div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span><span class="comment"></span> </div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span><span class="comment">        for(int i = 0; i &lt; n_ext; ++i) {</span></div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span><span class="comment">            for(int j = 0; j &lt; n_ext; ++j) {</span></div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span><span class="comment">                std::cout &lt;&lt; &quot;Coefficients for operators &quot; &lt;&lt; i &lt;&lt; &quot; and &quot; &lt;&lt; j &lt;&lt; &quot;:&quot;;</span></div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span><span class="comment">                std::cout &lt;&lt; ext_coeffs(_, i, j) &lt;&lt; &quot;\n&quot;;</span></div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span><span class="comment">            }</span></div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span><span class="comment">        }</span></div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span><span class="comment">        */</span></div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>        </div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>        <span class="keywordflow">return</span> <a class="code hl_class" href="classtriqs__xca_1_1dense_1_1DenseFSet.html">DenseFSet</a>{Fs_ext, Fdags_ext, ext_coeffs};</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>    }</div>
 </div>
-<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span> </div>
-<div class="foldopen" id="foldopen00087" data-start="{" data-end="}">
-<div class="line"><a id="l00087" name="l00087"></a><span class="lineno"><a class="line" href="namespacetriqs__xca_1_1dynint.html#af8e24ee0410e5302711105595f24cf7b">   87</a></span>    <a class="code hl_class" href="classtriqs__xca_1_1dense_1_1DenseFSet.html">DenseFSet</a> <a class="code hl_function" href="namespacetriqs__xca_1_1dynint.html#af8e24ee0410e5302711105595f24cf7b">get_operators_and_interactions_dense</a>(</div>
-<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>        <span class="keyword">const</span> <a class="code hl_typedef" href="namespacetriqs__xca_1_1atom__diag.html#a927f2a2556c1c0173cdb5b693e765e5f">triqs_atom_diag_t&lt;true&gt;</a> &amp;ad, </div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>        nda::array_const_view&lt;dcomplex, 3&gt; hyb_coeffs, </div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>        nda::array_const_view&lt;dcomplex, 3&gt; dynint_coeffs,  </div>
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>        std::vector&lt;triqs::operators::many_body_operator_real&gt; <span class="keyword">const</span> &amp;dynint_ops) {</div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>        <span class="keywordflow">return</span> <a class="code hl_function" href="namespacetriqs__xca_1_1dynint.html#a3702b08908b9d2e5da25af1a8c6c6f8b">get_operators_and_interactions_dense_impl</a>(ad, hyb_coeffs, dynint_coeffs, dynint_ops);</div>
-<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>    }</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span> </div>
+<div class="foldopen" id="foldopen00097" data-start="{" data-end="}">
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno"><a class="line" href="namespacetriqs__xca_1_1dynint.html#af8e24ee0410e5302711105595f24cf7b">   97</a></span>    <a class="code hl_class" href="classtriqs__xca_1_1dense_1_1DenseFSet.html">DenseFSet</a> <a class="code hl_function" href="namespacetriqs__xca_1_1dynint.html#af8e24ee0410e5302711105595f24cf7b">get_operators_and_interactions_dense</a>(</div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>        <span class="keyword">const</span> <a class="code hl_typedef" href="namespacetriqs__xca_1_1atom__diag.html#a927f2a2556c1c0173cdb5b693e765e5f">triqs_atom_diag_t&lt;true&gt;</a> &amp;ad, </div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>        nda::array_const_view&lt;dcomplex, 3&gt; hyb_coeffs, </div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>        nda::array_const_view&lt;dcomplex, 3&gt; dynint_coeffs,  </div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>        std::vector&lt;triqs::operators::many_body_operator_real&gt; <span class="keyword">const</span> &amp;dynint_ops) {</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>        <span class="keywordflow">return</span> <a class="code hl_function" href="namespacetriqs__xca_1_1dynint.html#a3702b08908b9d2e5da25af1a8c6c6f8b">get_operators_and_interactions_dense_impl</a>(ad, hyb_coeffs, dynint_coeffs, dynint_ops);</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>    }</div>
 </div>
-<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span> </div>
-<div class="foldopen" id="foldopen00095" data-start="{" data-end="}">
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno"><a class="line" href="namespacetriqs__xca_1_1dynint.html#ab07f5bbc2f892b596e64f02927170381">   95</a></span>    <a class="code hl_class" href="classtriqs__xca_1_1dense_1_1DenseFSet.html">DenseFSet</a> <a class="code hl_function" href="namespacetriqs__xca_1_1dynint.html#af8e24ee0410e5302711105595f24cf7b">get_operators_and_interactions_dense</a>(</div>
-<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>        <span class="keyword">const</span> <a class="code hl_typedef" href="namespacetriqs__xca_1_1atom__diag.html#a927f2a2556c1c0173cdb5b693e765e5f">triqs_atom_diag_t&lt;false&gt;</a> &amp;ad, </div>
-<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>        nda::array_const_view&lt;dcomplex, 3&gt; hyb_coeffs, </div>
-<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>        nda::array_const_view&lt;dcomplex, 3&gt; dynint_coeffs,  </div>
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>        std::vector&lt;triqs::operators::many_body_operator_real&gt; <span class="keyword">const</span> &amp;dynint_ops) {</div>
-<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>        <span class="keywordflow">return</span> <a class="code hl_function" href="namespacetriqs__xca_1_1dynint.html#a3702b08908b9d2e5da25af1a8c6c6f8b">get_operators_and_interactions_dense_impl</a>(ad, hyb_coeffs, dynint_coeffs, dynint_ops);</div>
-<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>    }</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span> </div>
+<div class="foldopen" id="foldopen00105" data-start="{" data-end="}">
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno"><a class="line" href="namespacetriqs__xca_1_1dynint.html#ab07f5bbc2f892b596e64f02927170381">  105</a></span>    <a class="code hl_class" href="classtriqs__xca_1_1dense_1_1DenseFSet.html">DenseFSet</a> <a class="code hl_function" href="namespacetriqs__xca_1_1dynint.html#af8e24ee0410e5302711105595f24cf7b">get_operators_and_interactions_dense</a>(</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>        <span class="keyword">const</span> <a class="code hl_typedef" href="namespacetriqs__xca_1_1atom__diag.html#a927f2a2556c1c0173cdb5b693e765e5f">triqs_atom_diag_t&lt;false&gt;</a> &amp;ad, </div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>        nda::array_const_view&lt;dcomplex, 3&gt; hyb_coeffs, </div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>        nda::array_const_view&lt;dcomplex, 3&gt; dynint_coeffs,  </div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>        std::vector&lt;triqs::operators::many_body_operator_real&gt; <span class="keyword">const</span> &amp;dynint_ops) {</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>        <span class="keywordflow">return</span> <a class="code hl_function" href="namespacetriqs__xca_1_1dynint.html#a3702b08908b9d2e5da25af1a8c6c6f8b">get_operators_and_interactions_dense_impl</a>(ad, hyb_coeffs, dynint_coeffs, dynint_ops);</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>    }</div>
 </div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span> </div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>}</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span> </div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>    <span class="keyword">namespace </span>{</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span></div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>        <span class="keyword">struct </span>DynintOpBlocks {</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>            nda::vector&lt;int&gt; connection;                     <span class="comment">// connection row of O, -1 where the block is absent</span></div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>            nda::vector&lt;int&gt; connection_dag;                 <span class="comment">// connection row of O^dag, the inverse map</span></div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>            std::vector&lt;nda::array&lt;dcomplex, 2&gt;&gt; blocks;     <span class="comment">// Fock-basis blocks of O</span></div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>            std::vector&lt;nda::array&lt;dcomplex, 2&gt;&gt; blocks_dag; <span class="comment">// Fock-basis blocks of O^dag</span></div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>        };</div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span> </div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>        <span class="keyword">template</span> &lt;<span class="keywordtype">bool</span> IsComplex&gt;</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>        DynintOpBlocks resolve_dynint_op(<span class="keyword">const</span> <a class="code hl_typedef" href="namespacetriqs__xca_1_1atom__diag.html#a927f2a2556c1c0173cdb5b693e765e5f">triqs_atom_diag_t&lt;IsComplex&gt;</a> &amp;ad, triqs::operators::many_body_operator_real <span class="keyword">const</span> &amp;op, <span class="keywordtype">int</span> i) {</div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span> </div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>            <span class="keywordtype">int</span> nb = ad.n_subspaces();</div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span> </div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>            <span class="keyword">auto</span> context = [&amp;](std::string <span class="keyword">const</span> &amp;what) {</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>                std::ostringstream msg;</div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>                msg &lt;&lt; <span class="stringliteral">&quot;get_operators_and_interactions: dynamical interaction operator &quot;</span> &lt;&lt; i &lt;&lt; <span class="stringliteral">&quot; (&quot;</span> &lt;&lt; op &lt;&lt; <span class="stringliteral">&quot;) &quot;</span> &lt;&lt; what;</div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>                <span class="keywordflow">return</span> msg.str();</div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>            };</div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span> </div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>            <span class="comment">// get_op_mat throws when two monomials of op take one subspace to different targets.</span></div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>            <span class="keyword">auto</span> op_mat_of = [&amp;](triqs::operators::many_body_operator_real <span class="keyword">const</span> &amp;o, std::string <span class="keyword">const</span> &amp;what) {</div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>                <span class="keywordflow">try</span> {</div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>                    <span class="keywordflow">return</span> ad.get_op_mat(o);</div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>                } <span class="keywordflow">catch</span> (std::exception <span class="keyword">const</span> &amp;e) {</div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>                    <span class="keywordflow">throw</span> std::invalid_argument(context(what + <span class="stringliteral">&quot;: atom_diag::get_op_mat failed with \&quot;&quot;</span> + std::string(e.what())</div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>                                                        + <span class="stringliteral">&quot;\&quot;. Every monomial must take each atom_diag subspace to the same target subspace.&quot;</span>));</div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>                }</div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>            };</div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span> </div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>            <span class="keyword">auto</span> om   = op_mat_of(op, <span class="stringliteral">&quot;is not block resolvable&quot;</span>);</div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>            <span class="keyword">auto</span> conn = nda::vector&lt;int&gt;(nb);</div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>            <span class="keywordflow">for</span> (<span class="keywordtype">int</span> b = 0; b &lt; nb; ++b) conn(b) = static_cast&lt;int&gt;(om.connection(b));</div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span> </div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>            <span class="comment">// an operator that is zero on every subspace would give a symmetry set of size zero</span></div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>            <span class="keywordtype">bool</span> any_present = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>            <span class="keywordflow">for</span> (<span class="keywordtype">int</span> b = 0; b &lt; nb; ++b) any_present = any_present || (conn(b) != -1);</div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>            <span class="keywordflow">if</span> (!any_present) <span class="keywordflow">throw</span> std::invalid_argument(context(<span class="stringliteral">&quot;is zero on every atom_diag subspace&quot;</span>));</div>
+<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span> </div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>            <span class="comment">// The connection row must be injective for the adjoint to have a well defined connection row. Checked before</span></div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>            <span class="comment">// the adjoint is fetched, since get_op_mat(dagger(op)) would otherwise throw from inside TRIQS with a less specific message.</span></div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>            std::set&lt;int&gt; seen;</div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>            <span class="keywordflow">for</span> (<span class="keywordtype">int</span> b = 0; b &lt; nb; ++b) {</div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>                <span class="keywordflow">if</span> (conn(b) == -1) <span class="keywordflow">continue</span>;</div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>                <span class="keywordflow">if</span> (!seen.insert(conn(b)).second) {</div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>                    <span class="keywordtype">int</span> b_first = -1;</div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>                    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> a = 0; a &lt; b; ++a) {</div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span>                        <span class="keywordflow">if</span> (conn(a) == conn(b)) {</div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>                            b_first = a;</div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>                            <span class="keywordflow">break</span>;</div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>                        }</div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>                    }</div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>                    <span class="keywordflow">throw</span> std::invalid_argument(context(<span class="stringliteral">&quot;has a non-injective connection map: subspaces &quot;</span> + std::to_string(b_first) + <span class="stringliteral">&quot; and &quot;</span></div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>                                                        + std::to_string(b) + <span class="stringliteral">&quot; are both taken to subspace &quot;</span> + std::to_string(conn(b))</div>
+<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span>                                                        + <span class="stringliteral">&quot;. The block-sparse storage keeps one block per block column and inverts the map to &quot;</span></div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>                                                          <span class="stringliteral">&quot;store the adjoint, so this operator cannot be represented.&quot;</span>));</div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>                }</div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>            }</div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span> </div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>            <span class="keyword">auto</span> omd      = op_mat_of(triqs::operators::many_body_operator_real{dagger(op)}, <span class="stringliteral">&quot;has an adjoint that is not block resolvable&quot;</span>);</div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>            <span class="keyword">auto</span> conn_dag = nda::vector&lt;int&gt;(nb);</div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>            <span class="keywordflow">for</span> (<span class="keywordtype">int</span> b = 0; b &lt; nb; ++b) conn_dag(b) = static_cast&lt;int&gt;(omd.connection(b));</div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span> </div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>            <span class="comment">// the connection row of the adjoint is the inverse of the injective row</span></div>
+<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>            <span class="keywordflow">for</span> (<span class="keywordtype">int</span> b = 0; b &lt; nb; ++b) {</div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>                <span class="keywordflow">if</span> (conn(b) != -1 &amp;&amp; conn_dag(conn(b)) != b)</div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>                    <span class="keywordflow">throw</span> std::invalid_argument(context(<span class="stringliteral">&quot;has an adjoint whose connection map is not the inverse of its own&quot;</span>));</div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>                <span class="keywordflow">if</span> (conn_dag(b) != -1 &amp;&amp; conn(conn_dag(b)) != b)</div>
+<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span>                    <span class="keywordflow">throw</span> std::invalid_argument(context(<span class="stringliteral">&quot;has an adjoint whose connection map is not the inverse of its own&quot;</span>));</div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>            }</div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span> </div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>            <span class="comment">// Rotate the eigenbasis blocks to the Fock basis, as setup_ops_from_triqs_2nd_quant_ops does.</span></div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>            <span class="keyword">auto</span> rotate = [&amp;](<span class="keyword">auto</span> <span class="keyword">const</span> &amp;m, nda::vector_const_view&lt;int&gt; cn) {</div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>                std::vector&lt;nda::array&lt;dcomplex, 2&gt;&gt; out(nb);</div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>                <span class="keywordflow">for</span> (<span class="keywordtype">int</span> b = 0; b &lt; nb; ++b) {</div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>                    <span class="keywordflow">if</span> (cn(b) == -1) {</div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>                        out[b] = nda::zeros&lt;dcomplex&gt;(1, 1);</div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>                        <span class="keywordflow">continue</span>;</div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>                    }</div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>                    <span class="keyword">auto</span> UR = ad.get_unitary_matrix(b);</div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>                    <span class="keyword">auto</span> UL = ad.get_unitary_matrix(cn(b));</div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>                    out[b]  = nda::array&lt;dcomplex, 2&gt;{UL * m.block_mat[b] * nda::conj(nda::transpose(UR))};</div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>                }</div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>                <span class="keywordflow">return</span> out;</div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>            };</div>
+<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span> </div>
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>            <span class="keywordflow">return</span> {conn, conn_dag, rotate(om, conn), rotate(omd, conn_dag)};</div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>        }</div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span> </div>
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>    } <span class="comment">// namespace</span></div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span> </div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>    <span class="keyword">template</span> &lt;<span class="keywordtype">bool</span> IsComplex&gt;</div>
+<div class="foldopen" id="foldopen00206" data-start="{" data-end="}">
+<div class="line"><a id="l00206" name="l00206"></a><span class="lineno"><a class="line" href="namespacetriqs__xca_1_1dynint.html#a5d421aebc64164cc0cf37de79b76f53e">  206</a></span>    std::tuple&lt;BlockOpSymQuartet, nda::vector&lt;long&gt;&gt; <a class="code hl_function" href="namespacetriqs__xca_1_1dynint.html#a5d421aebc64164cc0cf37de79b76f53e">get_operators_and_interactions_impl</a>(</div>
+<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span>        <span class="keyword">const</span> <a class="code hl_typedef" href="namespacetriqs__xca_1_1atom__diag.html#a927f2a2556c1c0173cdb5b693e765e5f">triqs_atom_diag_t&lt;IsComplex&gt;</a> &amp;ad,</div>
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>        nda::array_const_view&lt;dcomplex, 3&gt; hyb_coeffs,</div>
+<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span>        nda::array_const_view&lt;dcomplex, 3&gt; dynint_coeffs,</div>
+<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>        std::vector&lt;triqs::operators::many_body_operator_real&gt; <span class="keyword">const</span> &amp;dynint_ops) {</div>
+<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span> </div>
+<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>        <span class="keywordtype">int</span> nb    = ad.n_subspaces();</div>
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>        <span class="keywordtype">int</span> p     = hyb_coeffs.extent(0);</div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span>        <span class="keywordtype">int</span> n_hyb = hyb_coeffs.extent(1);</div>
+<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span>        <span class="keywordtype">int</span> n_int = <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(dynint_ops.size());</div>
+<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span> </div>
+<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span>        <span class="keywordflow">if</span> (hyb_coeffs.extent(2) != n_hyb)</div>
+<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>            <span class="keywordflow">throw</span> std::invalid_argument(<span class="stringliteral">&quot;get_operators_and_interactions: hyb_coeffs must have shape (p, n_hyb, n_hyb), got (&quot;</span></div>
+<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>                                        + std::to_string(p) + <span class="stringliteral">&quot;, &quot;</span> + std::to_string(n_hyb) + <span class="stringliteral">&quot;, &quot;</span> + std::to_string(hyb_coeffs.extent(2)) + <span class="stringliteral">&quot;)&quot;</span>);</div>
+<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span>        <span class="keywordflow">if</span> (n_hyb != <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(ad.get_fops().size()))</div>
+<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span>            <span class="keywordflow">throw</span> std::invalid_argument(<span class="stringliteral">&quot;get_operators_and_interactions: hyb_coeffs covers &quot;</span> + std::to_string(n_hyb)</div>
+<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>                                        + <span class="stringliteral">&quot; flavours but the atom_diag has &quot;</span> + std::to_string(ad.get_fops().size())</div>
+<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span>                                        + <span class="stringliteral">&quot; fundamental operators&quot;</span>);</div>
+<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span>        <span class="keywordflow">if</span> (dynint_coeffs.extent(1) != n_int || dynint_coeffs.extent(2) != n_int)</div>
+<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span>            <span class="keywordflow">throw</span> std::invalid_argument(<span class="stringliteral">&quot;get_operators_and_interactions: dynint_coeffs must have shape (p, n_int, n_int) with n_int = &quot;</span></div>
+<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span>                                        + std::to_string(n_int) + <span class="stringliteral">&quot;, got (&quot;</span> + std::to_string(dynint_coeffs.extent(0)) + <span class="stringliteral">&quot;, &quot;</span></div>
+<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>                                        + std::to_string(dynint_coeffs.extent(1)) + <span class="stringliteral">&quot;, &quot;</span> + std::to_string(dynint_coeffs.extent(2)) + <span class="stringliteral">&quot;)&quot;</span>);</div>
+<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>        <span class="keywordflow">if</span> (dynint_coeffs.extent(0) != p)</div>
+<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span>            <span class="keywordflow">throw</span> std::invalid_argument(<span class="stringliteral">&quot;get_operators_and_interactions: hyb_coeffs and dynint_coeffs must share the pole set, got &quot;</span></div>
+<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span>                                        + std::to_string(p) + <span class="stringliteral">&quot; and &quot;</span> + std::to_string(dynint_coeffs.extent(0)) + <span class="stringliteral">&quot; poles&quot;</span>);</div>
+<div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span> </div>
+<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span>        <span class="comment">// fermionic symmetry sets, as in get_operators()</span></div>
+<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span>        <span class="keyword">auto</span> sets     = <a class="code hl_function" href="namespacetriqs__xca_1_1atom__diag.html#a2225e19fca14aad350114303050ad687">atom_diag::get_operator_sym_sets</a>(ad, n_hyb);</div>
+<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span>        <span class="keywordtype">int</span> n_sym_hyb = <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(sets.Fs.size());</div>
+<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span> </div>
+<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span>        <span class="comment">// Resolve every interaction operator before grouping, so that a bad one is reported by index.</span></div>
+<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span>        std::vector&lt;DynintOpBlocks&gt; resolved;</div>
+<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span>        resolved.reserve(n_int);</div>
+<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span>        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; n_int; ++i) resolved.push_back(resolve_dynint_op(ad, dynint_ops[i], i));</div>
+<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span> </div>
+<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span>        <span class="comment">// group the interaction operators by identical connection row, i.e. by sparsity pattern, in order of first appearance</span></div>
+<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span>        std::vector&lt;int&gt; group_of_op(n_int, -1);</div>
+<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span>        std::vector&lt;std::vector&lt;int&gt;&gt; ops_of_group;</div>
+<div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span>        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; n_int; ++i) {</div>
+<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span>            <span class="keywordflow">for</span> (<span class="keywordtype">int</span> g = 0; g &lt; static_cast&lt;int&gt;(ops_of_group.size()) &amp;&amp; group_of_op[i] &lt; 0; ++g) {</div>
+<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span>                <span class="keywordtype">bool</span> same = <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span>                <span class="keywordflow">for</span> (<span class="keywordtype">int</span> b = 0; b &lt; nb &amp;&amp; same; ++b) same = (resolved[i].connection(b) == resolved[ops_of_group[g][0]].connection(b));</div>
+<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span>                <span class="keywordflow">if</span> (same) {</div>
+<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span>                    group_of_op[i] = g;</div>
+<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span>                    ops_of_group[g].push_back(i);</div>
+<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span>                }</div>
+<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span>            }</div>
+<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span>            <span class="keywordflow">if</span> (group_of_op[i] &lt; 0) {</div>
+<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span>                group_of_op[i] = <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(ops_of_group.size());</div>
+<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span>                ops_of_group.push_back({i});</div>
+<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span>            }</div>
+<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span>        }</div>
+<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span> </div>
+<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span>        <span class="comment">// one BlockOpSymSet per group, with the operators in increasing orbital order as assumed by BlockOpSymQuartet</span></div>
+<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> <span class="keyword">const</span> &amp;group : ops_of_group) {</div>
+<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span>            <span class="keywordtype">int</span> qg          = <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(group.size());</div>
+<div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span>            <span class="keyword">auto</span> <span class="keyword">const</span> &amp;rep = resolved[group[0]];</div>
+<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span> </div>
+<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span>            std::vector&lt;nda::array&lt;dcomplex, 3&gt;&gt; blocks(nb), blocks_dag(nb);</div>
+<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span>            <span class="keywordflow">for</span> (<span class="keywordtype">int</span> b = 0; b &lt; nb; ++b) {</div>
+<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>                blocks[b]     = rep.connection(b) == -1 ? nda::zeros&lt;dcomplex&gt;(qg, 1, 1)</div>
+<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span>                                                        : nda::zeros&lt;dcomplex&gt;(qg, rep.blocks[b].shape(0), rep.blocks[b].shape(1));</div>
+<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span>                blocks_dag[b] = rep.connection_dag(b) == -1 ? nda::zeros&lt;dcomplex&gt;(qg, 1, 1)</div>
+<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span>                                                            : nda::zeros&lt;dcomplex&gt;(qg, rep.blocks_dag[b].shape(0), rep.blocks_dag[b].shape(1));</div>
+<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span>            }</div>
+<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span>            <span class="keywordflow">for</span> (<span class="keywordtype">int</span> k = 0; k &lt; qg; ++k) {</div>
+<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span>                <span class="keyword">auto</span> <span class="keyword">const</span> &amp;rk = resolved[group[k]];</div>
+<div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span>                <span class="keywordflow">for</span> (<span class="keywordtype">int</span> b = 0; b &lt; nb; ++b) {</div>
+<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span>                    <span class="keywordflow">if</span> (rep.connection(b) != -1) blocks[b](k, range::all, range::all) = rk.blocks[b];</div>
+<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>                    <span class="keywordflow">if</span> (rep.connection_dag(b) != -1) blocks_dag[b](k, range::all, range::all) = rk.blocks_dag[b];</div>
+<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span>                }</div>
+<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span>            }</div>
+<div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span>            sets.Fs.emplace_back(rep.connection, blocks);</div>
+<div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span>            sets.F_dags.emplace_back(rep.connection_dag, blocks_dag);</div>
+<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span>        }</div>
+<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span> </div>
+<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span>        <span class="comment">// concatenate the labels, the interaction sets follow the fermionic ones</span></div>
+<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span>        <span class="keywordtype">int</span> n_ext   = n_hyb + n_int;</div>
+<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span>        <span class="keyword">auto</span> labels = nda::vector&lt;long&gt;(n_ext);</div>
+<div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span>        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; n_hyb; ++i) labels(i) = sets.sym_set_labels(i);</div>
+<div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span>        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; n_int; ++i) labels(n_hyb + i) = n_sym_hyb + group_of_op[i];</div>
+<div class="line"><a id="l00287" name="l00287"></a><span class="lineno">  287</span> </div>
+<div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span>        <span class="comment">// the cross-set guard of the quartet constructor validates the extended coefficients uniformly</span></div>
+<div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span>        <span class="keyword">auto</span> ext_coeffs = <a class="code hl_function" href="namespacetriqs__xca_1_1dynint.html#ac831b46445d14b4dedeb4521f2bbac54">get_extended_coefficients</a>(hyb_coeffs, dynint_coeffs);</div>
+<div class="line"><a id="l00290" name="l00290"></a><span class="lineno">  290</span> </div>
+<div class="line"><a id="l00291" name="l00291"></a><span class="lineno">  291</span>        <span class="keywordflow">return</span> {<a class="code hl_class" href="classtriqs__xca_1_1block__sparse_1_1BlockOpSymQuartet.html">BlockOpSymQuartet</a>(sets.Fs, sets.F_dags, ext_coeffs, labels), labels};</div>
+<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span>    }</div>
 </div>
+<div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span> </div>
+<div class="foldopen" id="foldopen00294" data-start="{" data-end="}">
+<div class="line"><a id="l00294" name="l00294"></a><span class="lineno"><a class="line" href="namespacetriqs__xca_1_1dynint.html#a9035bd383c01e189578dc6132ea2d732">  294</a></span>    std::tuple&lt;BlockOpSymQuartet, nda::vector&lt;long&gt;&gt; <a class="code hl_function" href="namespacetriqs__xca_1_1dynint.html#a9035bd383c01e189578dc6132ea2d732">get_operators_and_interactions</a>(</div>
+<div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span>        <span class="keyword">const</span> <a class="code hl_typedef" href="namespacetriqs__xca_1_1atom__diag.html#a927f2a2556c1c0173cdb5b693e765e5f">triqs_atom_diag_t&lt;true&gt;</a> &amp;ad,</div>
+<div class="line"><a id="l00296" name="l00296"></a><span class="lineno">  296</span>        nda::array_const_view&lt;dcomplex, 3&gt; hyb_coeffs,</div>
+<div class="line"><a id="l00297" name="l00297"></a><span class="lineno">  297</span>        nda::array_const_view&lt;dcomplex, 3&gt; dynint_coeffs,</div>
+<div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span>        std::vector&lt;triqs::operators::many_body_operator_real&gt; <span class="keyword">const</span> &amp;dynint_ops) {</div>
+<div class="line"><a id="l00299" name="l00299"></a><span class="lineno">  299</span>        <span class="keywordflow">return</span> <a class="code hl_function" href="namespacetriqs__xca_1_1dynint.html#a5d421aebc64164cc0cf37de79b76f53e">get_operators_and_interactions_impl</a>(ad, hyb_coeffs, dynint_coeffs, dynint_ops);</div>
+<div class="line"><a id="l00300" name="l00300"></a><span class="lineno">  300</span>    }</div>
+</div>
+<div class="line"><a id="l00301" name="l00301"></a><span class="lineno">  301</span> </div>
+<div class="foldopen" id="foldopen00302" data-start="{" data-end="}">
+<div class="line"><a id="l00302" name="l00302"></a><span class="lineno"><a class="line" href="namespacetriqs__xca_1_1dynint.html#a277db706ca40aee5d7c27b7296f0292d">  302</a></span>    std::tuple&lt;BlockOpSymQuartet, nda::vector&lt;long&gt;&gt; <a class="code hl_function" href="namespacetriqs__xca_1_1dynint.html#a9035bd383c01e189578dc6132ea2d732">get_operators_and_interactions</a>(</div>
+<div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span>        <span class="keyword">const</span> <a class="code hl_typedef" href="namespacetriqs__xca_1_1atom__diag.html#a927f2a2556c1c0173cdb5b693e765e5f">triqs_atom_diag_t&lt;false&gt;</a> &amp;ad,</div>
+<div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span>        nda::array_const_view&lt;dcomplex, 3&gt; hyb_coeffs,</div>
+<div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span>        nda::array_const_view&lt;dcomplex, 3&gt; dynint_coeffs,</div>
+<div class="line"><a id="l00306" name="l00306"></a><span class="lineno">  306</span>        std::vector&lt;triqs::operators::many_body_operator_real&gt; <span class="keyword">const</span> &amp;dynint_ops) {</div>
+<div class="line"><a id="l00307" name="l00307"></a><span class="lineno">  307</span>        <span class="keywordflow">return</span> <a class="code hl_function" href="namespacetriqs__xca_1_1dynint.html#a5d421aebc64164cc0cf37de79b76f53e">get_operators_and_interactions_impl</a>(ad, hyb_coeffs, dynint_coeffs, dynint_ops);</div>
+<div class="line"><a id="l00308" name="l00308"></a><span class="lineno">  308</span>    }</div>
+</div>
+<div class="line"><a id="l00309" name="l00309"></a><span class="lineno">  309</span> </div>
+<div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span>}</div>
+</div>
+<div class="ttc" id="aclasstriqs__xca_1_1block__sparse_1_1BlockOpSymQuartet_html"><div class="ttname"><a href="classtriqs__xca_1_1block__sparse_1_1BlockOpSymQuartet.html">triqs_xca::block_sparse::BlockOpSymQuartet</a></div><div class="ttdoc">Container for multiple symmetry sets of BOSS.</div><div class="ttdef"><b>Definition</b> <a href="block__sparse_8hpp_source.html#l00280">block_sparse.hpp:280</a></div></div>
 <div class="ttc" id="aclasstriqs__xca_1_1dense_1_1DenseFSet_html"><div class="ttname"><a href="classtriqs__xca_1_1dense_1_1DenseFSet.html">triqs_xca::dense::DenseFSet</a></div><div class="ttdoc">Container for (linear combinations of) creation and annihilation operators in dense storage.</div><div class="ttdef"><b>Definition</b> <a href="dense_8hpp_source.html#l00014">dense.hpp:14</a></div></div>
 <div class="ttc" id="adynint_8hpp_html"><div class="ttname"><a href="dynint_8hpp.html">dynint.hpp</a></div></div>
+<div class="ttc" id="anamespacetriqs__xca_1_1atom__diag_html_a2225e19fca14aad350114303050ad687"><div class="ttname"><a href="namespacetriqs__xca_1_1atom__diag.html#a2225e19fca14aad350114303050ad687">triqs_xca::atom_diag::get_operator_sym_sets</a></div><div class="ttdeci">BlockOpSymSets get_operator_sym_sets(const triqs_atom_diag_t&lt; true &gt; &amp;ad, int n)</div><div class="ttdoc">Group the first n field operators of an AtomDiag object into symmetry sets.</div><div class="ttdef"><b>Definition</b> <a href="atom__diag__utils_8cpp_source.html#l00370">atom_diag_utils.cpp:370</a></div></div>
 <div class="ttc" id="anamespacetriqs__xca_1_1atom__diag_html_a927f2a2556c1c0173cdb5b693e765e5f"><div class="ttname"><a href="namespacetriqs__xca_1_1atom__diag.html#a927f2a2556c1c0173cdb5b693e765e5f">triqs_xca::atom_diag::triqs_atom_diag_t</a></div><div class="ttdeci">triqs::atom_diag::atom_diag&lt; IsComplex &gt; triqs_atom_diag_t</div><div class="ttdef"><b>Definition</b> <a href="atom__diag__utils_8hpp_source.html#l00019">atom_diag_utils.hpp:19</a></div></div>
-<div class="ttc" id="anamespacetriqs__xca_1_1atom__diag_html_ae1f6ba8b632ec60b0ce53cb3d6f01916"><div class="ttname"><a href="namespacetriqs__xca_1_1atom__diag.html#ae1f6ba8b632ec60b0ce53cb3d6f01916">triqs_xca::atom_diag::get_operators_dense</a></div><div class="ttdeci">std::tuple&lt; nda::array&lt; dcomplex, 3 &gt;, nda::array&lt; dcomplex, 3 &gt; &gt; get_operators_dense(const triqs_atom_diag_t&lt; true &gt; &amp;ad)</div><div class="ttdoc">Get creation and annihilation operators from an AtomDiag object in dense storage.</div><div class="ttdef"><b>Definition</b> <a href="atom__diag__utils_8cpp_source.html#l00364">atom_diag_utils.cpp:364</a></div></div>
-<div class="ttc" id="anamespacetriqs__xca_1_1dynint_html"><div class="ttname"><a href="namespacetriqs__xca_1_1dynint.html">triqs_xca::dynint</a></div><div class="ttdef"><b>Definition</b> <a href="#l00006">dynint.cpp:6</a></div></div>
-<div class="ttc" id="anamespacetriqs__xca_1_1dynint_html_a3702b08908b9d2e5da25af1a8c6c6f8b"><div class="ttname"><a href="namespacetriqs__xca_1_1dynint.html#a3702b08908b9d2e5da25af1a8c6c6f8b">triqs_xca::dynint::get_operators_and_interactions_dense_impl</a></div><div class="ttdeci">DenseFSet get_operators_and_interactions_dense_impl(const triqs_atom_diag_t&lt; IsComplex &gt; &amp;ad, nda::array_const_view&lt; dcomplex, 3 &gt; hyb_coeffs, nda::array_const_view&lt; dcomplex, 3 &gt; dynint_coeffs, std::vector&lt; triqs::operators::many_body_operator_real &gt; const &amp;dynint_ops)</div><div class="ttdef"><b>Definition</b> <a href="#l00034">dynint.cpp:34</a></div></div>
-<div class="ttc" id="anamespacetriqs__xca_1_1dynint_html_ac831b46445d14b4dedeb4521f2bbac54"><div class="ttname"><a href="namespacetriqs__xca_1_1dynint.html#ac831b46445d14b4dedeb4521f2bbac54">triqs_xca::dynint::get_extended_coefficients</a></div><div class="ttdeci">nda::array&lt; dcomplex, 3 &gt; get_extended_coefficients(nda::array_const_view&lt; dcomplex, 3 &gt; hyb_coeffs, nda::array_const_view&lt; dcomplex, 3 &gt; dynint_coeffs)</div><div class="ttdef"><b>Definition</b> <a href="#l00012">dynint.cpp:12</a></div></div>
-<div class="ttc" id="anamespacetriqs__xca_1_1dynint_html_af8e24ee0410e5302711105595f24cf7b"><div class="ttname"><a href="namespacetriqs__xca_1_1dynint.html#af8e24ee0410e5302711105595f24cf7b">triqs_xca::dynint::get_operators_and_interactions_dense</a></div><div class="ttdeci">DenseFSet get_operators_and_interactions_dense(const triqs_atom_diag_t&lt; true &gt; &amp;ad, nda::array_const_view&lt; dcomplex, 3 &gt; hyb_coeffs, nda::array_const_view&lt; dcomplex, 3 &gt; dynint_coeffs, std::vector&lt; triqs::operators::many_body_operator_real &gt; const &amp;dynint_ops)</div><div class="ttdef"><b>Definition</b> <a href="#l00087">dynint.cpp:87</a></div></div>
+<div class="ttc" id="anamespacetriqs__xca_1_1atom__diag_html_ae1f6ba8b632ec60b0ce53cb3d6f01916"><div class="ttname"><a href="namespacetriqs__xca_1_1atom__diag.html#ae1f6ba8b632ec60b0ce53cb3d6f01916">triqs_xca::atom_diag::get_operators_dense</a></div><div class="ttdeci">std::tuple&lt; nda::array&lt; dcomplex, 3 &gt;, nda::array&lt; dcomplex, 3 &gt; &gt; get_operators_dense(const triqs_atom_diag_t&lt; true &gt; &amp;ad)</div><div class="ttdoc">Get creation and annihilation operators from an AtomDiag object in dense storage.</div><div class="ttdef"><b>Definition</b> <a href="atom__diag__utils_8cpp_source.html#l00388">atom_diag_utils.cpp:388</a></div></div>
+<div class="ttc" id="anamespacetriqs__xca_1_1dynint_html"><div class="ttname"><a href="namespacetriqs__xca_1_1dynint.html">triqs_xca::dynint</a></div><div class="ttdef"><b>Definition</b> <a href="#l00011">dynint.cpp:11</a></div></div>
+<div class="ttc" id="anamespacetriqs__xca_1_1dynint_html_a3702b08908b9d2e5da25af1a8c6c6f8b"><div class="ttname"><a href="namespacetriqs__xca_1_1dynint.html#a3702b08908b9d2e5da25af1a8c6c6f8b">triqs_xca::dynint::get_operators_and_interactions_dense_impl</a></div><div class="ttdeci">DenseFSet get_operators_and_interactions_dense_impl(const triqs_atom_diag_t&lt; IsComplex &gt; &amp;ad, nda::array_const_view&lt; dcomplex, 3 &gt; hyb_coeffs, nda::array_const_view&lt; dcomplex, 3 &gt; dynint_coeffs, std::vector&lt; triqs::operators::many_body_operator_real &gt; const &amp;dynint_ops)</div><div class="ttdef"><b>Definition</b> <a href="#l00039">dynint.cpp:39</a></div></div>
+<div class="ttc" id="anamespacetriqs__xca_1_1dynint_html_a5d421aebc64164cc0cf37de79b76f53e"><div class="ttname"><a href="namespacetriqs__xca_1_1dynint.html#a5d421aebc64164cc0cf37de79b76f53e">triqs_xca::dynint::get_operators_and_interactions_impl</a></div><div class="ttdeci">std::tuple&lt; BlockOpSymQuartet, nda::vector&lt; long &gt; &gt; get_operators_and_interactions_impl(const triqs_atom_diag_t&lt; IsComplex &gt; &amp;ad, nda::array_const_view&lt; dcomplex, 3 &gt; hyb_coeffs, nda::array_const_view&lt; dcomplex, 3 &gt; dynint_coeffs, std::vector&lt; triqs::operators::many_body_operator_real &gt; const &amp;dynint_ops)</div><div class="ttdef"><b>Definition</b> <a href="#l00206">dynint.cpp:206</a></div></div>
+<div class="ttc" id="anamespacetriqs__xca_1_1dynint_html_a9035bd383c01e189578dc6132ea2d732"><div class="ttname"><a href="namespacetriqs__xca_1_1dynint.html#a9035bd383c01e189578dc6132ea2d732">triqs_xca::dynint::get_operators_and_interactions</a></div><div class="ttdeci">std::tuple&lt; BlockOpSymQuartet, nda::vector&lt; long &gt; &gt; get_operators_and_interactions(const triqs_atom_diag_t&lt; true &gt; &amp;ad, nda::array_const_view&lt; dcomplex, 3 &gt; hyb_coeffs, nda::array_const_view&lt; dcomplex, 3 &gt; dynint_coeffs, std::vector&lt; triqs::operators::many_body_operator_real &gt; const &amp;dynint_ops)</div><div class="ttdoc">Block-sparse field operators extended by the dynamical-interaction operators.</div><div class="ttdef"><b>Definition</b> <a href="#l00294">dynint.cpp:294</a></div></div>
+<div class="ttc" id="anamespacetriqs__xca_1_1dynint_html_ac831b46445d14b4dedeb4521f2bbac54"><div class="ttname"><a href="namespacetriqs__xca_1_1dynint.html#ac831b46445d14b4dedeb4521f2bbac54">triqs_xca::dynint::get_extended_coefficients</a></div><div class="ttdeci">nda::array&lt; dcomplex, 3 &gt; get_extended_coefficients(nda::array_const_view&lt; dcomplex, 3 &gt; hyb_coeffs, nda::array_const_view&lt; dcomplex, 3 &gt; dynint_coeffs)</div><div class="ttdef"><b>Definition</b> <a href="#l00017">dynint.cpp:17</a></div></div>
+<div class="ttc" id="anamespacetriqs__xca_1_1dynint_html_af8e24ee0410e5302711105595f24cf7b"><div class="ttname"><a href="namespacetriqs__xca_1_1dynint.html#af8e24ee0410e5302711105595f24cf7b">triqs_xca::dynint::get_operators_and_interactions_dense</a></div><div class="ttdeci">DenseFSet get_operators_and_interactions_dense(const triqs_atom_diag_t&lt; true &gt; &amp;ad, nda::array_const_view&lt; dcomplex, 3 &gt; hyb_coeffs, nda::array_const_view&lt; dcomplex, 3 &gt; dynint_coeffs, std::vector&lt; triqs::operators::many_body_operator_real &gt; const &amp;dynint_ops)</div><div class="ttdef"><b>Definition</b> <a href="#l00097">dynint.cpp:97</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 </div><!-- container -->

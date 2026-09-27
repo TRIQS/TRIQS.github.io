@@ -196,7 +196,7 @@
 <div class="viewcode-block" id="BlockSparseSolver">
 <a class="viewcode-back" href="../../python_api.html#triqs_xca.block_sparse_solver.BlockSparseSolver">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">BlockSparseSolver</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-<span class="w">    </span>
+
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Solver class for triqs_xca using the block sparse algorithm. </span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
@@ -235,6 +235,10 @@
 <span class="sd">    It is a block Green&#39;s function in imaginary time.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># floor and eps multiplier of the relative slack on the DLR window, see pole_window_slack</span>
+    <span class="n">pole_window_slack_floor</span> <span class="o">=</span> <span class="mf">1e-9</span>
+    <span class="n">pole_window_slack_per_eps</span> <span class="o">=</span> <span class="mf">10.0</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H_loc</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">w_max</span><span class="p">,</span> <span class="n">eps</span><span class="p">,</span> <span class="n">gf_struct</span><span class="p">,</span> 
                  <span class="n">conserved_operators</span><span class="o">=</span><span class="s1">&#39;automatic&#39;</span><span class="p">,</span> <span class="n">dlr_symmetrize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -306,26 +310,115 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
 
 
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">pole_window_slack</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Relative slack on the DLR window below which an out-of-window pole is taken as physics.</span>
+
+<span class="sd">        A pole physically at w_max comes back from adapol slightly outside the window, by an amount</span>
+<span class="sd">        that tracks the accuracy eps of the basis, while the overshoot of an artefact pole is orders</span>
+<span class="sd">        of magnitude larger. The pointwise residual check in __restrict_poles_to_dlr_window is the</span>
+<span class="sd">        safety net for the cases where this estimate is wrong. &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pole_window_slack_floor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pole_window_slack_per_eps</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="o">.</span><span class="n">eps</span><span class="p">)</span>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__restrict_poles_to_dlr_window</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">poles</span><span class="p">,</span> <span class="n">pole_weights</span><span class="p">,</span> <span class="n">fit_error</span><span class="p">,</span> <span class="n">tol</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Drop compressed poles outside the DLR window and least-squares refit the survivors.</span>
+
+<span class="sd">        adapol constrains the fit error and not the pole locations, and a pole at |beta*omega| &gt; Lambda</span>
+<span class="sd">        is not representable in a DLR basis built for Lambda, so every vals2coefs round trip silently</span>
+<span class="sd">        loses it. The out-of-window pole usually carries numerical dust but can carry weight, so the</span>
+<span class="sd">        survivors are refit and the result is checked pointwise, raising if the discarded pole was</span>
+<span class="sd">        load-bearing. The slack pole_window_slack separates a pole physically at w_max, which is a</span>
+<span class="sd">        natural choice for the mode frequency, from an artefact. &quot;&quot;&quot;</span>
+
+        <span class="n">Lambda</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="o">.</span><span class="n">w_max</span>
+        <span class="n">beta_omega</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">poles</span><span class="p">)</span>
+        <span class="n">outside</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">beta_omega</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">Lambda</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">pole_window_slack</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">outside</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">poles</span><span class="p">,</span> <span class="n">pole_weights</span><span class="p">,</span> <span class="n">fit_error</span>
+
+        <span class="n">keep</span> <span class="o">=</span> <span class="o">~</span><span class="n">outside</span>
+        <span class="n">n_keep</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">keep</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">n_keep</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;Hybridization compression: every one of the </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">poles</span><span class="p">)</span><span class="si">}</span><span class="s1"> fitted poles lies &#39;</span>
+                <span class="sa">f</span><span class="s1">&#39;outside the DLR window (max|beta*omega| = </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">beta_omega</span><span class="p">))</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1"> vs &#39;</span>
+                <span class="sa">f</span><span class="s1">&#39;Lambda = </span><span class="si">{</span><span class="n">Lambda</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1">), so the fit cannot be repaired. Re-run with &#39;</span>
+                <span class="sa">f</span><span class="s1">&#39;hyb_comp=False, or widen w_max.&#39;</span><span class="p">)</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">adapol.sop</span><span class="w"> </span><span class="kn">import</span> <span class="n">SumOfSimplePoles</span>
+
+        <span class="n">sop</span> <span class="o">=</span> <span class="n">SumOfSimplePoles</span><span class="p">(</span><span class="n">poles</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">poles</span><span class="p">),</span> <span class="n">residues</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">pole_weights</span><span class="p">))</span>
+        <span class="n">refit</span> <span class="o">=</span> <span class="n">sop</span><span class="o">.</span><span class="n">best_imtime_lstsq_l2_norm_approximation_using_poles</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">poles</span><span class="p">)[</span><span class="n">keep</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">)</span>
+
+        <span class="c1"># Pointwise on the solver&#39;s tau nodes: a dropped pole contributes ~ -R_far at tau -&gt; 0+ however far</span>
+        <span class="c1"># out it sits, while its L2 mass and its least-squares footprint on the survivors vanish in that limit</span>
+        <span class="n">tau</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="p">])</span>
+        <span class="n">residual</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">sop</span><span class="o">.</span><span class="n">eval_imtime</span><span class="p">(</span><span class="n">tau</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">)</span> <span class="o">-</span> <span class="n">refit</span><span class="o">.</span><span class="n">eval_imtime</span><span class="p">(</span><span class="n">tau</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">)))</span>
+
+        <span class="c1"># a large residual means the discarded pole was load-bearing</span>
+        <span class="k">if</span> <span class="n">residual</span> <span class="o">&gt;</span> <span class="nb">max</span><span class="p">(</span><span class="mi">10</span> <span class="o">*</span> <span class="n">fit_error</span><span class="p">,</span> <span class="n">tol</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;Hybridization compression: dropping </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">poles</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">n_keep</span><span class="si">}</span><span class="s1"> out-of-window pole(s) &#39;</span>
+                <span class="sa">f</span><span class="s1">&#39;changed the hybridization by </span><span class="si">{</span><span class="n">residual</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1"> pointwise, above both 10x the fit &#39;</span>
+                <span class="sa">f</span><span class="s1">&#39;error (</span><span class="si">{</span><span class="mi">10</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">fit_error</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1">) and tol (</span><span class="si">{</span><span class="n">tol</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1">). The discarded pole carried &#39;</span>
+                <span class="sa">f</span><span class="s1">&#39;real weight, so it is likely physics this DLR window cannot represent. If the &#39;</span>
+                <span class="sa">f</span><span class="s1">&#39;pole sits AT the window edge, raise eps or w_max so the fit resolves it; &#39;</span>
+                <span class="sa">f</span><span class="s1">&#39;otherwise widen w_max, or re-run with hyb_comp=False.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">is_root</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Adapol: WARNING! </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">poles</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">n_keep</span><span class="si">}</span><span class="s1"> of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">poles</span><span class="p">)</span><span class="si">}</span><span class="s1"> poles outside the DLR &#39;</span>
+                  <span class="sa">f</span><span class="s1">&#39;window (max|beta*omega| = </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">beta_omega</span><span class="p">))</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1"> &gt; Lambda = &#39;</span>
+                  <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">Lambda</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1">), dropped and refit: N_poles = </span><span class="si">{</span><span class="n">n_keep</span><span class="si">}</span><span class="s1">, refit residual = &#39;</span>
+                  <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">residual</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1"> (adapol fit error </span><span class="si">{</span><span class="n">fit_error</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1">).&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">poles</span><span class="p">)[</span><span class="n">keep</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">refit</span><span class="o">.</span><span class="n">R</span><span class="p">),</span> <span class="n">fit_error</span>
+
+
     <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;Adapol hybridization fit&#39;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">fit_hybridization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 
+        <span class="k">assert</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">Delta_tau</span><span class="o">.</span><span class="n">mesh</span> <span class="p">),</span> <span class="s1">&#39;Error: Delta_tau mesh must match solver mesh_tau&#39;</span>
+
         <span class="n">Delta_tau_dense</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__from_blockgf_to_dense</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Delta_tau</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_dynamic_interactions</span><span class="p">:</span>
+            <span class="k">assert</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynint_tau</span><span class="o">.</span><span class="n">mesh</span> <span class="p">),</span> <span class="s1">&#39;Error: dynint_tau mesh must match solver mesh_tau&#39;</span>
+            <span class="n">Delta_dynint_tau</span> <span class="o">=</span> <span class="n">BlockGf</span><span class="p">(</span><span class="n">name_list</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Delta&#39;</span><span class="p">,</span> <span class="s1">&#39;dynint&#39;</span><span class="p">],</span> <span class="n">block_list</span><span class="o">=</span><span class="p">[</span><span class="n">Delta_tau_dense</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynint_tau</span><span class="p">])</span>
+            <span class="n">Delta_dynint_tau_dense</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__from_blockgf_to_dense</span><span class="p">(</span><span class="n">Delta_dynint_tau</span><span class="p">)</span>
+
+            <span class="c1"># Pretend that dynint is part of Delta during compresssion</span>
+            <span class="c1"># split up Delta and dynint before assigning at the end of this function</span>
+            <span class="n">Delta_tau_dense</span> <span class="o">=</span> <span class="n">Delta_dynint_tau_dense</span>
 
         <span class="k">if</span> <span class="n">compression</span><span class="p">:</span>
 
             <span class="k">assert</span><span class="p">(</span> <span class="n">tol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">tol</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">),</span> <span class="s1">&#39;Error: tol must be provided and positive when compression is enabled.&#39;</span>
 
-            <span class="kn">from</span><span class="w"> </span><span class="nn">adapol.triqs</span><span class="w"> </span><span class="kn">import</span> <span class="n">TriqsDLRCompression</span>
-        
             <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># The import is inside the try so that a missing adapol falls back to the direct DLR</span>
+                <span class="c1"># coefficients, and AssertionError is included since adapol asserts internally on inputs it can not fit</span>
+                <span class="kn">from</span><span class="w"> </span><span class="nn">adapol.triqs</span><span class="w"> </span><span class="kn">import</span> <span class="n">TriqsDLRCompression</span>
                 <span class="n">tdc</span> <span class="o">=</span> <span class="n">TriqsDLRCompression</span><span class="p">(</span><span class="n">Delta_tau_dense</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span> <span class="ow">and</span> <span class="n">is_root</span><span class="p">())</span>
                 <span class="n">poles</span><span class="p">,</span> <span class="n">pole_weights</span><span class="p">,</span> <span class="n">fit_error</span> <span class="o">=</span> <span class="n">tdc</span><span class="o">.</span><span class="n">poles</span><span class="p">,</span> <span class="n">tdc</span><span class="o">.</span><span class="n">residues</span><span class="p">,</span> <span class="n">tdc</span><span class="o">.</span><span class="n">error</span>
-            <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">ImportError</span><span class="p">,</span> <span class="ne">AssertionError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="n">fit_error</span> <span class="o">=</span> <span class="kc">None</span>
                 <span class="k">if</span> <span class="n">is_root</span><span class="p">():</span>
                     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Adapol: WARNING! TriqsDLRCompression failed with error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">. Using direct DLR coefficients instead.&#39;</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="n">is_root</span><span class="p">():</span>
+            <span class="c1"># outside the try above, so that the RuntimeErrors of the window filter stay loud</span>
+            <span class="k">if</span> <span class="n">fit_error</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">poles</span><span class="p">,</span> <span class="n">pole_weights</span><span class="p">,</span> <span class="n">fit_error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__restrict_poles_to_dlr_window</span><span class="p">(</span>
+                    <span class="n">poles</span><span class="p">,</span> <span class="n">pole_weights</span><span class="p">,</span> <span class="n">fit_error</span><span class="p">,</span> <span class="n">tol</span><span class="p">)</span>
+
+            <span class="c1"># fit_error is None when the fit failed above</span>
+            <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="n">is_root</span><span class="p">()</span> <span class="ow">and</span> <span class="n">fit_error</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">fit_error</span> <span class="o">&gt;=</span> <span class="n">tol</span><span class="p">:</span>
                     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Adapol: WARNING! Fit error = </span><span class="si">{</span><span class="n">fit_error</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1"> &gt;= tol = </span><span class="si">{</span><span class="n">tol</span><span class="si">:</span><span class="s1">2.2E</span><span class="si">}</span><span class="s1">, N_poles = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">poles</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
@@ -340,6 +433,13 @@
 
             <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="n">is_root</span><span class="p">():</span>
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Hybridization: using DLR expansion with N_poles = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">poles</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_dynamic_interactions</span><span class="p">:</span>
+            <span class="c1"># Split up Delta and dynint after compression</span>
+            <span class="c1"># pole_weights contains both Delta and dynint coefficients</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">Delta_dynint_tau</span><span class="p">[</span><span class="s1">&#39;Delta&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">target_shape</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dynint_coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">pole_weights</span><span class="p">[:,</span> <span class="n">n</span><span class="p">:,</span> <span class="n">m</span><span class="p">:])</span> <span class="c1"># Second diagonal block</span>
+            <span class="n">pole_weights</span> <span class="o">=</span> <span class="n">pole_weights</span><span class="p">[:,</span> <span class="p">:</span><span class="n">n</span><span class="p">,</span> <span class="p">:</span><span class="n">m</span><span class="p">]</span> <span class="c1"># First diagonal block</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">set_hybridization_poles_and_coefficients</span><span class="p">(</span><span class="n">poles</span><span class="p">,</span> <span class="n">pole_weights</span><span class="p">)</span>
 
@@ -390,10 +490,26 @@
             <span class="c1">#print(f&#39;hyb.coefficients =\n{self.hyb.coefficients}&#39;)</span>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">set_dynamic_interactions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dynint_ops</span><span class="p">,</span> <span class="n">dynint_coeffs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_dynamic_interactions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dynint_ops</span><span class="p">,</span> <span class="n">dynint_tau</span><span class="p">):</span>
+
+        <span class="k">assert</span><span class="p">(</span> <span class="n">dynint_tau</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">beta</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="o">.</span><span class="n">beta</span> <span class="p">)</span>
+        <span class="k">assert</span><span class="p">(</span> <span class="n">dynint_tau</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">w_max</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="o">.</span><span class="n">w_max</span> <span class="p">)</span>
+        <span class="k">assert</span><span class="p">(</span> <span class="n">dynint_tau</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">eps</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="o">.</span><span class="n">eps</span> <span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">has_dynamic_interactions</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dynint_ops</span> <span class="o">=</span> <span class="n">dynint_ops</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dynint_coeffs</span> <span class="o">=</span> <span class="n">dynint_coeffs</span>
+
+        <span class="c1"># Reinterpolate dynint_tau onto the solver mesh_tau if necessary</span>
+        <span class="k">if</span> <span class="n">dynint_tau</span><span class="o">.</span><span class="n">mesh</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="p">:</span>
+            <span class="n">dynint_dlr</span> <span class="o">=</span> <span class="n">make_gf_dlr</span><span class="p">(</span><span class="n">dynint_tau</span><span class="p">)</span>
+            <span class="n">dynint_tau_new</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="n">dynint_tau</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">tau</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="p">:</span>
+                <span class="n">dynint_tau_new</span><span class="p">[</span><span class="n">tau</span><span class="p">]</span> <span class="o">=</span> <span class="n">dynint_dlr</span><span class="p">(</span><span class="n">tau</span><span class="p">)</span>
+
+            <span class="n">dynint_tau</span> <span class="o">=</span> <span class="n">dynint_tau_new</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynint_tau</span> <span class="o">=</span> <span class="n">dynint_tau</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
 
     <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;DiagramEvaluator Init&#39;</span><span class="p">)</span>
@@ -406,8 +522,9 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">=</span> <span class="n">DenseDiagramEvaluator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hyb</span><span class="o">.</span><span class="n">poles</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hyb</span><span class="o">.</span><span class="n">coefficients</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">atom_diag</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_dynamic_interactions</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Dynamic interactions are not yet implemented for the block sparse solver (DiagramEvaluator).&#39;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">=</span> <span class="n">DiagramEvaluator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hyb</span><span class="o">.</span><span class="n">poles</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hyb</span><span class="o">.</span><span class="n">coefficients</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">atom_diag</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">=</span> <span class="n">DiagramEvaluator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hyb</span><span class="o">.</span><span class="n">poles</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hyb</span><span class="o">.</span><span class="n">coefficients</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">atom_diag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynint_ops</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dynint_coeffs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">=</span> <span class="n">DiagramEvaluator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hyb</span><span class="o">.</span><span class="n">poles</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hyb</span><span class="o">.</span><span class="n">coefficients</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">atom_diag</span><span class="p">)</span>
         <span class="c1">#if is_root(): print(f&#39;done.&#39;)</span>
 
 
@@ -432,7 +549,10 @@
 <span class="sd">            Whether to compress the hybridization function. Default: ``True``.</span>
 <span class="sd">            When set to ``False``, the hybridization function is represented using the full DLR basis.</span>
 <span class="sd">        spgf_max_order : int, optional</span>
-<span class="sd">            Maximum order for the single particle Green&#39;s function evaluation. If not provided, it defaults to ``max_order``.</span>
+<span class="sd">            Maximum order of the single particle Green&#39;s function diagram expansion. </span>
+<span class="sd">            Default: ``max_order``, is the Luttinger-Ward-consistent choice. </span>
+<span class="sd">            However, using ``spgf_max_order = max_order + 1`` improves convergence order </span>
+<span class="sd">            by one, while giving up the conserving property of Luttinger-Ward.</span>
 <span class="sd">        normalization : str, optional</span>
 <span class="sd">            Normalization method for the pseudo particle Green&#39;s function. Default: ``&#39;classic&#39;``.</span>
 
@@ -563,6 +683,8 @@
 <span class="sd">            Whether to solve the Dyson equation to obtain the pseudo particle Green&#39;s function. Default: ``False``.</span>
 <span class="sd">        spgf_max_order : int, optional</span>
 <span class="sd">            Maximum order for the single particle Green&#39;s function evaluation. If not provided, it defaults to ``max_order``.</span>
+<span class="sd">            </span>
+<span class="sd">            See ``solve()`` for why the default is ``max_order`` and what raising it costs.</span>
 <span class="sd">        verbose : bool, optional</span>
 <span class="sd">            Verbosity flag controlling level of printouts. Default: ``True``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>

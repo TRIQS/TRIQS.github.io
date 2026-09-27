@@ -8,6 +8,7 @@ var annotated_dup =
         [ "BlockDiagOpFun", "classtriqs__xca_1_1atom__diag_1_1BlockDiagOpFun.html", "classtriqs__xca_1_1atom__diag_1_1BlockDiagOpFun" ],
         [ "BlockOpSymQuartet", "classtriqs__xca_1_1atom__diag_1_1BlockOpSymQuartet.html", "classtriqs__xca_1_1atom__diag_1_1BlockOpSymQuartet" ],
         [ "BlockOpSymSet", "classtriqs__xca_1_1atom__diag_1_1BlockOpSymSet.html", "classtriqs__xca_1_1atom__diag_1_1BlockOpSymSet" ],
+        [ "BlockOpSymSets", "structtriqs__xca_1_1atom__diag_1_1BlockOpSymSets.html", "structtriqs__xca_1_1atom__diag_1_1BlockOpSymSets" ],
         [ "DenseFSet", "classtriqs__xca_1_1atom__diag_1_1DenseFSet.html", "classtriqs__xca_1_1atom__diag_1_1DenseFSet" ]
       ] ],
       [ "backbone", "namespacetriqs__xca_1_1backbone.html", [
@@ -28,6 +29,7 @@ var annotated_dup =
         [ "DenseFSet", "classtriqs__xca_1_1dense_1_1DenseFSet.html", "classtriqs__xca_1_1dense_1_1DenseFSet" ]
       ] ],
       [ "dynint", "namespacetriqs__xca_1_1dynint.html", [
+        [ "BlockOpSymQuartet", "classtriqs__xca_1_1dynint_1_1BlockOpSymQuartet.html", "classtriqs__xca_1_1dynint_1_1BlockOpSymQuartet" ],
         [ "DenseFSet", "classtriqs__xca_1_1dynint_1_1DenseFSet.html", "classtriqs__xca_1_1dynint_1_1DenseFSet" ]
       ] ],
       [ "hyb", "namespacetriqs__xca_1_1hyb.html", [

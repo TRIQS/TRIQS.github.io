@@ -13,5 +13,7 @@ var namespacetriqs__xca =
     ] ],
     [ "utils", "namespacetriqs__xca_1_1utils.html", [
       [ "pown", "namespacetriqs__xca_1_1utils.html#a97c215a5c9bfa915bac665a37187f5da", null ]
-    ] ]
+    ] ],
+    [ "correlator_statistics", "namespacetriqs__xca.html#a605b4741ce962cd62b9ce9f1e3b7def4", null ],
+    [ "is_fermionic_parity", "namespacetriqs__xca.html#a51e69033601ddef47490e0ce2cebd5bc", null ]
 ];

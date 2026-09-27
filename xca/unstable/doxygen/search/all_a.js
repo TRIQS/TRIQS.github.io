@@ -8,5 +8,6 @@ var searchData=
   ['installation_2emd_5',['installation.md',['../installation_8md.html',1,'']]],
   ['integration_20in_20c_20projects_6',['Integration in C++ projects',['../integration.html',1,'']]],
   ['integration_2emd_7',['integration.md',['../integration_8md.html',1,'']]],
-  ['itops_8',['itops',['../classtriqs__xca_1_1dense_1_1DenseDiagramEvaluator.html#ac26b50b6679a89d60b98172170cd00c6',1,'triqs_xca::dense::DenseDiagramEvaluator']]]
+  ['is_5ffermionic_5fparity_8',['is_fermionic_parity',['../namespacetriqs__xca.html#a51e69033601ddef47490e0ce2cebd5bc',1,'triqs_xca']]],
+  ['itops_9',['itops',['../classtriqs__xca_1_1dense_1_1DenseDiagramEvaluator.html#ac26b50b6679a89d60b98172170cd00c6',1,'triqs_xca::dense::DenseDiagramEvaluator']]]
 ];

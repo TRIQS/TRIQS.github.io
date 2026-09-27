@@ -12,6 +12,7 @@ var backbone_8hpp =
     [ "triqs_xca::backbone::get_pole_ind", "namespacetriqs__xca_1_1backbone.html#a30186e1f00f8e9683ffc01169dcbf5e5", null ],
     [ "triqs_xca::backbone::get_prefactor_Kexp", "namespacetriqs__xca_1_1backbone.html#ae9cbd8e7eb25efd75d5735c81a5b3d56", null ],
     [ "triqs_xca::backbone::get_prefactor_Ksign", "namespacetriqs__xca_1_1backbone.html#a797bb92bcec01d0e031bdd366bcbe9bf", null ],
+    [ "triqs_xca::backbone::get_topology", "namespacetriqs__xca_1_1backbone.html#a855f7d36a927337d0eef84150fe48610", null ],
     [ "triqs_xca::backbone::get_topology", "namespacetriqs__xca_1_1backbone.html#a2f27f6cf19f49f160dc781b637b071ce", null ],
     [ "triqs_xca::backbone::get_vertex_hyb_ind", "namespacetriqs__xca_1_1backbone.html#aa142a6b2de049ea536518c9ca32f0b37", null ],
     [ "triqs_xca::backbone::get_vertex_Ksign", "namespacetriqs__xca_1_1backbone.html#ab4b0f8bcee5615009798b5ab0bc9c5f1", null ],

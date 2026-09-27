@@ -1,7 +1,7 @@
 var searchData=
 [
   ['p_0',['P',['../classhyb__F.html#ab13b3bd7a5945c0b04713e7037a7791f',1,'hyb_F']]],
-  ['p_1',['p',['../classtriqs__xca_1_1block__sparse_1_1BlockOpSymQuartet.html#aa57168c6e015ba9a27837e4a39e028b8',1,'triqs_xca::block_sparse::BlockOpSymQuartet::p'],['../classtriqs__xca_1_1atom__diag_1_1BlockOpSymQuartet.html#aa57168c6e015ba9a27837e4a39e028b8',1,'triqs_xca::atom_diag::BlockOpSymQuartet::p']]],
+  ['p_1',['p',['../classtriqs__xca_1_1block__sparse_1_1BlockOpSymQuartet.html#aa57168c6e015ba9a27837e4a39e028b8',1,'triqs_xca::block_sparse::BlockOpSymQuartet::p'],['../classtriqs__xca_1_1atom__diag_1_1BlockOpSymQuartet.html#aa57168c6e015ba9a27837e4a39e028b8',1,'triqs_xca::atom_diag::BlockOpSymQuartet::p'],['../classtriqs__xca_1_1dynint_1_1BlockOpSymQuartet.html#aa57168c6e015ba9a27837e4a39e028b8',1,'triqs_xca::dynint::BlockOpSymQuartet::p']]],
   ['partition_5ffunction_2',['partition_function',['../classfastdiagram.html#abd1ce2430f31a686cd85bffdc2f749a8',1,'fastdiagram']]],
   ['permutation_5fparity_3',['permutation_parity',['../namespacetriqs__xca_1_1topology.html#aa105d3e9f260817c41c87da505291453',1,'triqs_xca::topology']]],
   ['pole_5finds_4',['pole_inds',['../namespacetriqs__xca_1_1backbone.html#a3006dcdbc6fedf93e716dc084c4d7909',1,'triqs_xca::backbone']]],

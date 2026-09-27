@@ -9,6 +9,7 @@ var block__sparse_8hpp =
     [ "triqs_xca::block_sparse::BlockOpSymSetBar", "classtriqs__xca_1_1block__sparse_1_1BlockOpSymSetBar.html", "classtriqs__xca_1_1block__sparse_1_1BlockOpSymSetBar" ],
     [ "triqs_xca::block_sparse::atom_prop_from_eigensystem", "namespacetriqs__xca_1_1block__sparse.html#ad62f9c1f9da56afe6801d9c3f2e1c913", null ],
     [ "triqs_xca::block_sparse::BDOF_to_block_gf", "namespacetriqs__xca_1_1block__sparse.html#a44fa1a272e01367a3083dca64b554c4d", null ],
+    [ "triqs_xca::block_sparse::check_sym_set_block_diagonal", "namespacetriqs__xca_1_1block__sparse.html#aa59c0f92bded95748c33fe3a27cd2c50", null ],
     [ "triqs_xca::block_sparse::convolve_ppsc", "namespacetriqs__xca_1_1block__sparse.html#a0ce7c2ba4f17d4298dc3c8c5ee4a08ed", null ],
     [ "triqs_xca::block_sparse::dagger_bs", "namespacetriqs__xca_1_1block__sparse.html#a8fe9ed10007d37ff33291dfb43722242", null ],
     [ "triqs_xca::block_sparse::expectation_value", "namespacetriqs__xca_1_1block__sparse.html#a09c6ec57731dc7eb34af11e5260996fc", null ],
@@ -20,5 +21,6 @@ var block__sparse_8hpp =
     [ "triqs_xca::block_sparse::operator<<", "namespacetriqs__xca_1_1block__sparse.html#aaf5657fdbebd04b5a89ce5b20faddc25", null ],
     [ "triqs_xca::block_sparse::operator<<", "namespacetriqs__xca_1_1block__sparse.html#a3bb54082fa70f2b424cbfca9ab993b01", null ],
     [ "triqs_xca::block_sparse::operator<<", "namespacetriqs__xca_1_1block__sparse.html#ad3bf9168135e6a477e195ad6f862e0d3", null ],
-    [ "triqs_xca::block_sparse::trace", "namespacetriqs__xca_1_1block__sparse.html#af79b72ae40cd405110765f73ed506361", null ]
+    [ "triqs_xca::block_sparse::trace", "namespacetriqs__xca_1_1block__sparse.html#af79b72ae40cd405110765f73ed506361", null ],
+    [ "triqs_xca::block_sparse::sym_set_coupling_tol", "namespacetriqs__xca_1_1block__sparse.html#a572689fad6eb38de559e7a8d1aa2b1e2", null ]
 ];

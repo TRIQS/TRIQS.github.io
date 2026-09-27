@@ -23,6 +23,7 @@ var dir_019b5facb111288a8e4545c7f39bf6da =
     [ "hyb.hpp", "hyb_8hpp.html", "hyb_8hpp" ],
     [ "impurity.cpp", "impurity_8cpp.html", null ],
     [ "impurity.hpp", "impurity_8hpp.html", "impurity_8hpp" ],
+    [ "operator_statistics.hpp", "operator__statistics_8hpp.html", "operator__statistics_8hpp" ],
     [ "strong_cpl.cpp", "strong__cpl_8cpp.html", "strong__cpl_8cpp" ],
     [ "strong_cpl.hpp", "strong__cpl_8hpp.html", "strong__cpl_8hpp" ],
     [ "topology.cpp", "topology_8cpp.html", "topology_8cpp" ],

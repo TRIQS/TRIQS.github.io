@@ -10,6 +10,7 @@ var hierarchy =
     [ "hyb_F", "classhyb__F.html", null ],
     [ "triqs_xca::atom_diag::BlockDiagOpFun", "classtriqs__xca_1_1atom__diag_1_1BlockDiagOpFun.html", null ],
     [ "triqs_xca::atom_diag::BlockOpSymQuartet", "classtriqs__xca_1_1atom__diag_1_1BlockOpSymQuartet.html", null ],
+    [ "triqs_xca::atom_diag::BlockOpSymSets", "structtriqs__xca_1_1atom__diag_1_1BlockOpSymSets.html", null ],
     [ "triqs_xca::atom_diag::DenseFSet", "classtriqs__xca_1_1atom__diag_1_1DenseFSet.html", null ],
     [ "triqs_xca::block_sparse::BlockDiagOpFun", "classtriqs__xca_1_1block__sparse_1_1BlockDiagOpFun.html", null ],
     [ "triqs_xca::block_sparse::BlockOp", "classtriqs__xca_1_1block__sparse_1_1BlockOp.html", null ],
@@ -22,6 +23,7 @@ var hierarchy =
     [ "triqs_xca::block_sparse::DiagramEvaluator", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html", null ],
     [ "triqs_xca::dense::DenseDiagramEvaluator", "classtriqs__xca_1_1dense_1_1DenseDiagramEvaluator.html", null ],
     [ "triqs_xca::dense::DenseFSet", "classtriqs__xca_1_1dense_1_1DenseFSet.html", null ],
+    [ "triqs_xca::dynint::BlockOpSymQuartet", "classtriqs__xca_1_1dynint_1_1BlockOpSymQuartet.html", null ],
     [ "triqs_xca::dynint::DenseFSet", "classtriqs__xca_1_1dynint_1_1DenseFSet.html", null ],
     [ "triqs_xca::hyb::Hybridization", "classtriqs__xca_1_1hyb_1_1Hybridization.html", null ]
 ];

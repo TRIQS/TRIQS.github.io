@@ -6,6 +6,8 @@ var atom__diag__utils_8cpp =
     [ "triqs_xca::atom_diag::get_full_operator_matrix", "namespacetriqs__xca_1_1atom__diag.html#a24e1133d285ecaf5e9c5a47d3ed904f3", null ],
     [ "triqs_xca::atom_diag::get_full_operator_matrix", "namespacetriqs__xca_1_1atom__diag.html#ab9df747848c19a84530ef11e5aaf5a74", null ],
     [ "triqs_xca::atom_diag::get_hamiltonian_blocks", "namespacetriqs__xca_1_1atom__diag.html#ab9c97847ae99ba505834b0e43c3c2ba0", null ],
+    [ "triqs_xca::atom_diag::get_operator_sym_sets", "namespacetriqs__xca_1_1atom__diag.html#afaf905ce8bbcaa3fad4bc5d8a06b4c11", null ],
+    [ "triqs_xca::atom_diag::get_operator_sym_sets", "namespacetriqs__xca_1_1atom__diag.html#a2225e19fca14aad350114303050ad687", null ],
     [ "triqs_xca::atom_diag::get_operators", "namespacetriqs__xca_1_1atom__diag.html#afd0210a3cd9cbf2f3eb9ad15b4dd430d", null ],
     [ "triqs_xca::atom_diag::get_operators", "namespacetriqs__xca_1_1atom__diag.html#ac75d137b907f6658858cc4faf3f6a3cd", null ],
     [ "triqs_xca::atom_diag::get_operators_dense", "namespacetriqs__xca_1_1atom__diag.html#ab978dcb132bcefde2186a23b9cdaad7b", null ],

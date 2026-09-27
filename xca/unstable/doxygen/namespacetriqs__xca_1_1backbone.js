@@ -11,6 +11,7 @@ var namespacetriqs__xca_1_1backbone =
     [ "get_pole_ind", "namespacetriqs__xca_1_1backbone.html#a30186e1f00f8e9683ffc01169dcbf5e5", null ],
     [ "get_prefactor_Kexp", "namespacetriqs__xca_1_1backbone.html#ae9cbd8e7eb25efd75d5735c81a5b3d56", null ],
     [ "get_prefactor_Ksign", "namespacetriqs__xca_1_1backbone.html#a797bb92bcec01d0e031bdd366bcbe9bf", null ],
+    [ "get_topology", "namespacetriqs__xca_1_1backbone.html#a855f7d36a927337d0eef84150fe48610", null ],
     [ "get_topology", "namespacetriqs__xca_1_1backbone.html#a2f27f6cf19f49f160dc781b637b071ce", null ],
     [ "get_vertex_hyb_ind", "namespacetriqs__xca_1_1backbone.html#aa142a6b2de049ea536518c9ca32f0b37", null ],
     [ "get_vertex_Ksign", "namespacetriqs__xca_1_1backbone.html#ab4b0f8bcee5615009798b5ab0bc9c5f1", null ],

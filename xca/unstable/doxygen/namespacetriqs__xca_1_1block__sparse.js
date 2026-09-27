@@ -10,6 +10,7 @@ var namespacetriqs__xca_1_1block__sparse =
     [ "DiagramEvaluator", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator" ],
     [ "atom_prop_from_eigensystem", "namespacetriqs__xca_1_1block__sparse.html#ad62f9c1f9da56afe6801d9c3f2e1c913", null ],
     [ "BDOF_to_block_gf", "namespacetriqs__xca_1_1block__sparse.html#a44fa1a272e01367a3083dca64b554c4d", null ],
+    [ "check_sym_set_block_diagonal", "namespacetriqs__xca_1_1block__sparse.html#aa59c0f92bded95748c33fe3a27cd2c50", null ],
     [ "convolve_ppsc", "namespacetriqs__xca_1_1block__sparse.html#a0ce7c2ba4f17d4298dc3c8c5ee4a08ed", null ],
     [ "dagger_bs", "namespacetriqs__xca_1_1block__sparse.html#a8fe9ed10007d37ff33291dfb43722242", null ],
     [ "eval_eq", "namespacetriqs__xca_1_1block__sparse.html#a3ee29e40ac549c00bc2d65fc13feeed5", null ],
@@ -52,5 +53,6 @@ var namespacetriqs__xca_1_1block__sparse =
     [ "setup_ops_from_triqs_2nd_quant_ops", "namespacetriqs__xca_1_1block__sparse.html#ad15b3180f82d85999f22d0eebb596914", null ],
     [ "third_order_gf_tpz", "namespacetriqs__xca_1_1block__sparse.html#a401ab2355b72d1f9b7aa7eb5683b4326", null ],
     [ "third_order_tpz", "namespacetriqs__xca_1_1block__sparse.html#a6812ece2148e30bba4929c5069456bd5", null ],
-    [ "trace", "namespacetriqs__xca_1_1block__sparse.html#af79b72ae40cd405110765f73ed506361", null ]
+    [ "trace", "namespacetriqs__xca_1_1block__sparse.html#af79b72ae40cd405110765f73ed506361", null ],
+    [ "sym_set_coupling_tol", "namespacetriqs__xca_1_1block__sparse.html#a572689fad6eb38de559e7a8d1aa2b1e2", null ]
 ];

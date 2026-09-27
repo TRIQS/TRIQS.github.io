@@ -1,7 +1,8 @@
 var classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator =
 [
     [ "DiagramEvaluator", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a636ec579a03ed82b22c2558fa3ef5e58", null ],
-    [ "DiagramEvaluator", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a4e39418e0efcf142dd35bb9450163da8", null ],
+    [ "DiagramEvaluator", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a8880fc7e3b0ea4da346f5348d6608a32", null ],
+    [ "DiagramEvaluator", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a1371e55b44b5e47f90018d02d2e975c6", null ],
     [ "~DiagramEvaluator", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#aee8bafd5172fcffd090c7937f9298a1e", null ],
     [ "compute_one_time_correlator", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a40f5564a534b1eb6a920c3473d54a080", null ],
     [ "compute_self_energy", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a58b7e4c956955a26a8b74d5513d6b143", null ],
@@ -25,6 +26,8 @@ var classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator =
     [ "GKt", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#ab25fbf9465bc07e8a0139012cc8a6925", null ],
     [ "hyb", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#acd932c9b9f5998d51015f72d48c199d7", null ],
     [ "n", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#aa16715b25279f1e8df568b208594bd34", null ],
+    [ "n_hyb", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#af6be50cebc0d875f9c5529aaa4bf6ab5", null ],
+    [ "n_int", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a9516a6cfe6af46bde7b883d871663ea0", null ],
     [ "Nmax", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a2f72934f6d48b8f1d587706e0278aca9", null ],
     [ "q", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#a966e37656a7d2616415f2330fb336f79", null ],
     [ "r", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html#af1225006be89c0cfb412e32c6452c9c7", null ],
