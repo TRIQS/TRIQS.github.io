@@ -28,6 +28,7 @@ Tutorials
 
    tutorials/Semi infinite chain.ipynb
    tutorials/Metal insulator transition.ipynb
+   tutorials/One-boson retarded interaction.ipynb
 
 
 Python API Reference
