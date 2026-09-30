@@ -1,6 +1,6 @@
 var files_dup =
 [
-    [ "doc", "dir_cf31f30f165d9440f3dc49a83dfe079f.html", "dir_cf31f30f165d9440f3dc49a83dfe079f" ],
-    [ "home", "dir_43e0a1f539e00dcfa1a6bc4d4fee4fc2.html", "dir_43e0a1f539e00dcfa1a6bc4d4fee4fc2" ],
-    [ "triqs_xca", "dir_678fa488313a819fc6f75ea31fc522a5.html", "dir_678fa488313a819fc6f75ea31fc522a5" ]
+    [ "CCQ_TRIQS_xca_0.1.x@tmp", "dir_3b7a5d6fb78fabf59331c04aeaec2918.html", "dir_3b7a5d6fb78fabf59331c04aeaec2918" ],
+    [ "doc", "dir_60dfa110dd9d6b4f43f628daf513af29.html", "dir_60dfa110dd9d6b4f43f628daf513af29" ],
+    [ "triqs_xca", "dir_9f1dbfb95324cb1ef8c4982031aa2141.html", "dir_9f1dbfb95324cb1ef8c4982031aa2141" ]
 ];

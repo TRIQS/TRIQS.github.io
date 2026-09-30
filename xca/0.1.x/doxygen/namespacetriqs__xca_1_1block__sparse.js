@@ -10,6 +10,7 @@ var namespacetriqs__xca_1_1block__sparse =
     [ "DiagramEvaluator", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator.html", "classtriqs__xca_1_1block__sparse_1_1DiagramEvaluator" ],
     [ "BDOF_to_block_gf", "namespacetriqs__xca_1_1block__sparse.html#a44fa1a272e01367a3083dca64b554c4d", null ],
     [ "BOFtoBDOF", "namespacetriqs__xca_1_1block__sparse.html#af2b376b15e1a1c3be47c69c6399ec8c6", null ],
+    [ "check_sym_set_block_diagonal", "namespacetriqs__xca_1_1block__sparse.html#aa59c0f92bded95748c33fe3a27cd2c50", null ],
     [ "convolve_ppsc", "namespacetriqs__xca_1_1block__sparse.html#a0ce7c2ba4f17d4298dc3c8c5ee4a08ed", null ],
     [ "dagger_bs", "namespacetriqs__xca_1_1block__sparse.html#a8fe9ed10007d37ff33291dfb43722242", null ],
     [ "eval_eq", "namespacetriqs__xca_1_1block__sparse.html#a3ee29e40ac549c00bc2d65fc13feeed5", null ],
@@ -52,5 +53,6 @@ var namespacetriqs__xca_1_1block__sparse =
     [ "operator<<", "namespacetriqs__xca_1_1block__sparse.html#ad3bf9168135e6a477e195ad6f862e0d3", null ],
     [ "setup_ops_from_triqs_2nd_quant_ops", "namespacetriqs__xca_1_1block__sparse.html#ad15b3180f82d85999f22d0eebb596914", null ],
     [ "third_order_dense_partial", "namespacetriqs__xca_1_1block__sparse.html#a1cc4472b093f61c40a647cce776a503b", null ],
-    [ "trace", "namespacetriqs__xca_1_1block__sparse.html#af79b72ae40cd405110765f73ed506361", null ]
+    [ "trace", "namespacetriqs__xca_1_1block__sparse.html#af79b72ae40cd405110765f73ed506361", null ],
+    [ "sym_set_coupling_tol", "namespacetriqs__xca_1_1block__sparse.html#a572689fad6eb38de559e7a8d1aa2b1e2", null ]
 ];
