@@ -174,6 +174,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">triqs.gfs</span><span class="w"> </span><span class="kn">import</span> <span class="n">Gf</span><span class="p">,</span> <span class="n">MeshDLRImTime</span><span class="p">,</span> <span class="n">BlockGf</span><span class="p">,</span> <span class="n">make_gf_dlr</span><span class="p">,</span> <span class="n">make_gf_dlr_imfreq</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">triqs.atom_diag</span><span class="w"> </span><span class="kn">import</span> <span class="n">AtomDiag</span><span class="p">,</span> <span class="n">AtomDiagReal</span><span class="p">,</span> <span class="n">AtomDiagComplex</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">triqs.operators</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operator</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.diag</span><span class="w"> </span><span class="kn">import</span> <span class="n">all_pairings</span><span class="p">,</span> <span class="n">all_connected_pairings</span>
 
@@ -419,17 +420,67 @@
             <span class="c1">#print(f&#39;hyb.coefficients =\n{self.hyb.coefficients}&#39;)</span>
 
 
+<div class="viewcode-block" id="BlockSparseSolver.set_dynamic_interactions">
+<a class="viewcode-back" href="../../python_api.html#triqs_xca.block_sparse_solver.BlockSparseSolver.set_dynamic_interactions">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_dynamic_interactions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dynint_ops</span><span class="p">,</span> <span class="n">dynint_tau</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Set retarded (dynamical) interactions of the impurity problem.</span>
 
-        <span class="k">assert</span><span class="p">(</span> <span class="n">dynint_tau</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">beta</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="o">.</span><span class="n">beta</span> <span class="p">)</span>
-        <span class="k">assert</span><span class="p">(</span> <span class="n">dynint_tau</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">w_max</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="o">.</span><span class="n">w_max</span> <span class="p">)</span>
-        <span class="k">assert</span><span class="p">(</span> <span class="n">dynint_tau</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">eps</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="o">.</span><span class="n">eps</span> <span class="p">)</span>
+<span class="sd">        The interactions enter the impurity action as the term</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \\iint_0^\\beta d\\tau d\\tau&#39; \\sum_{ij} O_i^\\dagger(\\tau) \\, D_{ij}(\\tau - \\tau&#39;) \\, O_j(\\tau&#39;)</span>
+
+<span class="sd">        where :math:`O_i` are the operators in ``dynint_ops`` and :math:`D_{ij}(\\tau)` is the kernel ``dynint_tau``.</span>
+<span class="sd">        The retarded interaction lines are expanded on the same footing as the hybridization lines,</span>
+<span class="sd">        i.e. the expansion order ``max_order`` of ``solve()`` counts both kinds of lines.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dynint_ops : list or tuple of triqs.operators.Operator</span>
+<span class="sd">            Local many-body operators :math:`O_i` coupled by the retarded interaction,</span>
+<span class="sd">            e.g. ``[n(&#39;up&#39;, 0)]`` for a density-density interaction.</span>
+<span class="sd">            Each operator has to map every ``atom_diag`` subspace to at most one subspace.</span>
+<span class="sd">        dynint_tau : triqs.gfs.Gf</span>
+<span class="sd">            Retarded interaction kernel :math:`D_{ij}(\\tau)` with target shape ``[len(dynint_ops)]*2``,</span>
+<span class="sd">            on a DLR imaginary time mesh (``MeshDLRImTime``) of either statistic, with the same ``beta``</span>
+<span class="sd">            as the solver, ``w_max`` smaller than or equal to, and ``eps`` larger than or equal to those of the solver.</span>
+<span class="sd">            If the mesh differs from the solver mesh ``mesh_tau``, the kernel is interpolated onto ``mesh_tau``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+
+<span class="sd">        The action term has no prefactor :math:`\\frac{1}{2}`. A density-density interaction written as</span>
+<span class="sd">        :math:`\\frac{1}{2} \\iint d\\tau d\\tau&#39; \\, n(\\tau) \\mathcal{U}(\\tau - \\tau&#39;) n(\\tau&#39;)`</span>
+<span class="sd">        is therefore set with ``dynint_ops=[n]`` and ``dynint_tau`` equal to :math:`\\frac{1}{2} \\mathcal{U}(\\tau)`.</span>
+
+<span class="sd">        The interaction kernel is fitted together with the hybridization function when calling ``solve()``,</span>
+<span class="sd">        so this method has to be called before ``solve()``. Calling it again replaces the previously set interactions.</span>
+
+<span class="sd">        See the tutorial on the one-boson retarded interaction for a complete example.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span><span class="p">(</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dynint_ops</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="p">),</span> <span class="s1">&#39;Error: dynint_ops must be a list or tuple&#39;</span>
+        <span class="k">assert</span><span class="p">(</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">Operator</span><span class="p">)</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">dynint_ops</span><span class="p">)</span> <span class="p">),</span> <span class="s1">&#39;Error: dynint_ops elements must be triqs.operators.Operator instances&#39;</span>
+        <span class="n">n_int</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dynint_ops</span><span class="p">)</span>
+        <span class="k">assert</span><span class="p">(</span> <span class="nb">list</span><span class="p">(</span><span class="n">dynint_tau</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span> <span class="o">==</span> <span class="p">[</span><span class="n">n_int</span><span class="p">,</span> <span class="n">n_int</span><span class="p">]</span> <span class="p">),</span> \
+            <span class="sa">f</span><span class="s1">&#39;Error: dynint_tau target_shape </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">dynint_tau</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span><span class="si">}</span><span class="s1"> must be [</span><span class="si">{</span><span class="n">n_int</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">n_int</span><span class="si">}</span><span class="s1">] to match len(dynint_ops)&#39;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">has_dynamic_interactions</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dynint_ops</span> <span class="o">=</span> <span class="n">dynint_ops</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynint_ops</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dynint_ops</span><span class="p">)</span>
 
         <span class="c1"># Reinterpolate dynint_tau onto the solver mesh_tau if necessary</span>
+
         <span class="k">if</span> <span class="n">dynint_tau</span><span class="o">.</span><span class="n">mesh</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="p">:</span>
+
+            <span class="k">assert</span><span class="p">(</span> <span class="n">dynint_tau</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">beta</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="o">.</span><span class="n">beta</span> <span class="p">)</span>
+            <span class="k">assert</span><span class="p">(</span> <span class="n">dynint_tau</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">w_max</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="o">.</span><span class="n">w_max</span> <span class="p">)</span>
+            <span class="k">assert</span><span class="p">(</span> <span class="n">dynint_tau</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">eps</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="o">.</span><span class="n">eps</span> <span class="p">)</span>
+
             <span class="n">dynint_dlr</span> <span class="o">=</span> <span class="n">make_gf_dlr</span><span class="p">(</span><span class="n">dynint_tau</span><span class="p">)</span>
             <span class="n">dynint_tau_new</span> <span class="o">=</span> <span class="n">Gf</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh_tau</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="n">dynint_tau</span><span class="o">.</span><span class="n">target_shape</span><span class="p">)</span>
 
@@ -438,7 +489,8 @@
 
             <span class="n">dynint_tau</span> <span class="o">=</span> <span class="n">dynint_tau_new</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">dynint_tau</span> <span class="o">=</span> <span class="n">dynint_tau</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dynint_tau</span> <span class="o">=</span> <span class="n">dynint_tau</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span></div>
+
 
 
     <span class="nd">@timer</span><span class="p">(</span><span class="s1">&#39;DiagramEvaluator Init&#39;</span><span class="p">)</span>

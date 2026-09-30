@@ -15,5 +15,5 @@ High-Level Solver Interface
 ----------------------------
 
 .. autoclass:: triqs_xca.block_sparse_solver.BlockSparseSolver
-   :members: solve, expectation_value, partition_function, pseudo_particle_chemical_potential
+   :members: solve, set_dynamic_interactions, expectation_value, partition_function, pseudo_particle_chemical_potential
 

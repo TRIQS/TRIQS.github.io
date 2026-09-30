@@ -223,7 +223,10 @@ If not provided, it will be initialized automatically using the provided local H
 <tr class="row-odd"><td><p><a class="reference internal" href="#triqs_xca.block_sparse_solver.BlockSparseSolver.pseudo_particle_chemical_potential" title="triqs_xca.block_sparse_solver.BlockSparseSolver.pseudo_particle_chemical_potential"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pseudo_particle_chemical_potential</span></code></a>()</p></td>
 <td><p>Pseudo particle chemical potential <span class="math notranslate nohighlight">\(\eta\)</span>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#triqs_xca.block_sparse_solver.BlockSparseSolver.solve" title="triqs_xca.block_sparse_solver.BlockSparseSolver.solve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">solve</span></code></a>(max_order[, tol, maxiter, mix, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#triqs_xca.block_sparse_solver.BlockSparseSolver.set_dynamic_interactions" title="triqs_xca.block_sparse_solver.BlockSparseSolver.set_dynamic_interactions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_dynamic_interactions</span></code></a>(dynint_ops, dynint_tau)</p></td>
+<td><p>Set retarded (dynamical) interactions of the impurity problem.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#triqs_xca.block_sparse_solver.BlockSparseSolver.solve" title="triqs_xca.block_sparse_solver.BlockSparseSolver.solve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">solve</span></code></a>(max_order[, tol, maxiter, mix, ...])</p></td>
 <td><p>Solve the impurity problem using pseudo particle self-consistent perturbation theory.</p></td>
 </tr>
 </tbody>
@@ -287,6 +290,45 @@ the normalization condition <span class="math notranslate nohighlight">\(\textrm
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="triqs_xca.block_sparse_solver.BlockSparseSolver.set_dynamic_interactions">
+<span class="sig-name descname"><span class="pre">set_dynamic_interactions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dynint_ops</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynint_tau</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/triqs_xca/block_sparse_solver.html#BlockSparseSolver.set_dynamic_interactions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#triqs_xca.block_sparse_solver.BlockSparseSolver.set_dynamic_interactions" title="Link to this definition"></a></dt>
+<dd><p>Set retarded (dynamical) interactions of the impurity problem.</p>
+<p>The interactions enter the impurity action as the term</p>
+<div class="math notranslate nohighlight">
+\[\iint_0^\beta d\tau d\tau' \sum_{ij} O_i^\dagger(\tau) \, D_{ij}(\tau - \tau') \, O_j(\tau')\]</div>
+<p>where <span class="math notranslate nohighlight">\(O_i\)</span> are the operators in <code class="docutils literal notranslate"><span class="pre">dynint_ops</span></code> and <span class="math notranslate nohighlight">\(D_{ij}(\tau)\)</span> is the kernel <code class="docutils literal notranslate"><span class="pre">dynint_tau</span></code>.
+The retarded interaction lines are expanded on the same footing as the hybridization lines,
+i.e. the expansion order <code class="docutils literal notranslate"><span class="pre">max_order</span></code> of <code class="docutils literal notranslate"><span class="pre">solve()</span></code> counts both kinds of lines.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>dynint_ops</strong><span class="classifier">list or tuple of triqs.operators.Operator</span></dt><dd><p>Local many-body operators <span class="math notranslate nohighlight">\(O_i\)</span> coupled by the retarded interaction,
+e.g. <code class="docutils literal notranslate"><span class="pre">[n('up',</span> <span class="pre">0)]</span></code> for a density-density interaction.
+Each operator has to map every <code class="docutils literal notranslate"><span class="pre">atom_diag</span></code> subspace to at most one subspace.</p>
+</dd>
+<dt><strong>dynint_tau</strong><span class="classifier">triqs.gfs.Gf</span></dt><dd><p>Retarded interaction kernel <span class="math notranslate nohighlight">\(D_{ij}(\tau)\)</span> with target shape <code class="docutils literal notranslate"><span class="pre">[len(dynint_ops)]*2</span></code>,
+on a DLR imaginary time mesh (<code class="docutils literal notranslate"><span class="pre">MeshDLRImTime</span></code>) of either statistic, with the same <code class="docutils literal notranslate"><span class="pre">beta</span></code>
+as the solver, <code class="docutils literal notranslate"><span class="pre">w_max</span></code> smaller than or equal to, and <code class="docutils literal notranslate"><span class="pre">eps</span></code> larger than or equal to those of the solver.
+If the mesh differs from the solver mesh <code class="docutils literal notranslate"><span class="pre">mesh_tau</span></code>, the kernel is interpolated onto <code class="docutils literal notranslate"><span class="pre">mesh_tau</span></code>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>None</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The action term has no prefactor <span class="math notranslate nohighlight">\(\frac{1}{2}\)</span>. A density-density interaction written as
+<span class="math notranslate nohighlight">\(\frac{1}{2} \iint d\tau d\tau' \, n(\tau) \mathcal{U}(\tau - \tau') n(\tau')\)</span>
+is therefore set with <code class="docutils literal notranslate"><span class="pre">dynint_ops=[n]</span></code> and <code class="docutils literal notranslate"><span class="pre">dynint_tau</span></code> equal to <span class="math notranslate nohighlight">\(\frac{1}{2} \mathcal{U}(\tau)\)</span>.</p>
+<p>The interaction kernel is fitted together with the hybridization function when calling <code class="docutils literal notranslate"><span class="pre">solve()</span></code>,
+so this method has to be called before <code class="docutils literal notranslate"><span class="pre">solve()</span></code>. Calling it again replaces the previously set interactions.</p>
+<p>See the tutorial on the one-boson retarded interaction for a complete example.</p>
 </dd></dl>
 
 <dl class="py method">
