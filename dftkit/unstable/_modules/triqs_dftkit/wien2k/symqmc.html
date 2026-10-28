@@ -232,10 +232,10 @@
 <span class="sd">through single-precision CMPLX differs from this output at about 1e-7.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">._dmftproj</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">read_dmftsym</span><span class="p">,</span> <span class="n">read_fromfile</span><span class="p">,</span> <span class="n">read_indmftpr</span><span class="p">,</span> <span class="n">reptrans</span><span class="p">,</span>
-                        <span class="n">shell_matrix</span><span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._dmftproj</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">paramag_time_op</span><span class="p">,</span> <span class="n">read_dmftsym</span><span class="p">,</span> <span class="n">read_fromfile</span><span class="p">,</span> <span class="n">read_indmftpr</span><span class="p">,</span>
+                        <span class="n">reptrans</span><span class="p">,</span> <span class="n">shell_matrix</span><span class="p">)</span>
 
 <span class="n">_shell_matrix</span> <span class="o">=</span> <span class="n">shell_matrix</span>
 
@@ -274,26 +274,39 @@
 <div class="viewcode-block" id="write_symqmc">
 <a class="viewcode-back" href="../../../_autosummary/triqs_dftkit.wien2k.symqmc.write_symqmc.html#triqs_dftkit.wien2k.symqmc.write_symqmc">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">write_symqmc</span><span class="p">(</span><span class="n">case</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write &lt;case&gt;.symqmc from &lt;case&gt;.dmftsym, &lt;case&gt;.indmftpr, &lt;case&gt;.struct.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write &lt;case&gt;.symqmc from &lt;case&gt;.dmftsym, &lt;case&gt;.indmftpr, &lt;case&gt;.struct.</span>
+
+<span class="sd">    ifSO comes from the indmftpr SO flag; ifSP from the presence of</span>
+<span class="sd">    &lt;case&gt;.almblm{up,dn} (ifSO =&gt; ifSP). With SO the matrices are the 2*(2l+1)</span>
+<span class="sd">    block-diag spinor representation and a timeflag line is written; without SO</span>
+<span class="sd">    they are the bare (2l+1) representation, with a timeflag line (all zero)</span>
+<span class="sd">    only when ifSP. The paramagnetic time-reversal tail follows when .not.ifSP.&quot;&quot;&quot;</span>
     <span class="n">nsym</span><span class="p">,</span> <span class="n">ops</span> <span class="o">=</span> <span class="n">read_dmftsym</span><span class="p">(</span><span class="n">case</span> <span class="o">+</span> <span class="s1">&#39;.dmftsym&#39;</span><span class="p">)</span>
     <span class="n">info</span> <span class="o">=</span> <span class="n">read_indmftpr</span><span class="p">(</span><span class="n">case</span> <span class="o">+</span> <span class="s1">&#39;.indmftpr&#39;</span><span class="p">)</span>
     <span class="n">shells</span><span class="p">,</span> <span class="n">so</span> <span class="o">=</span> <span class="n">_correlated_shells</span><span class="p">(</span><span class="n">info</span><span class="p">),</span> <span class="n">info</span><span class="p">[</span><span class="s1">&#39;so&#39;</span><span class="p">]</span>
     <span class="n">natom</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ops</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;perm&#39;</span><span class="p">])</span>
 
+    <span class="n">ifSO</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">so</span><span class="p">)</span>
+    <span class="n">ifSP</span> <span class="o">=</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">case</span> <span class="o">+</span> <span class="s1">&#39;.almblmup&#39;</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">case</span> <span class="o">+</span> <span class="s1">&#39;.almblmdn&#39;</span><span class="p">))</span> <span class="ow">or</span> <span class="n">ifSO</span>
+
     <span class="n">timeinv</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">ops</span><span class="p">:</span>
         <span class="n">det2</span> <span class="o">=</span> <span class="n">op</span><span class="p">[</span><span class="s1">&#39;krotm&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">op</span><span class="p">[</span><span class="s1">&#39;krotm&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">op</span><span class="p">[</span><span class="s1">&#39;krotm&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">op</span><span class="p">[</span><span class="s1">&#39;krotm&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
-        <span class="n">timeinv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span> <span class="k">if</span> <span class="p">(</span><span class="n">so</span> <span class="ow">and</span> <span class="n">det2</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">)</span> <span class="k">else</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">timeinv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span> <span class="k">if</span> <span class="p">(</span><span class="n">ifSO</span> <span class="ow">and</span> <span class="n">det2</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">)</span> <span class="k">else</span> <span class="mi">0</span><span class="p">)</span>
 
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">case</span> <span class="o">+</span> <span class="s1">&#39;.symqmc&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%6d</span><span class="s1"> </span><span class="si">%6d</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">nsym</span><span class="p">,</span> <span class="n">natom</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">ops</span><span class="p">:</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%6d</span><span class="s1"> &#39;</span> <span class="o">%</span> <span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">op</span><span class="p">[</span><span class="s1">&#39;perm&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">so</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">ifSP</span><span class="p">:</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%6d</span><span class="s1"> &#39;</span> <span class="o">%</span> <span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">timeinv</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">isym</span><span class="p">,</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ops</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">sh</span> <span class="ow">in</span> <span class="n">shells</span><span class="p">:</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">_format_matrix</span><span class="p">(</span><span class="n">_shell_matrix</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">sh</span><span class="p">,</span> <span class="n">timeinv</span><span class="p">[</span><span class="n">isym</span><span class="p">])))</span></div>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">_format_matrix</span><span class="p">(</span><span class="n">_shell_matrix</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">sh</span><span class="p">,</span> <span class="n">timeinv</span><span class="p">[</span><span class="n">isym</span><span class="p">],</span> <span class="n">ifSO</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ifSP</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">sh</span> <span class="ow">in</span> <span class="n">shells</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">_format_matrix</span><span class="p">(</span><span class="n">paramag_time_op</span><span class="p">(</span><span class="n">sh</span><span class="p">)))</span></div>
 
 
 

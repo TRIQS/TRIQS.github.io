@@ -225,14 +225,15 @@
 <span class="sd">no crorb%ifSOat/correp metadata. It is purely group-theoretic: header, perms,</span>
 <span class="sd">timeflag line, and the representation matrices.</span>
 
-<span class="sd">Only the spin-orbit case is implemented (indmftpr SO flag=1, which implies</span>
-<span class="sd">ifSP): 2*(2l+1)-wide spinor matrices with the timeflag line. The non-SO layouts</span>
-<span class="sd">(scalar l=0 entries, paramagnetic time-reversal tail) raise</span>
-<span class="sd">NotImplementedError. The reference case is CaOs2 (SP+SO).</span>
+<span class="sd">Spin-orbit runs write 2*(2l+1)-wide spinor matrices. Without spin-orbit</span>
+<span class="sd">coupling, the matrices have width 2l+1, with scalar s-shell entries and a</span>
+<span class="sd">paramagnetic time-reversal tail when the input is not spin-polarized.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">._dmftproj</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">read_dmftsym</span><span class="p">,</span> <span class="n">read_fromfile</span><span class="p">,</span> <span class="n">read_indmftpr</span><span class="p">,</span> <span class="n">reptrans</span><span class="p">,</span>
-                        <span class="n">shell_matrix</span><span class="p">,</span> <span class="n">write_row</span><span class="p">)</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">._dmftproj</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">paramag_time_op</span><span class="p">,</span> <span class="n">read_dmftsym</span><span class="p">,</span> <span class="n">read_fromfile</span><span class="p">,</span> <span class="n">read_indmftpr</span><span class="p">,</span>
+                        <span class="n">reptrans</span><span class="p">,</span> <span class="n">shell_matrix</span><span class="p">,</span> <span class="n">write_row</span><span class="p">)</span>
 
 <span class="n">_shell_matrix</span> <span class="o">=</span> <span class="n">shell_matrix</span>
 
@@ -273,31 +274,39 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">write_sympar</span><span class="p">(</span><span class="n">case</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Write &lt;case&gt;.sympar from &lt;case&gt;.dmftsym and &lt;case&gt;.indmftpr.</span>
 
-<span class="sd">    Spin-orbit only (indmftpr SO flag=1, implying ifSP): writes the timeflag</span>
-<span class="sd">    line and the 2*(2l+1)-wide spinor matrices.&quot;&quot;&quot;</span>
+<span class="sd">    Detects ifSP/ifSO from the presence of &lt;case&gt;.almblm{up,dn} and the indmftpr</span>
+<span class="sd">    SO flag, exactly as oubwin/symqmc/ctqmcout. For SP+SO the file carries the</span>
+<span class="sd">    timeflag line and 2*(2l+1)-wide block-diag spinor matrices; the paramagnetic</span>
+<span class="sd">    time-reversal tail is written only when .not.ifSP.&quot;&quot;&quot;</span>
     <span class="n">info</span> <span class="o">=</span> <span class="n">read_indmftpr</span><span class="p">(</span><span class="n">case</span> <span class="o">+</span> <span class="s1">&#39;.indmftpr&#39;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">info</span><span class="p">[</span><span class="s1">&#39;so&#39;</span><span class="p">]:</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;non-spin-orbit sympar is not implemented yet&#39;</span><span class="p">)</span>
-    <span class="n">shells</span> <span class="o">=</span> <span class="n">_included_shells</span><span class="p">(</span><span class="n">info</span><span class="p">)</span>
+    <span class="n">shells</span><span class="p">,</span> <span class="n">so</span> <span class="o">=</span> <span class="n">_included_shells</span><span class="p">(</span><span class="n">info</span><span class="p">),</span> <span class="n">info</span><span class="p">[</span><span class="s1">&#39;so&#39;</span><span class="p">]</span>
     <span class="n">nsym</span><span class="p">,</span> <span class="n">ops</span> <span class="o">=</span> <span class="n">read_dmftsym</span><span class="p">(</span><span class="n">case</span> <span class="o">+</span> <span class="s1">&#39;.dmftsym&#39;</span><span class="p">)</span>
     <span class="n">natom</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ops</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;perm&#39;</span><span class="p">])</span>
+
+    <span class="n">ifSP</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">case</span> <span class="o">+</span> <span class="s1">&#39;.almblmup&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">case</span> <span class="o">+</span> <span class="s1">&#39;.almblmdn&#39;</span><span class="p">)</span>
+    <span class="n">ifSO</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">so</span><span class="p">)</span>
+    <span class="n">ifSP</span> <span class="o">=</span> <span class="n">ifSP</span> <span class="ow">or</span> <span class="n">ifSO</span>                      <span class="c1"># ifSO =&gt; ifSP</span>
 
     <span class="n">timeflag</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">ops</span><span class="p">:</span>
         <span class="n">det2</span> <span class="o">=</span> <span class="p">(</span><span class="n">op</span><span class="p">[</span><span class="s1">&#39;krotm&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">op</span><span class="p">[</span><span class="s1">&#39;krotm&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
                 <span class="o">-</span> <span class="n">op</span><span class="p">[</span><span class="s1">&#39;krotm&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">op</span><span class="p">[</span><span class="s1">&#39;krotm&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
-        <span class="n">timeflag</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span> <span class="k">if</span> <span class="n">det2</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">timeflag</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span> <span class="k">if</span> <span class="p">(</span><span class="n">ifSO</span> <span class="ow">and</span> <span class="n">det2</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">)</span> <span class="k">else</span> <span class="mi">0</span><span class="p">)</span>
 
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">case</span> <span class="o">+</span> <span class="s1">&#39;.sympar&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%6d</span><span class="s1"> </span><span class="si">%6d</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">nsym</span><span class="p">,</span> <span class="n">natom</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">ops</span><span class="p">:</span>
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%6d</span><span class="s1"> &#39;</span> <span class="o">%</span> <span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">op</span><span class="p">[</span><span class="s1">&#39;perm&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%6d</span><span class="s1"> &#39;</span> <span class="o">%</span> <span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">timeflag</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ifSP</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%6d</span><span class="s1"> &#39;</span> <span class="o">%</span> <span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">timeflag</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">isym</span><span class="p">,</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ops</span><span class="p">):</span>
-            <span class="n">ti</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">timeflag</span><span class="p">[</span><span class="n">isym</span><span class="p">])</span>
             <span class="k">for</span> <span class="n">sh</span> <span class="ow">in</span> <span class="n">shells</span><span class="p">:</span>
-                <span class="n">_write_matrix</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">_shell_matrix</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">sh</span><span class="p">,</span> <span class="n">ti</span><span class="p">))</span></div>
+                <span class="n">_write_matrix</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">_shell_matrix</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">sh</span><span class="p">,</span> <span class="nb">bool</span><span class="p">(</span><span class="n">timeflag</span><span class="p">[</span><span class="n">isym</span><span class="p">]),</span> <span class="n">ifSO</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ifSP</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">sh</span> <span class="ow">in</span> <span class="n">shells</span><span class="p">:</span>
+                <span class="n">_write_matrix</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">paramag_time_op</span><span class="p">(</span><span class="n">sh</span><span class="p">))</span></div>
 
 </pre></div>
 
