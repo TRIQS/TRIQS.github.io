@@ -473,9 +473,12 @@ pointing to the corresponding sites in <code class="docutils literal notranslate
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rot_mat</span></code></p></td>
 <td><p>list of numpy.array.complex, dim <code class="docutils literal notranslate"><span class="pre">n_corr_shells</span></code> x
 [<code class="docutils literal notranslate"><span class="pre">corr_shells['dim']</span></code>, <code class="docutils literal notranslate"><span class="pre">corr_shells['dim']</span></code>]</p></td>
-<td><p>Rotation matrices for correlated shells, if <code class="docutils literal notranslate"><span class="pre">use_rotations</span></code>. These
-rotations are automatically applied for up / downfolding. Set to the
-unity matrix if no rotations are used.</p></td>
+<td><p>Rotation matrices for correlated shells, if <code class="docutils literal notranslate"><span class="pre">use_rotations</span></code>, from the
+global to the local frame of each shell: a global-frame matrix <code class="docutils literal notranslate"><span class="pre">M</span></code>
+becomes <code class="docutils literal notranslate"><span class="pre">rot_mat^dag</span> <span class="pre">M</span> <span class="pre">rot_mat</span></code> (complex conjugated as well if
+<code class="docutils literal notranslate"><span class="pre">rot_mat_time_inv</span></code> and <code class="docutils literal notranslate"><span class="pre">SO</span></code> are 1). <code class="docutils literal notranslate"><span class="pre">proj_mat</span></code> is in the global
+frame. These rotations are automatically applied for up / downfolding.
+Set to the unity matrix if no rotations are used.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rot_mat_time_inv</span></code></p></td>
 <td><p>list of int, dim <code class="docutils literal notranslate"><span class="pre">n_corr_shells</span></code></p></td>
@@ -773,7 +776,7 @@ otherwise. All zeros unless <code class="docutils literal notranslate"><span cla
 <td><p>list of list of numpy.array.complex, dim <code class="docutils literal notranslate"><span class="pre">n_symm</span></code> x <code class="docutils literal notranslate"><span class="pre">n_orbits</span></code> x
 [<code class="docutils literal notranslate"><span class="pre">orbits['dim']</span></code>, <code class="docutils literal notranslate"><span class="pre">orbits['dim']</span></code>]</p></td>
 <td><p>Representation of each symmetry operation in the orbital basis of each
-shell.</p></td>
+shell, in the global frame (see the frame note below).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mat_tinv</span></code></p></td>
 <td><p>list of numpy.array.complex, dim <code class="docutils literal notranslate"><span class="pre">n_orbits</span></code> x [<code class="docutils literal notranslate"><span class="pre">orbits['dim']</span></code>,
@@ -791,6 +794,17 @@ from file for <code class="docutils literal notranslate"><span class="pre">SO</s
 </tr>
 </tbody>
 </table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Frame convention.</strong> <code class="docutils literal notranslate"><span class="pre">mat</span></code> acts on global-frame quantities, the same
+frame as <code class="docutils literal notranslate"><span class="pre">proj_mat</span></code>. <code class="docutils literal notranslate"><span class="pre">SumkDFT</span></code> therefore symmetrizes the local Green’s
+function, the density matrix and the local levels in the global frame and
+only then rotates them to the local frame with <code class="docutils literal notranslate"><span class="pre">rot_mat</span></code>. Applying <code class="docutils literal notranslate"><span class="pre">mat</span></code>
+to local-frame data, or rotating <code class="docutils literal notranslate"><span class="pre">mat</span></code> into the local frames and applying
+it to global-frame data, is wrong whenever equivalent atoms have different
+local frames. The test <code class="docutils literal notranslate"><span class="pre">wien2k_frames_te.py</span></code> checks this on full-BZ
+tellurium.</p>
+</div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The VASP converter writes this group as a <strong>placeholder</strong> only: the
